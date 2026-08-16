@@ -21,7 +21,9 @@ progression in localStorage.
 
 ## Docs
 
-- [CONCEPTS.md](CONCEPTS.md) — the 5 MVP concepts with hooks, meta design, and projected KPIs
+- [CONCEPTS.md](CONCEPTS.md) — the 7 shipped MVP concepts with hooks, meta design, and projected KPIs
+- [CONCEPTS-WAVE3.md](CONCEPTS-WAVE3.md) — 10 build-ready briefs for the next wave (design only,
+  no code), including the platform integration contract and stability rules a coding model must follow
 - [RESEARCH.md](RESEARCH.md) — deep research on top-grossing hybrid-casual games (Color Block Jam,
   Screwdom, Mob Control, Hexa Sort, My Perfect Hotel, …) and market benchmarks
 
