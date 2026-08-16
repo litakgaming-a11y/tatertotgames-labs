@@ -3,244 +3,674 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>TaterTot Games Labs — Hybrid-Casual Playtest Hub</title>
-<meta name="description" content="TaterTot Games Labs — five original hybrid-casual game prototypes you can play right now in your browser.">
+<title>TaterTot Games Labs — Hyper-Casual Testing Arena</title>
+<meta name="description" content="A testing arena for hyper-casual game concepts. Seventeen playable prototypes, each with one hook and a real meta underneath.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥔</text></svg>">
 <style>
   :root{
-    --bg:#12101f; --bg2:#1c1832; --card:#231e42; --card2:#2c2554;
-    --ink:#f4f1ff; --muted:#9c93c9; --accent:#ffb703; --accent2:#ff5d8f;
-    --green:#3ddc84; --blue:#4cc9f0; --purple:#b388ff; --radius:22px;
+    --bg:#0d0b16; --bg2:#151127; --card:#1c1734; --card2:#241d44; --line:rgba(255,255,255,.08);
+    --ink:#f6f3ff; --muted:#9a91c4; --dim:#6e659b;
+    --accent:#ffb703; --accent2:#ff5d8f; --green:#3ddc84; --blue:#4cc9f0; --purple:#b388ff;
+    --r:20px;
   }
   *{margin:0;padding:0;box-sizing:border-box}
-  html,body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
-  body{min-height:100vh;overflow-x:hidden;position:relative}
-  body::before{content:"";position:fixed;inset:0;z-index:-1;
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;
+    min-height:100vh;overflow-x:hidden;position:relative}
+  body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
     background:
-      radial-gradient(1200px 600px at 15% -10%, rgba(255,93,143,.18), transparent 60%),
-      radial-gradient(1000px 500px at 110% 20%, rgba(76,201,240,.14), transparent 60%),
-      radial-gradient(900px 700px at 50% 120%, rgba(179,136,255,.16), transparent 60%),
-      linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%);}
-  .wrap{max-width:1080px;margin:0 auto;padding:28px 20px 80px}
-  header{text-align:center;padding:44px 0 12px}
-  .logo{font-size:clamp(2.4rem,7vw,4.2rem);font-weight:900;letter-spacing:-.02em;line-height:1.02;
-    background:linear-gradient(92deg,var(--accent) 0%,var(--accent2) 45%,var(--purple) 80%,var(--blue) 100%);
+      radial-gradient(1100px 560px at 12% -8%, rgba(255,93,143,.16), transparent 62%),
+      radial-gradient(900px 480px at 108% 12%, rgba(76,201,240,.13), transparent 60%),
+      radial-gradient(900px 700px at 50% 118%, rgba(179,136,255,.14), transparent 62%),
+      linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%)}
+
+  .wrap{max-width:1120px;margin:0 auto;padding:26px 18px 90px}
+
+  /* ---------- header ---------- */
+  header{text-align:center;padding:40px 0 6px}
+  .kicker{display:inline-flex;align-items:center;gap:8px;padding:7px 16px;border-radius:999px;
+    background:rgba(61,220,132,.1);border:1px solid rgba(61,220,132,.32);
+    color:var(--green);font-size:.74rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:blip 1.8s ease-in-out infinite}
+  @keyframes blip{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.75)}}
+  .logo{margin-top:20px;font-size:clamp(2.3rem,7.2vw,4rem);font-weight:900;letter-spacing:-.035em;line-height:.98;
+    background:linear-gradient(96deg,var(--accent) 0%,var(--accent2) 42%,var(--purple) 76%,var(--blue) 100%);
     -webkit-background-clip:text;background-clip:text;color:transparent;
-    animation:bob 3.2s ease-in-out infinite}
-  @keyframes bob{0%,100%{transform:translateY(0) rotate(-.4deg)}50%{transform:translateY(-6px) rotate(.4deg)}}
-  .tag{margin-top:14px;color:var(--muted);font-size:1.05rem}
-  .tag b{color:var(--ink)}
-  .pill{display:inline-block;margin-top:18px;padding:8px 18px;border-radius:999px;
-    background:rgba(61,220,132,.12);color:var(--green);font-weight:700;font-size:.85rem;letter-spacing:.06em;text-transform:uppercase;
-    border:1px solid rgba(61,220,132,.35)}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:20px;margin-top:40px}
-  .card{position:relative;display:flex;flex-direction:column;gap:12px;padding:26px 24px 22px;border-radius:var(--radius);
-    background:linear-gradient(160deg,var(--card) 0%,var(--card2) 100%);
-    border:1px solid rgba(255,255,255,.07);
-    text-decoration:none;color:var(--ink);
-    transition:transform .22s cubic-bezier(.34,1.56,.64,1),box-shadow .22s ease,border-color .22s ease;
-    box-shadow:0 8px 26px rgba(0,0,0,.35)}
-  .card:hover{transform:translateY(-7px) scale(1.015);border-color:rgba(255,255,255,.18);
-    box-shadow:0 22px 44px rgba(0,0,0,.5)}
-  .card:active{transform:translateY(-2px) scale(.99)}
-  .emoji{font-size:2.6rem;line-height:1;filter:drop-shadow(0 4px 10px rgba(0,0,0,.4))}
-  .card h2{font-size:1.45rem;font-weight:850;letter-spacing:-.01em}
-  .hook{font-size:.82rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
-  .card p{color:var(--muted);font-size:.95rem;line-height:1.5;flex:1}
-  .play{align-self:flex-start;margin-top:4px;padding:10px 22px;border-radius:14px;font-weight:800;font-size:.95rem;
-    color:#12101f;background:linear-gradient(92deg,var(--accent),#ffd166);
-    box-shadow:0 6px 0 rgba(0,0,0,.25);transition:transform .15s ease}
+    animation:bob 3.4s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(-.3deg)}50%{transform:translateY(-5px) rotate(.3deg)}}
+  .sub{margin:16px auto 0;max-width:600px;color:var(--muted);font-size:1.02rem;line-height:1.6}
+  .sub b{color:var(--ink)}
+
+  .stats{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:26px}
+  .stat{padding:11px 18px;border-radius:14px;background:rgba(255,255,255,.035);
+    border:1px solid var(--line);min-width:104px}
+  .stat b{display:block;font-size:1.32rem;font-weight:900;line-height:1.1}
+  .stat span{font-size:.7rem;color:var(--dim);font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+
+  /* ---------- wave heading ---------- */
+  .wave{display:flex;align-items:center;gap:14px;margin:52px 0 20px}
+  .wave h2{font-size:1.16rem;font-weight:900;letter-spacing:.01em;white-space:nowrap}
+  .wave .note{font-size:.76rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);white-space:nowrap}
+  .wave .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+
+  /* ---------- grid: always 2 per row, compacted on phones ---------- */
+  .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+  @media (max-width:660px){
+    .grid{gap:11px}
+    .body{padding:12px 12px 14px;gap:6px}
+    .card h3{font-size:.98rem}
+    .hook{font-size:.58rem;letter-spacing:.08em}
+    .card p{font-size:.78rem;line-height:1.45;
+      display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+    .meta{flex-direction:column;align-items:stretch;gap:8px}
+    .tag{display:none}
+    .play{text-align:center;padding:9px 8px;font-size:.8rem}
+    .badge{top:7px;right:7px;padding:4px 8px;font-size:.55rem}
+    .wave{margin:36px 0 14px;gap:10px}
+    .wave h2{font-size:1rem} .wave .note{font-size:.64rem;letter-spacing:.07em}
+  }
+  @media (max-width:380px){ .card p{-webkit-line-clamp:2} }
+
+  .card{position:relative;display:flex;flex-direction:column;border-radius:var(--r);overflow:hidden;
+    background:linear-gradient(165deg,var(--card) 0%,var(--card2) 100%);
+    border:1px solid var(--line);text-decoration:none;color:var(--ink);
+    box-shadow:0 10px 28px rgba(0,0,0,.4);
+    transition:transform .24s cubic-bezier(.34,1.5,.64,1),box-shadow .24s ease,border-color .24s ease}
+  .card:hover{transform:translateY(-6px);border-color:rgba(255,255,255,.2);box-shadow:0 24px 48px rgba(0,0,0,.55)}
+  .card:active{transform:translateY(-1px) scale(.995)}
+
+  .art{position:relative;display:block;width:100%;aspect-ratio:16/9;background:#0a0813}
+  .art svg{display:block;width:100%;height:100%}
+  .badge{position:absolute;top:11px;right:11px;padding:5px 11px;border-radius:999px;
+    font-size:.63rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase;
+    background:rgba(8,6,18,.72);border:1px solid rgba(255,255,255,.16);color:var(--muted);
+    backdrop-filter:blur(4px)}
+  .badge.new{background:linear-gradient(92deg,var(--green),#9df5c4);color:#0b2b19;border-color:transparent}
+
+  .body{padding:18px 18px 20px;display:flex;flex-direction:column;gap:9px;flex:1}
+  .hook{font-size:.7rem;font-weight:900;letter-spacing:.11em;text-transform:uppercase}
+  .card h3{font-size:1.24rem;font-weight:900;letter-spacing:-.015em}
+  .card p{color:var(--muted);font-size:.9rem;line-height:1.55;flex:1}
+  .meta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:4px}
+  .tag{font-size:.68rem;font-weight:700;color:var(--dim);letter-spacing:.04em}
+  .play{padding:9px 20px;border-radius:12px;font-weight:900;font-size:.86rem;color:#120f1e;
+    background:linear-gradient(92deg,var(--accent),#ffd76a);box-shadow:0 4px 0 rgba(0,0,0,.3);
+    transition:transform .16s ease;white-space:nowrap}
   .card:hover .play{transform:scale(1.06)}
-  .c1 .hook{color:var(--accent2)} .c2 .hook{color:var(--accent)} .c3 .hook{color:var(--blue)}
-  .c4 .hook{color:#8ecae6} .c5 .hook{color:var(--purple)}
-  .c6 .hook{color:#ff8c42} .c7 .hook{color:#ff9de2}
-  .w1 .hook{color:#6ee7ff} .w2 .hook{color:#5eead4} .w3 .hook{color:#fbbf6e}
-  .w4 .hook{color:#c4b5fd} .w5 .hook{color:#a5b4fc} .w6 .hook{color:#fda4af}
-  .w7 .hook{color:#7dd3fc} .w8 .hook{color:#fcd34d} .w9 .hook{color:#93c5fd}
-  .w10 .hook{color:#fde68a}
-  .waveTitle{margin:56px 0 -8px;font-size:1.35rem;font-weight:900;letter-spacing:-.01em;
-    display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
-  .waveTitle span{font-size:.82rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-  .new{position:absolute;top:14px;right:14px;padding:5px 12px;border-radius:999px;font-size:.72rem;font-weight:900;letter-spacing:.08em;
-    color:#12101f;background:linear-gradient(92deg,var(--green),#a7f3c9);animation:newPulse 1.6s ease-in-out infinite}
-  @keyframes newPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
-  .links{margin-top:52px;text-align:center;color:var(--muted);font-size:.92rem;line-height:2}
-  .links a{color:var(--blue);text-decoration:none;font-weight:700}
-  .links a:hover{text-decoration:underline}
-  footer{margin-top:34px;text-align:center;color:#6f679c;font-size:.85rem}
+
+  .h1{color:var(--accent2)} .h2{color:var(--accent)} .h3c{color:var(--blue)}
+  .h4{color:#8ecae6} .h5{color:var(--purple)} .h6{color:#ff8c42} .h7{color:#ff9de2}
+  .h8{color:#6ee7ff} .h9{color:#5eead4} .h10{color:#fbbf6e} .h11{color:#c4b5fd}
+  .h12{color:#a5b4fc} .h13{color:#fda4af} .h14{color:#7dd3fc} .h15{color:#fcd34d}
+  .h16{color:#93c5fd} .h17{color:#fde68a}
+
+  /* ---------- footer ---------- */
+  .docs{margin-top:56px;padding:22px;border-radius:var(--r);border:1px solid var(--line);
+    background:rgba(255,255,255,.025);text-align:center}
+  .docs h4{font-size:.72rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:12px}
+  .docs a{display:inline-block;margin:4px 5px;padding:11px 14px;border-radius:11px;
+    color:var(--blue);text-decoration:none;font-weight:700;font-size:.9rem;
+    background:rgba(76,201,240,.08);border:1px solid rgba(76,201,240,.18)}
+  .docs a:hover{text-decoration:underline}
+  footer{margin-top:30px;text-align:center;color:#5c5486;font-size:.82rem;line-height:1.7}
 </style>
 <script src="/analytics.js" defer></script>
 </head>
 <body>
 <div class="wrap">
+
   <header>
-    <div class="logo">TATERTOT<br>GAMES LABS</div>
-    <div class="tag">Seventeen original <b>hybrid-casual</b> prototypes. One hyper-casual hook each, a real meta underneath.<br>Built for the thumb. Tuned for the dopamine.</div>
-    <div class="pill">▶ All playable in your browser — no install</div>
+    <span class="kicker"><span class="dot"></span>Live testing arena</span>
+    <h1 class="logo">TATERTOT<br>GAMES LABS</h1>
+    <p class="sub">A proving ground for <b>hyper-casual game concepts</b>. Every prototype is one
+      readable hook with a real meta underneath — built for the thumb, instrumented end to end,
+      and playable right now.</p>
+    <div class="stats">
+      <div class="stat"><b>17</b><span>Prototypes</span></div>
+      <div class="stat"><b>3</b><span>Waves</span></div>
+      <div class="stat"><b>17</b><span>Mechanics</span></div>
+      <div class="stat"><b>0</b><span>Installs needed</span></div>
+    </div>
   </header>
 
+  <!-- ============ WAVE 1 ============ -->
+  <div class="wave"><h2>Wave 1</h2><span class="note">The founding five</span><span class="rule"></span></div>
   <div class="grid">
-    <a class="card c1" href="games/puff-puff-fit/">
-      <div class="emoji">🎈</div>
-      <div class="hook">Hold to inflate</div>
-      <h2>Puff Puff Fit</h2>
-      <p>Inflate a squishy blob to fill the chamber — release before it kisses a spike. Perfect fills rain confetti. Collect blob skins with your coins.</p>
-      <span class="play">PLAY →</span>
+
+    <a class="card" href="games/puff-puff-fit/">
+      <span class="art"><svg viewBox="0 0 320 180" aria-label="A squishy blob inflating inside a spiked chamber">
+        <defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#3aa0d8"/><stop offset="1" stop-color="#1f5f92"/></linearGradient>
+          <radialGradient id="b1" cx=".35" cy=".3"><stop offset="0" stop-color="#fff"/><stop offset=".3" stop-color="#ff9dbf"/><stop offset="1" stop-color="#d6538a"/></radialGradient></defs>
+        <rect width="320" height="180" fill="url(#g1)"/>
+        <rect x="60" y="26" width="200" height="128" rx="16" fill="#123f63" stroke="#8fd4ff" stroke-width="3"/>
+        <g fill="#ffe14d">
+          <path d="M100 26l9 17h-18z"/><path d="M160 26l9 17h-18z"/><path d="M220 26l9 17h-18z"/>
+          <path d="M100 154l9-17h-18z"/><path d="M180 154l9-17h-18z"/>
+          <path d="M60 70l17 9v-18z"/><path d="M260 110l-17 9v-18z"/></g>
+        <circle cx="160" cy="92" r="42" fill="url(#b1)"/>
+        <circle cx="147" cy="84" r="7" fill="#fff"/><circle cx="149" cy="85" r="3.6" fill="#2b1830"/>
+        <circle cx="173" cy="84" r="7" fill="#fff"/><circle cx="175" cy="85" r="3.6" fill="#2b1830"/>
+        <circle cx="138" cy="99" r="6" fill="#ff5f9e" opacity=".7"/><circle cx="182" cy="99" r="6" fill="#ff5f9e" opacity=".7"/>
+        <path d="M154 103q6 6 12 0" stroke="#2b1830" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <g stroke="#fff" stroke-width="2.5" opacity=".55" stroke-linecap="round">
+          <path d="M160 40v-9"/><path d="M204 60l7-6"/><path d="M116 60l-7-6"/></g>
+      </svg></span>
+      <div class="body">
+        <span class="hook h1">Hold to inflate</span>
+        <h3>Puff Puff Fit</h3>
+        <p>Inflate a squishy blob to fill the chamber — and release before it kisses a spike. Perfect fills rain confetti.</p>
+        <div class="meta"><span class="tag">Risk-vs-greed timing · skin shop</span><span class="play">PLAY →</span></div>
+      </div>
     </a>
 
-    <a class="card c2" href="games/topple-party/">
-      <div class="emoji">🁢</div>
-      <div class="hook">Draw the chain</div>
-      <h2>Topple Party</h2>
-      <p>Sketch domino runs with your finger, smash GO, and watch the cascade clack its way to every target in glorious slow-mo. Earnings build Topple Town.</p>
-      <span class="play">PLAY →</span>
+    <a class="card" href="games/topple-party/">
+      <span class="art"><svg viewBox="0 0 320 180" aria-label="A chain of dominoes toppling toward a target">
+        <defs><linearGradient id="g2" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#ffb35c"/><stop offset="1" stop-color="#e2683c"/></linearGradient></defs>
+        <rect width="320" height="180" fill="url(#g2)"/>
+        <rect y="132" width="320" height="48" fill="#7a3520" opacity=".55"/>
+        <g fill="#fff8ee" stroke="#8a3f22" stroke-width="2">
+          <rect x="36" y="86" width="15" height="46" rx="3" transform="rotate(-58 43 132)"/>
+          <rect x="66" y="88" width="15" height="46" rx="3" transform="rotate(-42 73 134)"/>
+          <rect x="96" y="90" width="15" height="46" rx="3" transform="rotate(-24 103 136)"/>
+          <rect x="126" y="88" width="15" height="46" rx="3" transform="rotate(-10 133 134)"/>
+          <rect x="156" y="86" width="15" height="46" rx="3"/>
+          <rect x="186" y="86" width="15" height="46" rx="3"/>
+          <rect x="216" y="86" width="15" height="46" rx="3"/></g>
+        <g fill="#c0472a"><circle cx="43" cy="100" r="2.6"/><circle cx="163" cy="98" r="2.6"/><circle cx="163" cy="118" r="2.6"/>
+          <circle cx="193" cy="98" r="2.6"/><circle cx="223" cy="108" r="2.6"/></g>
+        <g><rect x="252" y="94" width="40" height="38" rx="6" fill="#ff4d6d" stroke="#8a1d33" stroke-width="2"/>
+          <path d="M252 104h40M252 116h40" stroke="#fff" stroke-width="5" opacity=".8"/>
+          <path d="M272 94l-4-14" stroke="#ffe14d" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="268" cy="76" r="5" fill="#ffe14d"/></g>
+        <g fill="#fff" opacity=".8"><circle cx="60" cy="60" r="3"/><circle cx="242" cy="52" r="4"/><circle cx="150" cy="44" r="2.5"/></g>
+      </svg></span>
+      <div class="body">
+        <span class="hook h2">Draw the chain</span>
+        <h3>Topple Party</h3>
+        <p>Sketch domino runs with your finger, hit GO, and watch the cascade clack its way into every target in slow-mo.</p>
+        <div class="meta"><span class="tag">Chain reaction · build Topple Town</span><span class="play">PLAY →</span></div>
+      </div>
     </a>
 
-    <a class="card c3" href="games/slingshot-salvage/">
-      <div class="emoji">🛰️</div>
-      <div class="hook">One-drag gravity slingshot</div>
-      <h2>Slingshot Salvage</h2>
-      <p>Fling your pod through planetary gravity wells, hoover up space junk, and bank scrap for garage upgrades. The trajectory preview does the flexing.</p>
-      <span class="play">PLAY →</span>
+    <a class="card" href="games/slingshot-salvage/">
+      <span class="art"><svg viewBox="0 0 320 180" aria-label="A pod slingshotting around a planet on a dotted arc">
+        <defs><radialGradient id="g3" cx=".5" cy=".4"><stop offset="0" stop-color="#241b52"/><stop offset="1" stop-color="#0a0720"/></radialGradient>
+          <radialGradient id="p3" cx=".35" cy=".3"><stop offset="0" stop-color="#7ad7ff"/><stop offset="1" stop-color="#2a5fb0"/></radialGradient></defs>
+        <rect width="320" height="180" fill="url(#g3)"/>
+        <g fill="#fff"><circle cx="30" cy="30" r="1.6" opacity=".8"/><circle cx="290" cy="46" r="2" opacity=".9"/>
+          <circle cx="86" cy="150" r="1.4" opacity=".7"/><circle cx="250" cy="140" r="1.6" opacity=".7"/>
+          <circle cx="180" cy="26" r="1.3" opacity=".6"/><circle cx="60" cy="92" r="1.2" opacity=".5"/></g>
+        <circle cx="196" cy="94" r="34" fill="url(#p3)"/>
+        <ellipse cx="196" cy="94" rx="52" ry="14" fill="none" stroke="#7ad7ff" stroke-width="2" opacity=".4" transform="rotate(-18 196 94)"/>
+        <path d="M40 148 Q120 150 158 112 T236 52" fill="none" stroke="#ffe14d" stroke-width="3"
+          stroke-linecap="round" stroke-dasharray="1 11" opacity=".95"/>
+        <g transform="translate(236 52) rotate(-38)">
+          <path d="M-11-7 L11 0 L-11 7 L-6 0 Z" fill="#ffe14d"/>
+          <circle cx="-2" cy="0" r="3.4" fill="#fff"/></g>
+        <g fill="#9df5c4"><circle cx="120" cy="60" r="5"/><circle cx="86" cy="42" r="4"/><circle cx="262" cy="112" r="5"/></g>
+        <rect x="22" y="150" width="46" height="16" rx="5" fill="#3c3470" stroke="#8f86d8" stroke-width="2"/>
+      </svg></span>
+      <div class="body">
+        <span class="hook h3c">One-drag gravity slingshot</span>
+        <h3>Slingshot Salvage</h3>
+        <p>Fling your pod through planetary gravity wells, hoover up space junk, and bank scrap for garage upgrades.</p>
+        <div class="meta"><span class="tag">Physics aim · 4 upgrade tracks</span><span class="play">PLAY →</span></div>
+      </div>
     </a>
 
-    <a class="card c4" href="games/freeze-frame/">
-      <div class="emoji">🧊</div>
-      <div class="hook">Tap to freeze</div>
-      <h2>Freeze Frame!</h2>
-      <p>Flash-freeze water gaps so waddling critters can cross before the ice shatters. Every rescue moves into your snow village — and the village grows.</p>
-      <span class="play">PLAY →</span>
+    <a class="card" href="games/freeze-frame/">
+      <span class="art"><svg viewBox="0 0 320 180" aria-label="A critter crossing a melting ice bridge over water">
+        <defs><linearGradient id="g4" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#123a63"/><stop offset="1" stop-color="#2b7fae"/></linearGradient></defs>
+        <rect width="320" height="180" fill="url(#g4)"/>
+        <g stroke="#9df0ff" stroke-width="3" opacity=".35" fill="none">
+          <path d="M0 40q60-16 120 0t120 0 80-8"/><path d="M0 60q70-14 140 2t180-6"/></g>
+        <rect y="120" width="112" height="60" fill="#e9f6ff"/><rect y="112" width="112" height="12" rx="5" fill="#fff"/>
+        <rect x="208" y="120" width="112" height="60" fill="#e9f6ff"/><rect x="208" y="112" width="112" height="12" rx="5" fill="#fff"/>
+        <rect x="112" y="132" width="96" height="48" fill="#0e4a72"/>
+        <g><rect x="112" y="112" width="96" height="16" rx="4" fill="#b8ecff" opacity=".92"/>
+          <path d="M128 112v16M152 112v16M176 112v16" stroke="#5fbfe8" stroke-width="2" opacity=".8"/></g>
+        <g transform="translate(150 88)">
+          <ellipse cx="0" cy="16" rx="20" ry="7" fill="#0a3a5c" opacity=".35"/>
+          <circle cx="0" cy="0" r="20" fill="#fff3d6"/>
+          <circle cx="-7" cy="-4" r="4" fill="#22303f"/><circle cx="7" cy="-4" r="4" fill="#22303f"/>
+          <path d="M-5 7q5 5 10 0" stroke="#22303f" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path d="M-20-6q-8-6-4-13" stroke="#ff9f43" stroke-width="4" fill="none" stroke-linecap="round"/></g>
+        <g fill="#fff" opacity=".85"><circle cx="46" cy="36" r="2.6"/><circle cx="262" cy="52" r="3"/>
+          <circle cx="176" cy="28" r="2.2"/><circle cx="96" cy="66" r="2"/></g>
+        <circle cx="256" cy="96" r="17" fill="none" stroke="#ffe14d" stroke-width="3" stroke-dasharray="62 26"/>
+      </svg></span>
+      <div class="body">
+        <span class="hook h4">Tap to freeze</span>
+        <h3>Freeze Frame!</h3>
+        <p>Flash-freeze water gaps so waddling critters cross before the ice shatters. Every rescue joins your snow village.</p>
+        <div class="meta"><span class="tag">Timing juggle · village grows</span><span class="play">PLAY →</span></div>
+      </div>
     </a>
 
-    <a class="card c5" href="games/volt-rush/">
-      <div class="emoji">⚡</div>
-      <div class="hook">Drag to catch lightning</div>
-      <h2>Volt Rush</h2>
-      <p>Slide the rod cart under telegraphed strikes, chain combos up to x8, and feed the volts into a city that keeps earning while you're away.</p>
-      <span class="play">PLAY →</span>
+    <a class="card" href="games/volt-rush/">
+      <span class="art"><svg viewBox="0 0 320 180" aria-label="A lightning bolt striking a rod cart above a city">
+        <defs><linearGradient id="g5" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#0f1836"/><stop offset="1" stop-color="#2b2a63"/></linearGradient></defs>
+        <rect width="320" height="180" fill="url(#g5)"/>
+        <g fill="#1b2450" opacity=".95">
+          <rect x="10" y="118" width="34" height="62"/><rect x="52" y="96" width="30" height="84"/>
+          <rect x="90" y="126" width="36" height="54"/><rect x="134" y="82" width="34" height="98"/>
+          <rect x="176" y="112" width="30" height="68"/><rect x="214" y="92" width="38" height="88"/>
+          <rect x="260" y="122" width="34" height="58"/></g>
+        <g fill="#ffe14d" opacity=".9">
+          <rect x="58" y="104" width="5" height="6"/><rect x="70" y="118" width="5" height="6"/>
+          <rect x="140" y="92" width="5" height="6"/><rect x="152" y="112" width="5" height="6"/>
+          <rect x="222" y="102" width="5" height="6"/><rect x="238" y="126" width="5" height="6"/></g>
+        <ellipse cx="150" cy="26" rx="86" ry="20" fill="#3a3f7a" opacity=".85"/>
+        <ellipse cx="216" cy="32" rx="52" ry="15" fill="#333a70" opacity=".8"/>
+        <path d="M158 40l-22 40h20l-14 34 40-46h-22l16-28z" fill="#fff3a8" stroke="#fff" stroke-width="2"/>
+        <g transform="translate(168 118)">
+          <rect x="-26" y="0" width="52" height="18" rx="5" fill="#4b6cff" stroke="#a9bcff" stroke-width="2"/>
+          <path d="M0 0v-22" stroke="#cfe0ff" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="0" cy="-25" r="5" fill="#ffe14d"/></g>
+        <rect y="136" width="320" height="4" fill="#5a63a8" opacity=".6"/>
+      </svg></span>
+      <div class="body">
+        <span class="hook h5">Drag to catch lightning</span>
+        <h3>Volt Rush</h3>
+        <p>Slide the rod cart under telegraphed strikes, chain combos to x8, then feed a city that earns while you're away.</p>
+        <div class="meta"><span class="tag">Reflex arcade · idle city</span><span class="play">PLAY →</span></div>
+      </div>
     </a>
 
-    <a class="card c6" href="games/kaboom-crane/">
-      <span class="new">NEW</span>
-      <div class="emoji">🏗️</div>
-      <div class="hook">Tap the rhythm, wreck the block</div>
-      <h2>Kaboom Crane</h2>
-      <p>Push the wrecking ball like a playground swing — perfect-timed taps build monster amplitude — then release and watch the whole building come down in slow-mo.</p>
-      <span class="play">PLAY →</span>
-    </a>
-
-    <a class="card c7" href="games/buzzcut-buddies/">
-      <span class="new">NEW</span>
-      <div class="emoji">✂️</div>
-      <div class="hook">ASMR trim &amp; reveal</div>
-      <h2>Buzzcut Buddies</h2>
-      <p>Buzz away mountains of fuzz to reveal the cutie underneath — mind the mohawk requests, find hidden accessories, and fill your salon with groomed buddies.</p>
-      <span class="play">PLAY →</span>
-    </a>
   </div>
 
-  <h2 class="waveTitle">Wave 3 <span>ten new mechanic classes</span></h2>
-
+  <!-- ============ WAVE 2 ============ -->
+  <div class="wave"><h2>Wave 2</h2><span class="note">Research-driven follow-ups</span><span class="rule"></span></div>
   <div class="grid">
-    <a class="card w1" href="games/flip-force/">
-      <div class="emoji">🧲</div>
-      <div class="hook">One tap flips your polarity</div>
-      <h2>Flip Force</h2>
-      <p>Thread a drifting orb through fields of attract and repel magnets. Tap to swap your pole and every force arrow reverses under you.</p>
-      <span class="play">PLAY →</span>
+
+    <a class="card" href="games/kaboom-crane/">
+      <span class="badge new">New</span>
+      <span class="art"><svg viewBox="0 0 320 180" aria-label="A wrecking ball swinging into a block tower">
+        <defs><linearGradient id="g6" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#7fc7ef"/><stop offset="1" stop-color="#f5b06a"/></linearGradient></defs>
+        <rect width="320" height="180" fill="url(#g6)"/>
+        <rect y="150" width="320" height="30" fill="#6b5a45"/>
+        <g stroke="#4a4a58" stroke-width="6" fill="none"><path d="M40 150V22h150"/></g>
+        <rect x="24" y="120" width="34" height="32" rx="4" fill="#ffb703" stroke="#8a5c06" stroke-width="2"/>
+        <path d="M150 24v34" stroke="#3a3a46" stroke-width="3"/>
+        <g fill="#8a8a9a"><circle cx="150" cy="42" r="3"/><circle cx="150" cy="52" r="3"/></g>
+        <circle cx="150" cy="72" r="19" fill="#4a4f60" stroke="#22242e" stroke-width="3"/>
+        <circle cx="144" cy="66" r="6" fill="#7d8497" opacity=".85"/>
+        <g stroke="#fff" stroke-width="3" fill="none" opacity=".8" stroke-linecap="round">
+          <path d="M176 60q10-8 8-20"/><path d="M182 78q14 0 20-8"/></g>
+        <g stroke="#22242e" stroke-width="2">
+          <rect x="212" y="118" width="30" height="32" fill="#e56b5c"/><rect x="246" y="118" width="30" height="32" fill="#5cb8e5"/>
+          <rect x="212" y="84" width="30" height="32" fill="#5cb8e5"/><rect x="246" y="84" width="30" height="32" fill="#e5c65c"/>
+          <rect x="228" y="50" width="30" height="32" fill="#e56b5c"/></g>
+        <g fill="#fff" opacity=".9"><circle cx="206" cy="74" r="4"/><circle cx="284" cy="100" r="5"/><circle cx="200" cy="112" r="3"/></g>
+        <g fill="#8a7a66" opacity=".7"><circle cx="272" cy="146" r="7"/><circle cx="290" cy="150" r="5"/></g>
+      </svg></span>
+      <div class="body">
+        <span class="hook h6">Tap the rhythm, wreck the block</span>
+        <h3>Kaboom Crane</h3>
+        <p>Push the ball like a playground swing — perfect-timed taps build monster amplitude — then release and level it.</p>
+        <div class="meta"><span class="tag">Rhythm timing · demolition</span><span class="play">PLAY →</span></div>
+      </div>
     </a>
 
-    <a class="card w2" href="games/ping-pilot/">
-      <div class="emoji">📡</div>
-      <div class="hook">Tap to sonar-ping the dark</div>
-      <h2>Ping Pilot</h2>
-      <p>The cave is pitch black and your ping paints it for two seconds. The anglerfish hunts your pings — so seeing more means hiding less.</p>
-      <span class="play">PLAY →</span>
-    </a>
-
-    <a class="card w3" href="games/bounce-brigade/">
-      <div class="emoji">🤸</div>
-      <div class="hook">Drag to place trampolines</div>
-      <h2>Bounce Brigade</h2>
-      <p>Citizens leap from a smoking building. Bounce them across rooftops, chimneys and awnings into the rescue net — with style points for flips.</p>
-      <span class="play">PLAY →</span>
-    </a>
-
-    <a class="card w4" href="games/parcel-panic/">
-      <div class="emoji">📦</div>
-      <div class="hook">Tap the junction, flip the track</div>
-      <h2>Parcel Panic</h2>
-      <p>Colored parcels stream down conveyors toward forked junctions. One tap each routes them home — and gold parcels shatter if you take it too fast.</p>
-      <span class="play">PLAY →</span>
-    </a>
-
-    <a class="card w5" href="games/ghost-crew/">
-      <div class="emoji">👻</div>
-      <div class="hook">Team up with your past self</div>
-      <h2>Ghost Crew</h2>
-      <p>Run, then rewind — your last run replays as a ghost holding the plate while the new you walks through the door it opens.</p>
-      <span class="play">PLAY →</span>
-    </a>
-
-    <a class="card w6" href="games/sky-bloom/">
-      <div class="emoji">🎆</div>
-      <div class="hook">Tap at the perfect altitude</div>
-      <h2>Sky Bloom</h2>
-      <p>Burst each rocket inside its target ring to fill the night with blooms. Chain perfects and the whole festival sky escalates with you.</p>
-      <span class="play">PLAY →</span>
-    </a>
-
-    <a class="card w7" href="games/fold-friends/">
-      <div class="emoji">🦢</div>
-      <div class="hook">Swipe to fold — it comes alive</div>
-      <h2>Fold Friends</h2>
-      <p>Crisp swipes crease the paper into a crane. It blinks, flaps and waddles off to join a paper park that grows with every animal.</p>
-      <span class="play">PLAY →</span>
-    </a>
-
-    <a class="card w8" href="games/bloom-drop/">
-      <div class="emoji">🌻</div>
-      <div class="hook">Drop the seed, watch it plink</div>
-      <h2>Bloom Drop</h2>
-      <p>Seeds rattle down a pin field with escalating dings, and wherever they land a flower erupts — filling a garden you keep forever.</p>
-      <span class="play">PLAY →</span>
-    </a>
-
-    <a class="card w9" href="games/harbor-hustle/">
-      <div class="emoji">⛴️</div>
-      <div class="hook">Tap to stop, tap to go</div>
-      <h2>Harbor Hustle</h2>
-      <p>Six boats, one brain, zero collisions. Thread ferries and darting jet-skis through a busy harbor — near-misses pay a close-call bonus.</p>
-      <span class="play">PLAY →</span>
-    </a>
-
-    <a class="card w10" href="games/beam-team/">
-      <div class="emoji">🔦</div>
-      <div class="hook">Tap a mirror, the light bends</div>
-      <h2>Beam Team</h2>
-      <p>One golden beam snakes across a dark level. Rotate mirrors to reroute it live through prisms and filters until every lantern blooms into colour.</p>
-      <span class="play">PLAY →</span>
+    <a class="card" href="games/buzzcut-buddies/">
+      <span class="badge new">New</span>
+      <span class="art"><svg viewBox="0 0 320 180" aria-label="A fuzzy creature half trimmed by a clipper">
+        <defs><linearGradient id="g7" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#ffd9ec"/><stop offset="1" stop-color="#ffb0d4"/></linearGradient></defs>
+        <rect width="320" height="180" fill="url(#g7)"/>
+        <ellipse cx="160" cy="164" rx="86" ry="12" fill="#d4749f" opacity=".3"/>
+        <g stroke="#a86ad8" stroke-width="4" stroke-linecap="round">
+          <path d="M96 96q-8-20 2-32"/><path d="M112 78q-6-22 4-32"/><path d="M130 66q-4-22 6-30"/>
+          <path d="M148 60q-2-24 8-30"/><path d="M86 116q-16-12-14-28"/></g>
+        <ellipse cx="160" cy="106" rx="66" ry="54" fill="#c58ae8"/>
+        <path d="M160 52a66 54 0 0 1 66 54 66 54 0 0 1-66 54z" fill="#e8c6f7"/>
+        <g fill="#fff"><circle cx="140" cy="94" r="11"/><circle cx="180" cy="94" r="11"/></g>
+        <g fill="#3a2340"><circle cx="143" cy="96" r="5.5"/><circle cx="183" cy="96" r="5.5"/></g>
+        <path d="M150 118q10 10 20 0" stroke="#3a2340" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <circle cx="126" cy="112" r="7" fill="#ff8fc0" opacity=".7"/><circle cx="194" cy="112" r="7" fill="#ff8fc0" opacity=".7"/>
+        <g transform="translate(226 74) rotate(24)">
+          <rect x="-16" y="-12" width="44" height="24" rx="7" fill="#5b6ee0" stroke="#2b3a9a" stroke-width="2"/>
+          <rect x="-30" y="-9" width="16" height="18" rx="3" fill="#dfe6ff" stroke="#2b3a9a" stroke-width="2"/>
+          <path d="M-30-4h16M-30 2h16" stroke="#9aa8d8" stroke-width="2"/></g>
+        <g fill="#a86ad8" opacity=".8"><circle cx="252" cy="126" r="4"/><circle cx="270" cy="112" r="3"/><circle cx="244" cy="146" r="3.4"/></g>
+      </svg></span>
+      <div class="body">
+        <span class="hook h7">ASMR trim &amp; reveal</span>
+        <h3>Buzzcut Buddies</h3>
+        <p>Buzz away mountains of fuzz to reveal the cutie underneath — mind the mohawk requests, fill your salon.</p>
+        <div class="meta"><span class="tag">Zen reveal · creature collection</span><span class="play">PLAY →</span></div>
+      </div>
     </a>
   </div>
 
-  <div class="links">
-    📊 <a href="CONCEPTS.md">The 7 shipped MVP concepts &amp; projected stats</a> ·
-    🧪 <a href="CONCEPTS-WAVE3.md">Wave 3 design briefs</a> ·
-    🔬 <a href="RESEARCH.md">Hybrid-casual deep research</a>
+  <!-- ============ WAVE 3 ============ -->
+  <div class="wave"><h2>Wave 3</h2><span class="note">Ten new mechanic classes</span><span class="rule"></span></div>
+  <div class="grid">
+
+    <a class="card" href="games/flip-force/">
+      <span class="art"><svg viewBox="0 0 320 180" aria-label="An orb steering between attract and repel magnet nodes">
+        <defs><linearGradient id="g8" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#141a44"/><stop offset="1" stop-color="#2a1450"/></linearGradient></defs>
+        <rect width="320" height="180" fill="url(#g8)"/>
+        <g fill="none" stroke="#ff5d8f" stroke-width="2" opacity=".45">
+          <circle cx="76" cy="58" r="24"/><circle cx="76" cy="58" r="36"/><circle cx="76" cy="58" r="48"/></g>
+        <g fill="none" stroke="#4cc9f0" stroke-width="2" opacity=".45">
+          <circle cx="242" cy="120" r="24"/><circle cx="242" cy="120" r="36"/><circle cx="242" cy="120" r="48"/></g>
+        <circle cx="76" cy="58" r="13" fill="#ff5d8f"/><path d="M69 58h14M76 51v14" stroke="#fff" stroke-width="3"/>
+        <circle cx="242" cy="120" r="13" fill="#4cc9f0"/><path d="M235 120h14" stroke="#fff" stroke-width="3"/>
+        <path d="M22 140q56 12 92-26t120 16" fill="none" stroke="#ffe14d" stroke-width="2.5"
+          stroke-dasharray="2 9" stroke-linecap="round" opacity=".9"/>
+        <circle cx="158" cy="98" r="15" fill="#ffe14d"/>
+        <circle cx="158" cy="98" r="24" fill="none" stroke="#ffe14d" stroke-width="2" opacity=".5"/>
+        <circle cx="152" cy="92" r="4.5" fill="#fff" opacity=".9"/>
+      </svg></span>
+      <div class="body">
+        <span class="hook h8">One tap flips your polarity</span>
+        <h3>Flip Force</h3>
+        <p>Thread a drifting orb through attract and repel fields. Tap to swap poles and every force reverses under you.</p>
+        <div class="meta"><span class="tag">State-toggle steering</span><span class="play">PLAY →</span></div>
+      </div>
+    </a>
+
+    <a class="card" href="games/ping-pilot/">
+      <span class="art"><svg viewBox="0 0 320 180" aria-label="A submarine sonar ping revealing a dark cave">
+        <defs><radialGradient id="g9" cx=".4" cy=".5"><stop offset="0" stop-color="#0b2b3a"/><stop offset="1" stop-color="#03080f"/></radialGradient></defs>
+        <rect width="320" height="180" fill="url(#g9)"/>
+        <g fill="none" stroke="#5eead4" stroke-width="2.5">
+          <circle cx="112" cy="94" r="34" opacity=".85"/><circle cx="112" cy="94" r="56" opacity=".5"/>
+          <circle cx="112" cy="94" r="78" opacity=".22"/></g>
+        <g fill="#134e4a" opacity=".9">
+          <path d="M0 18q40 14 80 4t90 10 150-6V0H0z"/>
+          <path d="M0 168q52-18 104-6t104-10 112 8v20H0z"/></g>
+        <g stroke="#5eead4" stroke-width="2" fill="none" opacity=".75">
+          <path d="M40 30q34 12 72 2"/><path d="M56 154q40-14 80-4"/></g>
+        <g transform="translate(112 94)">
+          <ellipse cx="0" cy="0" rx="21" ry="12" fill="#ffe14d"/>
+          <circle cx="6" cy="-1" r="4.5" fill="#0b2b3a"/>
+          <path d="M-21 0l-11-7v14z" fill="#f6a02c"/>
+          <path d="M-2-12v-7h8v7" fill="#f6a02c"/></g>
+        <g fill="#9df5c4"><circle cx="180" cy="66" r="4"/><circle cx="204" cy="102" r="3.4"/><circle cx="158" cy="124" r="3"/></g>
+        <g transform="translate(258 74)" opacity=".95">
+          <ellipse cx="0" cy="0" rx="24" ry="14" fill="#1c2b3a"/>
+          <circle cx="-9" cy="-3" r="4" fill="#ff5d5d"/><circle cx="6" cy="-4" r="3" fill="#ff5d5d"/>
+          <path d="M24 0l12-6v12z" fill="#1c2b3a"/>
+          <path d="M-14 6q8 6 16 0" stroke="#ff5d5d" stroke-width="2" fill="none"/></g>
+      </svg></span>
+      <div class="body">
+        <span class="hook h9">Sonar-ping the dark</span>
+        <h3>Ping Pilot</h3>
+        <p>The cave is pitch black and your ping paints it for two seconds — but the anglerfish hunts your pings.</p>
+        <div class="meta"><span class="tag">Information reveal · risk</span><span class="play">PLAY →</span></div>
+      </div>
+    </a>
+
+    <a class="card" href="games/bounce-brigade/">
+      <span class="art"><svg viewBox="0 0 320 180" aria-label="A citizen bouncing off a trampoline toward a rescue net">
+        <defs><linearGradient id="g10" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#ffd08a"/><stop offset="1" stop-color="#ff9e6b"/></linearGradient></defs>
+        <rect width="320" height="180" fill="url(#g10)"/>
+        <rect y="152" width="320" height="28" fill="#7c4a34"/>
+        <rect x="14" y="34" width="66" height="118" fill="#8d5b7a"/>
+        <g fill="#ffe9a8"><rect x="26" y="48" width="16" height="18"/><rect x="52" y="48" width="16" height="18"/>
+          <rect x="26" y="78" width="16" height="18"/><rect x="52" y="78" width="16" height="18"/></g>
+        <g fill="#6b6b7d" opacity=".6"><circle cx="46" cy="26" r="12"/><circle cx="66" cy="20" r="9"/><circle cx="28" cy="20" r="8"/></g>
+        <path d="M84 62q34 26 62 4t54-2" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="3 9" opacity=".85"/>
+        <g transform="translate(146 44)">
+          <circle cx="0" cy="0" r="13" fill="#ffe9d0"/>
+          <circle cx="-4" cy="-2" r="2.4" fill="#3a2a3a"/><circle cx="4" cy="-2" r="2.4" fill="#3a2a3a"/>
+          <path d="M-4 5q4 4 8 0" stroke="#3a2a3a" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <path d="M-11 8l-9 12M11 8l9 12" stroke="#3a7ad8" stroke-width="4" stroke-linecap="round"/></g>
+        <g transform="translate(150 116)">
+          <ellipse cx="0" cy="0" rx="42" ry="9" fill="#3ddc84" stroke="#1c8a52" stroke-width="3"/>
+          <path d="M-42 2v22M42 2v22" stroke="#5b4a3a" stroke-width="5" stroke-linecap="round"/></g>
+        <g transform="translate(266 122)">
+          <path d="M-30 0h60l-8 30h-44z" fill="#e04f6b" opacity=".9"/>
+          <path d="M-30 0h60" stroke="#fff" stroke-width="4"/>
+          <path d="M-20 8h40M-16 18h32" stroke="#fff" stroke-width="2" opacity=".7"/></g>
+      </svg></span>
+      <div class="body">
+        <span class="hook h10">Place the trampolines</span>
+        <h3>Bounce Brigade</h3>
+        <p>Citizens leap from a smoking building. Bounce them across rooftops into the net — style points for flips.</p>
+        <div class="meta"><span class="tag">Placement physics · rescue</span><span class="play">PLAY →</span></div>
+      </div>
+    </a>
+
+    <a class="card" href="games/parcel-panic/">
+      <span class="art"><svg viewBox="0 0 320 180" aria-label="Parcels on conveyor belts routed by a junction switch">
+        <defs><linearGradient id="g11" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#3b3260"/><stop offset="1" stop-color="#241d44"/></linearGradient></defs>
+        <rect width="320" height="180" fill="url(#g11)"/>
+        <g stroke="#6f6499" stroke-width="8" fill="none" stroke-linecap="round">
+          <path d="M8 60h130"/><path d="M138 60l58-32"/><path d="M138 60l58 46"/></g>
+        <g stroke="#3ddc84" stroke-width="2" fill="none" opacity=".7" stroke-dasharray="5 7">
+          <path d="M8 60h130"/></g>
+        <circle cx="138" cy="60" r="18" fill="#ffb703" stroke="#8a5c06" stroke-width="3"/>
+        <path d="M138 60l13-9" stroke="#4a2f04" stroke-width="5" stroke-linecap="round"/>
+        <g stroke="#22243a" stroke-width="2">
+          <rect x="34" y="42" width="26" height="26" rx="4" fill="#4cc9f0"/>
+          <rect x="80" y="42" width="26" height="26" rx="4" fill="#ff5d8f"/>
+          <rect x="192" y="10" width="26" height="26" rx="4" fill="#4cc9f0"/>
+          <rect x="192" y="94" width="26" height="26" rx="4" fill="#ffd166"/></g>
+        <g stroke="#fff" stroke-width="2" opacity=".55">
+          <path d="M34 55h26M80 55h26M192 23h26M192 107h26"/></g>
+        <g><rect x="244" y="6" width="66" height="42" rx="6" fill="#4cc9f0" opacity=".9"/>
+          <rect x="244" y="90" width="66" height="42" rx="6" fill="#ffd166" opacity=".9"/>
+          <g fill="#1a1730" opacity=".6"><circle cx="258" cy="50" r="6"/><circle cx="296" cy="50" r="6"/>
+            <circle cx="258" cy="134" r="6"/><circle cx="296" cy="134" r="6"/></g></g>
+        <g fill="#fff" opacity=".85"><circle cx="130" cy="140" r="3"/><circle cx="60" cy="120" r="2.4"/></g>
+      </svg></span>
+      <div class="body">
+        <span class="hook h11">Tap the junction, flip the track</span>
+        <h3>Parcel Panic</h3>
+        <p>Colored parcels stream toward forked junctions. One tap each routes them home — gold ones shatter if rushed.</p>
+        <div class="meta"><span class="tag">Flow routing · logistics empire</span><span class="play">PLAY →</span></div>
+      </div>
+    </a>
+
+    <a class="card" href="games/ghost-crew/">
+      <span class="art"><svg viewBox="0 0 320 180" aria-label="A player and their translucent ghost cooperating on a puzzle">
+        <defs><linearGradient id="g12" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#1d2350"/><stop offset="1" stop-color="#331f56"/></linearGradient></defs>
+        <rect width="320" height="180" fill="url(#g12)"/>
+        <rect y="146" width="320" height="34" fill="#161a3c"/>
+        <g stroke="#4b5590" stroke-width="2" opacity=".5" fill="none">
+          <path d="M0 40h320M0 80h320M0 118h320"/><path d="M60 0v146M140 0v146M220 0v146"/></g>
+        <rect x="42" y="136" width="52" height="10" rx="4" fill="#ffb703" stroke="#8a5c06" stroke-width="2"/>
+        <g transform="translate(68 112)" opacity=".55">
+          <circle cx="0" cy="0" r="17" fill="#8fd4ff"/>
+          <circle cx="-6" cy="-3" r="3" fill="#1d2350"/><circle cx="6" cy="-3" r="3" fill="#1d2350"/>
+          <path d="M-17 8v14h34V8" fill="#8fd4ff"/>
+          <text x="0" y="-24" font-size="13" fill="#8fd4ff" text-anchor="middle" font-weight="bold">1</text></g>
+        <g fill="#8fd4ff" opacity=".35"><circle cx="86" cy="96" r="2.6"/><circle cx="52" cy="100" r="2"/><circle cx="72" cy="86" r="1.8"/></g>
+        <rect x="212" y="76" width="56" height="70" rx="5" fill="#3ddc84" opacity=".22" stroke="#3ddc84" stroke-width="2"/>
+        <path d="M240 76v70" stroke="#3ddc84" stroke-width="2" opacity=".5"/>
+        <g transform="translate(170 112)">
+          <circle cx="0" cy="0" r="17" fill="#ffd166"/>
+          <circle cx="-6" cy="-3" r="3" fill="#33234a"/><circle cx="6" cy="-3" r="3" fill="#33234a"/>
+          <path d="M-5 6q5 5 10 0" stroke="#33234a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path d="M-17 8v14h34V8" fill="#ffd166"/>
+          <text x="0" y="-24" font-size="13" fill="#ffd166" text-anchor="middle" font-weight="bold">2</text></g>
+        <path d="M96 128q28-22 56-6" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="4 6" opacity=".5"/>
+      </svg></span>
+      <div class="body">
+        <span class="hook h12">Team up with your past self</span>
+        <h3>Ghost Crew</h3>
+        <p>Run, then rewind — your last take replays as a ghost holding the plate while the new you walks through.</p>
+        <div class="meta"><span class="tag">Record &amp; replay · co-op solo</span><span class="play">PLAY →</span></div>
+      </div>
+    </a>
+
+    <a class="card" href="games/sky-bloom/">
+      <span class="art"><svg viewBox="0 0 320 180" aria-label="Fireworks blooming above a harbour at night">
+        <defs><linearGradient id="g13" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#100a2e"/><stop offset="1" stop-color="#3a1d54"/></linearGradient></defs>
+        <rect width="320" height="180" fill="url(#g13)"/>
+        <g stroke="#ff8fc0" stroke-width="2.5" stroke-linecap="round" opacity=".95">
+          <path d="M104 62l-26-26M104 62l26-26M104 62l-34 6M104 62l34 6M104 62l-16 34M104 62l16 34M104 62l-32-16M104 62l32-16"/></g>
+        <g fill="#ffe14d"><circle cx="78" cy="36" r="3.4"/><circle cx="130" cy="36" r="3.4"/><circle cx="70" cy="68" r="3"/>
+          <circle cx="138" cy="68" r="3"/><circle cx="88" cy="96" r="3"/><circle cx="120" cy="96" r="3"/>
+          <circle cx="72" cy="46" r="2.6"/><circle cx="136" cy="46" r="2.6"/></g>
+        <circle cx="104" cy="62" r="7" fill="#fff"/>
+        <g stroke="#7dd3fc" stroke-width="2" stroke-linecap="round" opacity=".8">
+          <path d="M232 44l-18-18M232 44l18-18M232 44l-22 6M232 44l22 6M232 44l-10 24M232 44l10 24"/></g>
+        <circle cx="232" cy="44" r="5" fill="#fff"/>
+        <circle cx="188" cy="112" r="22" fill="none" stroke="#ffe14d" stroke-width="2.5" stroke-dasharray="7 7"/>
+        <path d="M188 150v-24" stroke="#ff9e6b" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="188" cy="122" r="5" fill="#ffb703"/>
+        <rect y="150" width="320" height="30" fill="#0a0620"/>
+        <g fill="#2a2450"><rect x="20" y="136" width="26" height="16"/><rect x="60" y="128" width="20" height="24"/>
+          <rect x="252" y="132" width="30" height="20"/><rect x="290" y="140" width="22" height="12"/></g>
+        <g fill="#ffe14d" opacity=".5"><rect y="150" width="320" height="4"/></g>
+      </svg></span>
+      <div class="body">
+        <span class="hook h13">Burst at the perfect altitude</span>
+        <h3>Sky Bloom</h3>
+        <p>Time each tap inside the target ring to fill the night with blooms. Chain perfects and the whole sky escalates.</p>
+        <div class="meta"><span class="tag">Timed spectacle · festival meta</span><span class="play">PLAY →</span></div>
+      </div>
+    </a>
+
+    <a class="card" href="games/fold-friends/">
+      <span class="art"><svg viewBox="0 0 320 180" aria-label="A paper crane folding to life beside a crease line">
+        <defs><linearGradient id="g14" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#dff1ff"/><stop offset="1" stop-color="#a9d8f5"/></linearGradient></defs>
+        <rect width="320" height="180" fill="url(#g14)"/>
+        <g opacity=".5"><path d="M40 30l52 52-52 52-52-52z" fill="#fff" transform="translate(30 0)"/></g>
+        <g transform="translate(96 22)">
+          <path d="M0 60L44 8l44 52-44 26z" fill="#fff" stroke="#7fb2d8" stroke-width="2"/>
+          <path d="M44 8v78" stroke="#7fb2d8" stroke-width="1.6" stroke-dasharray="5 6"/>
+          <path d="M0 60l44-16 44 16" fill="#eaf6ff" stroke="#7fb2d8" stroke-width="1.6"/></g>
+        <g transform="translate(206 62)">
+          <path d="M0 40 L34-16 L52 26 L20 44z" fill="#ff9dbf" stroke="#d6538a" stroke-width="2"/>
+          <path d="M34-16 L64 4 L52 26z" fill="#ffc2d8" stroke="#d6538a" stroke-width="2"/>
+          <path d="M0 40 L-22 22 L14 16z" fill="#ffc2d8" stroke="#d6538a" stroke-width="2"/>
+          <path d="M64 4l16-8-8 14z" fill="#ff9dbf" stroke="#d6538a" stroke-width="2"/>
+          <circle cx="60" cy="2" r="2.6" fill="#3a2340"/></g>
+        <g stroke="#3ddc84" stroke-width="3" fill="none" stroke-linecap="round" opacity=".9">
+          <path d="M154 122q18 12 36 0"/><path d="M186 118l6 4-6 5"/></g>
+        <g fill="#fff" opacity=".8"><circle cx="46" cy="140" r="4"/><circle cx="70" cy="156" r="3"/><circle cx="286" cy="146" r="3.4"/></g>
+      </svg></span>
+      <div class="body">
+        <span class="hook h14">Swipe to fold — it comes alive</span>
+        <h3>Fold Friends</h3>
+        <p>Crisp swipes crease paper into a crane. It blinks, flaps and waddles off to a park that grows with every fold.</p>
+        <div class="meta"><span class="tag">Gesture craft · zen collection</span><span class="play">PLAY →</span></div>
+      </div>
+    </a>
+
+    <a class="card" href="games/bloom-drop/">
+      <span class="art"><svg viewBox="0 0 320 180" aria-label="A seed plinking down a pin field into a flower bed">
+        <defs><linearGradient id="g15" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#2b4b7a"/><stop offset="1" stop-color="#7bb26a"/></linearGradient></defs>
+        <rect width="320" height="180" fill="url(#g15)"/>
+        <g fill="#dff0ff" opacity=".9">
+          <circle cx="70" cy="46" r="4"/><circle cx="118" cy="46" r="4"/><circle cx="166" cy="46" r="4"/><circle cx="214" cy="46" r="4"/><circle cx="262" cy="46" r="4"/>
+          <circle cx="94" cy="76" r="4"/><circle cx="142" cy="76" r="4"/><circle cx="190" cy="76" r="4"/><circle cx="238" cy="76" r="4"/>
+          <circle cx="70" cy="106" r="4"/><circle cx="118" cy="106" r="4"/><circle cx="166" cy="106" r="4"/><circle cx="214" cy="106" r="4"/><circle cx="262" cy="106" r="4"/></g>
+        <g fill="#ffe14d"><circle cx="118" cy="46" r="8" opacity=".55"/><circle cx="142" cy="76" r="8" opacity=".55"/><circle cx="166" cy="106" r="8" opacity=".55"/></g>
+        <path d="M104 14q18 24 14 32t24 30 24 30" fill="none" stroke="#ffe14d" stroke-width="2.5" stroke-dasharray="3 7" opacity=".9"/>
+        <circle cx="176" cy="124" r="7" fill="#f6d365" stroke="#8a6a1c" stroke-width="2"/>
+        <rect y="146" width="320" height="34" fill="#4d7a3f"/>
+        <g stroke="#3ddc84" stroke-width="3">
+          <path d="M40 176v-16"/><path d="M96 176v-20"/><path d="M176 176v-14"/><path d="M240 176v-18"/><path d="M290 176v-15"/></g>
+        <g><circle cx="40" cy="156" r="8" fill="#ff8fc0"/><circle cx="40" cy="156" r="3" fill="#ffe14d"/>
+          <circle cx="96" cy="152" r="9" fill="#ffd166"/><circle cx="96" cy="152" r="3.4" fill="#a85f1c"/>
+          <circle cx="240" cy="154" r="8" fill="#b388ff"/><circle cx="240" cy="154" r="3" fill="#ffe14d"/>
+          <circle cx="290" cy="157" r="7" fill="#7dd3fc"/><circle cx="290" cy="157" r="2.6" fill="#ffe14d"/></g>
+      </svg></span>
+      <div class="body">
+        <span class="hook h15">Drop the seed, watch it plink</span>
+        <h3>Bloom Drop</h3>
+        <p>Seeds rattle down a pin field with escalating dings, and wherever they land a flower erupts — forever.</p>
+        <div class="meta"><span class="tag">Aim &amp; bounce · persistent garden</span><span class="play">PLAY →</span></div>
+      </div>
+    </a>
+
+    <a class="card" href="games/harbor-hustle/">
+      <span class="art"><svg viewBox="0 0 320 180" aria-label="Boats crossing routes toward colour matched docks">
+        <defs><linearGradient id="g16" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#ffb37a"/><stop offset="1" stop-color="#2e7fb8"/></linearGradient></defs>
+        <rect width="320" height="180" fill="url(#g16)"/>
+        <circle cx="248" cy="34" r="18" fill="#ffe9a8" opacity=".9"/>
+        <rect y="70" width="320" height="110" fill="#1f6d9e" opacity=".85"/>
+        <g stroke="#fff" stroke-width="2" opacity=".4" stroke-dasharray="7 9" fill="none">
+          <path d="M0 106h320"/><path d="M96 70v110"/><path d="M228 70v110"/></g>
+        <g fill="#0f4a72" opacity=".9"><rect y="60" width="320" height="12"/></g>
+        <g fill="#8a5b3a"><rect x="20" y="46" width="24" height="16"/><rect x="120" y="40" width="30" height="22"/>
+          <rect x="220" y="44" width="26" height="18"/></g>
+        <rect x="272" y="26" width="14" height="36" fill="#e8e0d0"/><rect x="270" y="20" width="18" height="8" fill="#e04f6b"/>
+        <g transform="translate(70 128)">
+          <path d="M-26 0h52l-8 14h-36z" fill="#fff"/><rect x="-14" y="-14" width="28" height="14" fill="#4cc9f0"/>
+          <path d="M-30 16q14 6 28 0t28 0" stroke="#dff0ff" stroke-width="2" fill="none" opacity=".8"/></g>
+        <g transform="translate(180 92)">
+          <path d="M-30 0h60l-9 13h-42z" fill="#fff"/><rect x="-16" y="-13" width="32" height="13" fill="#ff5d8f"/>
+          <path d="M-34 15q16 6 32 0t32 0" stroke="#dff0ff" stroke-width="2" fill="none" opacity=".8"/></g>
+        <g transform="translate(258 146)">
+          <path d="M-18 0h36l-6 10h-24z" fill="#fff"/><rect x="-9" y="-10" width="18" height="10" fill="#ffd166"/></g>
+        <g fill="#fff" opacity=".9"><path d="M108 44l6-4 6 4-6 3z"/><path d="M148 30l5-3 5 3-5 2z"/></g>
+        <g fill="#3ddc84" opacity=".9"><rect x="0" y="98" width="10" height="16" rx="2"/><rect x="310" y="132" width="10" height="16" rx="2"/></g>
+      </svg></span>
+      <div class="body">
+        <span class="hook h16">Tap to stop, tap to go</span>
+        <h3>Harbor Hustle</h3>
+        <p>Six boats, one brain, zero collisions. Thread ferries and darting jet-skis — near-misses pay a close-call bonus.</p>
+        <div class="meta"><span class="tag">Traffic control · harbour town</span><span class="play">PLAY →</span></div>
+      </div>
+    </a>
+
+    <a class="card" href="games/beam-team/">
+      <span class="art"><svg viewBox="0 0 320 180" aria-label="A light beam bouncing off mirrors to ignite lanterns">
+        <defs><linearGradient id="g17" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#141033"/><stop offset="1" stop-color="#241847"/></linearGradient></defs>
+        <rect width="320" height="180" fill="url(#g17)"/>
+        <g stroke="#3a3168" stroke-width="1.4" opacity=".55">
+          <path d="M40 0v180M100 0v180M160 0v180M220 0v180M280 0v180M0 40h320M0 90h320M0 140h320"/></g>
+        <g stroke="#ffe14d" stroke-width="9" opacity=".2" fill="none" stroke-linecap="round">
+          <path d="M22 40h138v50h60v50h60"/></g>
+        <g stroke="#fff6c4" stroke-width="3" fill="none" stroke-linecap="round">
+          <path d="M22 40h138v50h60v50h60"/></g>
+        <g stroke="#8fd4ff" stroke-width="5" stroke-linecap="round">
+          <path d="M150 30l20 20"/><path d="M210 80l20 20"/></g>
+        <g fill="#3a3168" stroke="#6f63b8" stroke-width="2">
+          <rect x="146" y="76" width="28" height="28" rx="5"/></g>
+        <g transform="translate(14 40)">
+          <rect x="-10" y="-18" width="20" height="36" rx="4" fill="#e8e0d0"/>
+          <circle cx="0" cy="0" r="6" fill="#ffe14d"/></g>
+        <g transform="translate(292 140)">
+          <circle cx="0" cy="0" r="13" fill="#ffe14d"/>
+          <circle cx="0" cy="0" r="22" fill="#ffe14d" opacity=".22"/>
+          <path d="M-8-13h16l3 26h-22z" fill="#ffb703" opacity=".85"/></g>
+        <g fill="#ffe14d" opacity=".85"><circle cx="70" cy="30" r="2.4"/><circle cx="196" cy="112" r="2"/>
+          <circle cx="252" cy="132" r="2.6"/><circle cx="120" cy="52" r="1.8"/></g>
+      </svg></span>
+      <div class="body">
+        <span class="hook h17">Tap a mirror, the light bends</span>
+        <h3>Beam Team</h3>
+        <p>One golden beam snakes through the dark. Rotate mirrors to reroute it live until every lantern blooms into colour.</p>
+        <div class="meta"><span class="tag">Rotate-to-route · lighthouse village</span><span class="play">PLAY →</span></div>
+      </div>
+    </a>
   </div>
 
-  <footer>© 2026 TaterTot Games Labs — prototype playtest builds. Made with an unreasonable amount of particles.</footer>
+  <div class="docs">
+    <h4>Lab notes</h4>
+    <a href="CONCEPTS.md">Shipped concepts &amp; projected KPIs</a>
+    <a href="CONCEPTS-WAVE3.md">Wave 3 design briefs</a>
+    <a href="RESEARCH.md">Hybrid-casual market research</a>
+    <a href="ANALYTICS.md">Analytics &amp; privacy model</a>
+  </div>
+
+  <footer>
+    Every prototype is a single self-contained file — no engine, no libraries, no external requests.<br>
+    © 2026 TaterTot Games Labs · built with an unreasonable number of particles.
+  </footer>
 </div>
-<script>
-/* Hub → game click-through, for the acquisition funnel. Fire-and-forget. */
-document.querySelectorAll('.grid .card').forEach(function (card) {
-  card.addEventListener('click', function () {
-    try {
-      var slug = (card.getAttribute('href') || '').replace(/^games\/|\/$/g, '');
-      window.TTG?.track('game_launch', { game: slug });
-    } catch (e) {}
-  });
-});
-</script>
 </body>
 </html>
