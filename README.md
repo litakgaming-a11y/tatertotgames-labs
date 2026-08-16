@@ -19,6 +19,21 @@ progression in localStorage.
 | 🏗️ **Kaboom Crane** | Rhythm-tap the swing, release to wreck | Demolition contracts + upgrades | [play](https://tatertotgames-labs.pages.dev/games/kaboom-crane/) |
 | ✂️ **Buzzcut Buddies** | ASMR fuzz-trim reveal | Groomed-buddy salon collection | [play](https://tatertotgames-labs.pages.dev/games/buzzcut-buddies/) |
 
+### Wave 3 — ten new mechanic classes
+
+| Game | Hook | Meta | Play |
+|---|---|---|---|
+| 🧲 **Flip Force** | Tap flips your magnet polarity | Orb core lab | [play](https://tatertotgames-labs.pages.dev/games/flip-force/) |
+| 📡 **Ping Pilot** | Sonar-ping a pitch-dark cave | Reef Vault upgrades | [play](https://tatertotgames-labs.pages.dev/games/ping-pilot/) |
+| 🤸 **Bounce Brigade** | Place trampolines, bounce the rescue | Station upgrades | [play](https://tatertotgames-labs.pages.dev/games/bounce-brigade/) |
+| 📦 **Parcel Panic** | Tap junctions to route parcels | Logistics depots | [play](https://tatertotgames-labs.pages.dev/games/parcel-panic/) |
+| 👻 **Ghost Crew** | Your last run replays as a ghost | Skins + crew photos | [play](https://tatertotgames-labs.pages.dev/games/ghost-crew/) |
+| 🎆 **Sky Bloom** | Burst fireworks at perfect altitude | Firework types + album | [play](https://tatertotgames-labs.pages.dev/games/sky-bloom/) |
+| 🦢 **Fold Friends** | Swipe to fold origami alive | Paper Park collection | [play](https://tatertotgames-labs.pages.dev/games/fold-friends/) |
+| 🌻 **Bloom Drop** | Drop seeds down a pin field | Persistent garden | [play](https://tatertotgames-labs.pages.dev/games/bloom-drop/) |
+| ⛴️ **Harbor Hustle** | Tap boats to stop and go | Harbor town build-out | [play](https://tatertotgames-labs.pages.dev/games/harbor-hustle/) |
+| 🔦 **Beam Team** | Tap mirrors to reroute the beam | Lighthouse Village | [play](https://tatertotgames-labs.pages.dev/games/beam-team/) |
+
 ## Docs
 
 - [CONCEPTS.md](CONCEPTS.md) — the 7 shipped MVP concepts with hooks, meta design, and projected KPIs
