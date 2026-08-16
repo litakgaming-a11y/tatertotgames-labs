@@ -354,6 +354,10 @@ function resize(){
       var cw = Math.round(W*DPR), ch = Math.round(H*DPR);
       if(cv.width !== cw) cv.width = cw;
       if(cv.height !== ch) cv.height = ch;
+      // Canvas is a replaced element: `inset:0` cannot stretch it, so without an
+      // explicit CSS size it lays out at its attribute size (W*DPR) — double or
+      // more the viewport on a phone. Pin it to logical CSS pixels.
+      cv.style.width = W+'px'; cv.style.height = H+'px';
     }
     S = Math.min(W*0.40, H*0.25);
     PX = W*0.5; PY = H*0.44;
