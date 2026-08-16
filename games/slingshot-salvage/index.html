@@ -2,1426 +2,156 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Slingshot Salvage</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛰️</text></svg>">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Slingshot Salvage — TaterTot Games Labs</title>
+<meta name="description" content="One drag, and gravity does the rest. Physics collector prototype from the TaterTot Games Labs testing arena — playable in your browser.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛰️</text></svg>">
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html, body {
-    width:100%; height:100%; overflow:hidden; position:fixed;
-    background:#05030f; touch-action:none;
-    -webkit-user-select:none; user-select:none;
-    font-family:'Segoe UI', system-ui, -apple-system, sans-serif;
-    color:#e8ecff;
-  }
-  canvas { position:fixed; inset:0; display:block; touch-action:none; }
+  :root{--bg:#0d0b16;--bg2:#151127;--card:#1c1734;--card2:#241d44;--line:rgba(255,255,255,.08);
+    --ink:#f6f3ff;--muted:#9a91c4;--dim:#6e659b;--accent:#4cc9f0;--r:20px}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden;position:relative}
+  body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:radial-gradient(900px 480px at 12% -6%, #4cc9f026, transparent 62%),
+      radial-gradient(760px 420px at 106% 8%, rgba(76,201,240,.10), transparent 60%),
+      linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%)}
+  .wrap{max-width:1000px;margin:0 auto;padding:20px 18px 80px}
+  .back{display:inline-flex;align-items:center;gap:8px;padding:13px 18px;min-height:44px;border-radius:12px;
+    background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--muted);
+    text-decoration:none;font-weight:700;font-size:.86rem}
+  .back:hover{color:var(--ink);border-color:rgba(255,255,255,.2)}
 
-  /* ---------- HUD ---------- */
-  #hud {
-    position:fixed; top:0; left:0; right:0; z-index:10;
-    display:flex; justify-content:space-between; align-items:flex-start;
-    padding:calc(8px + env(safe-area-inset-top)) 12px 8px;
-    pointer-events:none; opacity:0; transition:opacity .4s ease;
-    text-shadow:0 2px 8px rgba(0,0,0,.8);
-  }
-  #hud.show { opacity:1; }
-  .hudBox {
-    background:rgba(10,8,30,.55); border:1px solid rgba(140,150,255,.25);
-    border-radius:14px; padding:6px 12px; font-size:14px; font-weight:700;
-    backdrop-filter:blur(4px); line-height:1.5;
-  }
-  #hudLaunches span.used { opacity:.22; filter:grayscale(1); }
-  #hudLevel { color:#9fd8ff; }
-  #hudScrap { color:#ffd76b; }
-  #hudJunk  { color:#a7ffbf; }
+  .hero{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:34px;margin-top:26px;align-items:start}
+  @media (max-width:760px){ .hero{grid-template-columns:1fr;gap:22px} }
 
-  /* ---------- Screens ---------- */
-  .screen {
-    position:fixed; inset:0; z-index:20;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:18px; padding:24px; text-align:center;
-    background:radial-gradient(ellipse at 50% 30%, rgba(20,15,60,.55), rgba(4,2,14,.82));
-    transition:opacity .35s ease, transform .35s ease;
-  }
-  .screen.hidden { opacity:0; pointer-events:none; transform:scale(1.04); }
+  .shotFrame{position:relative;border-radius:26px;padding:9px;background:linear-gradient(160deg,#2a2350,#191333);
+    border:1px solid var(--line);box-shadow:0 20px 50px rgba(0,0,0,.55)}
+  .shotFrame img{display:block;width:100%;height:auto;border-radius:18px}
+  .shotTag{position:absolute;left:50%;transform:translateX(-50%);bottom:-11px;padding:5px 13px;border-radius:999px;
+    font-size:.6rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase;
+    background:#0d0b16;border:1px solid var(--line);color:var(--dim);white-space:nowrap}
 
-  #logo {
-    font-size:clamp(38px, 9vw, 72px); font-weight:900; letter-spacing:2px;
-    line-height:1.05;
-    background:linear-gradient(180deg,#aef1ff 0%, #7f9dff 45%, #c47bff 100%);
-    -webkit-background-clip:text; background-clip:text; color:transparent;
-    filter:drop-shadow(0 4px 18px rgba(120,120,255,.45));
-    animation:logoBob 2.6s ease-in-out infinite;
-  }
-  @keyframes logoBob {
-    0%,100% { transform:translateY(0) rotate(-1.2deg) scale(1); }
-    50%     { transform:translateY(-14px) rotate(1.2deg) scale(1.03); }
-  }
-  .tagline { font-size:14px; color:#8f96c9; letter-spacing:3px; text-transform:uppercase; }
+  .badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .b{padding:6px 13px;border-radius:999px;font-size:.68rem;font-weight:800;letter-spacing:.08em;
+    text-transform:uppercase;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--muted)}
+  .b.acc{background:#4cc9f01f;border-color:#4cc9f055;color:#4cc9f0}
+  h1{font-size:clamp(2rem,6vw,3rem);font-weight:900;letter-spacing:-.03em;line-height:1.02}
+  .hook{margin-top:10px;font-size:1.02rem;font-weight:800;color:var(--accent)}
+  .lede{margin-top:16px;color:var(--muted);font-size:1rem;line-height:1.68}
+  .why{margin-top:14px;padding:14px 16px;border-radius:14px;border-left:3px solid var(--accent);
+    background:rgba(255,255,255,.035);color:var(--muted);font-size:.94rem;line-height:1.6}
+  .why b{color:var(--ink)}
 
-  .btn {
-    pointer-events:auto; cursor:pointer; border:none; outline:none;
-    font-family:inherit; font-weight:800; letter-spacing:1px;
-    color:#0b0824; font-size:20px; padding:16px 44px; border-radius:999px;
-    background:linear-gradient(180deg,#8affea, #4bd8ff 60%, #3aa7ff);
-    box-shadow:0 6px 0 #1b6fb8, 0 10px 30px rgba(60,180,255,.4);
-    transition:transform .12s ease, box-shadow .12s ease, filter .12s ease;
-    animation:btnPulse 1.6s ease-in-out infinite;
-  }
-  @keyframes btnPulse {
-    0%,100% { transform:scale(1); }
-    50%     { transform:scale(1.05); }
-  }
-  .btn:active { transform:scale(.94) translateY(3px); box-shadow:0 2px 0 #1b6fb8, 0 4px 12px rgba(60,180,255,.35); }
-  .btn.secondary {
-    background:linear-gradient(180deg,#ffd98a,#ffb84b 60%,#ff9a3a);
-    box-shadow:0 6px 0 #b86a1b, 0 10px 30px rgba(255,170,60,.35);
-    animation:none; font-size:17px; padding:13px 34px;
-  }
-  .btn.secondary:active { box-shadow:0 2px 0 #b86a1b; }
-  .btn.ghost {
-    background:rgba(120,130,255,.12); color:#aeb6ff; font-size:14px; padding:10px 24px;
-    box-shadow:inset 0 0 0 2px rgba(140,150,255,.4); animation:none;
-  }
-  .btn.ghost:active { transform:scale(.94); }
-  .btn:disabled { filter:grayscale(.8) brightness(.6); animation:none; cursor:default; }
+  .playRow{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:22px}
+  .play{display:inline-block;padding:17px 44px;border-radius:16px;font-weight:900;font-size:1.1rem;
+    color:#120f1e;background:linear-gradient(92deg,#ffb703,#ffd76a);text-decoration:none;
+    box-shadow:0 6px 0 rgba(0,0,0,.35),0 0 30px rgba(255,183,3,.22);
+    transition:transform .16s ease;animation:pulse 1.9s ease-in-out infinite}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+  .play:hover{transform:scale(1.06)}
+  .play:active{transform:scale(.97);box-shadow:0 2px 0 rgba(0,0,0,.35)}
+  .note{color:var(--dim);font-size:.82rem}
 
-  #bestLine { font-size:15px; color:#cbd2ff; font-weight:700; }
-  #bestLine b { color:#ffd76b; }
+  section{margin-top:44px}
+  h2{font-size:1.12rem;font-weight:900;letter-spacing:.01em;margin-bottom:16px;
+    display:flex;align-items:center;gap:11px}
+  h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
 
-  #footerBadge {
-    position:absolute; bottom:calc(14px + env(safe-area-inset-bottom)); left:0; right:0;
-    display:flex; justify-content:center; pointer-events:none;
-  }
-  #footerBadge a {
-    pointer-events:auto; text-decoration:none; color:#8f96c9; font-size:12px; font-weight:700;
-    letter-spacing:1px; background:rgba(15,12,40,.6); border:1px solid rgba(140,150,255,.25);
-    padding:7px 16px; border-radius:999px; transition:color .2s, border-color .2s;
-  }
-  #footerBadge a:hover { color:#cfe6ff; border-color:rgba(140,190,255,.6); }
-  #footerBadge a::before { content:'🥔 '; }
+  ol.steps{list-style:none;display:grid;gap:11px}
+  ol.steps li{display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border-radius:14px;
+    background:rgba(255,255,255,.035);border:1px solid var(--line);color:var(--muted);
+    font-size:.95rem;line-height:1.55}
+  ol.steps .n{flex:0 0 26px;height:26px;border-radius:50%;display:grid;place-items:center;
+    background:#4cc9f022;color:#4cc9f0;font-weight:900;font-size:.82rem}
 
-  /* ---------- Garage ---------- */
-  #garage h2 { font-size:30px; font-weight:900; color:#ffd98a; letter-spacing:2px; text-shadow:0 3px 14px rgba(255,180,60,.35); }
-  #garageScrap { font-size:18px; font-weight:800; color:#ffd76b; }
-  #upgradeList { display:flex; flex-direction:column; gap:12px; width:min(440px, 92vw); max-height:56vh; overflow-y:auto; pointer-events:auto; }
-  .upCard {
-    display:flex; align-items:center; gap:12px; text-align:left;
-    background:rgba(18,14,48,.85); border:1px solid rgba(140,150,255,.28);
-    border-radius:16px; padding:12px 14px;
-  }
-  .upIcon { font-size:30px; width:44px; text-align:center; filter:drop-shadow(0 2px 8px rgba(255,255,255,.25)); }
-  .upInfo { flex:1; min-width:0; }
-  .upName { font-weight:800; font-size:15px; }
-  .upDesc { font-size:12px; color:#9aa2d6; margin-top:2px; }
-  .pips { display:flex; gap:4px; margin-top:6px; }
-  .pip { width:22px; height:7px; border-radius:4px; background:rgba(140,150,255,.18); }
-  .pip.on { background:linear-gradient(90deg,#7cf7c8,#4bd8ff); box-shadow:0 0 8px rgba(80,230,200,.7); }
-  .buyBtn {
-    cursor:pointer; border:none; font-family:inherit; font-weight:800; font-size:13px;
-    color:#0b0824; padding:10px 14px; border-radius:12px; min-width:76px;
-    background:linear-gradient(180deg,#ffe08a,#ffb84b); box-shadow:0 3px 0 #b8761b;
-    transition:transform .1s ease;
-  }
-  .buyBtn:active { transform:scale(.92) translateY(2px); box-shadow:0 1px 0 #b8761b; }
-  .buyBtn:disabled { filter:grayscale(.85) brightness(.55); cursor:default; }
-  .buyBtn.maxed { background:linear-gradient(180deg,#9df3c4,#4bd8a5); box-shadow:0 3px 0 #1b8a5f; }
+  ul.feats{list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  @media (max-width:700px){ ul.feats{grid-template-columns:1fr} }
+  ul.feats li{position:relative;padding:13px 15px 13px 38px;border-radius:13px;
+    background:rgba(255,255,255,.035);border:1px solid var(--line);
+    color:var(--muted);font-size:.9rem;line-height:1.5}
+  ul.feats li::before{content:"";position:absolute;left:15px;top:17px;width:9px;height:9px;border-radius:3px;
+    background:#4cc9f0;box-shadow:0 0 10px #4cc9f088}
 
-  /* ---------- Win / Lose ---------- */
-  #win h2 { font-size:36px; font-weight:900; color:#8affc9; letter-spacing:2px; text-shadow:0 4px 18px rgba(80,255,170,.4); animation:logoBob 2.2s ease-in-out infinite; }
-  #lose h2 { font-size:30px; font-weight:900; color:#ff8f9e; letter-spacing:2px; text-shadow:0 4px 18px rgba(255,90,110,.4); }
-  #stars { font-size:46px; letter-spacing:8px; height:60px; }
-  #stars span { display:inline-block; opacity:0; transform:scale(3) rotate(-30deg); transition:opacity .3s ease, transform .45s cubic-bezier(.2,2.2,.4,1); color:#3a3560; }
-  #stars span.lit { color:#ffd76b; text-shadow:0 0 24px rgba(255,210,90,.9); }
-  #stars span.pop { opacity:1; transform:scale(1) rotate(0deg); }
-  #winScrapLine { font-size:20px; font-weight:800; color:#ffd76b; }
-  #loseHint { font-size:14px; color:#9aa2d6; max-width:300px; }
+  .metaBox{padding:18px 20px;border-radius:16px;background:linear-gradient(160deg,var(--card),var(--card2));
+    border:1px solid var(--line);color:var(--muted);font-size:.95rem;line-height:1.62}
+  .metaBox b{color:var(--ink)}
 
-  /* ---------- Mute ---------- */
-  #muteBtn {
-    position:fixed; top:calc(10px + env(safe-area-inset-top)); right:12px; z-index:40;
-    width:44px; height:44px; border-radius:50%; border:1px solid rgba(140,150,255,.3);
-    background:rgba(12,10,34,.6); color:#cfd6ff; font-size:19px; cursor:pointer;
-    backdrop-filter:blur(4px); transition:transform .12s ease;
-    display:none;
-  }
-  #muteBtn.show { display:block; }
-  #muteBtn:active { transform:scale(.88); }
+  .nav{display:flex;justify-content:space-between;gap:12px;margin-top:48px;flex-wrap:wrap}
+  .nav a{flex:1;min-width:200px;padding:15px 18px;border-radius:14px;background:rgba(255,255,255,.035);
+    border:1px solid var(--line);text-decoration:none;color:var(--ink);font-weight:800;font-size:.92rem}
+  .nav a:hover{border-color:rgba(255,255,255,.2)}
+  .nav span{display:block;font-size:.64rem;font-weight:900;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--dim);margin-bottom:5px}
+  .nav .r{text-align:right}
+  footer{margin-top:40px;text-align:center;color:#5c5486;font-size:.8rem;line-height:1.7}
 </style>
-<script src="/analytics.js" defer></script>
 </head>
 <body>
-<canvas id="c"></canvas>
+<div class="wrap">
+  <a class="back" href="../../">← All prototypes</a>
 
-<div id="hud">
-  <div class="hudBox">
-    <div id="hudLevel">LEVEL 1</div>
-    <div id="hudLaunches">🚀🚀🚀</div>
+  <div class="hero">
+    <div>
+      <div class="shotFrame">
+        <img src="../../assets/shots/slingshot-salvage.png" width="645" height="1146"
+             alt="Slingshot Salvage gameplay screenshot">
+        <span class="shotTag">Actual gameplay</span>
+      </div>
+    </div>
+    <div>
+      <div class="badges">
+        <span class="b acc">Wave 1</span>
+        <span class="b">Physics collector</span>
+        <span class="b">15–30s launches</span>
+      </div>
+      <h1>🛰️ Slingshot Salvage</h1>
+      <p class="hook">One drag, and gravity does the rest</p>
+      <p class="lede">Drag back from your docked pod and a dotted trajectory bends live around every planet's gravity well. Release, and the pod flies the arc you plotted — hoovering up space junk, stealing speed from close fly-bys, and crashing spectacularly if you misjudge a planet.</p>
+      <p class="why"><b>Why it works:</b> The aim-assist arc is the hook: it teaches orbital intuition in about three seconds without a word of tutorial, and it makes a good bank shot feel earned rather than lucky.</p>
+      <div class="playRow">
+        <a class="play" href="play.html">▶ PLAY NOW</a>
+        <span class="note">Runs in your browser · no install · works on phones</span>
+      </div>
+    </div>
   </div>
-  <div class="hudBox" style="text-align:right;">
-    <div id="hudScrap">⚙️ 0</div>
-    <div id="hudJunk">🔩 0 / 8</div>
+
+  <section>
+    <h2>How to play</h2>
+    <ol class="steps">
+        <li><span class="n">1</span><span>Drag back from the pod to aim — the dotted arc previews your flight.</span></li>
+        <li><span class="n">2</span><span>Release to launch. Skim close to a planet for a GRAVITY ASSIST bonus.</span></li>
+        <li><span class="n">3</span><span>Collect the junk quota before you run out of launches.</span></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>What's in it</h2>
+    <ul class="feats">
+      <li>Trajectory preview that runs the exact same physics as the flight</li>
+      <li>Inverse-square gravity, clamped near surfaces so it stays forgiving</li>
+      <li>Magnet-suck collection with an ascending pentatonic combo ladder</li>
+      <li>Orbiting planets from level 4 and comet hazards from level 6</li>
+      <li>Gravity-assist detection with pitch-bend whoosh on fast fly-bys</li>
+      <li>Four upgrade tracks that visibly change how the pod flies</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>The meta layer</h2>
+    <div class="metaBox">Scrap funds a garage with four five-level tracks: Magnet Radius, Launch Power, Extra Launch and Lucky Star — each one changing the physics you play with.</div>
+  </section>
+
+  <div class="nav">
+    <a href="../topple-party/"><span>Previous</span>← 🁢 Topple Party</a>
+    <a class="r" href="../freeze-frame/"><span>Next</span>🧊 Freeze Frame! →</a>
   </div>
+
+  <footer>
+    A single self-contained file — no engine, no libraries, no external requests.<br>
+    © 2026 TaterTot Games Labs
+  </footer>
 </div>
-
-<button id="muteBtn" class="show">🔊</button>
-
-<div id="title" class="screen">
-  <div id="logo">SLINGSHOT<br>SALVAGE</div>
-  <div class="tagline">drag &middot; sling &middot; collect</div>
-  <button id="playBtn" class="btn">TAP TO PLAY</button>
-  <button id="garageBtn" class="btn secondary">🔧 GARAGE</button>
-  <div id="bestLine">BEST LEVEL <b>1</b> &nbsp;&middot;&nbsp; ⚙️ <b id="titleScrap">0</b></div>
-  <div id="footerBadge"><a href="../../">TaterTot Games Labs</a></div>
-</div>
-
-<div id="garage" class="screen hidden">
-  <h2>🔧 GARAGE</h2>
-  <div id="garageScrap">⚙️ 0 scrap</div>
-  <div id="upgradeList"></div>
-  <button id="garageBack" class="btn ghost">← BACK</button>
-</div>
-
-<div id="win" class="screen hidden">
-  <h2>SECTOR CLEAR!</h2>
-  <div id="stars"><span>★</span><span>★</span><span>★</span></div>
-  <div id="winScrapLine">+&nbsp;<span id="winScrap">0</span> ⚙️</div>
-  <button id="nextBtn" class="btn">NEXT LEVEL →</button>
-  <button id="winGarageBtn" class="btn secondary">🔧 GARAGE</button>
-  <button id="winTitleBtn" class="btn ghost">TITLE</button>
-</div>
-
-<div id="lose" class="screen hidden">
-  <h2>OUT OF LAUNCHES</h2>
-  <div id="loseHint">The junk drifts on... Upgrade your pod in the garage, or take another shot!</div>
-  <button id="retryBtn" class="btn">RETRY</button>
-  <button id="loseGarageBtn" class="btn secondary">🔧 GARAGE</button>
-  <button id="loseTitleBtn" class="btn ghost">TITLE</button>
-</div>
-
-<script>
-'use strict';
-/* ================================================================
-   SLINGSHOT SALVAGE — TaterTot Games Labs
-   One-drag gravity slingshot collector. Single file, zero deps.
-   ================================================================ */
-
-// ---------------- utils ----------------
-const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
-const lerp  = (a, b, t) => a + (b - a) * t;
-const rand  = (a, b) => a + Math.random() * (b - a);
-const randI = (a, b) => Math.floor(rand(a, b + 1));
-const pick  = arr => arr[Math.floor(Math.random() * arr.length)];
-const dist2 = (x1, y1, x2, y2) => { const dx = x2 - x1, dy = y2 - y1; return dx * dx + dy * dy; };
-const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
-const TAU = Math.PI * 2;
-
-function vibrate(ms) {
-  try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) { /* no haptics */ }
-}
-
-// ---------------- save ----------------
-const SAVE_KEY = 'ttg_sling';
-const DEFAULT_SAVE = { scrap: 0, lvl: 1, best: 1, mute: false, up: { mag: 0, pow: 0, extra: 0, luck: 0 } };
-
-function loadSave() {
-  try {
-    const raw = localStorage.getItem(SAVE_KEY);
-    if (!raw) return JSON.parse(JSON.stringify(DEFAULT_SAVE));
-    const parsed = JSON.parse(raw);
-    const s = JSON.parse(JSON.stringify(DEFAULT_SAVE));
-    if (typeof parsed.scrap === 'number') s.scrap = Math.max(0, parsed.scrap | 0);
-    if (typeof parsed.lvl === 'number')   s.lvl = Math.max(1, parsed.lvl | 0);
-    if (typeof parsed.best === 'number')  s.best = Math.max(1, parsed.best | 0);
-    if (typeof parsed.mute === 'boolean') s.mute = parsed.mute;
-    if (parsed.up && typeof parsed.up === 'object') {
-      for (const k of ['mag', 'pow', 'extra', 'luck']) {
-        if (typeof parsed.up[k] === 'number') s.up[k] = clamp(parsed.up[k] | 0, 0, 5);
-      }
-    }
-    return s;
-  } catch (e) { return JSON.parse(JSON.stringify(DEFAULT_SAVE)); }
-}
-function persist() {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { /* storage unavailable */ }
-}
-let S = loadSave();
-
-// derived upgrade values
-function upVals() {
-  return {
-    magnetR:  70 + 20 * S.up.mag,
-    powerMul: 1 + 0.12 * S.up.pow,
-    launches: 3 + S.up.extra,
-    luck:     0.08 * S.up.luck
-  };
-}
-
-// ---------------- audio ----------------
-let AC = null, master = null, whooshGain = null, whooshFilter = null, noiseBuf = null;
-
-function ensureAudio() {
-  if (AC) { if (AC.state === 'suspended') AC.resume().catch(() => {}); return; }
-  const Ctor = window.AudioContext || window.webkitAudioContext;
-  if (!Ctor) return;
-  try {
-    AC = new Ctor();
-    master = AC.createGain();
-    master.gain.value = S.mute ? 0 : 0.5;
-    master.connect(AC.destination);
-    // shared noise buffer
-    const len = AC.sampleRate;
-    noiseBuf = AC.createBuffer(1, len, AC.sampleRate);
-    const d = noiseBuf.getChannelData(0);
-    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
-    // persistent whoosh (speed-driven filtered noise)
-    const src = AC.createBufferSource();
-    src.buffer = noiseBuf; src.loop = true;
-    whooshFilter = AC.createBiquadFilter();
-    whooshFilter.type = 'bandpass'; whooshFilter.frequency.value = 300; whooshFilter.Q.value = 0.8;
-    whooshGain = AC.createGain(); whooshGain.gain.value = 0;
-    src.connect(whooshFilter); whooshFilter.connect(whooshGain); whooshGain.connect(master);
-    src.start();
-  } catch (e) { AC = null; }
-}
-
-function tone(freq, dur, type, vol, opts) {
-  if (!AC || S.mute) return;
-  opts = opts || {};
-  const t0 = AC.currentTime + (opts.delay || 0);
-  const o = AC.createOscillator();
-  const g = AC.createGain();
-  o.type = type || 'sine';
-  o.frequency.setValueAtTime(freq, t0);
-  if (opts.slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(20, opts.slideTo), t0 + dur);
-  g.gain.setValueAtTime(0.0001, t0);
-  g.gain.linearRampToValueAtTime(vol, t0 + 0.012);
-  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-  o.connect(g); g.connect(master);
-  o.start(t0); o.stop(t0 + dur + 0.05);
-}
-
-function noiseBurst(dur, vol, freq, opts) {
-  if (!AC || S.mute || !noiseBuf) return;
-  opts = opts || {};
-  const t0 = AC.currentTime + (opts.delay || 0);
-  const src = AC.createBufferSource();
-  src.buffer = noiseBuf; src.loop = true;
-  const f = AC.createBiquadFilter();
-  f.type = opts.type || 'lowpass';
-  f.frequency.setValueAtTime(freq, t0);
-  if (opts.slideTo) f.frequency.exponentialRampToValueAtTime(Math.max(30, opts.slideTo), t0 + dur);
-  const g = AC.createGain();
-  g.gain.setValueAtTime(0.0001, t0);
-  g.gain.linearRampToValueAtTime(vol, t0 + 0.01);
-  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-  src.connect(f); f.connect(g); g.connect(master);
-  src.start(t0); src.stop(t0 + dur + 0.05);
-}
-
-const PENTA = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24, 26];
-function sfxPling(combo) {
-  const st = PENTA[clamp(combo - 1, 0, PENTA.length - 1)];
-  const f = 523 * Math.pow(2, st / 12);
-  tone(f, 0.28, 'triangle', 0.22);
-  tone(f * 2, 0.2, 'sine', 0.1);
-}
-function sfxLaunch() {
-  tone(190, 0.22, 'sawtooth', 0.2, { slideTo: 60 });
-  tone(420, 0.1, 'square', 0.08, { slideTo: 800 });
-  noiseBurst(0.14, 0.12, 2200, { type: 'highpass' });
-}
-function sfxCrash() {
-  noiseBurst(0.55, 0.4, 2600, { slideTo: 90 });
-  tone(95, 0.5, 'sine', 0.35, { slideTo: 34 });
-  tone(60, 0.4, 'square', 0.1, { slideTo: 28 });
-}
-function sfxAssist() {
-  tone(320, 0.4, 'sine', 0.2, { slideTo: 980 });
-  tone(980, 0.28, 'sine', 0.14, { slideTo: 480, delay: 0.32 });
-  noiseBurst(0.4, 0.1, 700, { type: 'bandpass', slideTo: 2400 });
-}
-function sfxWin() {
-  const notes = [523, 659, 784, 1047, 1319];
-  notes.forEach((n, i) => {
-    tone(n, 0.34, 'triangle', 0.2, { delay: i * 0.11 });
-    tone(n / 2, 0.34, 'sine', 0.1, { delay: i * 0.11 });
-  });
-}
-function sfxLose() {
-  tone(330, 0.3, 'triangle', 0.18, { slideTo: 260 });
-  tone(260, 0.5, 'triangle', 0.18, { slideTo: 150, delay: 0.28 });
-}
-function sfxClick() { tone(640, 0.06, 'square', 0.08); tone(880, 0.05, 'sine', 0.06); }
-function sfxBuy() {
-  tone(520, 0.1, 'square', 0.1);
-  tone(780, 0.12, 'square', 0.1, { delay: 0.08 });
-  tone(1040, 0.2, 'triangle', 0.14, { delay: 0.16 });
-}
-function sfxDenied() { tone(180, 0.15, 'square', 0.1, { slideTo: 120 }); }
-
-// ---------------- canvas ----------------
-const cv = document.getElementById('c');
-const ctx = cv.getContext('2d');
-let W = 0, H = 0, DPR = 1;
-let stars = [];
-
-function makeStars() {
-  stars = [];
-  const layers = [
-    { n: Math.round(W * H / 16000), size: 1.1, par: 0.010, alpha: 0.5 },
-    { n: Math.round(W * H / 24000), size: 1.8, par: 0.025, alpha: 0.7 },
-    { n: Math.round(W * H / 42000), size: 2.6, par: 0.050, alpha: 0.95 }
-  ];
-  for (const L of layers) {
-    for (let i = 0; i < L.n; i++) {
-      stars.push({
-        x: Math.random() * W, y: Math.random() * H,
-        size: L.size * rand(0.7, 1.3), par: L.par,
-        base: L.alpha * rand(0.5, 1), tw: rand(0.6, 2.4), ph: rand(0, TAU)
-      });
-    }
-  }
-}
-
-function resize() {
-  DPR = Math.min(window.devicePixelRatio || 1, 2.5);
-  W = window.innerWidth; H = window.innerHeight;
-  cv.width = Math.round(W * DPR);
-  cv.height = Math.round(H * DPR);
-  cv.style.width = W + 'px';
-  cv.style.height = H + 'px';
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  makeStars();
-  if (G.base) { G.base.x = W / 2; G.base.y = H - 74; if (G.pod.state === 'docked') { G.pod.x = G.base.x; G.pod.y = G.base.y; } }
-}
-window.addEventListener('resize', resize);
-
-// ---------------- game state ----------------
-const POD_R = 13;
-const G = {
-  screen: 'title',          // title | garage | playing | win | lose
-  garageFrom: 'title',
-  level: 1,
-  bgHue: 240,
-  launchesLeft: 3,
-  collected: 0,
-  required: 8,
-  planets: [],
-  junk: [],
-  comets: [],
-  cometTimer: 0,
-  cometMax: 0,
-  base: { x: 0, y: 0 },
-  pod: { x: 0, y: 0, vx: 0, vy: 0, state: 'docked', deadT: 0, retT: 0, rx: 0, ry: 0, spawnT: 1 },
-  aiming: false,
-  aimSX: 0, aimSY: 0, aimCX: 0, aimCY: 0,
-  trail: [],
-  flightT: 0,
-  combo: 0,
-  winPending: -1,
-  losePending: -1,
-  time: 0,
-  parX: 0, parY: 0,
-  shakeT: 0, shakeMag: 0
-};
-let particles = [];
-let popups = [];
-
-function addShake(mag) { G.shakeT = 0.45; G.shakeMag = Math.max(G.shakeMag, mag); }
-
-function popup(x, y, txt, color, size) {
-  popups.push({ x, y, txt, color: color || '#fff', size: size || 18, t: 0, life: 1.1 });
-}
-
-function burst(x, y, n, colors, speed, life, size) {
-  for (let i = 0; i < n; i++) {
-    const a = rand(0, TAU), sp = rand(speed * 0.25, speed);
-    particles.push({
-      x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
-      t: 0, life: rand(life * 0.5, life), size: rand(size * 0.5, size),
-      color: pick(colors), drag: 0.94, grav: 0, shape: 'dot'
-    });
-  }
-}
-
-function confettiBurst() {
-  const colors = ['#ff6b8a', '#ffd76b', '#7cf7c8', '#4bd8ff', '#c47bff', '#ffffff'];
-  for (let i = 0; i < 90; i++) {
-    particles.push({
-      x: rand(0, W), y: rand(-H * 0.25, -10),
-      vx: rand(-60, 60), vy: rand(60, 190),
-      t: 0, life: rand(1.8, 3.2), size: rand(4, 8),
-      color: pick(colors), drag: 0.995, grav: 140,
-      shape: 'rect', rot: rand(0, TAU), rv: rand(-6, 6)
-    });
-  }
-}
-
-// ---------------- physics (shared by flight & preview) ----------------
-const GRAV = 3900;         // gravity constant (mass = r^2)
-const ACC_MAX = 1500;      // clamp acceleration near planets (forgiving)
-const MAX_SPEED = 1400;
-const PHYS_H = 1 / 120;    // fixed substep
-
-function accelAt(x, y) {
-  let ax = 0, ay = 0;
-  for (const p of G.planets) {
-    const dx = p.x - x, dy = p.y - y;
-    const d2 = dx * dx + dy * dy;
-    const d = Math.sqrt(d2) || 1;
-    let a = GRAV * p.mass / Math.max(d2, p.r * p.r * 0.7);
-    if (a > ACC_MAX) a = ACC_MAX;
-    ax += a * dx / d;
-    ay += a * dy / d;
-  }
-  return { ax, ay };
-}
-
-// one physics step (semi-implicit Euler). Returns 'crash' | 'off' | null.
-function physStep(b, h) {
-  const a = accelAt(b.x, b.y);
-  b.vx += a.ax * h;
-  b.vy += a.ay * h;
-  const sp = Math.hypot(b.vx, b.vy);
-  if (sp > MAX_SPEED) { b.vx *= MAX_SPEED / sp; b.vy *= MAX_SPEED / sp; }
-  b.x += b.vx * h;
-  b.y += b.vy * h;
-  for (const p of G.planets) {
-    if (dist2(b.x, b.y, p.x, p.y) < (p.r + POD_R - 3) * (p.r + POD_R - 3)) return 'crash';
-  }
-  const M = 90;
-  if (b.x < -M || b.x > W + M || b.y < -M || b.y > H + M) return 'off';
-  return null;
-}
-
-// trajectory preview: simulate ~1.5s with the SAME physics
-function computePreview(vx, vy) {
-  const b = { x: G.base.x, y: G.base.y, vx, vy };
-  const pts = [];
-  let hit = null;
-  const steps = Math.round(1.55 / PHYS_H);
-  for (let i = 0; i < steps; i++) {
-    const res = physStep(b, PHYS_H);
-    if (i % 5 === 0) pts.push({ x: b.x, y: b.y });
-    if (res === 'crash') { hit = { x: b.x, y: b.y }; break; }
-    if (res === 'off') break;
-  }
-  return { pts, hit };
-}
-
-// ---------------- level generation ----------------
-const JUNK_TYPES = [
-  { kind: 'bolt',  r: 9,  val: 1 },
-  { kind: 'gear',  r: 11, val: 2 },
-  { kind: 'star',  r: 8,  val: 2 },
-  { kind: 'sat',   r: 12, val: 3 }
-];
-
-function genLevel(level) {
-  G.level = level;
-  G.bgHue = (215 + level * 37) % 360;
-  G.planets = [];
-  G.junk = [];
-  G.comets = [];
-  G.cometTimer = rand(2.5, 4.5);
-  G.cometMax = level >= 6 ? (level >= 11 ? 2 : 1) : 0;
-  G.base = { x: W / 2, y: H - 74 };
-
-  const U = upVals();
-  G.launchesLeft = U.launches;
-  G.collected = 0;
-  G.combo = 0;
-  G.winPending = -1;
-  G.losePending = -1;
-  G.trail = [];
-  G.pod = { x: G.base.x, y: G.base.y, vx: 0, vy: 0, state: 'docked', deadT: 0, retT: 0, rx: 0, ry: 0, spawnT: 0 };
-
-  const top = 110, bottom = G.base.y - 150;
-  const nPlanets = clamp(1 + Math.floor((level + 1) / 3), 1, 4);
-  let guard = 0;
-  while (G.planets.length < nPlanets && guard++ < 400) {
-    const r = rand(26, Math.min(52, 26 + level * 3));
-    const px = rand(r + 34, W - r - 34);
-    const py = rand(top + r, bottom - r);
-    let ok = dist2(px, py, G.base.x, G.base.y) > (r + 150) * (r + 150);
-    for (const p of G.planets) {
-      if (dist2(px, py, p.cx, p.cy) < (r + p.r + 90) * (r + p.r + 90)) { ok = false; break; }
-    }
-    if (!ok) continue;
-    const moving = level >= 4 && Math.random() < 0.35 + level * 0.02;
-    G.planets.push({
-      cx: px, cy: py, x: px, y: py, r, mass: r * r,
-      hue: (G.bgHue + rand(60, 300)) % 360,
-      orbR: moving ? rand(24, 54) : 0,
-      ang: rand(0, TAU), angV: rand(0.25, 0.55) * pick([-1, 1]),
-      ringPh: rand(0, TAU), rippleT: 9, assisted: false
-    });
-  }
-
-  const nJunk = clamp(8 + Math.floor(level * 0.9), 8, 15);
-  G.required = clamp(Math.ceil(nJunk * 0.6), 4, nJunk);
-
-  // orbiting junk gets tighter with level
-  const orbShare = clamp(0.3 + level * 0.03, 0.3, 0.65);
-  guard = 0;
-  while (G.junk.length < nJunk && guard++ < 900) {
-    const type = pick(JUNK_TYPES);
-    const orbit = G.planets.length > 0 && Math.random() < orbShare;
-    if (orbit) {
-      const pi = randI(0, G.planets.length - 1);
-      const p = G.planets[pi];
-      const oR = p.r + rand(Math.max(26, 70 - level * 3), 105);
-      G.junk.push({
-        kind: type.kind, r: type.r, val: type.val, mode: 'orbit',
-        planet: pi, orbR: oR, ang: rand(0, TAU),
-        angV: rand(0.35, 0.8) * pick([-1, 1]),
-        x: 0, y: 0, sucking: false, suckT: 0, collected: false,
-        spin: rand(0, TAU), spinV: rand(-2, 2), bobPh: rand(0, TAU)
-      });
-    } else {
-      const jx = rand(26, W - 26), jy = rand(top, bottom);
-      let ok = dist2(jx, jy, G.base.x, G.base.y) > 130 * 130;
-      for (const p of G.planets) {
-        if (dist2(jx, jy, p.cx, p.cy) < (p.r + p.orbR + 30) * (p.r + p.orbR + 30)) { ok = false; break; }
-      }
-      for (const j of G.junk) {
-        if (j.mode === 'free' && dist2(jx, jy, j.x, j.y) < 40 * 40) { ok = false; break; }
-      }
-      if (!ok) continue;
-      G.junk.push({
-        kind: type.kind, r: type.r, val: type.val, mode: 'free',
-        planet: -1, orbR: 0, ang: 0, angV: 0,
-        x: jx, y: jy, sucking: false, suckT: 0, collected: false,
-        spin: rand(0, TAU), spinV: rand(-2, 2), bobPh: rand(0, TAU)
-      });
-    }
-  }
-  updateHUD();
-}
-
-// ---------------- flight control ----------------
-function launchPod(vx, vy) {
-  G.launchesLeft--;
-  G.combo = 0;
-  G.flightT = 0;
-  G.trail = [];
-  const p = G.pod;
-  p.x = G.base.x; p.y = G.base.y;
-  p.vx = vx; p.vy = vy;
-  p.state = 'flying';
-  for (const pl of G.planets) pl.assisted = false;
-  sfxLaunch();
-  vibrate(20);
-  burst(G.base.x, G.base.y + 10, 14, ['#8affea', '#4bd8ff', '#ffffff'], 220, 0.5, 4);
-  updateHUD();
-}
-
-function endFlight(crashed) {
-  const p = G.pod;
-  if (crashed) {
-    sfxCrash();
-    vibrate([60, 40, 80]);
-    addShake(16);
-    burst(p.x, p.y, 42, ['#ff8a5b', '#ffd76b', '#ff5b7a', '#ffffff'], 420, 0.9, 6);
-    burst(p.x, p.y, 20, ['#c9d2ff'], 180, 1.2, 3);
-    popup(clamp(p.x, 60, W - 60), clamp(p.y, 80, H - 80), 'CRASH!', '#ff8f9e', 24);
-    p.state = 'dead';
-    p.deadT = 0;
-  } else {
-    p.state = 'returning';
-    p.retT = 0;
-    p.rx = clamp(p.x, -40, W + 40);
-    p.ry = clamp(p.y, -40, H + 40);
-  }
-  // resolve any junk mid-suck: leave it where it is (still collectible next launch)
-  for (const j of G.junk) {
-    if (!j.collected && j.sucking) { j.sucking = false; j.suckT = 0; j.mode = 'free'; }
-  }
-  if (G.winPending < 0 && G.collected < G.required && G.launchesLeft <= 0) {
-    G.losePending = 1.0;
-  }
-}
-
-function collectJunk(j) {
-  j.collected = true;
-  G.collected++;
-  G.combo++;
-  const U = upVals();
-  let val = j.val;
-  let lucky = false;
-  if (Math.random() < U.luck) { val *= 2; lucky = true; }
-  S.scrap += val;
-  persist();
-  sfxPling(G.combo);
-  vibrate(12);
-  burst(j.x, j.y, 12, ['#a7ffbf', '#fff7ae', '#ffffff'], 170, 0.55, 3.5);
-  popup(j.x, j.y - 14, '+' + val + ' ⚙️', lucky ? '#ffd76b' : '#a7ffbf', lucky ? 22 : 17);
-  if (lucky) popup(j.x, j.y - 40, '🌟 LUCKY 2×!', '#ffd76b', 19);
-  if (G.combo >= 3) popup(j.x, j.y + 16, 'COMBO ×' + G.combo, '#8fd0ff', 14 + Math.min(8, G.combo));
-  updateHUD();
-  if (G.collected >= G.required && G.winPending < 0) {
-    G.winPending = 0.7;
-    G.losePending = -1;
-  }
-}
-
-// ---------------- update ----------------
-function update(dt) {
-  G.time += dt;
-  const t = G.time;
-
-  // shake decay
-  if (G.shakeT > 0) { G.shakeT -= dt; if (G.shakeT <= 0) G.shakeMag = 0; }
-
-  // planets orbit + ripple
-  for (const p of G.planets) {
-    if (p.orbR > 0) {
-      p.ang += p.angV * dt;
-      p.x = p.cx + Math.cos(p.ang) * p.orbR;
-      p.y = p.cy + Math.sin(p.ang) * p.orbR;
-    }
-    p.rippleT += dt;
-  }
-
-  const playing = G.screen === 'playing';
-  const pod = G.pod;
-
-  // junk motion
-  for (const j of G.junk) {
-    if (j.collected) continue;
-    j.spin += j.spinV * dt;
-    if (j.sucking) {
-      j.suckT += dt;
-      const sp = 220 + 2600 * j.suckT * j.suckT + 900 * j.suckT;
-      const dx = pod.x - j.x, dy = pod.y - j.y;
-      const d = Math.hypot(dx, dy) || 1;
-      const step = Math.min(d, sp * dt);
-      j.x += dx / d * step;
-      j.y += dy / d * step;
-      if (d < POD_R + j.r + 4) collectJunk(j);
-    } else if (j.mode === 'orbit') {
-      const p = G.planets[j.planet];
-      if (p) {
-        j.ang += j.angV * dt;
-        j.x = p.x + Math.cos(j.ang) * j.orbR;
-        j.y = p.y + Math.sin(j.ang) * j.orbR;
-      }
-    }
-    // free junk just bobs (drawn with bob offset)
-  }
-
-  // comets
-  if (playing && G.cometMax > 0) {
-    G.cometTimer -= dt;
-    if (G.cometTimer <= 0 && G.comets.length < G.cometMax) {
-      const fromLeft = Math.random() < 0.5;
-      const cy = rand(120, H * 0.55);
-      G.comets.push({
-        x: fromLeft ? -50 : W + 50, y: cy,
-        vx: (fromLeft ? 1 : -1) * rand(140, 220 + G.level * 6),
-        vy: rand(-30, 55), r: 10, ph: rand(0, TAU)
-      });
-      G.cometTimer = rand(4, 7.5);
-    }
-  }
-  for (let i = G.comets.length - 1; i >= 0; i--) {
-    const c = G.comets[i];
-    c.x += c.vx * dt; c.y += c.vy * dt;
-    if (Math.random() < 0.6) {
-      particles.push({
-        x: c.x + rand(-4, 4), y: c.y + rand(-4, 4),
-        vx: -c.vx * 0.12 + rand(-14, 14), vy: -c.vy * 0.12 + rand(-14, 14),
-        t: 0, life: rand(0.3, 0.7), size: rand(2, 4.5),
-        color: pick(['#9fe8ff', '#e0f6ff', '#6bc7ff']), drag: 0.96, grav: 0, shape: 'dot'
-      });
-    }
-    if (c.x < -120 || c.x > W + 120 || c.y < -120 || c.y > H + 120) G.comets.splice(i, 1);
-  }
-
-  // pod
-  if (pod.state === 'flying') {
-    G.flightT += dt;
-    let acc = dt;
-    let ended = null;
-    while (acc > 1e-6 && !ended) {
-      const h = Math.min(PHYS_H, acc);
-      acc -= h;
-      ended = physStep(pod, h);
-    }
-    // comet collision
-    if (!ended) {
-      for (const c of G.comets) {
-        if (dist2(pod.x, pod.y, c.x, c.y) < (c.r + POD_R) * (c.r + POD_R)) { ended = 'crash'; break; }
-      }
-    }
-    // magnet
-    const U = upVals();
-    const mr2 = U.magnetR * U.magnetR;
-    for (const j of G.junk) {
-      if (!j.collected && !j.sucking && dist2(pod.x, pod.y, j.x, j.y) < mr2) {
-        j.sucking = true; j.suckT = 0; j.mode = 'free';
-      }
-    }
-    // gravity assist detection
-    const speed = Math.hypot(pod.vx, pod.vy);
-    for (const p of G.planets) {
-      if (!p.assisted && speed > 330) {
-        const d = Math.hypot(pod.x - p.x, pod.y - p.y);
-        if (d < p.r + 74) {
-          p.assisted = true;
-          p.rippleT = 0;
-          sfxAssist();
-          vibrate(25);
-          S.scrap += 3; persist();
-          popup(pod.x, pod.y - 30, 'GRAVITY ASSIST! +3 ⚙️', '#c9a7ff', 19);
-          burst(pod.x, pod.y, 16, ['#c9a7ff', '#8fd0ff', '#ffffff'], 240, 0.6, 4);
-          updateHUD();
-        }
-      }
-    }
-    // whoosh loudness follows speed
-    if (AC && whooshGain && !S.mute) {
-      whooshGain.gain.setTargetAtTime(Math.min(0.22, speed / 3400), AC.currentTime, 0.06);
-      whooshFilter.frequency.setTargetAtTime(180 + speed * 1.1, AC.currentTime, 0.06);
-    }
-    // thruster sparks
-    if (speed > 40 && Math.random() < 0.85) {
-      const inv = 1 / (speed || 1);
-      particles.push({
-        x: pod.x - pod.vx * inv * POD_R, y: pod.y - pod.vy * inv * POD_R,
-        vx: -pod.vx * 0.12 + rand(-24, 24), vy: -pod.vy * 0.12 + rand(-24, 24),
-        t: 0, life: rand(0.2, 0.45), size: rand(1.6, 3.6),
-        color: pick(['#8affea', '#4bd8ff', '#fff']), drag: 0.94, grav: 0, shape: 'dot'
-      });
-    }
-    G.trail.push({ x: pod.x, y: pod.y });
-    if (G.trail.length > 44) G.trail.shift();
-    if (G.flightT > 18) ended = 'off';
-    if (ended) endFlight(ended === 'crash');
-  } else if (pod.state === 'dead') {
-    pod.deadT += dt;
-    if (pod.deadT > 0.85) {
-      pod.state = 'docked'; pod.spawnT = 0;
-      pod.x = G.base.x; pod.y = G.base.y; pod.vx = 0; pod.vy = 0;
-      G.trail = [];
-    }
-    if (AC && whooshGain) whooshGain.gain.setTargetAtTime(0, AC.currentTime, 0.08);
-  } else if (pod.state === 'returning') {
-    pod.retT += dt;
-    const k = easeOutCubic(clamp(pod.retT / 0.7, 0, 1));
-    pod.x = lerp(pod.rx, G.base.x, k);
-    pod.y = lerp(pod.ry, G.base.y, k);
-    if (pod.retT >= 0.7) { pod.state = 'docked'; pod.spawnT = 0.6; pod.vx = 0; pod.vy = 0; G.trail = []; }
-    if (G.trail.length > 0 && Math.random() < 0.5) G.trail.shift();
-    if (AC && whooshGain) whooshGain.gain.setTargetAtTime(0, AC.currentTime, 0.08);
-  } else {
-    pod.spawnT = Math.min(1, pod.spawnT + dt * 2.2);
-    if (AC && whooshGain) whooshGain.gain.setTargetAtTime(0, AC.currentTime, 0.08);
-    if (G.trail.length > 0) G.trail.shift();
-  }
-
-  // parallax target follows pod
-  const tx = (pod.x - W / 2), ty = (pod.y - H / 2);
-  G.parX = lerp(G.parX, tx, 1 - Math.pow(0.001, dt));
-  G.parY = lerp(G.parY, ty, 1 - Math.pow(0.001, dt));
-
-  // pending win/lose
-  if (G.winPending > 0) {
-    G.winPending -= dt;
-    if (G.winPending <= 0) { G.winPending = -1; doWin(); }
-  }
-  if (G.losePending > 0) {
-    G.losePending -= dt;
-    if (G.losePending <= 0) { G.losePending = -1; doLose(); }
-  }
-
-  // particles
-  for (let i = particles.length - 1; i >= 0; i--) {
-    const p = particles[i];
-    p.t += dt;
-    if (p.t >= p.life) { particles.splice(i, 1); continue; }
-    p.vy += (p.grav || 0) * dt;
-    p.vx *= Math.pow(p.drag, dt * 60);
-    p.vy *= Math.pow(p.drag, dt * 60);
-    p.x += p.vx * dt; p.y += p.vy * dt;
-    if (p.shape === 'rect') p.rot += p.rv * dt;
-  }
-  // popups
-  for (let i = popups.length - 1; i >= 0; i--) {
-    const p = popups[i];
-    p.t += dt;
-    if (p.t >= p.life) popups.splice(i, 1);
-  }
-}
-
-// ---------------- draw ----------------
-function drawJunkShape(j, x, y) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(j.spin);
-  ctx.lineWidth = 2;
-  if (j.kind === 'bolt') {
-    ctx.fillStyle = '#b8c4e8'; ctx.strokeStyle = '#7f8cc0';
-    ctx.beginPath();
-    for (let i = 0; i < 6; i++) {
-      const a = i / 6 * TAU;
-      const px = Math.cos(a) * j.r, py = Math.sin(a) * j.r;
-      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-    }
-    ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#5a6690';
-    ctx.beginPath(); ctx.arc(0, 0, j.r * 0.4, 0, TAU); ctx.fill();
-  } else if (j.kind === 'gear') {
-    ctx.fillStyle = '#e8c47b'; ctx.strokeStyle = '#b08a3f';
-    ctx.beginPath();
-    const teeth = 8;
-    for (let i = 0; i < teeth * 2; i++) {
-      const a = i / (teeth * 2) * TAU;
-      const rr = (i % 2 === 0) ? j.r : j.r * 0.72;
-      const px = Math.cos(a) * rr, py = Math.sin(a) * rr;
-      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-    }
-    ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#8a6a2a';
-    ctx.beginPath(); ctx.arc(0, 0, j.r * 0.32, 0, TAU); ctx.fill();
-  } else if (j.kind === 'star') {
-    ctx.fillStyle = '#fff2a8'; ctx.strokeStyle = '#d4b04a';
-    ctx.beginPath();
-    for (let i = 0; i < 10; i++) {
-      const a = i / 10 * TAU - Math.PI / 2;
-      const rr = (i % 2 === 0) ? j.r * 1.25 : j.r * 0.55;
-      const px = Math.cos(a) * rr, py = Math.sin(a) * rr;
-      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-    }
-    ctx.closePath(); ctx.fill(); ctx.stroke();
-  } else { // satellite
-    ctx.fillStyle = '#9fb8d8';
-    ctx.fillRect(-j.r * 1.5, -j.r * 0.35, j.r * 0.9, j.r * 0.7);
-    ctx.fillRect(j.r * 0.6, -j.r * 0.35, j.r * 0.9, j.r * 0.7);
-    ctx.strokeStyle = '#6a7ea0';
-    ctx.strokeRect(-j.r * 1.5, -j.r * 0.35, j.r * 0.9, j.r * 0.7);
-    ctx.strokeRect(j.r * 0.6, -j.r * 0.35, j.r * 0.9, j.r * 0.7);
-    ctx.fillStyle = '#dfe8f8';
-    ctx.beginPath(); ctx.arc(0, 0, j.r * 0.55, 0, TAU); ctx.fill();
-    ctx.strokeStyle = '#8a9cc0'; ctx.stroke();
-  }
-  ctx.restore();
-}
-
-function drawPod(x, y, scale, angle) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(angle);
-  ctx.scale(scale, scale);
-  // glow
-  const gl = ctx.createRadialGradient(0, 0, 2, 0, 0, POD_R * 2.6);
-  gl.addColorStop(0, 'rgba(120,255,230,.55)');
-  gl.addColorStop(1, 'rgba(120,255,230,0)');
-  ctx.fillStyle = gl;
-  ctx.beginPath(); ctx.arc(0, 0, POD_R * 2.6, 0, TAU); ctx.fill();
-  // body
-  const bg = ctx.createLinearGradient(0, -POD_R, 0, POD_R);
-  bg.addColorStop(0, '#eafffb');
-  bg.addColorStop(0.5, '#6ee8d8');
-  bg.addColorStop(1, '#2f9fc9');
-  ctx.fillStyle = bg;
-  ctx.beginPath(); ctx.arc(0, 0, POD_R, 0, TAU); ctx.fill();
-  ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = 2; ctx.stroke();
-  // nose fin
-  ctx.fillStyle = '#eafffb';
-  ctx.beginPath();
-  ctx.moveTo(POD_R + 6, 0); ctx.lineTo(POD_R - 3, -6); ctx.lineTo(POD_R - 3, 6);
-  ctx.closePath(); ctx.fill();
-  // window
-  ctx.fillStyle = '#0e3550';
-  ctx.beginPath(); ctx.arc(2, -1, POD_R * 0.45, 0, TAU); ctx.fill();
-  ctx.fillStyle = 'rgba(255,255,255,.85)';
-  ctx.beginPath(); ctx.arc(4, -3, POD_R * 0.14, 0, TAU); ctx.fill();
-  ctx.restore();
-}
-
-function draw() {
-  const t = G.time;
-  // background gradient (shifts per level)
-  const hue = G.bgHue;
-  const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
-  bgGrad.addColorStop(0, 'hsl(' + hue + ',65%,6%)');
-  bgGrad.addColorStop(0.55, 'hsl(' + ((hue + 30) % 360) + ',55%,10%)');
-  bgGrad.addColorStop(1, 'hsl(' + ((hue + 60) % 360) + ',60%,14%)');
-  ctx.fillStyle = bgGrad;
-  ctx.fillRect(0, 0, W, H);
-
-  // stars (parallax + twinkle)
-  for (const s of stars) {
-    let sx = s.x - G.parX * s.par;
-    let sy = s.y - G.parY * s.par;
-    sx = ((sx % W) + W) % W;
-    sy = ((sy % H) + H) % H;
-    const a = clamp(s.base * (0.65 + 0.35 * Math.sin(t * s.tw + s.ph)), 0, 1);
-    ctx.globalAlpha = a;
-    ctx.fillStyle = '#dde8ff';
-    ctx.beginPath(); ctx.arc(sx, sy, s.size, 0, TAU); ctx.fill();
-  }
-  ctx.globalAlpha = 1;
-
-  // world shake
-  ctx.save();
-  if (G.shakeT > 0) {
-    const m = G.shakeMag * (G.shakeT / 0.45);
-    ctx.translate(rand(-m, m), rand(-m, m));
-  }
-
-  const inGame = true; // world is always drawn (ambient scene behind menu overlays)
-  if (inGame) {
-    // planets
-    for (const p of G.planets) {
-      // gravity rings (animated, ripple boost when assisted)
-      const ringN = 3;
-      for (let i = 0; i < ringN; i++) {
-        const ph = ((t * 0.45 + p.ringPh + i / ringN) % 1);
-        const rr = p.r + ph * p.r * 1.7;
-        let al = (1 - ph) * 0.16;
-        if (p.rippleT < 0.9) al += (1 - p.rippleT / 0.9) * 0.3;
-        ctx.strokeStyle = 'hsla(' + p.hue + ',80%,70%,' + al.toFixed(3) + ')';
-        ctx.lineWidth = 1.6 + (1 - ph) * 1.4;
-        ctx.beginPath(); ctx.arc(p.x, p.y, rr, 0, TAU); ctx.stroke();
-      }
-      // extra ripple ring on recent assist
-      if (p.rippleT < 0.9) {
-        const k = p.rippleT / 0.9;
-        ctx.strokeStyle = 'hsla(' + p.hue + ',90%,80%,' + ((1 - k) * 0.7).toFixed(3) + ')';
-        ctx.lineWidth = 3.5 * (1 - k) + 0.5;
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.r + k * p.r * 2.4, 0, TAU); ctx.stroke();
-      }
-      // body
-      const pg = ctx.createRadialGradient(p.x - p.r * 0.35, p.y - p.r * 0.35, p.r * 0.15, p.x, p.y, p.r);
-      pg.addColorStop(0, 'hsl(' + p.hue + ',75%,72%)');
-      pg.addColorStop(0.6, 'hsl(' + p.hue + ',65%,45%)');
-      pg.addColorStop(1, 'hsl(' + p.hue + ',70%,24%)');
-      ctx.fillStyle = pg;
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, TAU); ctx.fill();
-      // subtle bands
-      ctx.save();
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, TAU); ctx.clip();
-      ctx.globalAlpha = 0.18;
-      ctx.fillStyle = 'hsl(' + ((p.hue + 40) % 360) + ',80%,80%)';
-      ctx.beginPath(); ctx.ellipse(p.x, p.y - p.r * 0.3, p.r * 1.1, p.r * 0.16, -0.25, 0, TAU); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(p.x, p.y + p.r * 0.35, p.r * 1.1, p.r * 0.13, -0.25, 0, TAU); ctx.fill();
-      ctx.restore();
-      // orbit path hint for moving planets
-      if (p.orbR > 0) {
-        ctx.strokeStyle = 'rgba(255,255,255,.07)';
-        ctx.lineWidth = 1;
-        ctx.setLineDash([3, 7]);
-        ctx.beginPath(); ctx.arc(p.cx, p.cy, p.orbR, 0, TAU); ctx.stroke();
-        ctx.setLineDash([]);
-      }
-    }
-
-    // base station
-    const b = G.base;
-    ctx.save();
-    ctx.translate(b.x, b.y + 20);
-    ctx.fillStyle = 'rgba(90,110,190,.9)';
-    ctx.beginPath();
-    ctx.moveTo(-42, 26); ctx.lineTo(-26, 0); ctx.lineTo(26, 0); ctx.lineTo(42, 26);
-    ctx.closePath(); ctx.fill();
-    ctx.fillStyle = 'rgba(140,170,255,.9)';
-    ctx.fillRect(-30, -6, 60, 8);
-    // landing lights
-    for (let i = -1; i <= 1; i++) {
-      const blink = 0.5 + 0.5 * Math.sin(t * 4 + i);
-      ctx.fillStyle = 'rgba(140,255,220,' + (0.35 + 0.6 * blink).toFixed(3) + ')';
-      ctx.beginPath(); ctx.arc(i * 20, -4, 3, 0, TAU); ctx.fill();
-    }
-    ctx.restore();
-
-    // junk
-    for (const j of G.junk) {
-      if (j.collected) continue;
-      const bob = j.mode === 'free' && !j.sucking ? Math.sin(t * 1.6 + j.bobPh) * 4 : 0;
-      // soft glow
-      ctx.globalAlpha = 0.5 + 0.3 * Math.sin(t * 2.2 + j.bobPh);
-      ctx.fillStyle = 'rgba(190,220,255,.14)';
-      ctx.beginPath(); ctx.arc(j.x, j.y + bob, j.r * 2.1, 0, TAU); ctx.fill();
-      ctx.globalAlpha = 1;
-      drawJunkShape(j, j.x, j.y + bob);
-    }
-
-    // comets
-    for (const c of G.comets) {
-      const cg = ctx.createRadialGradient(c.x, c.y, 1, c.x, c.y, c.r * 2.2);
-      cg.addColorStop(0, 'rgba(230,250,255,.95)');
-      cg.addColorStop(0.5, 'rgba(130,200,255,.5)');
-      cg.addColorStop(1, 'rgba(130,200,255,0)');
-      ctx.fillStyle = cg;
-      ctx.beginPath(); ctx.arc(c.x, c.y, c.r * 2.2, 0, TAU); ctx.fill();
-      ctx.fillStyle = '#eaf8ff';
-      ctx.beginPath(); ctx.arc(c.x, c.y, c.r * 0.75, 0, TAU); ctx.fill();
-    }
-
-    // trajectory preview
-    if (G.aiming && G.pod.state === 'docked') {
-      const v = aimVelocity();
-      if (v.len > 14) {
-        const prev = computePreview(v.vx, v.vy);
-        const n = prev.pts.length;
-        for (let i = 0; i < n; i++) {
-          const pt = prev.pts[i];
-          const k = i / Math.max(1, n - 1);
-          ctx.globalAlpha = (1 - k) * 0.85;
-          ctx.fillStyle = i < 4 ? '#ffffff' : '#8fd0ff';
-          const r = lerp(4.2, 1.4, k);
-          ctx.beginPath(); ctx.arc(pt.x, pt.y, r, 0, TAU); ctx.fill();
-        }
-        ctx.globalAlpha = 1;
-        if (prev.hit) {
-          ctx.strokeStyle = 'rgba(255,120,140,.9)';
-          ctx.lineWidth = 3;
-          const hx = prev.hit.x, hy = prev.hit.y, s = 8;
-          ctx.beginPath();
-          ctx.moveTo(hx - s, hy - s); ctx.lineTo(hx + s, hy + s);
-          ctx.moveTo(hx + s, hy - s); ctx.lineTo(hx - s, hy + s);
-          ctx.stroke();
-        }
-        // rubber band
-        const pull = Math.min(46, v.len * 0.22);
-        const px = G.base.x - v.vx / (v.speed || 1) * pull;
-        const py = G.base.y - v.vy / (v.speed || 1) * pull;
-        ctx.strokeStyle = 'rgba(140,255,230,.5)';
-        ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.moveTo(G.base.x, G.base.y); ctx.lineTo(px, py); ctx.stroke();
-      }
-    }
-
-    // pod trail
-    const p = G.pod;
-    for (let i = 0; i < G.trail.length; i++) {
-      const k = i / Math.max(1, G.trail.length - 1);
-      ctx.globalAlpha = k * 0.55;
-      ctx.fillStyle = '#6ee8d8';
-      ctx.beginPath(); ctx.arc(G.trail[i].x, G.trail[i].y, 1.5 + k * 6, 0, TAU); ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-
-    // pod
-    if (p.state !== 'dead') {
-      let px = p.x, py = p.y, sc = 1, ang = 0;
-      if (p.state === 'docked') {
-        py += Math.sin(t * 2) * 3;
-        sc = 0.5 + 0.5 * easeOutCubic(p.spawnT);
-        ang = -Math.PI / 2;
-        // magnet radius hint while docked/aiming
-        if (G.screen === 'playing') {
-          const U = upVals();
-          ctx.strokeStyle = 'rgba(120,230,255,.10)';
-          ctx.lineWidth = 2;
-          ctx.setLineDash([4, 9]);
-          ctx.beginPath(); ctx.arc(px, py, U.magnetR, 0, TAU); ctx.stroke();
-          ctx.setLineDash([]);
-        }
-        if (G.aiming) {
-          const v = aimVelocity();
-          if (v.len > 14) {
-            const pull = Math.min(46, v.len * 0.22);
-            px -= v.vx / (v.speed || 1) * pull;
-            py -= v.vy / (v.speed || 1) * pull;
-            ang = Math.atan2(v.vy, v.vx);
-          }
-        }
-      } else if (p.state === 'flying') {
-        ang = Math.atan2(p.vy, p.vx);
-        // live magnet ring
-        const U = upVals();
-        ctx.strokeStyle = 'rgba(120,230,255,' + (0.10 + 0.06 * Math.sin(t * 6)).toFixed(3) + ')';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([4, 9]);
-        ctx.beginPath(); ctx.arc(px, py, U.magnetR, 0, TAU); ctx.stroke();
-        ctx.setLineDash([]);
-      } else if (p.state === 'returning') {
-        ang = -Math.PI / 2;
-        ctx.globalAlpha = 0.75;
-      }
-      drawPod(px, py, sc, ang);
-      ctx.globalAlpha = 1;
-    }
-  }
-
-  // particles
-  for (const pa of particles) {
-    const k = 1 - pa.t / pa.life;
-    ctx.globalAlpha = clamp(k, 0, 1);
-    ctx.fillStyle = pa.color;
-    if (pa.shape === 'rect') {
-      ctx.save();
-      ctx.translate(pa.x, pa.y);
-      ctx.rotate(pa.rot);
-      ctx.fillRect(-pa.size / 2, -pa.size / 2, pa.size, pa.size * 0.6);
-      ctx.restore();
-    } else {
-      ctx.beginPath(); ctx.arc(pa.x, pa.y, pa.size * (0.4 + 0.6 * k), 0, TAU); ctx.fill();
-    }
-  }
-  ctx.globalAlpha = 1;
-
-  // popups
-  ctx.textAlign = 'center';
-  for (const pp of popups) {
-    const k = pp.t / pp.life;
-    const rise = easeOutCubic(k) * 46;
-    const sc = k < 0.15 ? easeOutCubic(k / 0.15) : 1;
-    ctx.globalAlpha = clamp(1 - Math.max(0, (k - 0.55)) / 0.45, 0, 1);
-    ctx.font = '800 ' + Math.round(pp.size * sc) + 'px "Segoe UI", system-ui, sans-serif';
-    ctx.strokeStyle = 'rgba(5,3,15,.8)';
-    ctx.lineWidth = 4;
-    ctx.strokeText(pp.txt, pp.x, pp.y - rise);
-    ctx.fillStyle = pp.color;
-    ctx.fillText(pp.txt, pp.x, pp.y - rise);
-  }
-  ctx.globalAlpha = 1;
-
-  ctx.restore(); // shake
-}
-
-// ---------------- aiming input ----------------
-function aimVelocity() {
-  const dx = G.aimSX - G.aimCX;
-  const dy = G.aimSY - G.aimCY;
-  const len = Math.hypot(dx, dy);
-  const U = upVals();
-  const k = 3.1 * U.powerMul;
-  let vx = dx * k, vy = dy * k;
-  const cap = 950 * U.powerMul;
-  const sp = Math.hypot(vx, vy);
-  if (sp > cap) { vx *= cap / sp; vy *= cap / sp; }
-  return { vx, vy, len, speed: Math.min(sp, cap) };
-}
-
-function onDown(e) {
-  ensureAudio();
-  if (G.screen !== 'playing') return;
-  if (G.pod.state !== 'docked') return;
-  G.aiming = true;
-  G.aimSX = G.aimCX = e.clientX;
-  G.aimSY = G.aimCY = e.clientY;
-}
-function onMove(e) {
-  if (!G.aiming) return;
-  G.aimCX = e.clientX;
-  G.aimCY = e.clientY;
-}
-function onUp() {
-  if (!G.aiming) return;
-  G.aiming = false;
-  if (G.screen !== 'playing' || G.pod.state !== 'docked') return;
-  const v = aimVelocity();
-  if (v.len > 14 && G.launchesLeft > 0) launchPod(v.vx, v.vy);
-}
-cv.addEventListener('pointerdown', onDown);
-window.addEventListener('pointermove', onMove);
-window.addEventListener('pointerup', onUp);
-window.addEventListener('pointercancel', onUp);
-cv.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
-window.addEventListener('contextmenu', e => e.preventDefault());
-
-// ---------------- DOM / screens ----------------
-const $ = id => document.getElementById(id);
-const el = {
-  hud: $('hud'), hudLevel: $('hudLevel'), hudLaunches: $('hudLaunches'),
-  hudScrap: $('hudScrap'), hudJunk: $('hudJunk'),
-  title: $('title'), garage: $('garage'), win: $('win'), lose: $('lose'),
-  bestLine: $('bestLine'), titleScrap: $('titleScrap'),
-  garageScrap: $('garageScrap'), upgradeList: $('upgradeList'),
-  stars: $('stars'), winScrap: $('winScrap'),
-  muteBtn: $('muteBtn')
-};
-
-function setScreen(name) {
-  G.screen = name;
-  for (const s of ['title', 'garage', 'win', 'lose']) {
-    el[s].classList.toggle('hidden', s !== name);
-  }
-  el.hud.classList.toggle('show', name === 'playing' || name === 'win' || name === 'lose');
-  if (name === 'title') {
-    el.bestLine.innerHTML = 'BEST LEVEL <b>' + S.best + '</b> &nbsp;&middot;&nbsp; ⚙️ <b id="titleScrap">' + S.scrap + '</b>';
-  }
-}
-
-function updateHUD() {
-  el.hudLevel.textContent = 'LEVEL ' + G.level;
-  const U = upVals();
-  let icons = '';
-  for (let i = 0; i < U.launches; i++) {
-    icons += '<span' + (i < U.launches - G.launchesLeft ? ' class="used"' : '') + '>🚀</span>';
-  }
-  el.hudLaunches.innerHTML = icons;
-  el.hudScrap.textContent = '⚙️ ' + S.scrap;
-  el.hudJunk.textContent = '🔩 ' + G.collected + ' / ' + G.required;
-}
-
-// ---------------- garage ----------------
-const UPGRADES = [
-  { key: 'mag',   icon: '🧲', name: 'Magnet Radius', base: 30,
-    desc: l => 'Pulls junk from ' + (70 + 20 * l) + 'px away' },
-  { key: 'pow',   icon: '💥', name: 'Launch Power', base: 40,
-    desc: l => 'Launch velocity +' + Math.round(l * 12) + '%' },
-  { key: 'extra', icon: '🚀', name: 'Extra Launch', base: 60,
-    desc: l => (3 + l) + ' launches per level' },
-  { key: 'luck',  icon: '🌟', name: 'Lucky Star', base: 50,
-    desc: l => Math.round(l * 8) + '% chance of 2× scrap' }
-];
-function upCost(u, lvl) { return Math.round(u.base * Math.pow(1.7, lvl)); }
-
-function renderGarage() {
-  el.garageScrap.textContent = '⚙️ ' + S.scrap + ' scrap';
-  let html = '';
-  for (const u of UPGRADES) {
-    const lvl = S.up[u.key];
-    const maxed = lvl >= 5;
-    const cost = maxed ? 0 : upCost(u, lvl);
-    let pips = '';
-    for (let i = 0; i < 5; i++) pips += '<div class="pip' + (i < lvl ? ' on' : '') + '"></div>';
-    html += '<div class="upCard">' +
-      '<div class="upIcon">' + u.icon + '</div>' +
-      '<div class="upInfo">' +
-        '<div class="upName">' + u.name + '</div>' +
-        '<div class="upDesc">' + u.desc(Math.min(5, lvl + (maxed ? 0 : 1))) + '</div>' +
-        '<div class="pips">' + pips + '</div>' +
-      '</div>' +
-      (maxed
-        ? '<button class="buyBtn maxed" disabled>MAX</button>'
-        : '<button class="buyBtn" data-buy="' + u.key + '"' + (S.scrap < cost ? ' disabled' : '') + '>⚙️ ' + cost + '</button>') +
-      '</div>';
-  }
-  el.upgradeList.innerHTML = html;
-}
-
-el.upgradeList.addEventListener('click', e => {
-  const btn = e.target.closest('button[data-buy]');
-  if (!btn) return;
-  ensureAudio();
-  const key = btn.getAttribute('data-buy');
-  const u = UPGRADES.find(x => x.key === key);
-  if (!u) return;
-  const lvl = S.up[key];
-  if (lvl >= 5) return;
-  const cost = upCost(u, lvl);
-  if (S.scrap < cost) { sfxDenied(); return; }
-  S.scrap -= cost;
-  S.up[key] = lvl + 1;
-  persist();
-  window.TTG?.track('upgrade_bought', { level: lvl + 1, value: cost });
-  sfxBuy();
-  vibrate(20);
-  renderGarage();
-});
-
-// ---------------- flow ----------------
-function startLevel(level) {
-  genLevel(level);
-  window.TTG?.track('level_start', { level: level });
-  setScreen('playing');
-  popup(W / 2, H * 0.4, 'LEVEL ' + level, '#cfe0ff', 30);
-  popup(W / 2, H * 0.4 + 40, 'Collect ' + G.required + ' junk!', '#a7ffbf', 17);
-}
-
-function doWin() {
-  const stars = G.launchesLeft >= 2 ? 3 : (G.launchesLeft === 1 ? 2 : 1);
-  const bonus = 10 + G.level * 2 + stars * 5;
-  S.scrap += bonus;
-  S.lvl = G.level + 1;
-  if (S.lvl > S.best) S.best = S.lvl;
-  persist();
-  window.TTG?.track('level_complete', { level: G.level, value: bonus });
-  if (G.pod.state === 'flying') {
-    G.pod.state = 'returning'; G.pod.retT = 0;
-    G.pod.rx = clamp(G.pod.x, -40, W + 40); G.pod.ry = clamp(G.pod.y, -40, H + 40);
-  }
-  sfxWin();
-  vibrate([30, 40, 30, 40, 60]);
-  confettiBurst();
-  setScreen('win');
-  updateHUD();
-  // stars pop-in
-  const spans = el.stars.querySelectorAll('span');
-  spans.forEach((sp, i) => {
-    sp.classList.remove('pop', 'lit');
-    setTimeout(() => {
-      sp.classList.add('pop');
-      if (i < stars) { sp.classList.add('lit'); sfxPling(i + 2); vibrate(15); }
-    }, 350 + i * 320);
-  });
-  // scrap count-up
-  const target = bonus;
-  const t0 = performance.now();
-  function countUp(now) {
-    const k = clamp((now - t0) / 1100, 0, 1);
-    el.winScrap.textContent = Math.round(easeOutCubic(k) * target);
-    if (k < 1 && G.screen === 'win') requestAnimationFrame(countUp);
-  }
-  el.winScrap.textContent = '0';
-  requestAnimationFrame(countUp);
-}
-
-function doLose() {
-  window.TTG?.track('game_over', { level: G.level, value: G.collected });
-  sfxLose();
-  vibrate(60);
-  setScreen('lose');
-}
-
-// buttons
-function bindTap(id, fn) {
-  $(id).addEventListener('click', () => { ensureAudio(); sfxClick(); fn(); });
-}
-bindTap('playBtn', () => startLevel(S.lvl));
-bindTap('garageBtn', () => { G.garageFrom = 'title'; window.TTG?.track('shop_open', { level: S.lvl }); renderGarage(); setScreen('garage'); });
-bindTap('garageBack', () => {
-  setScreen(G.garageFrom);
-  if (G.garageFrom === 'title') setScreen('title');
-});
-bindTap('nextBtn', () => startLevel(S.lvl));
-bindTap('winGarageBtn', () => { G.garageFrom = 'win'; window.TTG?.track('shop_open', { level: S.lvl }); renderGarage(); setScreen('garage'); });
-bindTap('winTitleBtn', () => setScreen('title'));
-bindTap('retryBtn', () => startLevel(G.level));
-bindTap('loseGarageBtn', () => { G.garageFrom = 'lose'; window.TTG?.track('shop_open', { level: S.lvl }); renderGarage(); setScreen('garage'); });
-bindTap('loseTitleBtn', () => setScreen('title'));
-
-el.muteBtn.addEventListener('click', () => {
-  ensureAudio();
-  S.mute = !S.mute;
-  persist();
-  if (master) master.gain.value = S.mute ? 0 : 0.5;
-  el.muteBtn.textContent = S.mute ? '🔇' : '🔊';
-  if (!S.mute) sfxClick();
-});
-el.muteBtn.textContent = S.mute ? '🔇' : '🔊';
-
-// ---------------- main loop ----------------
-let last = performance.now();
-let frameErrs = 0;
-function frame(now) {
-  // Re-arm in `finally`: one bad frame must never permanently blank the game.
-  try {
-    const dt = clamp((now - last) / 1000, 0, 0.033);
-    last = now;
-    update(dt);
-    draw();
-  } catch (e) {
-    if (++frameErrs <= 3 && window.console) console.error('[sling] frame error:', e);
-  } finally {
-    requestAnimationFrame(frame);
-  }
-}
-
-resize();
-setScreen('title');
-// pretty ambient scene behind the title
-genLevel(S.lvl);
-G.screen = 'title';
-setScreen('title');
-requestAnimationFrame(frame);
-</script>
 </body>
 </html>

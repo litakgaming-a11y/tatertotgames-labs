@@ -2,1359 +2,156 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Puff Puff Fit</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Puff Puff Fit — TaterTot Games Labs</title>
+<meta name="description" content="Hold to inflate, release before the pop. Risk-vs-greed puzzle prototype from the TaterTot Games Labs testing arena — playable in your browser.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎈</text></svg>">
 <style>
-  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{width:100%;height:100%;overflow:hidden;position:fixed;inset:0;
-    background:#2a1a4a;touch-action:none;
-    -webkit-user-select:none;user-select:none;
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
-  canvas#c{position:fixed;inset:0;display:block;touch-action:none}
+  :root{--bg:#0d0b16;--bg2:#151127;--card:#1c1734;--card2:#241d44;--line:rgba(255,255,255,.08);
+    --ink:#f6f3ff;--muted:#9a91c4;--dim:#6e659b;--accent:#ff5d8f;--r:20px}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden;position:relative}
+  body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:radial-gradient(900px 480px at 12% -6%, #ff5d8f26, transparent 62%),
+      radial-gradient(760px 420px at 106% 8%, rgba(76,201,240,.10), transparent 60%),
+      linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%)}
+  .wrap{max-width:1000px;margin:0 auto;padding:20px 18px 80px}
+  .back{display:inline-flex;align-items:center;gap:8px;padding:13px 18px;min-height:44px;border-radius:12px;
+    background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--muted);
+    text-decoration:none;font-weight:700;font-size:.86rem}
+  .back:hover{color:var(--ink);border-color:rgba(255,255,255,.2)}
 
-  /* ---------- shared UI ---------- */
-  .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;
-    justify-content:center;z-index:20;padding:20px;
-    padding-bottom:calc(20px + env(safe-area-inset-bottom));
-    animation:scrIn .35s cubic-bezier(.34,1.56,.64,1) both}
-  .hidden{display:none!important}
-  @keyframes scrIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+  .hero{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:34px;margin-top:26px;align-items:start}
+  @media (max-width:760px){ .hero{grid-template-columns:1fr;gap:22px} }
 
-  button{font-family:inherit;border:none;cursor:pointer;color:#fff;font-weight:900;
-    -webkit-user-select:none;user-select:none;touch-action:manipulation}
-  button:active{transform:scale(.93)}
+  .shotFrame{position:relative;border-radius:26px;padding:9px;background:linear-gradient(160deg,#2a2350,#191333);
+    border:1px solid var(--line);box-shadow:0 20px 50px rgba(0,0,0,.55)}
+  .shotFrame img{display:block;width:100%;height:auto;border-radius:18px}
+  .shotTag{position:absolute;left:50%;transform:translateX(-50%);bottom:-11px;padding:5px 13px;border-radius:999px;
+    font-size:.6rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase;
+    background:#0d0b16;border:1px solid var(--line);color:var(--dim);white-space:nowrap}
 
-  .bigBtn{font-size:26px;letter-spacing:1px;padding:20px 54px;border-radius:32px;
-    background:linear-gradient(180deg,#ffd24d,#ff9d2e);color:#7a3b00;
-    box-shadow:0 8px 0 #c9641a,0 14px 26px rgba(0,0,0,.35);
-    animation:pulseBtn 1.4s ease-in-out infinite;transition:transform .1s}
-  .bigBtn small{display:block;font-size:13px;letter-spacing:2px;opacity:.85;margin-top:2px}
-  @keyframes pulseBtn{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+  .badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .b{padding:6px 13px;border-radius:999px;font-size:.68rem;font-weight:800;letter-spacing:.08em;
+    text-transform:uppercase;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--muted)}
+  .b.acc{background:#ff5d8f1f;border-color:#ff5d8f55;color:#ff5d8f}
+  h1{font-size:clamp(2rem,6vw,3rem);font-weight:900;letter-spacing:-.03em;line-height:1.02}
+  .hook{margin-top:10px;font-size:1.02rem;font-weight:800;color:var(--accent)}
+  .lede{margin-top:16px;color:var(--muted);font-size:1rem;line-height:1.68}
+  .why{margin-top:14px;padding:14px 16px;border-radius:14px;border-left:3px solid var(--accent);
+    background:rgba(255,255,255,.035);color:var(--muted);font-size:.94rem;line-height:1.6}
+  .why b{color:var(--ink)}
 
-  .midBtn{font-size:18px;padding:14px 30px;border-radius:24px;margin-top:18px;
-    background:linear-gradient(180deg,#8f7bff,#6b4fe0);
-    box-shadow:0 6px 0 #4530a8,0 10px 20px rgba(0,0,0,.3);transition:transform .1s}
-  .ghostBtn{font-size:16px;padding:12px 26px;border-radius:20px;margin-top:14px;
-    background:rgba(255,255,255,.14);box-shadow:inset 0 0 0 2px rgba(255,255,255,.35);
-    transition:transform .1s}
+  .playRow{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:22px}
+  .play{display:inline-block;padding:17px 44px;border-radius:16px;font-weight:900;font-size:1.1rem;
+    color:#120f1e;background:linear-gradient(92deg,#ffb703,#ffd76a);text-decoration:none;
+    box-shadow:0 6px 0 rgba(0,0,0,.35),0 0 30px rgba(255,183,3,.22);
+    transition:transform .16s ease;animation:pulse 1.9s ease-in-out infinite}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+  .play:hover{transform:scale(1.06)}
+  .play:active{transform:scale(.97);box-shadow:0 2px 0 rgba(0,0,0,.35)}
+  .note{color:var(--dim);font-size:.82rem}
 
-  .coinChip{display:inline-block;background:rgba(0,0,0,.25);border-radius:14px;
-    padding:3px 10px;font-size:14px;margin-left:8px;vertical-align:2px}
+  section{margin-top:44px}
+  h2{font-size:1.12rem;font-weight:900;letter-spacing:.01em;margin-bottom:16px;
+    display:flex;align-items:center;gap:11px}
+  h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
 
-  /* ---------- title ---------- */
-  #scrTitle{justify-content:flex-start;padding-top:9vh}
-  .logo{display:flex;flex-direction:column;align-items:center;line-height:.95;margin-bottom:8px}
-  .logo span{font-size:clamp(46px,13vw,84px);font-weight:900;color:#fff;letter-spacing:2px;
-    text-shadow:0 4px 0 rgba(120,40,140,.55),0 10px 24px rgba(0,0,0,.35);
-    animation:logoBounce 2.2s ease-in-out infinite}
-  .logo span:nth-child(2){animation-delay:.15s;color:#ffd9ec}
-  .logo span.fit{color:#ffe14d;animation-delay:.3s;
-    text-shadow:0 4px 0 rgba(180,90,0,.6),0 10px 24px rgba(0,0,0,.35)}
-  @keyframes logoBounce{0%,100%{transform:translateY(0) rotate(-1.5deg) scale(1)}
-    50%{transform:translateY(-10px) rotate(1.5deg) scale(1.04)}}
-  .bestBadge{margin:10px 0 26px;color:#fff;font-weight:800;font-size:14px;letter-spacing:3px;
-    background:rgba(0,0,0,.25);padding:8px 20px;border-radius:20px}
-  #titleSpacer{flex:1 1 auto;min-height:24vh;pointer-events:none}
-  .badge{position:absolute;bottom:calc(14px + env(safe-area-inset-bottom));left:50%;
-    transform:translateX(-50%);color:rgba(255,255,255,.75);font-size:12px;font-weight:700;
-    letter-spacing:1px;text-decoration:none;background:rgba(0,0,0,.28);
-    padding:7px 16px;border-radius:16px}
-  .badge:active{background:rgba(0,0,0,.45)}
+  ol.steps{list-style:none;display:grid;gap:11px}
+  ol.steps li{display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border-radius:14px;
+    background:rgba(255,255,255,.035);border:1px solid var(--line);color:var(--muted);
+    font-size:.95rem;line-height:1.55}
+  ol.steps .n{flex:0 0 26px;height:26px;border-radius:50%;display:grid;place-items:center;
+    background:#ff5d8f22;color:#ff5d8f;font-weight:900;font-size:.82rem}
 
-  /* ---------- HUD ---------- */
-  #hud{position:fixed;inset:0;z-index:10;pointer-events:none;color:#fff}
-  #hudTop{position:absolute;top:calc(10px + env(safe-area-inset-top));left:12px;right:12px;
-    display:flex;align-items:center;justify-content:space-between;gap:8px}
-  .hudChip{background:rgba(0,0,0,.32);border-radius:18px;padding:7px 14px;font-weight:900;
-    font-size:15px;letter-spacing:.5px;box-shadow:0 3px 8px rgba(0,0,0,.2)}
-  #hudMid{display:flex;flex-direction:column;align-items:center;gap:5px}
-  #hudDots{display:flex;gap:6px}
-  #hudDots i{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.3);
-    transition:all .3s cubic-bezier(.34,1.56,.64,1)}
-  #hudDots i.done{background:#ffe14d;transform:scale(1.3);box-shadow:0 0 8px #ffe14d}
-  #hudDots i.cur{background:#fff;transform:scale(1.15)}
-  #hudHearts{display:flex;gap:3px;font-size:17px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.3))}
-  #hudHearts s{text-decoration:none;transition:all .3s}
-  #hudHearts s.off{filter:grayscale(1);opacity:.35;transform:scale(.8)}
+  ul.feats{list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  @media (max-width:700px){ ul.feats{grid-template-columns:1fr} }
+  ul.feats li{position:relative;padding:13px 15px 13px 38px;border-radius:13px;
+    background:rgba(255,255,255,.035);border:1px solid var(--line);
+    color:var(--muted);font-size:.9rem;line-height:1.5}
+  ul.feats li::before{content:"";position:absolute;left:15px;top:17px;width:9px;height:9px;border-radius:3px;
+    background:#ff5d8f;box-shadow:0 0 10px #ff5d8f88}
 
-  #meterWrap{position:absolute;left:50%;transform:translateX(-50%);
-    bottom:calc(22px + env(safe-area-inset-bottom));width:min(86vw,420px)}
-  #meterLabel{text-align:center;font-weight:900;font-size:13px;letter-spacing:2px;
-    margin-bottom:6px;text-shadow:0 2px 4px rgba(0,0,0,.5)}
-  #meterBar{position:relative;height:22px;background:rgba(0,0,0,.4);border-radius:14px;
-    overflow:hidden;box-shadow:inset 0 2px 6px rgba(0,0,0,.4),0 2px 6px rgba(0,0,0,.25)}
-  #meterFill{position:absolute;left:0;top:0;bottom:0;width:0%;border-radius:14px;
-    background:linear-gradient(90deg,#5fd4ff,#7cff9a);transition:width .08s linear}
-  #meterFill.hot{background:linear-gradient(90deg,#ffd24d,#ff9d2e)}
-  #meterFill.perf{background:linear-gradient(90deg,#ff9df0,#ffd24d)}
-  .mMark{position:absolute;top:0;bottom:0;width:3px;background:rgba(255,255,255,.9);
-    border-radius:2px;z-index:2}
-  #meterPerfect{background:#ffe14d;box-shadow:0 0 6px #ffe14d}
+  .metaBox{padding:18px 20px;border-radius:16px;background:linear-gradient(160deg,var(--card),var(--card2));
+    border:1px solid var(--line);color:var(--muted);font-size:.95rem;line-height:1.62}
+  .metaBox b{color:var(--ink)}
 
-  /* ---------- mute ---------- */
-  #btnMute{position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:40;
-    width:44px;height:44px;border-radius:50%;font-size:20px;
-    background:rgba(0,0,0,.32);box-shadow:0 3px 8px rgba(0,0,0,.25);display:none}
-  #btnMute.show{display:block}
-  body[data-ui="title"] #btnMute,body[data-ui="playing"] #btnMute{display:block}
-
-  /* ---------- shop ---------- */
-  #scrShop{justify-content:flex-start;padding-top:calc(16px + env(safe-area-inset-top));
-    background:rgba(18,8,40,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
-  #shopHead{display:flex;align-items:center;justify-content:space-between;gap:10px;
-    width:min(92vw,460px);margin-bottom:14px}
-  #shopHead h2{color:#fff;font-size:26px;letter-spacing:2px;
-    text-shadow:0 3px 0 rgba(0,0,0,.3)}
-  #btnShopBack{font-size:15px;padding:10px 18px;border-radius:16px;
-    background:rgba(255,255,255,.16);box-shadow:inset 0 0 0 2px rgba(255,255,255,.3)}
-  #shopCoins{color:#ffe14d;font-weight:900;font-size:17px;background:rgba(0,0,0,.3);
-    padding:8px 14px;border-radius:16px}
-  #shopGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;
-    width:min(92vw,460px);overflow-y:auto;padding-bottom:20px;touch-action:pan-y}
-  .skinCard{background:rgba(255,255,255,.1);border-radius:22px;padding:14px 10px;
-    display:flex;flex-direction:column;align-items:center;gap:6px;color:#fff;
-    box-shadow:inset 0 0 0 2px rgba(255,255,255,.15);transition:transform .15s}
-  .skinCard.sel{box-shadow:inset 0 0 0 3px #ffe14d,0 0 18px rgba(255,225,77,.35)}
-  .skinCard.deny{animation:denyShake .35s}
-  @keyframes denyShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}
-    75%{transform:translateX(7px)}}
-  .skinCard canvas{width:76px;height:76px}
-  .skinName{font-weight:900;font-size:15px;letter-spacing:1px}
-  .skinPrice{font-size:13px;font-weight:800;background:rgba(0,0,0,.3);
-    padding:4px 12px;border-radius:12px;color:#ffe14d}
-  .skinPrice.owned{color:#9fffb0}
-
-  /* ---------- complete / gameover ---------- */
-  .panel{background:rgba(20,10,44,.66);backdrop-filter:blur(5px);
-    -webkit-backdrop-filter:blur(5px);border-radius:32px;padding:34px 40px;
-    display:flex;flex-direction:column;align-items:center;color:#fff;
-    box-shadow:0 20px 50px rgba(0,0,0,.45),inset 0 0 0 2px rgba(255,255,255,.12)}
-  .panel h2{font-size:32px;letter-spacing:2px;margin-bottom:8px;
-    text-shadow:0 3px 0 rgba(0,0,0,.3)}
-  #compStars{font-size:44px;letter-spacing:6px;margin:10px 0;height:56px}
-  #compStars b{display:inline-block;opacity:.2;filter:grayscale(1);transform:scale(.6)}
-  #compStars b.on{opacity:1;filter:none;
-    animation:starPop .5s cubic-bezier(.34,1.8,.64,1) both}
-  @keyframes starPop{from{transform:scale(0) rotate(-40deg)}
-    to{transform:scale(1) rotate(0)}}
-  #compCoinLine{font-size:24px;font-weight:900;color:#ffe14d;margin:6px 0 4px}
-  .subLine{font-size:15px;opacity:.85;font-weight:700}
+  .nav{display:flex;justify-content:space-between;gap:12px;margin-top:48px;flex-wrap:wrap}
+  .nav a{flex:1;min-width:200px;padding:15px 18px;border-radius:14px;background:rgba(255,255,255,.035);
+    border:1px solid var(--line);text-decoration:none;color:var(--ink);font-weight:800;font-size:.92rem}
+  .nav a:hover{border-color:rgba(255,255,255,.2)}
+  .nav span{display:block;font-size:.64rem;font-weight:900;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--dim);margin-bottom:5px}
+  .nav .r{text-align:right}
+  footer{margin-top:40px;text-align:center;color:#5c5486;font-size:.8rem;line-height:1.7}
 </style>
-<script src="/analytics.js" defer></script>
 </head>
-<body data-ui="title">
-<canvas id="c"></canvas>
+<body>
+<div class="wrap">
+  <a class="back" href="../../">← All prototypes</a>
 
-<div id="hud" class="hidden">
-  <div id="hudTop">
-    <div class="hudChip" id="hudLevel">LV 1</div>
-    <div id="hudMid">
-      <div id="hudDots"><i></i><i></i><i></i></div>
-      <div id="hudHearts"><s>❤️</s><s>❤️</s><s>❤️</s></div>
+  <div class="hero">
+    <div>
+      <div class="shotFrame">
+        <img src="../../assets/shots/puff-puff-fit.png" width="645" height="1146"
+             alt="Puff Puff Fit gameplay screenshot">
+        <span class="shotTag">Actual gameplay</span>
+      </div>
     </div>
-    <div class="hudChip" id="hudCoins">🪙 0</div>
-  </div>
-  <div id="meterWrap">
-    <div id="meterLabel">FILL 0% · TARGET 60%</div>
-    <div id="meterBar">
-      <div id="meterFill"></div>
-      <div class="mMark" id="meterTarget"></div>
-      <div class="mMark" id="meterPerfect"></div>
+    <div>
+      <div class="badges">
+        <span class="b acc">Wave 1</span>
+        <span class="b">Risk-vs-greed puzzle</span>
+        <span class="b">10–25s rounds</span>
+      </div>
+      <h1>🎈 Puff Puff Fit</h1>
+      <p class="hook">Hold to inflate, release before the pop</p>
+      <p class="lede">A squishy blob sits in a chamber ringed with spikes. Hold anywhere and it inflates; let go and it locks in place. Fill enough of the chamber to clear the round — but every extra millimetre of greed brings the blob closer to a spike, and a pop costs a heart.</p>
+      <p class="why"><b>Why it works:</b> The whole game is one button and one decision: take the safe fill, or push for the perfect. That near-miss tension is the same greed loop that drives the genre's best performers, and failure is instant and comedic rather than punishing.</p>
+      <div class="playRow">
+        <a class="play" href="play.html">▶ PLAY NOW</a>
+        <span class="note">Runs in your browser · no install · works on phones</span>
+      </div>
     </div>
   </div>
-</div>
 
-<button id="btnMute" class="show">🔊</button>
+  <section>
+    <h2>How to play</h2>
+    <ol class="steps">
+        <li><span class="n">1</span><span>Press and hold anywhere to start inflating the blob.</span></li>
+        <li><span class="n">2</span><span>Watch the fill meter and the spikes — the blob's eyes widen as it gets close.</span></li>
+        <li><span class="n">3</span><span>Release before you touch a spike. Fill 92%+ for a PERFECT and triple coins.</span></li>
+    </ol>
+  </section>
 
-<div id="scrTitle" class="screen">
-  <h1 class="logo"><span>PUFF</span><span>PUFF</span><span class="fit">FIT</span></h1>
-  <div class="bestBadge" id="titleBest">BEST LEVEL 1</div>
-  <button id="btnPlay" class="bigBtn">PLAY<small id="playLvl">LEVEL 1</small></button>
-  <button id="btnShopOpen" class="midBtn">🛍 SHOP<span class="coinChip" id="titleCoins">🪙 0</span></button>
-  <div id="titleSpacer"></div>
-  <a class="badge" href="../../">TaterTot Games Labs</a>
-</div>
+  <section>
+    <h2>What's in it</h2>
+    <ul class="feats">
+      <li>Wobbly 14-vertex blob with real squash and stretch</li>
+      <li>Eyes that track the nearest spike and widen with danger</li>
+      <li>Procedural chambers with orbiting spike balls from level 3</li>
+      <li>Perfect-fill confetti cannons and a coin multiplier</li>
+      <li>Seven unlockable blob skins, from Lemon to Galaxy to Ghost</li>
+      <li>Verified winnable: a 200-round sweep across levels 1–50 found zero unwinnable rounds</li>
+    </ul>
+  </section>
 
-<div id="scrShop" class="screen hidden">
-  <div id="shopHead">
-    <button id="btnShopBack">← BACK</button>
-    <h2>SKIN SHOP</h2>
-    <div id="shopCoins">🪙 0</div>
+  <section>
+    <h2>The meta layer</h2>
+    <div class="metaBox">Coins earned each round feed a skin shop with seven collectable blobs, each with its own palette, face and particle signature.</div>
+  </section>
+
+  <div class="nav">
+    <a href="../beam-team/"><span>Previous</span>← 🔦 Beam Team</a>
+    <a class="r" href="../topple-party/"><span>Next</span>🁢 Topple Party →</a>
   </div>
-  <div id="shopGrid"></div>
+
+  <footer>
+    A single self-contained file — no engine, no libraries, no external requests.<br>
+    © 2026 TaterTot Games Labs
+  </footer>
 </div>
-
-<div id="scrComplete" class="screen hidden">
-  <div class="panel">
-    <h2 id="compTitle">LEVEL 1 CLEAR!</h2>
-    <div id="compStars"><b>⭐</b><b>⭐</b><b>⭐</b></div>
-    <div id="compCoinLine">+<span id="compCoins">0</span> 🪙</div>
-    <div class="subLine" id="compSub">Nicely puffed!</div>
-    <button id="btnNext" class="bigBtn" style="margin-top:22px;font-size:22px">NEXT LEVEL</button>
-  </div>
-</div>
-
-<div id="scrOver" class="screen hidden">
-  <div class="panel">
-    <h2>POPPED OUT!</h2>
-    <div class="subLine" id="overLevel">You reached level 1</div>
-    <button id="btnRetry" class="bigBtn" style="margin-top:24px;font-size:22px">RETRY</button>
-    <button id="btnHome" class="ghostBtn">🏠 HOME</button>
-  </div>
-</div>
-
-<script>
-'use strict';
-/* ============================== utils ============================== */
-var TAU = Math.PI * 2;
-function clamp(v, a, b){ return v < a ? a : (v > b ? b : v); }
-function lerp(a, b, t){ return a + (b - a) * t; }
-function rand(a, b){ return a + Math.random() * (b - a); }
-function randi(a, b){ return Math.floor(rand(a, b + 1)); }
-function easeOutCubic(t){ return 1 - Math.pow(1 - t, 3); }
-function easeOutBack(t){
-  var c1 = 1.70158, c3 = c1 + 1;
-  return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
-}
-
-/* ============================== save ============================== */
-var SAVE_KEY = 'ttg_puff';
-function defaultSave(){
-  return { coins: 0, level: 1, best: 1, skins: ['classic'], skin: 'classic', muted: false };
-}
-function loadSave(){
-  var d = defaultSave();
-  try {
-    var raw = localStorage.getItem(SAVE_KEY);
-    if (raw) {
-      var s = JSON.parse(raw);
-      if (s && typeof s === 'object') {
-        d.coins = typeof s.coins === 'number' ? Math.max(0, s.coins | 0) : 0;
-        d.level = typeof s.level === 'number' ? Math.max(1, s.level | 0) : 1;
-        d.best  = typeof s.best  === 'number' ? Math.max(1, s.best  | 0) : 1;
-        d.skins = Array.isArray(s.skins) && s.skins.length ? s.skins : ['classic'];
-        d.skin  = typeof s.skin === 'string' ? s.skin : 'classic';
-        d.muted = !!s.muted;
-        if (d.skins.indexOf('classic') < 0) d.skins.unshift('classic');
-        if (d.skins.indexOf(d.skin) < 0) d.skin = 'classic';
-      }
-    }
-  } catch (e) { /* corrupted save — start fresh */ }
-  return d;
-}
-var save = loadSave();
-function persist(){
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) { /* full/blocked */ }
-}
-
-/* ============================== skins ============================== */
-var SKINS = [
-  { id:'classic',   name:'Puffy',     price:0,    body:'#ff9dbf', dark:'#d6538a', cheek:'#ff5f9e', special:'' },
-  { id:'lemon',     name:'Lemon',     price:120,  body:'#ffe14d', dark:'#dba018', cheek:'#ff9d2e', special:'' },
-  { id:'bubblegum', name:'Bubblegum', price:250,  body:'#ff9de2', dark:'#c94fa8'.slice(0,7), cheek:'#ff6fd8', special:'bubble' },
-  { id:'slime',     name:'Slime',     price:400,  body:'#8ee84f', dark:'#4fae1f', cheek:'#5fd42e', special:'drip' },
-  { id:'galaxy',    name:'Galaxy',    price:600,  body:'#7b5bd6', dark:'#43289c', cheek:'#a98fff', special:'stars' },
-  { id:'cheese',    name:'Cheese',    price:850,  body:'#ffc93c', dark:'#d78f1c', cheek:'#ff9d2e', special:'holes' },
-  { id:'ghost',     name:'Boo',       price:1200, body:'#eef2ff', dark:'#93a0c8', cheek:'#ffb3c8', special:'ghost' }
-];
-function skinById(id){
-  for (var i = 0; i < SKINS.length; i++) if (SKINS[i].id === id) return SKINS[i];
-  return SKINS[0];
-}
-var curSkin = skinById(save.skin);
-
-/* ============================== audio ============================== */
-var AC = null, master = null, audioDead = false;
-var muted = save.muted;
-// Audio is optional: a machine with no output device throws on construction.
-// It must never be able to abort a caller (the PLAY handler calls this first).
-function ac(){
-  if (audioDead) return null;
-  if (!AC) {
-    var Ctx = window.AudioContext || window.webkitAudioContext;
-    if (!Ctx) { audioDead = true; return null; }
-    try {
-      AC = new Ctx();
-      master = AC.createGain();
-      master.gain.value = muted ? 0 : 0.5;
-      master.connect(AC.destination);
-    } catch (e) {
-      AC = null; master = null; audioDead = true;
-      return null;
-    }
-  }
-  try { if (AC.state === 'suspended') AC.resume(); } catch (e) {}
-  return AC;
-}
-function beep(f0, f1, dur, type, vol, when){
-  var a = ac(); if (!a) return;
-  var t0 = a.currentTime + (when || 0);
-  var o = a.createOscillator(), g = a.createGain();
-  o.type = type || 'sine';
-  o.frequency.setValueAtTime(f0, t0);
-  if (f1) o.frequency.exponentialRampToValueAtTime(Math.max(f1, 1), t0 + dur);
-  g.gain.setValueAtTime(0.0001, t0);
-  g.gain.exponentialRampToValueAtTime(vol || 0.25, t0 + 0.015);
-  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-  o.connect(g); g.connect(master);
-  o.start(t0); o.stop(t0 + dur + 0.05);
-}
-function noiseBurst(dur, vol, f0, f1, when){
-  var a = ac(); if (!a) return;
-  var t0 = a.currentTime + (when || 0);
-  var len = Math.max(1, Math.floor(a.sampleRate * dur));
-  var buf = a.createBuffer(1, len, a.sampleRate);
-  var d = buf.getChannelData(0);
-  for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
-  var src = a.createBufferSource(); src.buffer = buf;
-  var bp = a.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 0.8;
-  bp.frequency.setValueAtTime(f0 || 900, t0);
-  bp.frequency.exponentialRampToValueAtTime(Math.max(f1 || 150, 20), t0 + dur);
-  var g = a.createGain();
-  g.gain.setValueAtTime(vol || 0.4, t0);
-  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-  src.connect(bp); bp.connect(g); g.connect(master);
-  src.start(t0); src.stop(t0 + dur + 0.02);
-}
-var infOsc = null, infGain = null;
-function startInflateSnd(){
-  stopInflateSnd();
-  var a = ac(); if (!a) return;
-  infOsc = a.createOscillator(); infGain = a.createGain();
-  infOsc.type = 'triangle';
-  infOsc.frequency.value = 150;
-  infGain.gain.setValueAtTime(0.0001, a.currentTime);
-  infGain.gain.exponentialRampToValueAtTime(0.09, a.currentTime + 0.08);
-  infOsc.connect(infGain); infGain.connect(master);
-  infOsc.start();
-}
-function updateInflateSnd(fill){
-  if (infOsc && AC) infOsc.frequency.setTargetAtTime(140 + fill * 560, AC.currentTime, 0.03);
-}
-function stopInflateSnd(){
-  if (!infOsc || !AC) { infOsc = null; infGain = null; return; }
-  var t = AC.currentTime;
-  try {
-    infGain.gain.cancelScheduledValues(t);
-    infGain.gain.setTargetAtTime(0.0001, t, 0.04);
-    infOsc.stop(t + 0.25);
-  } catch (e) { /* already stopped */ }
-  infOsc = null; infGain = null;
-}
-function sfxClick(){ beep(500, 700, 0.08, 'sine', 0.2); }
-function sfxPop(){ noiseBurst(0.3, 0.5, 1400, 120); beep(220, 40, 0.28, 'sine', 0.4); }
-function sfxFail(){ beep(280, 180, 0.22, 'sawtooth', 0.16); beep(200, 120, 0.3, 'sawtooth', 0.16, 0.18); }
-function sfxWin(){ beep(523, 0, 0.11, 'square', 0.14); beep(659, 0, 0.11, 'square', 0.14, 0.09); beep(784, 0, 0.16, 'square', 0.16, 0.18); }
-function sfxPerfect(){
-  var notes = [523, 659, 784, 1047, 1319];
-  for (var i = 0; i < notes.length; i++) beep(notes[i], 0, 0.14, 'square', 0.15, i * 0.08);
-  beep(1568, 0, 0.35, 'sine', 0.14, 0.42);
-  noiseBurst(0.35, 0.1, 4000, 2000, 0.4);
-}
-function sfxCoin(when){ beep(900, 1400, 0.09, 'sine', 0.16, when || 0); beep(1350, 1800, 0.12, 'sine', 0.14, (when || 0) + 0.07); }
-function sfxBuy(){ sfxCoin(0); sfxCoin(0.12); beep(700, 1100, 0.2, 'triangle', 0.15, 0.2); }
-function buzz(p){ if (!muted && navigator.vibrate) { try { navigator.vibrate(p); } catch (e) {} } }
-
-/* ============================== canvas ============================== */
-var cv = document.getElementById('c');
-var ctx = cv.getContext('2d');
-var W = 0, H = 0, DPR = 1;
-function resize(){
-  DPR = Math.min(window.devicePixelRatio || 1, 3);
-  W = window.innerWidth; H = window.innerHeight;
-  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
-  cv.style.width = W + 'px'; cv.style.height = H + 'px';
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  if (state === 'playing') genRound(true);
-}
-window.addEventListener('resize', function(){ resize(); });
-
-function rr(c, x, y, w, h, r){
-  r = Math.min(r, w / 2, h / 2);
-  c.beginPath();
-  c.moveTo(x + r, y);
-  c.arcTo(x + w, y, x + w, y + h, r);
-  c.arcTo(x + w, y + h, x, y + h, r);
-  c.arcTo(x, y + h, x, y, r);
-  c.arcTo(x, y, x + w, y, r);
-  c.closePath();
-}
-
-/* ============================== game state ============================== */
-var state = 'title'; // title | playing | complete | over | shop
-var time = 0;
-var level = save.level, hearts = 3, round = 1;
-var coins = save.coins, levelCoins = 0, perfects = 0;
-var phase = 'ready';  // ready | inflate | win | fail | pop
-var phaseT = 0, holdT = 0;
-var wasPerfect = false;
-
-var cham = { x: 0, y: 0, w: 100, h: 100, pa: 0, ps: 1 };
-var spikes = [], orbiters = [];
-var capacity = 1, target = 0.6, requiredR = 50, perfectR = 60, Rins = 100;
-
-var NV = 14;
-var blob = { x: 0, y: 0, r: 20, r0: 20, verts: [], sq: 1, sqv: 0, danger: 0, dangX: 0, dangY: -1 };
-// Seed the wobble springs up front: update() runs every frame from boot — including
-// on the title screen — long before genRound() first populates them.
-for (var iv = 0; iv < NV; iv++) blob.verts.push({ o: 0, v: 0 });
-var blinkT = 0, blinkV = 0;
-
-var particles = [], popups = [];
-var shake = 0;
-var sparkAcc = 0;
-
-/* ============================== DOM refs ============================== */
-function $(id){ return document.getElementById(id); }
-var elHud = $('hud'), elHudLevel = $('hudLevel'), elHudCoins = $('hudCoins');
-var elDots = $('hudDots').children, elHearts = $('hudHearts').children;
-var elMeterFill = $('meterFill'), elMeterLabel = $('meterLabel');
-var elMeterTarget = $('meterTarget'), elMeterPerfect = $('meterPerfect');
-var elTitle = $('scrTitle'), elShop = $('scrShop'), elComplete = $('scrComplete'), elOver = $('scrOver');
-var elBtnMute = $('btnMute');
-
-function showScreen(el){
-  var all = [elTitle, elShop, elComplete, elOver];
-  for (var i = 0; i < all.length; i++) all[i].classList.add('hidden');
-  if (el) { el.classList.remove('hidden'); el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; }
-  elHud.classList.toggle('hidden', state !== 'playing');
-  document.body.setAttribute('data-ui', state);
-}
-function updateHudStatic(){
-  elHudLevel.textContent = 'LV ' + level;
-  elHudCoins.textContent = '🪙 ' + coins;
-  for (var i = 0; i < 3; i++) {
-    elDots[i].className = (i < round - 1) ? 'done' : (i === round - 1 ? 'cur' : '');
-    elHearts[i].className = i < hearts ? '' : 'off';
-  }
-}
-function updateMeter(fill){
-  var pct = Math.round(clamp(fill, 0, 1.2) * 100);
-  elMeterFill.style.width = clamp(fill * 100, 0, 100) + '%';
-  elMeterFill.className = fill >= 0.92 ? 'perf' : (fill >= target ? 'hot' : '');
-  elMeterLabel.textContent = 'FILL ' + pct + '% · TARGET ' + Math.round(target * 100) + '%';
-  elMeterTarget.style.left = 'calc(' + Math.round(target * 100) + '% - 2px)';
-  elMeterPerfect.style.left = 'calc(92% - 2px)';
-}
-
-/* ============================== level generation ============================== */
-function curInset(){
-  return cham.pa ? cham.pa * (0.5 + 0.5 * Math.sin(time * cham.ps)) : 0;
-}
-function wallDist(px, py, ins){
-  return Math.min(px - (cham.x + ins), (cham.x + cham.w - ins) - px,
-                  py - (cham.y + ins), (cham.y + cham.h - ins) - py);
-}
-function spikePts(s, ins){
-  // returns [tipX, tipY, midX, midY] for the current wall inset
-  var bx = s.x + s.nx * ins, by = s.y + s.ny * ins;
-  return [bx + s.nx * s.h, by + s.ny * s.h, bx + s.nx * s.h * 0.55, by + s.ny * s.h * 0.55];
-}
-function orbPos(o){
-  return [o.ax + Math.cos(o.ang) * o.orad, o.ay + Math.sin(o.ang) * o.orad];
-}
-// distance to nearest pop-hazard right now (spike tips + orbiter balls)
-function hazardDist(px, py){
-  var ins = curInset(), best = Infinity, bx = 0, by = 0, i, p, d;
-  for (i = 0; i < spikes.length; i++) {
-    p = spikePts(spikes[i], ins);
-    d = Math.hypot(px - p[0], py - p[1]) - 2;
-    if (d < best) { best = d; bx = p[0]; by = p[1]; }
-    d = Math.hypot(px - p[2], py - p[3]) - 3;
-    if (d < best) { best = d; bx = p[2]; by = p[3]; }
-  }
-  for (i = 0; i < orbiters.length; i++) {
-    var op = orbPos(orbiters[i]);
-    d = Math.hypot(px - op[0], py - op[1]) - orbiters[i].rad;
-    if (d < best) { best = d; bx = op[0]; by = op[1]; }
-  }
-  blob.dangX = bx; blob.dangY = by;
-  return best;
-}
-// worst-case safe radius at a point (walls at max inset, spikes, full orbit paths)
-function safeRadiusAt(px, py){
-  var ins = cham.pa;
-  var d = wallDist(px, py, ins) - 3, i, p;
-  for (i = 0; i < spikes.length; i++) {
-    p = spikePts(spikes[i], ins);
-    d = Math.min(d, Math.hypot(px - p[0], py - p[1]) - 3);
-    d = Math.min(d, Math.hypot(px - p[2], py - p[3]) - 4);
-  }
-  for (i = 0; i < orbiters.length; i++) {
-    var o = orbiters[i];
-    var da = Math.hypot(px - o.ax, py - o.ay);
-    d = Math.min(d, Math.abs(da - o.orad) - o.rad - 4);
-  }
-  return d;
-}
-function perimPoint(s){
-  var w = cham.w, h = cham.h;
-  if (s < w)          return [cham.x + s, cham.y, 0, 1];
-  s -= w;
-  if (s < h)          return [cham.x + w, cham.y + s, -1, 0];
-  s -= h;
-  if (s < w)          return [cham.x + w - s, cham.y + h, 0, -1];
-  s -= w;
-  return [cham.x, cham.y + h - s, 1, 0];
-}
-function genLayoutOnce(){
-  spikes = []; orbiters = [];
-  var per = 2 * (cham.w + cham.h);
-  var ns = Math.min(3 + Math.floor(level * 0.9), 14, Math.floor(per / 120));
-  var nOrb = level >= 3 ? Math.min(1 + Math.floor((level - 3) / 4), 3) : 0;
-  var placed = [], tries = 0;
-  while (spikes.length < ns && tries < 200) {
-    tries++;
-    var sp = rand(0, per), ok = true;
-    for (var i = 0; i < placed.length; i++) {
-      var dd = Math.abs(sp - placed[i]);
-      if (Math.min(dd, per - dd) < 52) { ok = false; break; }
-    }
-    if (!ok) continue;
-    placed.push(sp);
-    var pt = perimPoint(sp);
-    var sh = rand(20, 26 + Math.min(level * 1.1, 18));
-    spikes.push({ x: pt[0], y: pt[1], nx: pt[2], ny: pt[3], h: sh, w2: sh * 0.44 });
-  }
-  var cx = cham.x + cham.w / 2, cy = cham.y + cham.h / 2;
-  var spd = Math.min(0.6 + level * 0.07, 2.0);
-  for (var k = 0; k < nOrb; k++) {
-    var ax = cx + rand(-cham.w * 0.16, cham.w * 0.16);
-    var ay = cy + rand(-cham.h * 0.16, cham.h * 0.16);
-    var maxo = Math.min(ax - cham.x, cham.x + cham.w - ax, ay - cham.y, cham.y + cham.h - ay) - 13 - cham.pa - 12;
-    if (maxo < 36) continue;
-    orbiters.push({
-      ax: ax, ay: ay, orad: rand(Math.min(46, maxo), maxo),
-      ang: rand(0, TAU), speed: spd * rand(0.85, 1.15) * (Math.random() < 0.5 ? -1 : 1),
-      rad: 13, spin: rand(1, 2)
-    });
-  }
-  // capacity + spawn
-  Rins = Math.min(cham.w, cham.h) / 2 - cham.pa;
-  capacity = Math.PI * Math.pow(Rins * 0.96, 2) *
-             (1 - 0.018 * spikes.length - 0.05 * orbiters.length);
-  var bestX = cx, bestY = cy, bestSafe = -1;
-  for (var t = 0; t < 60; t++) {
-    var pad = Rins * 0.25;
-    var px = lerp(cham.x + pad, cham.x + cham.w - pad, (Math.random() + Math.random()) / 2);
-    var py = lerp(cham.y + pad, cham.y + cham.h - pad, (Math.random() + Math.random()) / 2);
-    var sr = safeRadiusAt(px, py);
-    if (sr > bestSafe) { bestSafe = sr; bestX = px; bestY = py; }
-  }
-  return { x: bestX, y: bestY, safe: bestSafe };
-}
-function genRound(keepPhaseQuiet){
-  // chamber box
-  cham.w = Math.min(W * 0.88, 540);
-  cham.h = Math.min(H * 0.54, 620);
-  cham.x = (W - cham.w) / 2;
-  cham.y = Math.max(H * 0.13, (H - cham.h) / 2 - H * 0.045);
-  if (level >= 8) { cham.pa = Math.min(10 + (level - 8) * 2, 26); cham.ps = 1.1 + level * 0.02; }
-  else { cham.pa = 0; cham.ps = 1; }
-
-  // retry layout until comfortably winnable
-  var best = null;
-  for (var attempt = 0; attempt < 4; attempt++) {
-    var g = genLayoutOnce();
-    var achievable = Math.PI * g.safe * g.safe / capacity;
-    if (!best || achievable > best.achievable) {
-      best = { x: g.x, y: g.y, safe: g.safe, achievable: achievable,
-               spikes: spikes, orbiters: orbiters, capacity: capacity };
-    }
-    if (achievable >= 0.8) break;
-  }
-  spikes = best.spikes; orbiters = best.orbiters; capacity = best.capacity;
-
-  target = clamp(0.58 + level * 0.012, 0.58, 0.8) + rand(-0.04, 0.04);
-  // winnability is absolute: never let the target exceed what a careful player can reach
-  target = Math.max(Math.min(clamp(target, 0.35, 0.85), best.achievable * 0.82), 0.08);
-  requiredR = Math.sqrt(target * capacity / Math.PI);
-  perfectR = Math.sqrt(0.92 * capacity / Math.PI);
-
-  blob.x = best.x; blob.y = best.y;
-  blob.r0 = Math.max(13, Rins * 0.14);
-  blob.r = blob.r0;
-  blob.sq = 1; blob.sqv = 0; blob.danger = 0;
-  blob.verts = [];
-  for (var i = 0; i < NV; i++) blob.verts.push({ o: 0, v: rand(-30, 30) });
-
-  phase = 'ready'; phaseT = 0; holdT = 0; wasPerfect = false;
-  sparkAcc = 0;
-  updateHudStatic();
-  updateMeter(Math.PI * blob.r * blob.r / capacity);
-  if (!keepPhaseQuiet) {
-    pushPopup(blob.x, cham.y - 26, 'ROUND ' + round + '/3', '#ffffff', 22);
-    beep(440 + round * 60, 0, 0.1, 'sine', 0.12);
-  }
-}
-
-/* ============================== flow ============================== */
-function startLevel(lv){
-  level = lv; hearts = 3; round = 1; levelCoins = 0; perfects = 0;
-  state = 'playing';
-  window.TTG?.track('level_start', { level: lv });
-  showScreen(null);
-  genRound(false);
-}
-function levelComplete(){
-  stopInflateSnd();
-  state = 'complete';
-  var stars = Math.max(1, hearts);
-  save.level = level + 1;
-  save.best = Math.max(save.best, save.level);
-  save.coins = coins;
-  persist();
-  window.TTG?.track('level_complete', { level: level, value: levelCoins });
-  $('compTitle').textContent = 'LEVEL ' + level + ' CLEAR!';
-  $('compSub').textContent = perfects >= 3 ? 'FLAWLESS PUFFING!' :
-    (perfects > 0 ? perfects + ' perfect fit' + (perfects > 1 ? 's' : '') + '!' : 'Nicely puffed!');
-  var starEls = $('compStars').children;
-  for (var i = 0; i < 3; i++) {
-    starEls[i].className = '';
-    if (i < stars) {
-      (function(el, d){ setTimeout(function(){ el.className = 'on'; beep(600 + d * 200, 0, 0.12, 'square', 0.12); }, 300 + d * 280); })(starEls[i], i);
-    }
-  }
-  showScreen(elComplete);
-  // coin tally count-up
-  var el = $('compCoins'), from = 0, dur = 900, t0 = performance.now();
-  function tick(now){
-    var t = clamp((now - t0) / dur, 0, 1);
-    el.textContent = Math.round(lerp(from, levelCoins, easeOutCubic(t)));
-    if (t < 1) requestAnimationFrame(tick);
-  }
-  requestAnimationFrame(tick);
-  confettiBlast(2);
-  sfxWin(); sfxCoin(0.3); sfxCoin(0.45);
-  buzz([30, 40, 30, 40, 60]);
-}
-function gameOver(){
-  stopInflateSnd();
-  state = 'over';
-  save.coins = coins; persist();
-  window.TTG?.track('game_over', { level: level, value: levelCoins });
-  $('overLevel').textContent = 'You reached level ' + level;
-  showScreen(elOver);
-}
-function goTitle(){
-  state = 'title';
-  save.coins = coins; persist();
-  $('titleBest').textContent = 'BEST LEVEL ' + save.best;
-  $('playLvl').textContent = 'LEVEL ' + save.level;
-  $('titleCoins').textContent = '🪙 ' + coins;
-  showScreen(elTitle);
-}
-
-/* ============================== juice ============================== */
-function pushPopup(x, y, txt, color, size){
-  popups.push({ x: x, y: y, txt: txt, color: color, size: size || 18, t: 0, dur: 1.2 });
-}
-function spawnShards(x, y, r, color){
-  for (var i = 0; i < 26; i++) {
-    var a = rand(0, TAU), sp = rand(120, 420);
-    particles.push({ type: 'shard', x: x + Math.cos(a) * r * 0.6, y: y + Math.sin(a) * r * 0.6,
-      vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 80, rot: rand(0, TAU), vr: rand(-8, 8),
-      size: rand(4, 11), color: color, life: 0, max: rand(0.6, 1.1) });
-  }
-}
-function spawnSparks(x, y, n, color){
-  for (var i = 0; i < n; i++) {
-    var a = rand(0, TAU), sp = rand(30, 140);
-    particles.push({ type: 'spark', x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 40,
-      size: rand(1.5, 4), color: color, life: 0, max: rand(0.4, 0.8) });
-  }
-}
-function spawnRing(x, y, r, color){
-  particles.push({ type: 'ring', x: x, y: y, r: r, color: color, life: 0, max: 0.6 });
-}
-function confettiBlast(mult){
-  mult = mult || 1;
-  var colors = ['#ff5f9e', '#ffe14d', '#5fd4ff', '#7cff9a', '#c58fff', '#ff9d2e'];
-  for (var side = 0; side < 2; side++) {
-    var ox = side === 0 ? W * 0.06 : W * 0.94;
-    for (var i = 0; i < 45 * mult; i++) {
-      var a = (side === 0 ? -TAU / 4 + rand(-0.5, 0.25) : -TAU / 4 + rand(-0.25, 0.5));
-      var sp = rand(400, 900);
-      particles.push({ type: 'conf', x: ox, y: H + 10, vx: Math.cos(a) * sp * (side === 0 ? 1 : 1) + (side === 0 ? rand(30, 160) : rand(-160, -30)),
-        vy: Math.sin(a) * sp, rot: rand(0, TAU), vr: rand(-10, 10),
-        w: rand(6, 11), h: rand(4, 7), color: colors[randi(0, colors.length - 1)],
-        life: 0, max: rand(1.6, 2.6) });
-    }
-  }
-}
-
-/* ============================== round events ============================== */
-function popBlob(){
-  stopInflateSnd();
-  phase = 'pop'; phaseT = 0;
-  hearts--;
-  shake = 14;
-  sfxPop(); buzz(70);
-  spawnShards(blob.x, blob.y, blob.r, curSkin.body);
-  spawnSparks(blob.x, blob.y, 14, '#ffffff');
-  spawnRing(blob.x, blob.y, blob.r, '#ffffff');
-  pushPopup(blob.x, blob.y - blob.r - 14, 'POP!', '#ff6b6b', 26);
-  updateHudStatic();
-}
-function releaseBlob(){
-  if (phase !== 'inflate') return;
-  stopInflateSnd();
-  var fill = Math.PI * blob.r * blob.r / capacity;
-  if (fill >= target) {
-    phase = 'win'; phaseT = 0;
-    blob.sqv += 2.4;
-    var isPerfect = fill >= 0.92;
-    wasPerfect = isPerfect;
-    var earned = (10 + level * 2) * (isPerfect ? 3 : 1);
-    coins += earned; levelCoins += earned;
-    if (isPerfect) {
-      perfects++;
-      pushPopup(blob.x, blob.y - blob.r - 40, 'PERFECT!', '#ffe14d', 34);
-      confettiBlast(1.6);
-      sfxPerfect(); buzz([20, 30, 20, 30, 60]);
-      shake = 6;
-    } else {
-      sfxWin(); buzz([20, 30, 20]);
-    }
-    pushPopup(blob.x, blob.y - blob.r - (isPerfect ? 74 : 16), '+' + earned + ' 🪙', '#ffe14d', 22);
-    spawnRing(blob.x, blob.y, blob.r, isPerfect ? '#ffe14d' : '#7cff9a');
-    spawnSparks(blob.x, blob.y, isPerfect ? 40 : 18, isPerfect ? '#ffe14d' : '#7cff9a');
-    save.coins = coins; persist();
-    sfxCoin(0.15);
-    updateHudStatic();
-  } else {
-    phase = 'fail'; phaseT = 0;
-    hearts--;
-    sfxFail(); buzz(40);
-    pushPopup(blob.x, blob.y - blob.r - 14, 'TOO SMALL!', '#8fd4ff'.replace('8f','9f'), 24);
-    updateHudStatic();
-  }
-}
-
-/* ============================== update ============================== */
-function update(dt){
-  time += dt;
-  // squash spring
-  blob.sqv += (1 - blob.sq) * 160 * dt - blob.sqv * 9 * dt;
-  blob.sq = clamp(blob.sq + blob.sqv * dt, 0.55, 1.45);
-  // vertex springs
-  for (var i = 0; i < NV; i++) {
-    var v = blob.verts[i];
-    v.v += (-v.o * 130 - v.v * 6) * dt;
-    v.o += v.v * dt;
-  }
-  // blink
-  blinkT -= dt;
-  if (blinkT <= 0) { blinkT = rand(2.2, 4.5); blinkV = 1; }
-  if (blinkV > 0) blinkV = Math.max(0, blinkV - dt * 6);
-
-  if (state !== 'playing') { shake = Math.max(0, shake - dt * 40); return; }
-
-  // orbiters always move
-  for (i = 0; i < orbiters.length; i++) orbiters[i].ang += orbiters[i].speed * dt;
-
-  phaseT += dt;
-  var hd = hazardDist(blob.x, blob.y);
-  blob.danger = clamp(1 - (hd - blob.r) / 55, 0, 1);
-
-  if (phase === 'inflate') {
-    holdT += dt;
-    var spd = Rins * (0.38 + Math.min(level * 0.012, 0.14)) * (0.55 + 0.45 * Math.min(holdT / 1.1, 1));
-    blob.r += spd * dt;
-    // walls squish (safe clamp)
-    var mw = wallDist(blob.x, blob.y, curInset()) - 2;
-    if (blob.r > mw) { blob.r = mw; blob.sq = clamp(blob.sq, 0.9, 1.05); }
-    // spike / orbiter pop
-    if (hd < blob.r) { popBlob(); return; }
-    var fill = Math.PI * blob.r * blob.r / capacity;
-    updateMeter(fill);
-    updateInflateSnd(clamp(fill, 0, 1.1));
-    // sparkles while inflating
-    sparkAcc += dt;
-    if (sparkAcc > 0.05) {
-      sparkAcc = 0;
-      var a = rand(0, TAU);
-      particles.push({ type: 'spark', x: blob.x + Math.cos(a) * blob.r, y: blob.y + Math.sin(a) * blob.r,
-        vx: Math.cos(a) * 60, vy: Math.sin(a) * 60 - 20, size: rand(1.5, 3.5),
-        color: '#ffffff', life: 0, max: 0.45 });
-    }
-    // danger tremble
-    if (blob.danger > 0.6) {
-      var vi = randi(0, NV - 1);
-      blob.verts[vi].v += rand(-90, 90) * blob.danger;
-    }
-  }
-  else if (phase === 'pop' || phase === 'fail') {
-    if (phase === 'fail') blob.r = lerp(blob.r, blob.r0, 1 - Math.pow(0.002, dt));
-    if (phaseT > 1.0) {
-      if (hearts > 0) genRound(false); else gameOver();
-    }
-  }
-  else if (phase === 'win') {
-    if (phaseT > (wasPerfect ? 1.5 : 1.1)) {
-      if (round < 3) { round++; genRound(false); }
-      else levelComplete();
-    }
-  }
-
-  shake = Math.max(0, shake - dt * 42);
-}
-
-function updateParticles(dt){
-  for (var i = particles.length - 1; i >= 0; i--) {
-    var p = particles[i];
-    p.life += dt;
-    if (p.life >= p.max) { particles.splice(i, 1); continue; }
-    if (p.type === 'ring') continue;
-    var drag = p.type === 'conf' ? 0.9 : 0.96;
-    p.vx *= Math.pow(drag, dt * 60);
-    p.vy *= Math.pow(drag, dt * 60);
-    p.vy += (p.type === 'spark' ? 160 : 520) * dt;
-    p.x += p.vx * dt; p.y += p.vy * dt;
-    if (p.rot !== undefined) p.rot += p.vr * dt;
-  }
-  for (var j = popups.length - 1; j >= 0; j--) {
-    popups[j].t += dt;
-    if (popups[j].t >= popups[j].dur) popups.splice(j, 1);
-  }
-}
-
-/* ============================== render ============================== */
-function drawBG(){
-  var hue = (200 + (level - 1) * 26 + time * 2) % 360;
-  var g = ctx.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, 'hsl(' + hue + ',62%,58%)');
-  g.addColorStop(1, 'hsl(' + ((hue + 46) % 360) + ',64%,38%)');
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, W, H);
-  // soft drifting blobs
-  ctx.globalAlpha = 0.09;
-  ctx.fillStyle = '#ffffff';
-  for (var i = 0; i < 4; i++) {
-    var bx = ((i * 137 + time * (10 + i * 6)) % (W + 300)) - 150;
-    var by = H * (0.12 + 0.22 * i) + Math.sin(time * 0.6 + i * 2) * 26;
-    ctx.beginPath(); ctx.arc(bx, by, 60 + i * 34, 0, TAU); ctx.fill();
-  }
-  ctx.globalAlpha = 1;
-}
-function drawChamber(){
-  var ins = curInset();
-  var x = cham.x + ins, y = cham.y + ins, w = cham.w - ins * 2, h = cham.h - ins * 2;
-  // wall
-  ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = 26; ctx.shadowOffsetY = 10;
-  rr(ctx, x - 16, y - 16, w + 32, h + 32, 38);
-  ctx.fillStyle = 'rgba(30,14,60,0.85)';
-  ctx.fill();
-  ctx.restore();
-  rr(ctx, x - 16, y - 16, w + 32, h + 32, 38);
-  ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 3; ctx.stroke();
-  // interior
-  rr(ctx, x, y, w, h, 24);
-  ctx.fillStyle = 'rgba(255,255,255,0.12)';
-  ctx.fill();
-  rr(ctx, x, y, w, h, 24);
-  ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = 2; ctx.stroke();
-  // wall spikes
-  var i;
-  for (i = 0; i < spikes.length; i++) {
-    var s = spikes[i];
-    var bx = s.x + s.nx * ins, by = s.y + s.ny * ins;
-    var tx = bx + s.nx * s.h, ty = by + s.ny * s.h;
-    var px = -s.ny, py = s.nx;
-    ctx.beginPath();
-    ctx.moveTo(bx + px * s.w2, by + py * s.w2);
-    ctx.lineTo(tx, ty);
-    ctx.lineTo(bx - px * s.w2, by - py * s.w2);
-    ctx.closePath();
-    ctx.fillStyle = '#efe6ff';
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(30,14,60,0.9)'; ctx.lineWidth = 2.5; ctx.stroke();
-  }
-  // orbiters
-  for (i = 0; i < orbiters.length; i++) {
-    var o = orbiters[i];
-    var op = orbPos(o);
-    // faint path
-    ctx.beginPath(); ctx.arc(o.ax, o.ay, o.orad, 0, TAU);
-    ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 2;
-    ctx.setLineDash([4, 8]); ctx.stroke(); ctx.setLineDash([]);
-    // spike ball
-    ctx.save();
-    ctx.translate(op[0], op[1]);
-    ctx.rotate(time * o.spin);
-    ctx.fillStyle = '#efe6ff';
-    ctx.strokeStyle = 'rgba(30,14,60,0.9)'; ctx.lineWidth = 2.5;
-    for (var k = 0; k < 8; k++) {
-      var aa = k / 8 * TAU;
-      ctx.beginPath();
-      ctx.moveTo(Math.cos(aa - 0.24) * o.rad * 0.8, Math.sin(aa - 0.24) * o.rad * 0.8);
-      ctx.lineTo(Math.cos(aa) * (o.rad + 6), Math.sin(aa) * (o.rad + 6));
-      ctx.lineTo(Math.cos(aa + 0.24) * o.rad * 0.8, Math.sin(aa + 0.24) * o.rad * 0.8);
-      ctx.closePath(); ctx.fill(); ctx.stroke();
-    }
-    ctx.beginPath(); ctx.arc(0, 0, o.rad * 0.85, 0, TAU);
-    ctx.fillStyle = '#c9b8f2'; ctx.fill(); ctx.stroke();
-    ctx.beginPath(); ctx.arc(-o.rad * 0.25, -o.rad * 0.25, o.rad * 0.26, 0, TAU);
-    ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.fill();
-    ctx.restore();
-  }
-}
-function drawTargetRings(){
-  if (phase !== 'ready' && phase !== 'inflate') return;
-  var pulse = 0.5 + 0.5 * Math.sin(time * 3);
-  ctx.save();
-  ctx.setLineDash([7, 9]);
-  ctx.beginPath(); ctx.arc(blob.x, blob.y, requiredR, 0, TAU);
-  ctx.strokeStyle = 'rgba(255,255,255,' + (0.3 + pulse * 0.2) + ')';
-  ctx.lineWidth = 2.5; ctx.stroke();
-  if (perfectR > requiredR + 6 && perfectR < wallDist(blob.x, blob.y, cham.pa)) {
-    ctx.beginPath(); ctx.arc(blob.x, blob.y, perfectR, 0, TAU);
-    ctx.strokeStyle = 'rgba(255,225,77,0.3)';
-    ctx.lineWidth = 2; ctx.stroke();
-  }
-  ctx.restore();
-}
-function blobPath(c, r, verts, wob, tt){
-  var pts = [];
-  for (var i = 0; i < NV; i++) {
-    var a = i / NV * TAU - TAU / 4;
-    var off = (verts ? verts[i].o : 0) + Math.sin(tt * 2.1 + i * 1.87) * wob;
-    var rr2 = Math.max(r * 0.4, r + off);
-    pts.push([Math.cos(a) * rr2, Math.sin(a) * rr2]);
-  }
-  c.beginPath();
-  var mx = (pts[0][0] + pts[NV - 1][0]) / 2, my = (pts[0][1] + pts[NV - 1][1]) / 2;
-  c.moveTo(mx, my);
-  for (i = 0; i < NV; i++) {
-    var p1 = pts[i], p2 = pts[(i + 1) % NV];
-    c.quadraticCurveTo(p1[0], p1[1], (p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2);
-  }
-  c.closePath();
-}
-function drawFace(c, r, skin, opts){
-  var danger = opts.danger || 0, fill = opts.fill || 0;
-  var inflating = !!opts.inflating, happy = !!opts.happy;
-  var blink = opts.blink || 0;
-  var lookX = opts.lookX || 0, lookY = opts.lookY || 0;
-  var ew = r * 0.155 * (1 + danger * 0.8);       // eye radius
-  var ex = r * 0.34, ey = -r * 0.14;
-  var eyeSY = Math.max(0.08, 1 - blink);
-  // eyes
-  c.fillStyle = '#ffffff';
-  c.save(); c.translate(-ex, ey); c.scale(1, eyeSY);
-  c.beginPath(); c.arc(0, 0, ew, 0, TAU); c.fill(); c.restore();
-  c.save(); c.translate(ex, ey); c.scale(1, eyeSY);
-  c.beginPath(); c.arc(0, 0, ew, 0, TAU); c.fill(); c.restore();
-  // pupils
-  if (eyeSY > 0.3) {
-    var pr = ew * (danger > 0.4 ? 0.34 : 0.46);
-    c.fillStyle = '#2a1a34';
-    c.beginPath(); c.arc(-ex + lookX * ew * 0.4, ey + lookY * ew * 0.4, pr, 0, TAU); c.fill();
-    c.beginPath(); c.arc(ex + lookX * ew * 0.4, ey + lookY * ew * 0.4, pr, 0, TAU); c.fill();
-    c.fillStyle = 'rgba(255,255,255,0.9)';
-    c.beginPath(); c.arc(-ex + lookX * ew * 0.4 - pr * 0.3, ey + lookY * ew * 0.4 - pr * 0.3, pr * 0.3, 0, TAU); c.fill();
-    c.beginPath(); c.arc(ex + lookX * ew * 0.4 - pr * 0.3, ey + lookY * ew * 0.4 - pr * 0.3, pr * 0.3, 0, TAU); c.fill();
-  }
-  // worried brows
-  if (danger > 0.45) {
-    c.strokeStyle = '#2a1a34'; c.lineWidth = Math.max(2, r * 0.045); c.lineCap = 'round';
-    c.beginPath(); c.moveTo(-ex - ew * 0.8, ey - ew * 1.5); c.lineTo(-ex + ew * 0.5, ey - ew * 1.15); c.stroke();
-    c.beginPath(); c.moveTo(ex + ew * 0.8, ey - ew * 1.5); c.lineTo(ex - ew * 0.5, ey - ew * 1.15); c.stroke();
-  }
-  // cheeks
-  if (inflating || happy) {
-    c.globalAlpha = clamp(0.25 + fill * 0.6, 0, 0.85);
-    c.fillStyle = skin.cheek;
-    var chR = r * (0.13 + fill * 0.08);
-    c.beginPath(); c.arc(-r * 0.52, r * 0.12, chR, 0, TAU); c.fill();
-    c.beginPath(); c.arc(r * 0.52, r * 0.12, chR, 0, TAU); c.fill();
-    c.globalAlpha = 1;
-  }
-  // mouth
-  c.strokeStyle = '#2a1a34'; c.fillStyle = '#2a1a34';
-  c.lineWidth = Math.max(2, r * 0.05); c.lineCap = 'round';
-  var my = r * 0.28;
-  if (happy) {
-    c.beginPath(); c.arc(0, my - r * 0.06, r * 0.22, 0.15 * Math.PI, 0.85 * Math.PI); c.stroke();
-  } else if (danger > 0.6) {
-    c.beginPath();
-    c.moveTo(-r * 0.16, my);
-    c.quadraticCurveTo(-r * 0.08, my - r * 0.08, 0, my);
-    c.quadraticCurveTo(r * 0.08, my + r * 0.08, r * 0.16, my);
-    c.stroke();
-  } else if (inflating) {
-    c.beginPath(); c.arc(0, my, r * (0.07 + fill * 0.1), 0, TAU); c.fill();
-  } else {
-    c.beginPath(); c.arc(0, my - r * 0.08, r * 0.16, 0.2 * Math.PI, 0.8 * Math.PI); c.stroke();
-  }
-}
-function drawSkinSpecial(c, r, skin, tt){
-  if (skin.special === 'stars') {
-    c.fillStyle = 'rgba(255,255,255,0.85)';
-    var st = [[-0.5, -0.5], [0.45, -0.35], [-0.2, 0.55], [0.55, 0.4], [0.05, -0.65], [-0.62, 0.15]];
-    for (var i = 0; i < st.length; i++) {
-      var tw = 0.6 + 0.4 * Math.sin(tt * 3 + i * 2.1);
-      c.globalAlpha = tw;
-      c.beginPath(); c.arc(st[i][0] * r, st[i][1] * r, r * 0.045, 0, TAU); c.fill();
-    }
-    c.globalAlpha = 1;
-  } else if (skin.special === 'holes') {
-    c.fillStyle = 'rgba(180,110,20,0.5)';
-    var ho = [[-0.45, -0.42, 0.13], [0.5, -0.15, 0.1], [-0.15, 0.6, 0.11], [0.35, 0.52, 0.08]];
-    for (var j = 0; j < ho.length; j++) {
-      c.beginPath(); c.arc(ho[j][0] * r, ho[j][1] * r, ho[j][2] * r, 0, TAU); c.fill();
-    }
-  } else if (skin.special === 'bubble') {
-    c.strokeStyle = 'rgba(255,255,255,0.55)'; c.lineWidth = Math.max(1.5, r * 0.03);
-    c.beginPath(); c.arc(-r * 0.4, -r * 0.45, r * 0.16, 0, TAU); c.stroke();
-    c.beginPath(); c.arc(r * 0.5, -r * 0.25, r * 0.09, 0, TAU); c.stroke();
-  }
-}
-function drawBlob(){
-  if (phase === 'pop') return;
-  var r = blob.r;
-  var sq = blob.sq, sx = 2 - sq, sy = sq;
-  var tt = time;
-  // shadow
-  ctx.save();
-  ctx.globalAlpha = 0.22;
-  ctx.fillStyle = '#000';
-  ctx.beginPath();
-  ctx.ellipse(blob.x, Math.min(blob.y + r * 1.1, cham.y + cham.h - 8), r * 0.8 * sx, r * 0.16, 0, 0, TAU);
-  ctx.fill();
-  ctx.restore();
-
-  ctx.save();
-  ctx.translate(blob.x, blob.y);
-  ctx.scale(sx, sy);
-  if (curSkin.special === 'ghost') ctx.globalAlpha = 0.88;
-  blobPath(ctx, r, blob.verts, 1.4 + r * 0.02, tt);
-  var g = ctx.createRadialGradient(-r * 0.35, -r * 0.4, r * 0.1, 0, 0, r * 1.25);
-  g.addColorStop(0, '#ffffff');
-  g.addColorStop(0.25, curSkin.body);
-  g.addColorStop(1, curSkin.dark);
-  ctx.fillStyle = g;
-  ctx.fill();
-  ctx.strokeStyle = curSkin.dark;
-  ctx.lineWidth = Math.max(3, r * 0.05);
-  ctx.stroke();
-  // specials clipped inside body
-  ctx.save();
-  blobPath(ctx, r, blob.verts, 1.4 + r * 0.02, tt);
-  ctx.clip();
-  drawSkinSpecial(ctx, r, curSkin, tt);
-  ctx.restore();
-  // highlight
-  ctx.globalAlpha *= 0.5;
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = Math.max(2.5, r * 0.06);
-  ctx.lineCap = 'round';
-  ctx.beginPath(); ctx.arc(0, 0, r * 0.74, -TAU * 0.38, -TAU * 0.28); ctx.stroke();
-  ctx.globalAlpha = curSkin.special === 'ghost' ? 0.88 : 1;
-  // face
-  var dx = blob.dangX - blob.x, dy = blob.dangY - blob.y;
-  var dl = Math.hypot(dx, dy) || 1;
-  var look = blob.danger > 0.15 ? 1 : 0;
-  drawFace(ctx, r, curSkin, {
-    danger: blob.danger,
-    fill: clamp(Math.PI * r * r / capacity, 0, 1),
-    inflating: phase === 'inflate',
-    happy: phase === 'win',
-    blink: blinkV > 0.5 ? (1 - blinkV) * 2 : blinkV * 2,
-    lookX: look ? dx / dl : Math.sin(tt * 0.7) * 0.4,
-    lookY: look ? dy / dl : Math.cos(tt * 0.9) * 0.25
-  });
-  ctx.restore();
-
-  // live fill % while inflating
-  if (phase === 'inflate') {
-    var f = Math.round(clamp(Math.PI * r * r / capacity, 0, 1.2) * 100);
-    ctx.save();
-    ctx.font = '900 17px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillStyle = 'rgba(255,255,255,0.95)';
-    ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 6;
-    ctx.fillText(f + '%', blob.x, blob.y - r - 14);
-    ctx.restore();
-  }
-}
-function drawParticles(){
-  for (var i = 0; i < particles.length; i++) {
-    var p = particles[i];
-    var lt = p.life / p.max;
-    if (p.type === 'spark') {
-      ctx.globalAlpha = 1 - lt;
-      ctx.fillStyle = p.color;
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.size * (1 - lt * 0.5), 0, TAU); ctx.fill();
-    } else if (p.type === 'shard') {
-      ctx.globalAlpha = 1 - lt * lt;
-      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
-      ctx.fillStyle = p.color;
-      ctx.beginPath(); ctx.arc(0, 0, p.size, 0, TAU); ctx.fill();
-      ctx.restore();
-    } else if (p.type === 'conf') {
-      ctx.globalAlpha = lt > 0.75 ? (1 - lt) * 4 : 1;
-      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
-      ctx.scale(1, Math.sin(p.life * 9 + p.rot) * 0.7 + 0.3);
-      ctx.fillStyle = p.color;
-      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
-      ctx.restore();
-    } else if (p.type === 'ring') {
-      ctx.globalAlpha = 1 - lt;
-      ctx.strokeStyle = p.color;
-      ctx.lineWidth = 5 * (1 - lt);
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r + easeOutCubic(lt) * 70, 0, TAU); ctx.stroke();
-    }
-  }
-  ctx.globalAlpha = 1;
-}
-function drawPopups(){
-  for (var i = 0; i < popups.length; i++) {
-    var p = popups[i];
-    var t = p.t / p.dur;
-    var sc = t < 0.25 ? easeOutBack(t / 0.25) : 1;
-    var alpha = t > 0.7 ? 1 - (t - 0.7) / 0.3 : 1;
-    ctx.save();
-    ctx.translate(p.x, p.y - easeOutCubic(t) * 44);
-    ctx.scale(sc, sc);
-    ctx.globalAlpha = alpha;
-    ctx.font = '900 ' + p.size + 'px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.lineWidth = p.size * 0.22;
-    ctx.strokeStyle = 'rgba(40,14,60,0.85)';
-    ctx.lineJoin = 'round';
-    ctx.strokeText(p.txt, 0, 0);
-    ctx.fillStyle = p.color;
-    ctx.fillText(p.txt, 0, 0);
-    ctx.restore();
-  }
-}
-function drawHint(){
-  if (phase !== 'ready' || level > 2) return;
-  if (cham.y + cham.h + 54 > H - 80) return; // no room above the meter
-  var a = 0.55 + 0.35 * Math.sin(time * 4);
-  ctx.save();
-  ctx.globalAlpha = a;
-  ctx.font = '900 16px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillStyle = '#ffffff';
-  ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 6;
-  ctx.fillText('HOLD to inflate — release to lock!', W / 2, cham.y + cham.h + 40);
-  ctx.restore();
-}
-function drawTitleBlob(){
-  // decorative bobbing blob under the DOM logo
-  var r = Math.min(W, H) * 0.13;
-  var bx = W / 2, by = H * 0.66 + Math.sin(time * 1.6) * 10;
-  ctx.save();
-  ctx.translate(bx, by);
-  var sq2 = 1 + Math.sin(time * 3.2) * 0.045;
-  ctx.scale(2 - sq2, sq2);
-  if (curSkin.special === 'ghost') ctx.globalAlpha = 0.9;
-  blobPath(ctx, r, null, 3.5, time);
-  var g = ctx.createRadialGradient(-r * 0.35, -r * 0.4, r * 0.1, 0, 0, r * 1.25);
-  g.addColorStop(0, '#ffffff'); g.addColorStop(0.25, curSkin.body); g.addColorStop(1, curSkin.dark);
-  ctx.fillStyle = g; ctx.fill();
-  ctx.strokeStyle = curSkin.dark; ctx.lineWidth = r * 0.05; ctx.stroke();
-  ctx.save(); blobPath(ctx, r, null, 3.5, time); ctx.clip();
-  drawSkinSpecial(ctx, r, curSkin, time); ctx.restore();
-  drawFace(ctx, r, curSkin, {
-    danger: 0, fill: 0, inflating: false, happy: true,
-    blink: blinkV > 0.5 ? (1 - blinkV) * 2 : blinkV * 2,
-    lookX: Math.sin(time * 0.8) * 0.5, lookY: Math.cos(time * 1.1) * 0.3
-  });
-  ctx.restore();
-  // rising bubbles
-  ctx.fillStyle = 'rgba(255,255,255,0.25)';
-  for (var i = 0; i < 8; i++) {
-    var ph = (time * (18 + i * 7) + i * 260) % (H + 120);
-    var px = (i * 0.131 + 0.05) * W + Math.sin(time + i * 3) * 22;
-    ctx.beginPath(); ctx.arc(px, H + 40 - ph, 4 + (i % 4) * 3, 0, TAU); ctx.fill();
-  }
-}
-function render(){
-  ctx.save();
-  if (shake > 0.2) ctx.translate(rand(-shake, shake), rand(-shake, shake));
-  drawBG();
-  if (state === 'playing' || state === 'complete' || state === 'over') {
-    drawChamber();
-    drawTargetRings();
-    drawBlob();
-    drawHint();
-  } else {
-    drawTitleBlob();
-  }
-  drawParticles();
-  drawPopups();
-  ctx.restore();
-}
-
-/* ============================== loop ============================== */
-var lastT = performance.now();
-var frameErrs = 0;
-function frame(now){
-  // Re-arm in `finally`: one bad frame must never permanently blank the game.
-  try {
-    var dt = clamp((now - lastT) / 1000, 0, 0.033);
-    lastT = now;
-    update(dt);
-    updateParticles(dt);
-    render();
-  } catch (e) {
-    if (++frameErrs <= 3 && window.console) console.error('[puff] frame error:', e);
-  } finally {
-    requestAnimationFrame(frame);
-  }
-}
-requestAnimationFrame(frame);
-
-/* ============================== input ============================== */
-var activePtr = null;
-cv.addEventListener('pointerdown', function(e){
-  e.preventDefault();
-  ac();
-  if (state !== 'playing') return;
-  if (activePtr !== null) return;
-  if (phase === 'ready') {
-    activePtr = e.pointerId;
-    phase = 'inflate'; phaseT = 0; holdT = 0;
-    blob.sqv -= 2.6;
-    startInflateSnd();
-    spawnSparks(blob.x, blob.y + blob.r * 0.6, 6, '#ffffff');
-  }
-});
-function endPointer(e){
-  if (activePtr !== null && e.pointerId === activePtr) {
-    activePtr = null;
-    releaseBlob();
-  }
-}
-window.addEventListener('pointerup', endPointer);
-window.addEventListener('pointercancel', endPointer);
-document.addEventListener('visibilitychange', function(){
-  if (document.hidden && phase === 'inflate') { activePtr = null; releaseBlob(); }
-});
-document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
-document.addEventListener('touchmove', function(e){
-  if (e.target === cv) e.preventDefault();
-}, { passive: false });
-
-/* ============================== shop ============================== */
-function drawMini(canvasEl, skin){
-  var dp = Math.min(window.devicePixelRatio || 1, 2);
-  canvasEl.width = 76 * dp; canvasEl.height = 76 * dp;
-  var c = canvasEl.getContext('2d');
-  c.setTransform(dp, 0, 0, dp, 0, 0);
-  c.clearRect(0, 0, 76, 76);
-  c.save();
-  c.translate(38, 40);
-  var r = 26;
-  if (skin.special === 'ghost') c.globalAlpha = 0.9;
-  c.beginPath();
-  for (var i = 0; i <= 24; i++) {
-    var a = i / 24 * TAU;
-    var rr2 = r + Math.sin(a * 5 + 1) * 1.6;
-    var px = Math.cos(a) * rr2, py = Math.sin(a) * rr2;
-    if (i === 0) c.moveTo(px, py); else c.lineTo(px, py);
-  }
-  c.closePath();
-  var g = c.createRadialGradient(-9, -10, 3, 0, 0, 33);
-  g.addColorStop(0, '#ffffff'); g.addColorStop(0.25, skin.body); g.addColorStop(1, skin.dark);
-  c.fillStyle = g; c.fill();
-  c.strokeStyle = skin.dark; c.lineWidth = 2.5; c.stroke();
-  c.save();
-  c.clip();
-  drawSkinSpecial(c, r, skin, 1.3);
-  c.restore();
-  drawFace(c, r, skin, { danger: 0, fill: 0.3, inflating: false, happy: true, blink: 0, lookX: 0.2, lookY: 0.1 });
-  c.restore();
-}
-function buildShop(){
-  var grid = $('shopGrid');
-  grid.innerHTML = '';
-  $('shopCoins').textContent = '🪙 ' + coins;
-  for (var i = 0; i < SKINS.length; i++) {
-    (function(skin){
-      var owned = save.skins.indexOf(skin.id) >= 0;
-      var card = document.createElement('button');
-      card.className = 'skinCard' + (save.skin === skin.id ? ' sel' : '');
-      var mini = document.createElement('canvas');
-      card.appendChild(mini);
-      var nm = document.createElement('div');
-      nm.className = 'skinName'; nm.textContent = skin.name;
-      card.appendChild(nm);
-      var pr = document.createElement('div');
-      pr.className = 'skinPrice' + (owned ? ' owned' : '');
-      pr.textContent = owned ? (save.skin === skin.id ? 'EQUIPPED' : 'OWNED') : '🪙 ' + skin.price;
-      card.appendChild(pr);
-      grid.appendChild(card);
-      drawMini(mini, skin);
-      card.addEventListener('click', function(){
-        ac();
-        if (owned) {
-          save.skin = skin.id; curSkin = skin;
-          persist(); sfxClick(); buildShop();
-        } else if (coins >= skin.price) {
-          coins -= skin.price;
-          save.coins = coins;
-          save.skins.push(skin.id);
-          save.skin = skin.id; curSkin = skin;
-          persist(); sfxBuy(); buzz([20, 30, 20]);
-          window.TTG?.track('purchase', { level: level, value: skin.price });
-          confettiBlast(0.7);
-          buildShop();
-        } else {
-          card.classList.remove('deny'); void card.offsetWidth;
-          card.classList.add('deny');
-          beep(180, 120, 0.15, 'sawtooth', 0.14);
-        }
-      });
-    })(SKINS[i]);
-  }
-}
-
-/* ============================== buttons ============================== */
-$('btnPlay').addEventListener('click', function(){
-  ac(); sfxClick();
-  startLevel(save.level);
-});
-$('btnShopOpen').addEventListener('click', function(){
-  ac(); sfxClick();
-  state = 'shop';
-  window.TTG?.track('shop_open', { level: level });
-  buildShop();
-  showScreen(elShop);
-});
-$('btnShopBack').addEventListener('click', function(){
-  sfxClick();
-  goTitle();
-});
-$('btnNext').addEventListener('click', function(){
-  sfxClick();
-  startLevel(save.level);
-});
-$('btnRetry').addEventListener('click', function(){
-  sfxClick();
-  startLevel(level);
-});
-$('btnHome').addEventListener('click', function(){
-  sfxClick();
-  goTitle();
-});
-elBtnMute.addEventListener('click', function(){
-  muted = !muted;
-  save.muted = muted; persist();
-  if (master) master.gain.value = muted ? 0 : 0.5;
-  elBtnMute.textContent = muted ? '🔇' : '🔊';
-  if (!muted) sfxClick();
-});
-elBtnMute.textContent = muted ? '🔇' : '🔊';
-
-/* ============================== boot ============================== */
-resize();
-goTitle();
-</script>
 </body>
 </html>

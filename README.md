@@ -2,10 +2,13 @@
 
 ### ▶ Play now: **https://tatertotgames-labs.pages.dev**
 
-Seven original **hybrid-casual** game prototypes — playable instantly in the browser, hosted on
+Seventeen original **hybrid-casual** game prototypes — playable instantly in the browser, hosted on
 Cloudflare. Each game is one self-contained HTML file: zero dependencies, mobile-first one-hand
 controls, WebAudio-synthesized sound, haptics, particles everywhere, and persistent meta
 progression in localStorage.
+
+Every game has a detail page with a real gameplay screenshot, a play button, its feature list and
+an explanation of how it works — the links below go there.
 
 ## The games
 
@@ -48,6 +51,20 @@ Every game is **one HTML file with zero external requests** — no libraries, no
 audio files, no web fonts. All art is drawn to canvas; all SFX are synthesized live with WebAudio;
 favicons are inline SVG data URIs. That means instant cold loads on mobile data (46–57 KB per game),
 which is the whole point for a playable-ad / instant-playtest funnel.
+
+## Structure
+
+Each game folder holds two files:
+
+- `games/<slug>/index.html` — the detail page: gameplay screenshot, play button, features,
+  how-to-play steps and the meta-layer explanation
+- `games/<slug>/play.html` — the game itself, a single self-contained file
+
+Screenshots in `assets/shots/` are captured from the real games with headless Chrome, driven into
+gameplay by an injected auto-start snippet, so they show actual play rather than title screens.
+
+Detail pages deliberately omit `analytics.js`: browsing a page should never be counted as a play
+session, which would inflate session counts and deflate per-game completion rates.
 
 ## Run locally
 
