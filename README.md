@@ -2,7 +2,7 @@
 
 ### ▶ Play now: **https://tatertotgames-labs.pages.dev**
 
-Five original **hybrid-casual** game prototypes — playable instantly in the browser, hosted on
+Seven original **hybrid-casual** game prototypes — playable instantly in the browser, hosted on
 Cloudflare. Each game is one self-contained HTML file: zero dependencies, mobile-first one-hand
 controls, WebAudio-synthesized sound, haptics, particles everywhere, and persistent meta
 progression in localStorage.
@@ -16,6 +16,8 @@ progression in localStorage.
 | 🛰️ **Slingshot Salvage** | One-drag gravity slingshot | Upgrade garage | [play](https://tatertotgames-labs.pages.dev/games/slingshot-salvage/) |
 | 🧊 **Freeze Frame!** | Tap water to freeze melting bridges | Snow village grows per rescue | [play](https://tatertotgames-labs.pages.dev/games/freeze-frame/) |
 | ⚡ **Volt Rush** | Drag the rod, catch the lightning | Idle city with offline earnings | [play](https://tatertotgames-labs.pages.dev/games/volt-rush/) |
+| 🏗️ **Kaboom Crane** | Rhythm-tap the swing, release to wreck | Demolition contracts + upgrades | [play](https://tatertotgames-labs.pages.dev/games/kaboom-crane/) |
+| ✂️ **Buzzcut Buddies** | ASMR fuzz-trim reveal | Groomed-buddy salon collection | [play](https://tatertotgames-labs.pages.dev/games/buzzcut-buddies/) |
 
 ## Docs
 

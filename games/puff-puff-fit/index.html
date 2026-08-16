@@ -141,6 +141,7 @@
   #compCoinLine{font-size:24px;font-weight:900;color:#ffe14d;margin:6px 0 4px}
   .subLine{font-size:15px;opacity:.85;font-weight:700}
 </style>
+<script src="/analytics.js" defer></script>
 </head>
 <body data-ui="title">
 <canvas id="c"></canvas>
@@ -264,18 +265,26 @@ function skinById(id){
 var curSkin = skinById(save.skin);
 
 /* ============================== audio ============================== */
-var AC = null, master = null;
+var AC = null, master = null, audioDead = false;
 var muted = save.muted;
+// Audio is optional: a machine with no output device throws on construction.
+// It must never be able to abort a caller (the PLAY handler calls this first).
 function ac(){
+  if (audioDead) return null;
   if (!AC) {
     var Ctx = window.AudioContext || window.webkitAudioContext;
-    if (!Ctx) return null;
-    AC = new Ctx();
-    master = AC.createGain();
-    master.gain.value = muted ? 0 : 0.5;
-    master.connect(AC.destination);
+    if (!Ctx) { audioDead = true; return null; }
+    try {
+      AC = new Ctx();
+      master = AC.createGain();
+      master.gain.value = muted ? 0 : 0.5;
+      master.connect(AC.destination);
+    } catch (e) {
+      AC = null; master = null; audioDead = true;
+      return null;
+    }
   }
-  if (AC.state === 'suspended') AC.resume();
+  try { if (AC.state === 'suspended') AC.resume(); } catch (e) {}
   return AC;
 }
 function beep(f0, f1, dur, type, vol, when){
@@ -387,6 +396,9 @@ var capacity = 1, target = 0.6, requiredR = 50, perfectR = 60, Rins = 100;
 
 var NV = 14;
 var blob = { x: 0, y: 0, r: 20, r0: 20, verts: [], sq: 1, sqv: 0, danger: 0, dangX: 0, dangY: -1 };
+// Seed the wobble springs up front: update() runs every frame from boot — including
+// on the title screen — long before genRound() first populates them.
+for (var iv = 0; iv < NV; iv++) blob.verts.push({ o: 0, v: 0 });
 var blinkT = 0, blinkV = 0;
 
 var particles = [], popups = [];
@@ -581,6 +593,7 @@ function genRound(keepPhaseQuiet){
 function startLevel(lv){
   level = lv; hearts = 3; round = 1; levelCoins = 0; perfects = 0;
   state = 'playing';
+  window.TTG?.track('level_start', { level: lv });
   showScreen(null);
   genRound(false);
 }
@@ -592,6 +605,7 @@ function levelComplete(){
   save.best = Math.max(save.best, save.level);
   save.coins = coins;
   persist();
+  window.TTG?.track('level_complete', { level: level, value: levelCoins });
   $('compTitle').textContent = 'LEVEL ' + level + ' CLEAR!';
   $('compSub').textContent = perfects >= 3 ? 'FLAWLESS PUFFING!' :
     (perfects > 0 ? perfects + ' perfect fit' + (perfects > 1 ? 's' : '') + '!' : 'Nicely puffed!');
@@ -619,6 +633,7 @@ function gameOver(){
   stopInflateSnd();
   state = 'over';
   save.coins = coins; persist();
+  window.TTG?.track('game_over', { level: level, value: levelCoins });
   $('overLevel').textContent = 'You reached level ' + level;
   showScreen(elOver);
 }
@@ -1178,13 +1193,20 @@ function render(){
 
 /* ============================== loop ============================== */
 var lastT = performance.now();
+var frameErrs = 0;
 function frame(now){
-  var dt = clamp((now - lastT) / 1000, 0, 0.033);
-  lastT = now;
-  update(dt);
-  updateParticles(dt);
-  render();
-  requestAnimationFrame(frame);
+  // Re-arm in `finally`: one bad frame must never permanently blank the game.
+  try {
+    var dt = clamp((now - lastT) / 1000, 0, 0.033);
+    lastT = now;
+    update(dt);
+    updateParticles(dt);
+    render();
+  } catch (e) {
+    if (++frameErrs <= 3 && window.console) console.error('[puff] frame error:', e);
+  } finally {
+    requestAnimationFrame(frame);
+  }
 }
 requestAnimationFrame(frame);
 
@@ -1280,6 +1302,7 @@ function buildShop(){
           save.skins.push(skin.id);
           save.skin = skin.id; curSkin = skin;
           persist(); sfxBuy(); buzz([20, 30, 20]);
+          window.TTG?.track('purchase', { level: level, value: skin.price });
           confettiBlast(0.7);
           buildShop();
         } else {
@@ -1300,6 +1323,7 @@ $('btnPlay').addEventListener('click', function(){
 $('btnShopOpen').addEventListener('click', function(){
   ac(); sfxClick();
   state = 'shop';
+  window.TTG?.track('shop_open', { level: level });
   buildShop();
   showScreen(elShop);
 });

@@ -148,6 +148,7 @@
   #muteBtn.show { display:block; }
   #muteBtn:active { transform:scale(.88); }
 </style>
+<script src="/analytics.js" defer></script>
 </head>
 <body>
 <canvas id="c"></canvas>
@@ -1310,6 +1311,7 @@ el.upgradeList.addEventListener('click', e => {
   S.scrap -= cost;
   S.up[key] = lvl + 1;
   persist();
+  window.TTG?.track('upgrade_bought', { level: lvl + 1, value: cost });
   sfxBuy();
   vibrate(20);
   renderGarage();
@@ -1318,6 +1320,7 @@ el.upgradeList.addEventListener('click', e => {
 // ---------------- flow ----------------
 function startLevel(level) {
   genLevel(level);
+  window.TTG?.track('level_start', { level: level });
   setScreen('playing');
   popup(W / 2, H * 0.4, 'LEVEL ' + level, '#cfe0ff', 30);
   popup(W / 2, H * 0.4 + 40, 'Collect ' + G.required + ' junk!', '#a7ffbf', 17);
@@ -1330,6 +1333,7 @@ function doWin() {
   S.lvl = G.level + 1;
   if (S.lvl > S.best) S.best = S.lvl;
   persist();
+  window.TTG?.track('level_complete', { level: G.level, value: bonus });
   if (G.pod.state === 'flying') {
     G.pod.state = 'returning'; G.pod.retT = 0;
     G.pod.rx = clamp(G.pod.x, -40, W + 40); G.pod.ry = clamp(G.pod.y, -40, H + 40);
@@ -1361,6 +1365,7 @@ function doWin() {
 }
 
 function doLose() {
+  window.TTG?.track('game_over', { level: G.level, value: G.collected });
   sfxLose();
   vibrate(60);
   setScreen('lose');
@@ -1371,16 +1376,16 @@ function bindTap(id, fn) {
   $(id).addEventListener('click', () => { ensureAudio(); sfxClick(); fn(); });
 }
 bindTap('playBtn', () => startLevel(S.lvl));
-bindTap('garageBtn', () => { G.garageFrom = 'title'; renderGarage(); setScreen('garage'); });
+bindTap('garageBtn', () => { G.garageFrom = 'title'; window.TTG?.track('shop_open', { level: S.lvl }); renderGarage(); setScreen('garage'); });
 bindTap('garageBack', () => {
   setScreen(G.garageFrom);
   if (G.garageFrom === 'title') setScreen('title');
 });
 bindTap('nextBtn', () => startLevel(S.lvl));
-bindTap('winGarageBtn', () => { G.garageFrom = 'win'; renderGarage(); setScreen('garage'); });
+bindTap('winGarageBtn', () => { G.garageFrom = 'win'; window.TTG?.track('shop_open', { level: S.lvl }); renderGarage(); setScreen('garage'); });
 bindTap('winTitleBtn', () => setScreen('title'));
 bindTap('retryBtn', () => startLevel(G.level));
-bindTap('loseGarageBtn', () => { G.garageFrom = 'lose'; renderGarage(); setScreen('garage'); });
+bindTap('loseGarageBtn', () => { G.garageFrom = 'lose'; window.TTG?.track('shop_open', { level: S.lvl }); renderGarage(); setScreen('garage'); });
 bindTap('loseTitleBtn', () => setScreen('title'));
 
 el.muteBtn.addEventListener('click', () => {
@@ -1395,12 +1400,19 @@ el.muteBtn.textContent = S.mute ? '🔇' : '🔊';
 
 // ---------------- main loop ----------------
 let last = performance.now();
+let frameErrs = 0;
 function frame(now) {
-  const dt = clamp((now - last) / 1000, 0, 0.033);
-  last = now;
-  update(dt);
-  draw();
-  requestAnimationFrame(frame);
+  // Re-arm in `finally`: one bad frame must never permanently blank the game.
+  try {
+    const dt = clamp((now - last) / 1000, 0, 0.033);
+    last = now;
+    update(dt);
+    draw();
+  } catch (e) {
+    if (++frameErrs <= 3 && window.console) console.error('[sling] frame error:', e);
+  } finally {
+    requestAnimationFrame(frame);
+  }
 }
 
 resize();

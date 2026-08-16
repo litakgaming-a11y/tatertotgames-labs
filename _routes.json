@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "include": [
+    "/api/*",
+    "/functions/*",
+    "/wrangler.toml",
+    "/schema.sql",
+    "/_routes.json"
+  ],
+  "exclude": []
+}

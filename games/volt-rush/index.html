@@ -109,6 +109,7 @@
   #muteBtn.show { display:block; }
   #muteBtn:active { transform:scale(.9); }
 </style>
+<script src="/analytics.js" defer></script>
 </head>
 <body>
 <canvas id="cv"></canvas>
@@ -556,6 +557,7 @@ function startWave() {
   waveEnding = false; clearTimer = 0;
   cart.x = cart.tx = W / 2;
   state = 'playing';
+  window.TTG?.track('level_start', { level: waveNum });
   $('hudCombo').classList.remove('on');
   showScreen('hud');
   updateHUD();
@@ -575,6 +577,7 @@ function openResults() {
   save.volts = pool; save.lit = lit; save.wave++;
   if (earned > save.best) save.best = earned;
   persist();
+  window.TTG?.track('level_complete', { level: waveNum, value: earned });
   resultsAnim = { t: 0, earned, startVolts, events, next: 0, shown: startVolts,
     endT: tAt, done: false };
   $('resTitle').textContent = 'WAVE ' + waveNum + ' CLEAR!';
@@ -607,6 +610,9 @@ function lightBuildingFX(idx, quiet) {
   nl.textContent = (nl.textContent ? nl.textContent + '  ·  ' : '') + '💡 ' + B[idx].n;
 }
 function goHome() {
+  // Volt Rush has no fail state — a run ends when the player returns to the
+  // title. No `level` is sent so this never counts as a funnel drop-off.
+  window.TTG?.track('game_over', { value: waveNum });
   state = 'title';
   showScreen('title');
   refreshTitle();
@@ -621,7 +627,7 @@ function refreshTitle() {
     ? '· next: ' + B[save.lit].n + ' (' + fmt(B[save.lit].c) + '⚡)'
     : '· CITY FULLY LIT! 🎉';
 }
-function openShop() { state = 'shop'; showScreen('shop'); renderShop(); }
+function openShop() { window.TTG?.track('shop_open', { level: save.wave }); state = 'shop'; showScreen('shop'); renderShop(); }
 function renderShop() {
   $('shopCoins').textContent = '🪙 ' + fmt(save.coins);
   const list = $('upList');
@@ -644,6 +650,7 @@ function renderShop() {
       if (maxed) return;
       if (save.coins >= cost) {
         save.coins -= cost; save.up[u.id]++; persist();
+        window.TTG?.track('upgrade_bought', { level: save.up[u.id], value: cost });
         sfxBuy(); vibrate(12);
         renderShop();
       } else { sfxDenied(); }
@@ -670,6 +677,7 @@ function checkOffline() {
     $('offline').classList.add('show');
     $('claimBtn').onclick = () => {
       save.coins += earned; persist();
+      window.TTG?.track('offline_claim', { level: save.wave, value: earned });
       $('offline').classList.remove('show');
       for (let i = 0; i < 6; i++) sfxCoin(i);
       addConfetti(W / 2, H / 2, 40);
@@ -1176,12 +1184,19 @@ function draw() {
 
 /* ============================= main loop ============================= */
 let lastT = performance.now();
+let frameErrs = 0;
 function loop(t) {
-  const dt = Math.min(0.05, (t - lastT) / 1000);
-  lastT = t;
-  update(dt);
-  draw();
-  requestAnimationFrame(loop);
+  // Re-arm in `finally`: one bad frame must never permanently blank the game.
+  try {
+    const dt = Math.min(0.05, (t - lastT) / 1000);
+    lastT = t;
+    update(dt);
+    draw();
+  } catch (e) {
+    if (++frameErrs <= 3 && window.console) console.error('[volt] frame error:', e);
+  } finally {
+    requestAnimationFrame(loop);
+  }
 }
 
 /* ============================= boot ============================= */

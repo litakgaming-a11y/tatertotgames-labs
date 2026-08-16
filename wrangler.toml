@@ -1,0 +1,16 @@
+name = "tatertotgames-labs"
+compatibility_date = "2025-06-01"
+pages_build_output_dir = "."
+
+# Production bindings
+[[d1_databases]]
+binding = "DB"
+database_name = "tatertot-analytics"
+database_id = "dba5d10d-a59b-4c7e-b334-b3135bf149d1"
+
+# Preview (non-main branch) bindings — same database so preview deploys are
+# testable. Preview traffic is tagged by the branch alias in the URL only.
+[[env.preview.d1_databases]]
+binding = "DB"
+database_name = "tatertot-analytics"
+database_id = "dba5d10d-a59b-4c7e-b334-b3135bf149d1"

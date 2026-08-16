@@ -18,6 +18,7 @@
     letter-spacing:.5px;backdrop-filter:blur(4px);z-index:5;display:none;white-space:nowrap}
   #badge:active{background:rgba(40,80,130,.7)}
 </style>
+<script src="/analytics.js" defer></script>
 </head>
 <body>
 <canvas id="c"></canvas>
@@ -246,6 +247,8 @@ function buildLevel(lv) {
       geysers.push({ nx, phase: 'idle', t: rnd(1.5, 4), idleT: rnd(2.6, 4.4), warnT: 0.8, eruptT: 1.35 });
     }
   }
+
+  window.TTG?.track('level_start', { level: lv });
 
   return {
     level: lv, total, required, gaps, geysers,
@@ -490,8 +493,12 @@ function finishLevel(result) {
   if (result === 'win') {
     store.best = Math.max(store.best, game.level);
     saveStore();
+    window.TTG?.track('level_complete', { level: game.level, value: game.saved });
     sfx.win(); vib([20, 40, 20, 40, 40]);
-    if (villageLevel() > game.villageLvlAtStart) { villageUpFlash = 2.5; sfx.villageUp(); }
+    if (villageLevel() > game.villageLvlAtStart) {
+      window.TTG?.track('village_levelup', { level: game.level, value: villageLevel() });
+      villageUpFlash = 2.5; sfx.villageUp();
+    }
     addParts(90, () => ({
       type: 'confetti', x: rnd(0, view.W), y: rnd(-60, -5),
       vx: rnd(-40, 40), vy: rnd(60, 190), g: 40,
@@ -500,6 +507,7 @@ function finishLevel(result) {
     }));
     setScene('win');
   } else {
+    window.TTG?.track('game_over', { level: game.level, value: game.saved });
     sfx.lose(); vib(60);
     setScene('lose');
   }
@@ -1531,7 +1539,14 @@ function drawEndScreen(dt, t, isWin) {
    ============================================================ */
 let last = performance.now();
 let elapsed = 0;
+let frameErrs = 0;
 function frame(now) {
+  // Re-arm in `finally`: one bad frame must never permanently blank the game.
+  try { frameBody(now); }
+  catch (e) { if (++frameErrs <= 3 && window.console) console.error('[freeze] frame error:', e); }
+  finally { requestAnimationFrame(frame); }
+}
+function frameBody(now) {
   const dt = Math.min((now - last) / 1000, 0.033);
   last = now;
   elapsed += dt;
@@ -1574,8 +1589,6 @@ function frame(now) {
     updateDrawPops(dt);
     updateSnow(dt); drawSnow();
   }
-
-  requestAnimationFrame(frame);
 }
 
 resize();

@@ -134,6 +134,7 @@
   }
   #hintTip.show{opacity:1}
 </style>
+<script src="/analytics.js" defer></script>
 </head>
 <body>
 <canvas id="cv"></canvas>
@@ -250,19 +251,26 @@ const hintTip = el('hintTip');
 const muteBtn = el('muteBtn');
 
 // ---------------------------------------------------------------- audio
-let ac = null, master = null, noiseBuf = null;
+let ac = null, master = null, noiseBuf = null, audioDead = false;
+// Audio is optional: a machine with no output device throws on construction.
+// It must never be able to abort a caller (button handlers call this first).
 function initAudio() {
-  if (ac) { if (ac.state === 'suspended') ac.resume(); return; }
+  if (audioDead) return;
+  if (ac) { try { if (ac.state === 'suspended') ac.resume(); } catch (e) {} return; }
   const AC = window.AudioContext || window.webkitAudioContext;
-  if (!AC) return;
-  ac = new AC();
-  master = ac.createGain();
-  master.gain.value = save.muted ? 0 : 0.5;
-  master.connect(ac.destination);
-  const len = Math.floor(ac.sampleRate * 0.35);
-  noiseBuf = ac.createBuffer(1, len, ac.sampleRate);
-  const data = noiseBuf.getChannelData(0);
-  for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+  if (!AC) { audioDead = true; return; }
+  try {
+    ac = new AC();
+    master = ac.createGain();
+    master.gain.value = save.muted ? 0 : 0.5;
+    master.connect(ac.destination);
+    const len = Math.floor(ac.sampleRate * 0.35);
+    noiseBuf = ac.createBuffer(1, len, ac.sampleRate);
+    const data = noiseBuf.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+  } catch (e) {
+    ac = null; master = null; noiseBuf = null; audioDead = true;
+  }
 }
 function setMuted(m) {
   save.muted = m; persist();
@@ -832,6 +840,7 @@ function goTitle() {
 function startPlay() {
   state = 'play';
   genLevel(level);
+  window.TTG?.track('level_start', { level: level });
   showScreen('play');
 }
 let coinAnim = null;
@@ -844,6 +853,7 @@ function triggerWin() {
   save.best = Math.max(save.best, level + 1);
   save.level = level + 1;
   persist();
+  window.TTG?.track('level_complete', { level: level, value: coinsEarned });
   // stars stagger in
   const spans = starsEl.querySelectorAll('span');
   spans.forEach((sp, i) => {
@@ -852,6 +862,7 @@ function triggerWin() {
   });
   // new building banner
   if (after > before && after <= BUILDINGS.length) {
+    window.TTG?.track('building_built', { level: level, value: after });
     newBuildingEl.style.display = 'inline-block';
     newBuildingEl.textContent = '🏗️ NEW BUILDING: ' + BUILDINGS[after - 1].n + '!';
   } else {
@@ -870,6 +881,7 @@ function triggerWin() {
 }
 function triggerLose() {
   state = 'lose';
+  window.TTG?.track('game_over', { level: level });
   sndFizzle();
   showScreen('lose');
 }
@@ -1485,12 +1497,19 @@ function render(now) {
 
 // ---------------------------------------------------------------- main loop
 let lastT = performance.now();
+let frameErrs = 0;
 function frame(now) {
-  const dt = clamp((now - lastT) / 1000, 0, 0.05); // clamped delta
-  lastT = now;
-  update(dt);
-  render(now);
-  requestAnimationFrame(frame);
+  // Re-arm in `finally`: one bad frame must never permanently blank the game.
+  try {
+    const dt = clamp((now - lastT) / 1000, 0, 0.05); // clamped delta
+    lastT = now;
+    update(dt);
+    render(now);
+  } catch (e) {
+    if (++frameErrs <= 3 && window.console) console.error('[topple] frame error:', e);
+  } finally {
+    requestAnimationFrame(frame);
+  }
 }
 
 // ---------------------------------------------------------------- boot

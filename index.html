@@ -53,17 +53,22 @@
   .card:hover .play{transform:scale(1.06)}
   .c1 .hook{color:var(--accent2)} .c2 .hook{color:var(--accent)} .c3 .hook{color:var(--blue)}
   .c4 .hook{color:#8ecae6} .c5 .hook{color:var(--purple)}
+  .c6 .hook{color:#ff8c42} .c7 .hook{color:#ff9de2}
+  .new{position:absolute;top:14px;right:14px;padding:5px 12px;border-radius:999px;font-size:.72rem;font-weight:900;letter-spacing:.08em;
+    color:#12101f;background:linear-gradient(92deg,var(--green),#a7f3c9);animation:newPulse 1.6s ease-in-out infinite}
+  @keyframes newPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
   .links{margin-top:52px;text-align:center;color:var(--muted);font-size:.92rem;line-height:2}
   .links a{color:var(--blue);text-decoration:none;font-weight:700}
   .links a:hover{text-decoration:underline}
   footer{margin-top:34px;text-align:center;color:#6f679c;font-size:.85rem}
 </style>
+<script src="/analytics.js" defer></script>
 </head>
 <body>
 <div class="wrap">
   <header>
     <div class="logo">TATERTOT<br>GAMES LABS</div>
-    <div class="tag">Five original <b>hybrid-casual</b> prototypes. One hyper-casual hook each, a real meta underneath.<br>Built for the thumb. Tuned for the dopamine.</div>
+    <div class="tag">Seven original <b>hybrid-casual</b> prototypes. One hyper-casual hook each, a real meta underneath.<br>Built for the thumb. Tuned for the dopamine.</div>
     <div class="pill">▶ All playable in your browser — no install</div>
   </header>
 
@@ -107,6 +112,24 @@
       <p>Slide the rod cart under telegraphed strikes, chain combos up to x8, and feed the volts into a city that keeps earning while you're away.</p>
       <span class="play">PLAY →</span>
     </a>
+
+    <a class="card c6" href="games/kaboom-crane/">
+      <span class="new">NEW</span>
+      <div class="emoji">🏗️</div>
+      <div class="hook">Tap the rhythm, wreck the block</div>
+      <h2>Kaboom Crane</h2>
+      <p>Push the wrecking ball like a playground swing — perfect-timed taps build monster amplitude — then release and watch the whole building come down in slow-mo.</p>
+      <span class="play">PLAY →</span>
+    </a>
+
+    <a class="card c7" href="games/buzzcut-buddies/">
+      <span class="new">NEW</span>
+      <div class="emoji">✂️</div>
+      <div class="hook">ASMR trim &amp; reveal</div>
+      <h2>Buzzcut Buddies</h2>
+      <p>Buzz away mountains of fuzz to reveal the cutie underneath — mind the mohawk requests, find hidden accessories, and fill your salon with groomed buddies.</p>
+      <span class="play">PLAY →</span>
+    </a>
   </div>
 
   <div class="links">
@@ -116,5 +139,16 @@
 
   <footer>© 2026 TaterTot Games Labs — prototype playtest builds. Made with an unreasonable amount of particles.</footer>
 </div>
+<script>
+/* Hub → game click-through, for the acquisition funnel. Fire-and-forget. */
+document.querySelectorAll('.grid .card').forEach(function (card) {
+  card.addEventListener('click', function () {
+    try {
+      var slug = (card.getAttribute('href') || '').replace(/^games\/|\/$/g, '');
+      window.TTG?.track('game_launch', { game: slug });
+    } catch (e) {}
+  });
+});
+</script>
 </body>
 </html>

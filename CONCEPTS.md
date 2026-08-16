@@ -1,4 +1,4 @@
-# TaterTot Games Labs — 5 Hybrid-Casual MVP Concepts
+# TaterTot Games Labs — 7 Hybrid-Casual MVP Concepts
 
 Five original hybrid-casual concepts, deliberately **not** clones of the current top-grossing pack
 (no screws, no color-block boards, no hole-swallowing, no hexa-sorting). Each follows the proven
@@ -96,15 +96,49 @@ Sessions/DAU **6** · ARPDAU **$0.14–0.22** · LTV(90d) **$1.00** · Year-1 at
 
 ---
 
+## 6. 🏗️ Kaboom Crane *(wave 2 — research-driven)*
+
+| | |
+|---|---|
+| **Genre** | Rhythm-timing demolition + upgrade meta |
+| **Hyper-casual hook** | *Tap in rhythm to push the wrecking ball like a playground swing, then release to smash.* Everyone on Earth already knows how to push a swing — zero tutorial, instant mastery curve. The demolition payoff (slow-mo impact, crumbling tower) is the ad creative. |
+| **Concept** | Time your taps to the pendulum to build amplitude ("PERFECT PUSH!" ladders pitch), release at the right point in the arc, and the ball flies off tangentially into a procedurally-built tower: glass shatters, bricks crack, unsupported blocks collapse, TNT chains, gold piñata blocks pay out. Hit the demolition % target within your ball budget. |
+| **Meta layer** | Contract progression with silly names + 4 upgrade tracks that visibly change the sim (Heavier Ball, Chain Length, +1 Ball, TNT Luck). |
+| **Research grounding** | Destruction moments are among the highest-CTR ad creatives in paid UA; near-miss framing ("94% demolished!") drives the retry compulsion the research flags as All in Hole's RPD engine; the timing micro-skill adds the Pop-the-Lock-style mastery loop that pure tap-to-win demolition clones lack. |
+| **Why it can win** | Two dopamine spikes per loop (perfect-push chain + destruction payoff) instead of one; skill expression gives it depth headroom clones can't fast-follow. |
+
+**Projected stats** — CPI **$0.30–0.50** · D1 **50%** · D7 **18%** · D30 **7%** · Session **9 min** ·
+Sessions/DAU **5** · ARPDAU **$0.12–0.18** · LTV(90d) **$0.80** · Year-1 at scale: **8–14M downloads, $6–10M net**
+
+---
+
+## 7. ✂️ Buzzcut Buddies *(wave 2 — research-driven)*
+
+| | |
+|---|---|
+| **Genre** | ASMR grooming/reveal + creature-collection salon |
+| **Hyper-casual hook** | *Drag to buzz the fuzz off and reveal the cutie underneath.* The satisfying-reveal mechanic (mow/powerwash/shave lineage) is a proven low-CPI creative machine — the before/after IS the ad. |
+| **Concept** | Hundreds of physical fuzz strands with crunchy per-strand ASMR audio that pitch-shifts with stroke speed. Skill layer: style requests ("leave the mohawk!") with keep-zones, golden strands, hidden accessories that sparkle when uncovered, ticklish spots that make the buddy giggle-wiggle, and a FLOW combo for unbroken strokes. Finish ≥95% for the reveal celebration and a procedurally-named buddy ("BARNABY the Wombler"). |
+| **Meta layer** | Every groomed buddy joins your salon (visible, wandering, wearing their found accessories); salon decor levels up every 10 buddies; a 4h-cooldown VIP client pays 2x (the re-engagement hook); 4 upgrade tracks. |
+| **Research grounding** | ASMR/cleaning genre shows exceptional CTR and sub-$0.30 CPIs in market data; collection/nurture metas are the highest-retention layer in the report (My Perfect Hotel pattern); the VIP timer imports the idle re-engagement mechanic that drives Volt Rush-style D30. |
+| **Why it can win** | Zen sessions with zero fail-state remove churn pressure while the collection + VIP timer pull players back; broadest demographic reach of the seven (ASMR audience skews wide). |
+
+**Projected stats** — CPI **$0.20–0.40** (lowest of the portfolio) · D1 **52%** · D7 **19%** · D30 **7.5%** · Session **11 min** ·
+Sessions/DAU **4.5** · ARPDAU **$0.10–0.15** · LTV(90d) **$0.75** · Year-1 at scale: **12–20M downloads, $6–11M net**
+
+---
+
 ## Portfolio strategy
 
 | Game | Primary KPI bet | Monetization center of gravity |
 |---|---|---|
-| Puff Puff Fit | Lowest CPI (broadest hook) | Interstitials + skin IAP |
+| Puff Puff Fit | Low CPI (broad hook) | Interstitials + skin IAP |
 | Topple Party | Shareability / UGC virality | Rewarded (extra dominoes) + no-ads IAP |
 | Slingshot Salvage | Highest skill-based retention | Rewarded (+launch, 2x scrap) + upgrade IAP |
 | Freeze Frame! | Best D1 (cute + panic) | Interstitials + rewarded (slow-melt boost) |
 | Volt Rush | Best D30 / LTV (idle layer) | Rewarded (2x offline) + battery IAP |
+| Kaboom Crane | Ad-creative CTR (destruction payoff) | Rewarded (+1 ball, 2x gold) + upgrade IAP |
+| Buzzcut Buddies | Lowest CPI (ASMR reveal) + broadest reach | Interstitials between buddies + VIP/cosmetic IAP |
 
 **Test plan:** ship all five to Cloudflare, run $200–500 creative probes per concept on TikTok/Meta
 targeting CPI + 3-day retention; kill or double-down at 2 weeks; the winner gets live-ops

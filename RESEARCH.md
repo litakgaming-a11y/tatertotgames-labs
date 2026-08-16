@@ -325,3 +325,93 @@ Estimates compiled from Tap Nation, AppSamurai, Admiral Media, Gamigion/Lancaric
 ---
 
 *Prepared for TaterTot Games Labs. All figures are estimates from public app-intelligence sources; do not treat as audited financials.*
+
+---
+
+## Deep dive: emerging hook genres (2025–2026)
+
+**Addendum date:** 2026-08-16. Same caveats as above: third-party estimates, directional only. This section drills into four hook families that sit *underneath* the sub-genre chart battles of Section 5 — the raw sensory/psychological triggers that make creatives cheap and cores sticky.
+
+### 8.1 ASMR / cleaning / grooming / reveal mechanics
+
+The "satisfying reveal" family — power-washing, mowing, slicing, shaving, deep-cleaning — is the most durable creative hook in casual UA, and supply keeps growing: Apptopia tracked the number of ASMR-themed mobile games increasing for **13 consecutive quarters**.
+
+| Game | Publisher | Signal |
+|---|---|---|
+| ASMR Slicing | Crazy Labs | **100M+ installs lifetime; 36.5M installs in May 2020 alone — the most-downloaded game in the world that month** (Sensor Tower via PocketGamer.biz) |
+| Deep Clean Inc. 3D | Alictus (→ SciPlay/Zynga) | 40M+ downloads; flagship of the portfolio that got Alictus (300M+ total downloads) acquired in an all-cash deal valued up to **$300M** |
+| DIY Makeup / Hair Dye | Crazy Labs | 65M / 55M downloads — grooming-reveal as a repeatable template inside CrazyLabs' 7B-download machine |
+| Stone Grass: Mowing Simulator | Freeplay | Current mowing standard-bearer (7.5M+ downloads on iOS alone per store data; heavily cloned "mow-and-sell" arcade-idle loop à la My Perfect Hotel) |
+| My Perfect Hotel (Section 2.10) | SayGames | Proof that "chore-core ASMR" scales to 133M downloads / $100M+ when a meta is attached |
+
+**Why the creatives over-perform (CTR up, CPI down):**
+- The chaos→order arc "releases micro-doses of dopamine in the viewer": a filthy surface wiped clean in one stroke is a complete, pre-verbal story in under 3 seconds — it passes Rule #1 of Section 6 better than any other hook (MegaDigital TikTok analysis).
+- Reveal mechanics *demo themselves*: the ad is literally gameplay, so IPM holds up and creative production is nearly free. Casual games already post the highest CTRs in mobile (9.4% Android / 8.8% iOS, Liftoff/Singular 2025); satisfying loops are the top-performing concept class within them.
+- 2025 twist: long-form ASMR and AI-generated ASMR hooks are now used to *pre-qualify* higher-LTV users rather than only minimize CPI (AppAgent playable-ads review).
+
+**Retention & monetization character:** raw reveal cores retain like hyper-casual (strong D1, weak D30) — ASMR Slicing and Deep Clean Inc. monetized ads-first and faded without metas. The fix is the Section 2.10 pattern: keep the reveal as the moment-to-moment verb, wrap it in an arcade-idle economy (hire staff / sell clippings / upgrade tools), monetize via rewarded 2x-cash + tool-upgrade IAP. Crazy Labs attributed ASMR Slicing's success to obsessive material/sound polish — in this family, juice *is* the product.
+
+### 8.2 Destruction / demolition mechanics
+
+Destruction is the mirror image of cleaning: order→chaos instead of chaos→order, same instant legibility. Examples: Wrecking Ball – Demolition! (swing a ball into weak points, watch physics collapse), Dozer Demolish: City Tear Down (run a demolition company — note the built-in upgrade meta), Ragdoll Destruction Simulator and the broader Teardown-like clone wave. Data caveat: no destruction title currently charts at Screwdom scale, so this is a *creative-layer* opportunity more than a proven revenue genre.
+
+**Why destruction payoffs work in paid UA:**
+- The collapse moment is a guaranteed spectacle frame for the 3-second hook; structural weak-point targeting reads instantly ("hit the base") — same legibility class as Mob Control's gate math.
+- Failure/near-failure arcs outperform success arcs in creatives: "Pure Failure" endings drove **+65% IPM** vs pure-success in casual, and fail-to-success arcs **+78% IPM at ~40% less spend** in hyper-casual (ROASPIG creative-testing data). A wrecking ball that *almost* topples a tower is a better ad than one that does.
+- Destruction pairs naturally with the fail-forward economics of Section 6 Rule #5: an incomplete demolition (one wall standing) is a sellable continue.
+
+**Risk:** destruction cores are session-shallow (sandbox chaos lacks goal tension). The fix is level-based demolition with a resource meta — exactly the hyper→hybrid conversion of Section 3.
+
+### 8.3 Timing / rhythm micro-skill hooks
+
+One-tap timing is the oldest micro-skill loop that still converts:
+
+- **Pop the Lock** (Simple Machine, 2015): tap when the line crosses the tick; **30M+ downloads** across App Store/Google Play, #1 on the US App Store within a week of launch, and later physical Dave & Buster's arcade cabinets — rare proof the loop converts even at $1/credit.
+- Modern descendants: perfect-timing meters in idle/merge games (tap-in-the-green-zone bonus bars), swing/release pendulum timing, and "resonance" loops where consecutive perfect taps build multipliers.
+
+**The psychology is measurable.** Near-misses activate the ventral striatum — the same dopamine-driven reward circuitry as genuine wins (Clark et al. 2009, University of Cambridge); gambling research shows amplified striatal response to near-miss outcomes and that near-misses "invigorate" continued play even when players report the experience as frustrating (Nature Neuropsychopharmacology). Rat models confirm dopamine agonists enhance the near-miss effect. For design, a timing window tuned so failures cluster *just* outside it manufactures near-misses on demand — driving the "one more try" reflex, higher session counts, and retryable 5–15s loops that fit the 4–8 sessions/day benchmark of Section 4.
+
+**Design note:** timing hooks are the cheapest way to add *skill expression* to an otherwise automatic core (cf. Pocket Champs, which removed execution skill entirely — the opposite bet). A single well-tuned timing meter converts passive watching into authored tension, and every miss is a legitimate fail-forward monetization point.
+
+### 8.4 Collection / nurture metas as retention engines
+
+Collection is the meta-layer that most reliably converts hyper-casual D1 into D30:
+
+- **My Perfect Hotel** entered its liveops phase with the **Barbie Dream Hotel** event (collectible Barbie/Ken character skins, running until March 2027) — SayGames explicitly frames third-party-IP *collectible* content as an audience-retention strategy for longtime users, layered onto the Section 2.10 base game.
+- **Pocket Champs** (Section 2.5) is the cohort's native example: gear/champ collection plus visible customization sustains a 4-year-old title.
+- Nurture variants (care for a creature, not just collect it) print downloads: My Talking Angela 2 did **85M installs in 2024** (#21 globally) on a pure care/grooming loop — and nurture targets the same broad casual demo as the reveal genre.
+- Udonis' My Perfect Hotel teardown credits multi-tiered progression ("each milestone is a gateway to new gameplay") as the backbone of retention; Naavik's hybrid-casual thesis (Section 3) generalizes it: collections give non-payers a reason to return and payers a reason to spend.
+
+**Pattern:** cute-creature collection is the lowest-friction meta to bolt onto a sensory core because it never touches the core verb — it converts each level-complete into a gacha-lite "who did I unlock?" beat, feeding both the event calendar and IAP (skins, egg/incubator timers, collection-completion bundles).
+
+### 8.5 Implications for TaterTot Labs
+
+- **Kaboom Crane = destruction payoff × timing micro-skill — the two hooks compound.** The swing-timing meter manufactures near-misses (ventral-striatum loop, 8.3); the collapse is the ad (8.2). Every failed swing that clips a corner of the building is both a retry trigger and a fail-forward offer slot.
+- **Tune Kaboom Crane creatives to fail:** lead UA testing with almost-collapse and pure-failure endings (+65–78% IPM evidence, 8.2), not perfect demolitions; keep one readable "weak point" in frame 1.
+- **Kaboom Crane needs level goals + an upgrade meta from day one** (crane parts, ball weights, contract/company progression à la Dozer Demolish) — sandbox destruction is a retention trap; clear the Section 4 gates (D1 ≥30%, D7 ≥15%) before scaling.
+- **Buzzcut Buddies sits on the strongest evidence base in this addendum:** grooming-reveal cores are proven at 55–100M installs (Hair Dye, ASMR Slicing), and fuzz-trimming is a fresh surface for the same chaos→order arc. Invest disproportionately in trim feel — blade sound, fuzz physics, haptics — because juice is the product (8.1).
+- **Buzzcut Buddies' creature-collection salon meta is exactly the 8.4 pattern:** each trim reveals/unlocks a collectible creature (the reveal *is* the gacha moment), salon expansion supplies the arcade-idle economy (My Perfect Hotel blueprint), and creature sets feed a 12-month event calendar (Rule #10) with IP-collab slots later.
+- **Shared kill criteria:** both prototypes must clear CPI ≤ $1.50 (Android T1) on mechanic-only creatives in a 2-week test — these hook families exist precisely because they make that bar beatable; if the raw verb can't hit it, no meta will save it.
+
+### 8.6 Addendum sources
+
+- Apptopia — ASMR games up 13 consecutive quarters: https://apptopia.com/en/insights/asmr-mobile-games-increase-13-consecutive-quarters/
+- PocketGamer.biz — Crazy Labs on why ASMR Slicing succeeded: https://www.pocketgamer.biz/pgc-digital-crazy-labs-explains-why-asmr-slicing-is-successful-after-launch/
+- PocketGamer.biz — ASMR Slicing most downloads May 2020 (36.5M): https://www.pocketgamer.biz/asmr-slicing-most-downloads-may-2020/
+- Mobidictum — CrazyLabs 5B downloads (DIY Makeup 65M, Hair Dye 55M): https://mobidictum.com/crazylabs-hits-5-billion-downloads/
+- Mobile Marketing Reads — SciPlay acquires Alictus (up to $300M): https://mobilemarketingreads.com/sciplay-acquires-alictus-in-all-cash-deal/
+- Google Play — Deep Clean Inc. 3D: https://play.google.com/store/apps/details?id=com.smo.deepcleaninc3d
+- App Store — Stone Grass: Lawn Mower Game: https://apps.apple.com/us/app/stone-grass-lawn-mower-game/id1606739002
+- MegaDigital — TikTok visual hooks for puzzle/satisfying games: https://megadigital.ai/en/blog/tiktok-ads-for-puzzle-games/
+- AppAgent — State of Playable Ads 2025: https://appagent.com/blog/the-state-of-playable-ads-in-2025-mid-year-strategic-review/
+- GameDev Reports — Liftoff & Singular Casual Games 2025 (CTR benchmarks): https://gamedevreports.substack.com/p/liftoff-and-singular-casual-games
+- Lancaric — Creative Trends June 2025 ("copy-paste is the new default"): https://lancaric.substack.com/p/creative-trends-june-2025
+- ROASPIG — creative testing / failure-arc IPM lifts: https://roaspig.com/blog/creative-testing-gaming-apps/
+- Nature Neuropsychopharmacology — Amplified striatal responses to near-misses: https://www.nature.com/articles/npp201643
+- Nature Neuropsychopharmacology — Dopamine & near-miss effect in rats: https://www.nature.com/articles/npp2010230
+- Wikipedia — Near-miss effect (Clark et al. 2009 summary): https://en.wikipedia.org/wiki/Near-miss_effect
+- Rohil Aniruth — Pop the Lock (30M+ downloads, D&B cabinets): https://rohilaniruth.com/pop-the-lock
+- AppBrain — Pop the Lock (10M+ Google Play): https://www.appbrain.com/app/pop-the-lock/com.sm.popTheLock
+- SayGames — Barbie IP integration in My Perfect Hotel (GamesBeat interview): https://blog.say.games/posts/why-saygames-teamed-up-with-barbie-for-my-perfect-hotels-first-third-party-ip-integration--exclusive-interview-with-gamesbeat
+- Udonis — My Perfect Hotel deconstruction (progression backbone): https://www.blog.udonis.co/mobile-marketing/mobile-games/my-perfect-hotel
+- Mobilegamer.biz — Top downloads 2024 (My Talking Angela 2, 85M): https://mobilegamer.biz/the-top-mobile-game-downloads-of-2024/
