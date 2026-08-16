@@ -77,7 +77,7 @@
   @keyframes pillPop{50%{transform:scale(1.22)}}
   #muteBtn{
     pointer-events:auto;background:rgba(0,0,0,.4);border:2px solid rgba(255,255,255,.18);
-    color:#fff;font-size:15px;border-radius:99px;width:38px;height:38px;cursor:pointer;
+    color:#fff;font-size:16px;border-radius:99px;width:44px;height:44px;cursor:pointer;
   }
   #demoWrap{
     position:absolute;top:calc(56px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);
@@ -137,6 +137,7 @@
   .btn{
     pointer-events:auto;cursor:pointer;border:none;font-family:inherit;font-weight:900;
     border-radius:20px;color:#fff;letter-spacing:.05em;transition:transform .08s ease;
+    min-height:44px; /* minimum comfortable touch target */
   }
   .btn:active{transform:scale(.9)}
   .btnBig{
@@ -428,6 +429,9 @@ function resize(){
   W=innerWidth; H=innerHeight;
   DPR=Math.min(devicePixelRatio||1,2);
   cvs.width=Math.round(W*DPR); cvs.height=Math.round(H*DPR);
+  // Canvas is a replaced element: without an explicit CSS size it lays out at its
+  // attribute size (W*DPR), i.e. double the viewport on any phone. Pin it to CSS px.
+  cvs.style.width=W+'px'; cvs.style.height=H+'px';
   ctx.setTransform(DPR,0,0,DPR,0,0);
   groundY=H-Math.max(46,H*0.075);
   genBackdrop();
@@ -1111,6 +1115,9 @@ titleScreen.addEventListener('pointerdown',e=>{
 $('titleUpgBtn').addEventListener('click',e=>{ e.stopPropagation(); ensureAudio(); goUpg('title'); });
 releaseBtn.addEventListener('pointerdown',e=>{ e.preventDefault(); e.stopPropagation(); ensureAudio(); releaseBall(); });
 muteBtn.addEventListener('click',e=>{ e.stopPropagation(); ensureAudio(); setMuted(!save.muted); });
+// Phones suspend the AudioContext when the tab is backgrounded (calls, app switching,
+// screen lock) and it stays suspended on return — the game would come back silent.
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) ensureAudio(); });
 $('nextBtn').addEventListener('click',()=>{ winScreen.classList.remove('show'); goPlay(save.contract); });
 $('winUpgBtn').addEventListener('click',()=>goUpg('winback'));
 $('retryBtn').addEventListener('click',()=>{ failScreen.classList.remove('show'); goPlay(level.n); });

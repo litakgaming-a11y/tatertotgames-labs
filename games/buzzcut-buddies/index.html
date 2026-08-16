@@ -31,10 +31,10 @@
     box-shadow:0 8px 0 #d13c7a,0 16px 30px rgba(209,60,122,.35);
     animation:pulseBtn 1.5s ease-in-out infinite;text-shadow:0 2px 0 rgba(0,0,0,.15)}
   @keyframes pulseBtn{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
-  .subBtn{font-size:16px;padding:12px 28px;border-radius:22px;margin-top:14px;
+  .subBtn{font-size:16px;padding:13px 28px;min-height:44px;border-radius:22px;margin-top:14px;
     background:linear-gradient(180deg,#9ad7ff,#4fa8f0);color:#fff;
     box-shadow:0 5px 0 #2f7cc0,0 10px 18px rgba(47,124,192,.3)}
-  .ghostBtn{font-size:14px;padding:10px 22px;border-radius:18px;margin-top:10px;
+  .ghostBtn{font-size:14px;padding:13px 22px;min-height:44px;border-radius:18px;margin-top:10px;
     background:rgba(255,255,255,.75);color:#a05a78;box-shadow:0 3px 0 rgba(160,90,120,.25)}
 
   /* ---- title ---- */
@@ -81,7 +81,7 @@
     animation:vip2 .5s ease-in-out infinite alternate}
   @keyframes vip2{from{transform:scale(1)}to{transform:scale(1.1)}}
   #hudBtns{position:fixed;bottom:calc(12px + env(safe-area-inset-bottom));left:12px;z-index:15;display:flex;gap:8px}
-  .iconBtn{width:42px;height:42px;border-radius:50%;font-size:19px;line-height:1;
+  .iconBtn{width:44px;height:44px;border-radius:50%;font-size:19px;line-height:1;
     background:rgba(255,255,255,.85);color:#a05a78;box-shadow:0 4px 10px rgba(160,90,120,.25)}
 
   /* ---- completion ---- */
@@ -240,6 +240,9 @@ function resize(){
   DPR = Math.min(devicePixelRatio||1, 2.5);
   W = innerWidth; H = innerHeight;
   cv.width = Math.round(W*DPR); cv.height = Math.round(H*DPR);
+  // Canvas is a replaced element: without an explicit CSS size it lays out at its
+  // attribute size (W*DPR), i.e. double the viewport on any phone. Pin it to CSS px.
+  cv.style.width = W+'px'; cv.style.height = H+'px';
 }
 addEventListener('resize', resize);
 resize();
@@ -1400,6 +1403,12 @@ function endStroke(e){
 cv.addEventListener('pointerup', endStroke);
 cv.addEventListener('pointercancel', endStroke);
 addEventListener('blur', endStroke);
+// Phones background the tab constantly (calls, app switching, screen lock). `blur` is
+// unreliable there, so end the stroke — which also silences the clipper hum — and
+// resume the AudioContext on return, since it stays suspended otherwise.
+document.addEventListener('visibilitychange', function(){
+  if (document.hidden) endStroke(); else initAudio();
+});
 
 document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
 document.addEventListener('touchmove', function(e){ e.preventDefault(); }, {passive:false});
