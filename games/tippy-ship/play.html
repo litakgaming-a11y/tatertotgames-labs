@@ -1,0 +1,2439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Tippy Ship — TaterTot Games Labs</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9B%B5%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --ink:#0b1f33;
+    --accent:#ff6b6b;
+    --gold:#ffc93c;
+    --teal:#38d9c3;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{
+    margin:0;padding:0;width:100%;height:100%;overflow:hidden;
+    background:#0b1f33;touch-action:none;
+    -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,Roboto,"Helvetica Neue",Arial,sans-serif;
+    overscroll-behavior:none;
+  }
+  canvas{position:fixed;inset:0;display:block;touch-action:none}
+  #safeProbe{
+    position:fixed;top:0;left:0;width:0;height:0;pointer-events:none;visibility:hidden;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .screen{
+    position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    pointer-events:none;opacity:0;transition:opacity .28s ease;z-index:10;text-align:center;
+    padding:calc(10px + env(safe-area-inset-top)) 12px calc(10px + env(safe-area-inset-bottom));
+  }
+  .screen.show{pointer-events:auto;opacity:1}
+  /* ---------- TITLE ---------- */
+  #titleScreen{justify-content:flex-start;padding-top:calc(7vh + env(safe-area-inset-top))}
+  #logo{
+    font-size:min(15vw,84px);font-weight:900;letter-spacing:-.02em;line-height:.92;
+    color:#fff;margin:0;
+    text-shadow:0 4px 0 rgba(0,0,0,.28), 0 10px 30px rgba(0,0,0,.4);
+    animation:logoBounce 2.8s ease-in-out infinite;
+    transform-origin:50% 60%;
+  }
+  #logo .l2{display:block;color:var(--gold)}
+  @keyframes logoBounce{
+    0%,100%{transform:scale(1) rotate(-2.5deg)}
+    25%{transform:scale(1.05) rotate(1.5deg)}
+    50%{transform:scale(.98) rotate(-1deg)}
+    75%{transform:scale(1.04) rotate(2.5deg)}
+  }
+  #tagline{margin-top:8px;color:#dff1ffcc;font-weight:800;font-size:min(3.7vw,15px);letter-spacing:.05em}
+  #tapToPlay{
+    margin-top:16px;font-size:min(6vw,26px);font-weight:900;color:#fff;letter-spacing:.14em;
+    animation:blink 1.15s ease-in-out infinite;
+    text-shadow:0 3px 0 rgba(0,0,0,.3);
+  }
+  @keyframes blink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.96)}}
+  #bestLine{margin-top:10px;color:#ffffffcc;font-weight:800;font-size:15px;letter-spacing:.04em}
+  #routeLine{margin-top:5px;color:#ffd97dcc;font-weight:800;font-size:14px;letter-spacing:.04em}
+  #titleBtns{margin-top:12px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  #footerBadge{
+    position:absolute;bottom:calc(12px + env(safe-area-inset-bottom));left:0;right:0;display:flex;justify-content:center;
+  }
+  #footerBadge a{
+    color:#fff;background:rgba(0,0,0,.34);text-decoration:none;font-weight:800;font-size:12px;
+    padding:9px 16px;border-radius:99px;letter-spacing:.08em;border:2px solid rgba(255,255,255,.25);
+    min-height:44px;display:flex;align-items:center;
+  }
+  /* ---------- HUD ---------- */
+  #hud{position:fixed;inset:0;pointer-events:none;z-index:5;opacity:0;transition:opacity .25s ease}
+  #hud.show{opacity:1}
+  #hudTop{
+    position:absolute;top:calc(8px + env(safe-area-inset-top));
+    left:calc(8px + env(safe-area-inset-left));right:calc(8px + env(safe-area-inset-right));
+    display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap;
+  }
+  .pill{
+    background:rgba(4,18,34,.55);color:#fff;font-weight:900;font-size:12.5px;
+    padding:7px 10px;border-radius:99px;letter-spacing:.02em;border:2px solid rgba(255,255,255,.2);
+    display:flex;align-items:center;gap:4px;white-space:nowrap;
+  }
+  @media (max-width:360px){ .pill{font-size:11px;padding:6px 8px} }
+  .pill b{color:var(--gold)}
+  .pill.flash{animation:pillFlash .5s ease}
+  @keyframes pillFlash{0%{transform:scale(1);background:#e63946}50%{transform:scale(1.2);background:#e63946}100%{transform:scale(1)}}
+  #muteBtn{
+    pointer-events:auto;position:absolute;
+    right:calc(10px + env(safe-area-inset-right));bottom:calc(12px + env(safe-area-inset-bottom));
+    background:rgba(4,18,34,.55);border:2px solid rgba(255,255,255,.2);
+    color:#fff;font-size:18px;border-radius:99px;width:46px;height:46px;min-width:46px;cursor:pointer;
+  }
+  #sailBtn{
+    pointer-events:auto;position:absolute;left:50%;transform:translateX(-50%);
+    bottom:calc(16px + env(safe-area-inset-bottom));
+    border:none;font-family:inherit;font-weight:900;font-size:20px;color:#04283a;
+    padding:14px 34px;border-radius:22px;min-height:52px;cursor:pointer;letter-spacing:.08em;
+    background:linear-gradient(180deg,#ffd76a,#ffb62e);box-shadow:0 6px 0 #b57a10,0 10px 24px rgba(0,0,0,.45);
+    display:none;animation:sailPulse 1s ease-in-out infinite;
+  }
+  #sailBtn.show{display:block}
+  #sailBtn:active{transform:translateX(-50%) scale(.93)}
+  @keyframes sailPulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.06)}}
+  /* ---------- BUTTONS / PANELS ---------- */
+  .btn{
+    pointer-events:auto;cursor:pointer;border:none;font-family:inherit;font-weight:900;
+    border-radius:20px;color:#fff;letter-spacing:.05em;min-height:44px;
+    transition:transform .08s ease;
+  }
+  .btn:active{transform:scale(.92)}
+  .btnSmall{
+    font-size:14px;padding:12px 18px;background:rgba(4,18,34,.8);
+    border:2px solid rgba(255,255,255,.28);box-shadow:0 4px 0 rgba(0,0,0,.32);
+  }
+  .panel{
+    background:rgba(7,24,44,.88);border:3px solid rgba(255,255,255,.16);border-radius:28px;
+    padding:26px 26px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    box-shadow:0 20px 60px rgba(0,0,0,.55);
+    transform:scale(.7);transition:transform .35s cubic-bezier(.2,1.6,.4,1);
+    max-width:min(92vw,420px);max-height:84vh;overflow-y:auto;
+  }
+  .screen.show .panel{transform:scale(1)}
+  .panelTitle{font-size:min(8.5vw,38px);font-weight:900;color:#fff;margin:0;text-shadow:0 3px 0 rgba(0,0,0,.32)}
+  #stars{font-size:40px;letter-spacing:6px;margin:12px 0 2px;min-height:50px}
+  #stars span{display:inline-block;opacity:0;transform:scale(3) rotate(-30deg)}
+  #stars span.on{animation:starPop .45s cubic-bezier(.2,1.7,.4,1) forwards}
+  #stars span:nth-child(1).on{animation-delay:.1s}
+  #stars span:nth-child(2).on{animation-delay:.38s}
+  #stars span:nth-child(3).on{animation-delay:.66s}
+  @keyframes starPop{to{opacity:1;transform:scale(1) rotate(0deg)}}
+  #winCoins{font-size:28px;font-weight:900;color:var(--gold);margin:4px 0;text-shadow:0 2px 0 rgba(0,0,0,.3)}
+  #winSub{color:#cfe6ffcc;font-weight:800;font-size:14px;margin:2px 0 0}
+  #newPort{
+    display:none;margin:10px auto 0;font-weight:900;font-size:14px;color:#0b1f33;
+    background:linear-gradient(90deg,#ffc93c,#ffde7d);padding:9px 16px;border-radius:99px;
+    animation:goPulse 1.2s ease-in-out infinite;
+  }
+  @keyframes goPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+  .bigBtn{
+    margin-top:18px;font-size:19px;padding:15px 34px;border-radius:22px;
+    background:linear-gradient(180deg,#38d9c3,#1fa896);box-shadow:0 6px 0 #12776a;
+  }
+  .bigBtn.retry{background:linear-gradient(180deg,#ffb84d,#ff8a3c);box-shadow:0 6px 0 #c05e17}
+  .bigBtn.ghost{background:linear-gradient(180deg,#5b7fa8,#3c5f85);box-shadow:0 6px 0 #24405e}
+  #loseSub{color:#cfe6ffcc;font-weight:700;font-size:14px;margin:10px 0 0;max-width:270px}
+  /* ---------- SHOP ---------- */
+  #shopCoins{font-size:20px;font-weight:900;color:var(--gold);margin:8px 0 4px}
+  .shopHead{font-weight:900;color:#9fd8ff;font-size:12px;letter-spacing:.14em;margin:14px 0 0;text-align:left}
+  .upRow{
+    display:flex;align-items:center;gap:10px;text-align:left;
+    background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.12);
+    border-radius:18px;padding:10px 12px;margin-top:10px;
+  }
+  .upIcon{font-size:24px;line-height:1}
+  .upMid{flex:1;min-width:0}
+  .upName{font-weight:900;color:#fff;font-size:14px}
+  .upDesc{font-weight:700;color:#cfe6ff99;font-size:11.5px;line-height:1.25;margin-top:2px}
+  .upLvl{font-weight:900;color:var(--teal);font-size:11px;margin-top:3px;letter-spacing:.08em}
+  .buyBtn{
+    pointer-events:auto;cursor:pointer;border:none;font-family:inherit;font-weight:900;font-size:13px;
+    padding:11px 12px;border-radius:14px;color:#0b1f33;min-height:44px;min-width:74px;
+    background:linear-gradient(180deg,#ffd76a,#ffb62e);box-shadow:0 4px 0 #b57a10;
+  }
+  .buyBtn:active{transform:scale(.92)}
+  .buyBtn.off{background:rgba(255,255,255,.14);color:#ffffff66;box-shadow:none;cursor:default}
+  .buyBtn.max{background:linear-gradient(180deg,#38d9c3,#1fa896);color:#04283a;box-shadow:0 4px 0 #12776a}
+  .buyBtn.use{background:linear-gradient(180deg,#9fd8ff,#5aa9e6);color:#04283a;box-shadow:0 4px 0 #2b6ca3}
+  /* ---------- HINT ---------- */
+  #hintTip{
+    position:fixed;bottom:calc(76px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;
+    color:#fff;font-weight:800;font-size:14px;text-shadow:0 2px 6px rgba(0,0,0,.7);
+    pointer-events:none;z-index:6;opacity:0;transition:opacity .35s ease;padding:0 24px;
+  }
+  #hintTip.show{opacity:1}
+</style>
+<script src="/analytics.js" defer></script>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="safeProbe"></div>
+
+<div id="hud">
+  <div id="hudTop">
+    <div class="pill" id="pillPort">⚓ PORT <b id="hPort">1</b></div>
+    <div class="pill" id="pillCargo">📦 <b id="hCargo">0/4</b></div>
+    <div class="pill" id="pillSupply">🧰 <b id="hSupply">7</b></div>
+    <div class="pill" id="pillCoins">🪙 <b id="hCoins">0</b></div>
+  </div>
+  <button id="sailBtn">⛵ SAIL!</button>
+  <button id="muteBtn" aria-label="mute">🔊</button>
+</div>
+
+<div id="hintTip">TAP TO DROP THE CRATE ON THE SHIP 👆</div>
+
+<div class="screen show" id="titleScreen">
+  <h1 id="logo">TIPPY<span class="l2">SHIP</span></h1>
+  <div id="tagline">LOAD THE BOAT · DON'T TIP THE BOAT</div>
+  <div id="tapToPlay">▶ TAP TO PLAY</div>
+  <div id="bestLine">BEST PORT 1</div>
+  <div id="routeLine">🏘️ 0 ports delivered</div>
+  <div id="titleBtns"><button class="btn btnSmall" id="shopBtn">🛠️ DOCKYARD</button></div>
+  <div id="footerBadge"><a href="../../">🥔 TaterTot Games Labs</a></div>
+</div>
+
+<div class="screen" id="winScreen">
+  <div class="panel">
+    <h2 class="panelTitle">CARGO DELIVERED!</h2>
+    <div id="stars"><span>⭐</span><span>⭐</span><span>⭐</span></div>
+    <div id="winCoins">+0 🪙</div>
+    <div id="winSub">Not a splinter lost.</div>
+    <div id="newPort">🏘️ PORT LIT UP!</div>
+    <button class="btn bigBtn" id="nextBtn">NEXT PORT ➜</button>
+  </div>
+</div>
+
+<div class="screen" id="loseScreen">
+  <div class="panel">
+    <h2 class="panelTitle" id="loseTitle">CAPSIZED! 🌊</h2>
+    <p id="loseSub">The whole stack went for a swim. Keep your coins and try the port again.</p>
+    <button class="btn bigBtn retry" id="retryBtn">↻ TRY AGAIN</button>
+    <button class="btn bigBtn ghost" id="loseShopBtn">🛠️ DOCKYARD</button>
+  </div>
+</div>
+
+<div class="screen" id="shopScreen">
+  <div class="panel">
+    <h2 class="panelTitle">🛠️ DOCKYARD</h2>
+    <div id="shopCoins">🪙 0</div>
+    <div id="shopList"></div>
+    <button class="btn bigBtn" id="shopCloseBtn">CLOSE</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* =====================================================================
+   TIPPY SHIP — load the boat, don't tip the boat
+   TaterTot Games Labs · self-contained, canvas-drawn, WebAudio-synth
+   Physics: 2D rigid bodies (impulse solver, fixed substeps) stacking on
+   a hull with real displaced-area buoyancy, wave forcing and water drag.
+   ===================================================================== */
+
+// ---------------------------------------------------------------- utils
+var TAU = Math.PI * 2;
+function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+function lerp(a, b, t) { return a + (b - a) * t; }
+function smooth(t) { return t * t * (3 - 2 * t); }
+function mulberry32(seed) {
+  var a = seed >>> 0;
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    var t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function vibrate(ms) {
+  if (typeof navigator !== 'undefined' && navigator.vibrate) {
+    try { navigator.vibrate(ms); } catch (e) { /* no-op */ }
+  }
+}
+function hex2rgb(h) {
+  var n = parseInt(h.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+function mixHex(a, b, t) {
+  var ca = hex2rgb(a), cb = hex2rgb(b);
+  return 'rgb(' + Math.round(lerp(ca[0], cb[0], t)) + ',' +
+    Math.round(lerp(ca[1], cb[1], t)) + ',' + Math.round(lerp(ca[2], cb[2], t)) + ')';
+}
+function track(ev, data) {
+  try { if (typeof window !== 'undefined') window.TTG?.track(ev, data); } catch (e) { /* no-op */ }
+}
+
+// ---------------------------------------------------------------- save
+var SAVE_KEY = 'ttg_tippy';
+var save = {
+  coins: 0, earned: 0, best: 1, level: 1, muted: false,
+  skin: 'tug', skins: { junk: 0, paddle: 0 },
+  upg: { hull: 0, ballast: 0, deck: 0, brake: 0 },
+};
+function num(v, def, lo, hi) {
+  var n = typeof v === 'number' ? v : parseFloat(v);
+  if (!isFinite(n)) n = def;
+  return clamp(Math.floor(n), lo, hi);
+}
+function loadSave() {
+  var raw = null;
+  try { raw = localStorage.getItem(SAVE_KEY); } catch (e) { raw = null; }
+  var o = null;
+  if (raw) { try { o = JSON.parse(raw); } catch (e) { o = null; } }
+  if (!o || typeof o !== 'object') o = {};
+  // schema repair — every field coerced and clamped, unknown shapes discarded
+  save.coins = num(o.coins, 0, 0, 1e9);
+  save.earned = num(o.earned, 0, 0, 1e9);
+  save.best = num(o.best, 1, 1, 9999);
+  save.level = num(o.level, 1, 1, 9999);
+  save.muted = !!o.muted;
+  save.skin = (o.skin === 'junk' || o.skin === 'paddle') ? o.skin : 'tug';
+  var sk = (o.skins && typeof o.skins === 'object') ? o.skins : {};
+  save.skins = { junk: num(sk.junk, 0, 0, 1), paddle: num(sk.paddle, 0, 0, 1) };
+  if (save.skin === 'junk' && !save.skins.junk) save.skin = 'tug';
+  if (save.skin === 'paddle' && !save.skins.paddle) save.skin = 'tug';
+  var u = (o.upg && typeof o.upg === 'object') ? o.upg : {};
+  save.upg = {
+    hull: num(u.hull, 0, 0, 3),
+    ballast: num(u.ballast, 0, 0, 3),
+    deck: num(u.deck, 0, 0, 3),
+    brake: num(u.brake, 0, 0, 3),
+  };
+  if (save.earned < save.coins) save.earned = save.coins;
+  if (save.best < save.level) save.best = save.level;
+}
+function persist() {
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) { /* private mode etc. */ }
+}
+loadSave();
+
+// ---------------------------------------------------------------- meta
+var UPGRADES = [
+  { k: 'hull',    icon: '🛳️', name: 'Wider Hull',  desc: 'A beamier hull sits flatter and carries more before she tips.', max: 3, costs: [250, 550, 1000] },
+  { k: 'ballast', icon: '⚖️', name: 'Ballast',     desc: 'Keel weight pulls her upright faster after every roll.',        max: 3, costs: [220, 500, 900] },
+  { k: 'deck',    icon: '🟩', name: 'Rubber Deck', desc: 'Grippy decking — cargo slides overboard far less easily.',      max: 3, costs: [200, 420, 800] },
+  { k: 'brake',   icon: '🪝', name: 'Crane Brake', desc: 'The trolley slows over the ship for easier center drops.',      max: 3, costs: [180, 400, 750] },
+];
+var SKINS = [
+  { k: 'tug',    icon: '⛴️', name: 'Tiny Tug',       desc: 'The trusty original. Red belly, big heart.', cost: 0 },
+  { k: 'junk',   icon: '⛵', name: 'Junk Rig',       desc: 'Battened sail, salty attitude.',            cost: 500 },
+  { k: 'paddle', icon: '🛳️', name: 'Paddle Steamer', desc: 'Twin stacks and a churning wheel.',         cost: 1200 },
+];
+function upgLvl(k) { return save.upg[k] || 0; }
+var PORT_A = ['Salt', 'Gull', 'Fog', 'Tide', 'Coral', 'Anchor', 'Pearl', 'Breezy', 'Star', 'Drift', 'Sunny', 'Kelp', 'Moon', 'Wave', 'Sandy', 'Storm'];
+var PORT_B = ['haven', ' Cove', ' Bay', 'port', ' Quay', ' Reach', ' Landing', ' Wharf', ' Point', ' Jetty'];
+function portName(i) {
+  var r = mulberry32(i * 7919 + 13);
+  return PORT_A[Math.floor(r() * PORT_A.length)] + PORT_B[Math.floor(r() * PORT_B.length)];
+}
+
+// ---------------------------------------------------------------- dom
+var cv = document.getElementById('cv');
+var ctx = cv.getContext('2d');
+function el(id) { return document.getElementById(id); }
+var hud = el('hud');
+var hPort = el('hPort'), hCargo = el('hCargo'), hSupply = el('hSupply'), hCoins = el('hCoins');
+var pillCargo = el('pillCargo');
+var titleScreen = el('titleScreen'), winScreen = el('winScreen'), loseScreen = el('loseScreen'), shopScreen = el('shopScreen');
+var bestLine = el('bestLine'), routeLine = el('routeLine');
+var starsEl = el('stars'), winCoinsEl = el('winCoins'), winSubEl = el('winSub'), newPortEl = el('newPort');
+var loseTitleEl = el('loseTitle'), loseSubEl = el('loseSub');
+var shopCoinsEl = el('shopCoins'), shopListEl = el('shopList');
+var hintTip = el('hintTip');
+var muteBtn = el('muteBtn'), sailBtn = el('sailBtn');
+var safeProbe = el('safeProbe');
+
+// ---------------------------------------------------------------- audio
+var ac = null, master = null, noiseBuf = null, audioDead = false;
+// A machine with no output device throws on construction — audio must never
+// be able to abort a caller (every input handler calls initAudio first).
+function initAudio() {
+  if (audioDead) return;
+  if (ac) {
+    try { if (ac.state === 'suspended') ac.resume(); } catch (e) { /* no-op */ }
+    return;
+  }
+  var AC = (typeof window !== 'undefined') && (window.AudioContext || window.webkitAudioContext);
+  if (!AC) { audioDead = true; return; }
+  try {
+    ac = new AC();
+    master = ac.createGain();
+    master.gain.value = save.muted ? 0 : 0.45;
+    master.connect(ac.destination);
+    var len = Math.floor(ac.sampleRate * 0.5);
+    noiseBuf = ac.createBuffer(1, len, ac.sampleRate);
+    var data = noiseBuf.getChannelData(0);
+    for (var i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+  } catch (e) {
+    ac = null; master = null; noiseBuf = null; audioDead = true;
+  }
+}
+function setMuted(m) {
+  save.muted = !!m; persist();
+  muteBtn.textContent = save.muted ? '🔇' : '🔊';
+  if (master) { try { master.gain.value = save.muted ? 0 : 0.45; } catch (e) { /* no-op */ } }
+}
+function audioOk() { return !!(ac && master && !save.muted); }
+function tone(type, f0, f1, dur, vol, delay) {
+  if (!audioOk()) return;
+  try {
+    var t = ac.currentTime + (delay || 0);
+    var o = ac.createOscillator();
+    o.type = type;
+    o.frequency.setValueAtTime(f0, t);
+    if (f1 && f1 !== f0) o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
+    var g = ac.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + Math.min(0.03, dur * 0.3));
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t + dur + 0.05);
+  } catch (e) { /* no-op */ }
+}
+function noise(dur, vol, freq, type, delay, rate) {
+  if (!audioOk() || !noiseBuf) return;
+  try {
+    var t = ac.currentTime + (delay || 0);
+    var src = ac.createBufferSource();
+    src.buffer = noiseBuf; src.loop = true;
+    src.playbackRate.value = rate || 1;
+    var f = ac.createBiquadFilter();
+    f.type = type || 'lowpass';
+    f.frequency.setValueAtTime(freq, t);
+    f.Q.value = 1.1;
+    var g = ac.createGain();
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start(t); src.stop(t + dur + 0.05);
+  } catch (e) { /* no-op */ }
+}
+function sndClick() { tone('triangle', 620, 880, 0.07, 0.22); }
+function sndDrop() { tone('sine', 300, 180, 0.1, 0.2); }
+function sndThunk(mass) {
+  var f = clamp(260 - mass * 0.14, 60, 260);
+  tone('triangle', f, f * 0.6, 0.13, 0.5);
+  noise(0.09, 0.3, 320, 'lowpass');
+}
+function sndSplash() {
+  noise(0.5, 0.5, 900, 'lowpass', 0, 0.8);
+  tone('sine', 300, 90, 0.3, 0.25);
+}
+function sndCreak(roll) {
+  var f = 70 + roll * 240;
+  tone('sawtooth', f, f * 1.5, 0.28, 0.09);
+  noise(0.2, 0.08, 500, 'bandpass', 0, 0.5);
+}
+function sndHeart() {
+  tone('sine', 60, 40, 0.11, 0.5);
+  tone('sine', 55, 38, 0.1, 0.42, 0.16);
+}
+function sndSaved() { tone('triangle', 520, 780, 0.12, 0.3); tone('triangle', 780, 1040, 0.14, 0.3, 0.1); }
+function sndGullCry() { tone('square', 1500, 950, 0.11, 0.06); tone('square', 1350, 850, 0.13, 0.05, 0.13); }
+function sndWind() { noise(1.3, 0.22, 700, 'bandpass', 0, 0.6); }
+function sndHorn() { tone('square', 174, 168, 0.5, 0.16); tone('square', 262, 250, 0.5, 0.12, 0.05); }
+function sndCoin(i) { tone('sine', 880 + i * 90, 1180 + i * 90, 0.08, 0.2, i * 0.05); }
+function sndStar(i) { tone('triangle', 700 + i * 180, 1000 + i * 180, 0.14, 0.3, 0); }
+function sndWin() {
+  var ns = [523, 659, 784, 1047];
+  for (var i = 0; i < ns.length; i++) tone('triangle', ns[i], ns[i], 0.16, 0.3, i * 0.11);
+  noise(0.5, 0.14, 2600, 'highpass', 0.42);
+}
+function sndLose() {
+  tone('sawtooth', 220, 60, 0.9, 0.28);
+  tone('sawtooth', 165, 45, 1.0, 0.22, 0.08);
+}
+function sndBreak() { noise(0.2, 0.4, 2200, 'highpass'); tone('square', 400, 150, 0.12, 0.2); }
+function sndBuy() { tone('sine', 660, 990, 0.09, 0.3); tone('sine', 990, 1320, 0.1, 0.3, 0.09); }
+
+// ---------------------------------------------------------------- layout
+var DPR = 1, W = 360, H = 640;
+var SAFE = { t: 0, r: 0, b: 0, l: 0 };
+var WATERY = 400;      // screen y of the water rest line
+var VS = 1;            // world→screen scale
+var TROLLEY_WY = -380; // world y of the crane trolley
+var CRANE_SY = 120;    // screen y of crane beam
+var resizing = false;
+function readSafe() {
+  try {
+    var cs = (typeof getComputedStyle === 'function') ? getComputedStyle(safeProbe) : null;
+    if (cs) {
+      SAFE.t = parseFloat(cs.paddingTop) || 0;
+      SAFE.r = parseFloat(cs.paddingRight) || 0;
+      SAFE.b = parseFloat(cs.paddingBottom) || 0;
+      SAFE.l = parseFloat(cs.paddingLeft) || 0;
+    }
+  } catch (e) { /* keep zeros */ }
+}
+function resize() {
+  if (resizing) return;
+  resizing = true;
+  try {
+    var iw = (typeof window !== 'undefined' && window.innerWidth) || 0;
+    var ih = (typeof window !== 'undefined' && window.innerHeight) || 0;
+    if (iw < 2 || ih < 2) return; // guard against 0-size layout passes
+    DPR = Math.min(2.5, (typeof window !== 'undefined' && window.devicePixelRatio) || 1);
+    W = iw; H = ih;
+    cv.width = Math.round(W * DPR);
+    cv.height = Math.round(H * DPR);
+    // CRITICAL: a canvas is a replaced element. Without an explicit CSS size it
+    // lays out at its attribute size (W*DPR) — double the viewport on a phone.
+    cv.style.width = W + 'px';
+    cv.style.height = H + 'px';
+    readSafe();
+    WATERY = Math.round(H * 0.62);
+    VS = clamp(Math.min(W / 460, H / 760), 0.55, 1.5);
+    CRANE_SY = SAFE.t + clamp(H * 0.15, 84, 150);
+    TROLLEY_WY = (CRANE_SY + 26 - WATERY) / VS;
+    seedTitleDecor();
+  } finally { resizing = false; }
+}
+if (typeof window !== 'undefined' && window.addEventListener) {
+  window.addEventListener('resize', resize);
+  window.addEventListener('orientationchange', function () { setTimeout(resize, 120); });
+}
+function wx2s(x) { return W / 2 + x * VS; }
+function wy2s(y) { return WATERY + y * VS; }
+
+// ---------------------------------------------------------------- physics constants
+var G = 1300;            // gravity, world units/s²
+var RHO = 1.0;           // water density (hull dens 0.30 → floats at ~30% draft)
+var PH = 1 / 150;        // fixed physics substep
+var VEL_ITERS = 8, POS_ITERS = 2;
+var SLOP = 0.6, POS_PCT = 0.4;
+var MAX_V = 1900, MAX_VA = 9;
+var CAPSIZE_ANG = 0.70;  // ~40°
+var WARN_ANG = 0.44;     // ~25° — slow-mo + heartbeat
+var SAVED_ANG = 0.28;    // recover below this → "SAVED!"
+var HULL_DENS = 0.34;
+var HULL_W0 = 184, HULL_H = 52;
+
+// ---------------------------------------------------------------- bodies
+var B = [];          // all bodies, hull first (loop-safe: initialized empty for title boot)
+var hull = null;
+var bodyId = 1;
+function makeBox(x, y, w, h, dens, kind) {
+  var m = w * h * dens;
+  var b = {
+    id: bodyId++, shape: 'box', kind: kind, x: x, y: y, a: 0,
+    vx: 0, vy: 0, va: 0, w: w, h: h, r: Math.hypot(w, h) / 2,
+    m: m, invM: 1 / m, I: m * (w * w + h * h) / 12, invI: 12 / (m * (w * w + h * h)),
+    invM0: 1 / m, invI0: 12 / (m * (w * w + h * h)),
+    area: w * h, dens: dens,
+    mu: 0.65, e: 0.04,
+    sleeping: false, sleepT: 0, lx: 0, ly: 0, la: 0,
+    touching: false, overboard: false, dead: false, obT: 0, obDir: 1,
+    crush: 0, impulseFromAbove: 0, val: 10, col: '#c58f52', seed: Math.random() * 10,
+  };
+  return b;
+}
+function makeCircle(x, y, r, dens, kind) {
+  var m = Math.PI * r * r * dens;
+  var b = makeBox(x, y, r * 2, r * 2, dens, kind);
+  b.shape = 'circle'; b.r = r; b.m = m; b.invM = 1 / m;
+  b.I = m * r * r / 2; b.invI = 2 / (m * r * r);
+  b.invM0 = b.invM; b.invI0 = b.invI;
+  b.area = Math.PI * r * r;
+  return b;
+}
+function hullHalfW() { return (HULL_W0 * (1 + 0.08 * upgLvl('hull'))) / 2; }
+function deckMu() { return 0.72 + 0.08 * upgLvl('deck'); }
+function makeHull() {
+  var hw = hullHalfW();
+  var b = makeBox(0, 0, hw * 2, HULL_H, HULL_DENS, 'hull');
+  b.mu = deckMu(); b.e = 0.02;
+  // extra roll inertia (keel + machinery low in the hull): slows roll build-up
+  // without changing the buoyancy equilibrium — the forgiving-early tuning knob
+  b.I *= 2.2; b.invI /= 2.2; b.invI0 = b.invI;
+  b.y = -HULL_H / 2 + (b.m / RHO) / (hw * 2); // start near equilibrium draft
+  return b;
+}
+
+// ---------------------------------------------------------------- waves & water
+var WAVE = { a1: 3, a2: 1.5 };
+var WAKE = { on: false, amp: 0, ph: 0, env: 0 };
+var waveT = 0;
+function waterYAt(x) {
+  var y = Math.sin(x * 0.016 + waveT * 1.5) * WAVE.a1 +
+          Math.sin(x * 0.043 - waveT * 2.3) * WAVE.a2;
+  if (WAKE.on) y += Math.sin(x * 0.045 - WAKE.ph) * WAKE.amp * WAKE.env;
+  return y;
+}
+function waterSlopeAt(x) { return (waterYAt(x + 8) - waterYAt(x - 8)) / 16; }
+
+// ---------------------------------------------------------------- geometry helpers
+function boxVerts(b) {
+  var c = Math.cos(b.a), s = Math.sin(b.a), hw = b.w / 2, hh = b.h / 2;
+  return [
+    { x: b.x + c * -hw - s * -hh, y: b.y + s * -hw + c * -hh },
+    { x: b.x + c * hw - s * -hh, y: b.y + s * hw + c * -hh },
+    { x: b.x + c * hw - s * hh, y: b.y + s * hw + c * hh },
+    { x: b.x + c * -hw - s * hh, y: b.y + s * -hw + c * hh },
+  ];
+}
+function clipBelowWater(pts, x1, y1, x2, y2) {
+  var out = [];
+  var dx = (x2 - x1) || 1e-6;
+  function lineY(px) { return y1 + (y2 - y1) * ((px - x1) / dx); }
+  for (var i = 0; i < pts.length; i++) {
+    var a = pts[i], b = pts[(i + 1) % pts.length];
+    var da = a.y - lineY(a.x), db = b.y - lineY(b.x);
+    if (da >= 0) out.push(a);
+    if ((da >= 0) !== (db >= 0)) {
+      var t = da / (da - db);
+      out.push({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
+    }
+  }
+  return out;
+}
+function polyAreaCentroid(p) {
+  if (p.length < 3) return { a: 0, cx: 0, cy: 0 };
+  var a = 0, cx = 0, cy = 0;
+  for (var i = 0; i < p.length; i++) {
+    var q = p[i], r = p[(i + 1) % p.length];
+    var cr = q.x * r.y - r.x * q.y;
+    a += cr; cx += (q.x + r.x) * cr; cy += (q.y + r.y) * cr;
+  }
+  a *= 0.5;
+  if (Math.abs(a) < 1e-6) return { a: 0, cx: 0, cy: 0 };
+  return { a: Math.abs(a), cx: cx / (6 * a), cy: cy / (6 * a) };
+}
+
+// ---------------------------------------------------------------- collision detection
+// Box-box: SAT over face normals + reference/incident face clipping (2-pt manifold).
+function boxAxes(b) {
+  var c = Math.cos(b.a), s = Math.sin(b.a);
+  return [{ x: c, y: s }, { x: -s, y: c }];
+}
+function projectBox(b, ax) {
+  var vs = boxVerts(b), mn = 1e18, mx = -1e18;
+  for (var i = 0; i < 4; i++) {
+    var d = vs[i].x * ax.x + vs[i].y * ax.y;
+    if (d < mn) mn = d;
+    if (d > mx) mx = d;
+  }
+  return { mn: mn, mx: mx };
+}
+function collideBoxBox(A, Bb) {
+  var axes = boxAxes(A).concat(boxAxes(Bb));
+  var best = -1, bestOv = 1e18, bestAx = null;
+  for (var i = 0; i < 4; i++) {
+    var ax = axes[i];
+    var pa = projectBox(A, ax), pb = projectBox(Bb, ax);
+    var ov = Math.min(pa.mx, pb.mx) - Math.max(pa.mn, pb.mn);
+    if (ov < 0) return null;
+    if (ov < bestOv) { bestOv = ov; bestAx = ax; best = i; }
+  }
+  var nx = bestAx.x, ny = bestAx.y;
+  var dxc = Bb.x - A.x, dyc = Bb.y - A.y;
+  if (nx * dxc + ny * dyc < 0) { nx = -nx; ny = -ny; }
+  // incident body = the one whose face was NOT the separating axis owner
+  var inc = best < 2 ? Bb : A;
+  var vs = boxVerts(inc);
+  // pick the two incident vertices deepest along -n (from inc toward the other)
+  var sign = (inc === Bb) ? -1 : 1; // deepest along n*sign
+  var d0 = [], k;
+  for (k = 0; k < 4; k++) d0.push({ v: vs[k], d: (vs[k].x * nx + vs[k].y * ny) * sign });
+  d0.sort(function (p, q) { return q.d - p.d; });
+  var pts = [];
+  for (k = 0; k < 2; k++) {
+    var p = d0[k].v;
+    // penetration of this point into the other box along n
+    var other = (inc === Bb) ? A : Bb;
+    var pen = penIntoBox(p, other, nx * sign, ny * sign);
+    if (pen > 0) pts.push({ x: p.x, y: p.y, pen: Math.min(pen, bestOv) });
+  }
+  if (!pts.length) pts.push({ x: (A.x + Bb.x) / 2, y: (A.y + Bb.y) / 2, pen: bestOv });
+  return { nx: nx, ny: ny, pts: pts };
+}
+function penIntoBox(p, b, nx, ny) {
+  // distance the point sits inside box b measured along (nx,ny) toward b
+  var c = Math.cos(b.a), s = Math.sin(b.a);
+  var dx = p.x - b.x, dy = p.y - b.y;
+  var lx = c * dx + s * dy, ly = -s * dx + c * dy;
+  var px = b.w / 2 - Math.abs(lx), py = b.h / 2 - Math.abs(ly);
+  if (px < 0 || py < 0) return 0;
+  return Math.min(px, py) + 0.001;
+}
+function collideCircleBox(c0, b) {
+  var c = Math.cos(b.a), s = Math.sin(b.a);
+  var dx = c0.x - b.x, dy = c0.y - b.y;
+  var lx = c * dx + s * dy, ly = -s * dx + c * dy;
+  var qx = clamp(lx, -b.w / 2, b.w / 2), qy = clamp(ly, -b.h / 2, b.h / 2);
+  var inside = (qx === lx && qy === ly);
+  if (inside) {
+    // push out along smallest local axis
+    var px = b.w / 2 - Math.abs(lx), py = b.h / 2 - Math.abs(ly);
+    if (px < py) qx = lx > 0 ? b.w / 2 : -b.w / 2; else qy = ly > 0 ? b.h / 2 : -b.h / 2;
+  }
+  var ddx = lx - qx, ddy = ly - qy;
+  var d2 = ddx * ddx + ddy * ddy;
+  if (!inside && d2 > c0.r * c0.r) return null;
+  var d = Math.sqrt(d2) || 1e-6;
+  var nlx = inside ? -ddx / d : ddx / d, nly = inside ? -ddy / d : ddy / d;
+  // world normal pointing from box toward circle
+  var nx = c * nlx - s * nly, ny = s * nlx + c * nly;
+  var pen = inside ? (c0.r + d) : (c0.r - d);
+  var wqx = b.x + c * qx - s * qy, wqy = b.y + s * qx + c * qy;
+  return { nx: -nx, ny: -ny, pts: [{ x: wqx, y: wqy, pen: pen }] }; // normal from circle toward box
+}
+function collideCircleCircle(a, b) {
+  var dx = b.x - a.x, dy = b.y - a.y;
+  var rr = a.r + b.r, d2 = dx * dx + dy * dy;
+  if (d2 > rr * rr) return null;
+  var d = Math.sqrt(d2) || 1e-6;
+  var nx = dx / d, ny = dy / d;
+  return { nx: nx, ny: ny, pts: [{ x: a.x + nx * a.r, y: a.y + ny * a.r, pen: rr - d }] };
+}
+// hull compound geometry: deck box + two low bulwark lips at the ends.
+// Parts are geometry-only proxies — contacts still apply impulses to the hull
+// body itself (contact r-vectors are measured from the hull CoM).
+var LIP_W = 7, LIP_H = 17;
+function hullParts(hb) {
+  var c = Math.cos(hb.a), s = Math.sin(hb.a);
+  var parts = [hb];
+  for (var side = -1; side <= 1; side += 2) {
+    var lx = side * (hb.w / 2 - LIP_W / 2), ly = -hb.h / 2 - LIP_H / 2;
+    parts.push({
+      shape: 'box', kind: 'lip',
+      x: hb.x + c * lx - s * ly, y: hb.y + s * lx + c * ly,
+      a: hb.a, w: LIP_W, h: LIP_H, r: Math.hypot(LIP_W, LIP_H) / 2,
+    });
+  }
+  return parts;
+}
+// dispatcher — normal always points from a to b
+function collide(a, b) {
+  if (a.shape === 'box' && b.shape === 'box') return collideBoxBox(a, b);
+  if (a.shape === 'circle' && b.shape === 'circle') return collideCircleCircle(a, b);
+  if (a.shape === 'circle' && b.shape === 'box') {
+    var m = collideCircleBox(a, b);
+    return m; // normal already from circle(a) toward box(b)
+  }
+  if (a.shape === 'box' && b.shape === 'circle') {
+    var m2 = collideCircleBox(b, a);
+    if (!m2) return null;
+    m2.nx = -m2.nx; m2.ny = -m2.ny;
+    return m2;
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------- solver
+var contacts = [];
+function wakeBody(b) {
+  if (b.sleeping) { b.sleeping = false; b.invM = b.invM0; b.invI = b.invI0; }
+  b.sleepT = 0;
+}
+function wakeAll() { for (var i = 0; i < B.length; i++) wakeBody(B[i]); }
+function genContacts() {
+  contacts.length = 0;
+  for (var i = 0; i < B.length; i++) {
+    var a = B[i];
+    if (a.overboard || a.dead) continue;
+    for (var j = i + 1; j < B.length; j++) {
+      var b = B[j];
+      if (b.overboard || b.dead) continue;
+      // sleeping bodies are welded to the hull: skip their hull contact and
+      // sleeper-sleeper pairs; awake-vs-sleeping keeps a KINEMATIC contact
+      // (sleeper invM=0) so stacks stay supported without jitter.
+      if (a.sleeping && b.sleeping) continue;
+      if ((a === hull && b.sleeping) || (b === hull && a.sleeping)) continue;
+      // cheap circle broadphase
+      var dx = b.x - a.x, dy = b.y - a.y, rr = a.r + b.r + 2;
+      if (dx * dx + dy * dy > rr * rr) continue;
+      // hull is a compound shape (deck + bulwark lips); geometry proxies
+      // collide, impulses land on the hull body itself
+      var partsA = (a === hull) ? hullParts(a) : [a];
+      var partsB = (b === hull) ? hullParts(b) : [b];
+      var touched = false;
+      for (var pa = 0; pa < partsA.length; pa++) {
+        for (var pb = 0; pb < partsB.length; pb++) {
+          var m = collide(partsA[pa], partsB[pb]);
+          if (!m) continue;
+          touched = true;
+          for (var k = 0; k < m.pts.length; k++) {
+            var p = m.pts[k];
+            contacts.push({
+              a: a, b: b, nx: m.nx, ny: m.ny, x: p.x, y: p.y, pen: p.pen,
+              jn: 0, jt: 0,
+              mu: Math.sqrt(a.mu * b.mu),
+              e: Math.max(a.e, b.e),
+            });
+          }
+        }
+      }
+      if (!touched) continue;
+      a.touching = true; b.touching = true;
+      // fragile crush tracking: something resting on top of a fragile crate
+      var frag = null, other = null;
+      if (a.kind === 'fragile' && b !== hull) { frag = a; other = b; }
+      else if (b.kind === 'fragile' && a !== hull) { frag = b; other = a; }
+      if (frag && other && other.y < frag.y - 4 && !other.overboard) frag.crush += PH;
+    }
+  }
+}
+function solveVelocity() {
+  var it, i;
+  for (it = 0; it < VEL_ITERS; it++) {
+    for (i = 0; i < contacts.length; i++) {
+      var c = contacts[i];
+      var a = c.a, b = c.b;
+      var rax = c.x - a.x, ray = c.y - a.y;
+      var rbx = c.x - b.x, rby = c.y - b.y;
+      // relative velocity at contact (b - a)
+      var rvx = b.vx - b.va * rby - a.vx + a.va * ray;
+      var rvy = b.vy + b.va * rbx - a.vy - a.va * rax;
+      var vn = rvx * c.nx + rvy * c.ny;
+      var raXn = rax * c.ny - ray * c.nx;
+      var rbXn = rbx * c.ny - rby * c.nx;
+      var kn = a.invM + b.invM + raXn * raXn * a.invI + rbXn * rbXn * b.invI;
+      var rest = vn < -40 ? c.e : 0;
+      var dj = -(1 + rest) * vn / kn;
+      var jn0 = c.jn;
+      c.jn = Math.max(0, jn0 + dj);
+      dj = c.jn - jn0;
+      var ix = c.nx * dj, iy = c.ny * dj;
+      a.vx -= ix * a.invM; a.vy -= iy * a.invM; a.va -= (rax * iy - ray * ix) * a.invI;
+      b.vx += ix * b.invM; b.vy += iy * b.invM; b.va += (rbx * iy - rby * ix) * b.invI;
+      // fragile impact bookkeeping (impulse arriving from a body above)
+      if (c.a.kind === 'fragile' && c.b.y < c.a.y - 4) c.a.impulseFromAbove += Math.abs(dj);
+      if (c.b.kind === 'fragile' && c.a.y < c.b.y - 4) c.b.impulseFromAbove += Math.abs(dj);
+      // friction
+      var tx = -c.ny, ty = c.nx;
+      rvx = b.vx - b.va * rby - a.vx + a.va * ray;
+      rvy = b.vy + b.va * rbx - a.vy - a.va * rax;
+      var vt = rvx * tx + rvy * ty;
+      var raXt = rax * ty - ray * tx;
+      var rbXt = rbx * ty - rby * tx;
+      var kt = a.invM + b.invM + raXt * raXt * a.invI + rbXt * rbXt * b.invI;
+      var djt = -vt / kt;
+      var maxT = c.mu * c.jn;
+      var jt0 = c.jt;
+      c.jt = clamp(jt0 + djt, -maxT, maxT);
+      djt = c.jt - jt0;
+      ix = tx * djt; iy = ty * djt;
+      a.vx -= ix * a.invM; a.vy -= iy * a.invM; a.va -= (rax * iy - ray * ix) * a.invI;
+      b.vx += ix * b.invM; b.vy += iy * b.invM; b.va += (rbx * iy - rby * ix) * b.invI;
+    }
+  }
+}
+function solvePosition() {
+  for (var it = 0; it < POS_ITERS; it++) {
+    for (var i = 0; i < contacts.length; i++) {
+      var c = contacts[i];
+      var corr = Math.max(c.pen - SLOP, 0) * POS_PCT / (c.a.invM + c.b.invM);
+      if (corr <= 0) continue;
+      c.a.x -= c.nx * corr * c.a.invM; c.a.y -= c.ny * corr * c.a.invM;
+      c.b.x += c.nx * corr * c.b.invM; c.b.y += c.ny * corr * c.b.invM;
+      c.pen -= corr * (c.a.invM + c.b.invM);
+    }
+  }
+}
+
+// ---------------------------------------------------------------- forces
+var hullSubFrac = 0;
+var wind = { active: false, nextT: 6, gust: 0, dir: 1, gustT: 0, warnT: 0 };
+var gull = { state: 'none', x: 0, y: 0, side: 1, t: 0, nextT: 10, ph: 0, w: 55 };
+function applyHullForces(h) {
+  if (!hull) return;
+  // gravity
+  hull.vy += G * h;
+  // buoyancy: clip hull box against the local water line → displaced area.
+  // The line is a least-squares fit of 7 surface samples across the hull, so
+  // short chop averages out instead of aliasing into huge fake tilts.
+  var vs = boxVerts(hull);
+  var hw2 = hull.w / 2 + 10;
+  var ns = 7, sxs = 0, sys = 0, sxx = 0, sxy = 0, si;
+  for (si = 0; si < ns; si++) {
+    var xi = -hw2 + (2 * hw2) * si / (ns - 1);
+    var yi = waterYAt(hull.x + xi);
+    sxs += xi; sys += yi; sxx += xi * xi; sxy += xi * yi;
+  }
+  var den = ns * sxx - sxs * sxs;
+  var slope = den !== 0 ? (ns * sxy - sxs * sys) / den : 0;
+  var icpt = (sys - slope * sxs) / ns;
+  var xl = hull.x - 120, xr = hull.x + 120;
+  var sub = clipBelowWater(vs, xl, icpt + slope * -120, xr, icpt + slope * 120);
+  var pc = polyAreaCentroid(sub);
+  hullSubFrac = clamp(pc.a / hull.area, 0, 1);
+  if (pc.a > 0) {
+    var Fb = RHO * G * pc.a;
+    hull.vy -= Fb * hull.invM * h;
+    // roll torque: center of buoyancy vs center of mass
+    hull.va += (-(pc.cx - hull.x) * Fb) * hull.invI * h;
+    // water drag (scales with submersion)
+    var q = hullSubFrac;
+    hull.vx /= 1 + 3.0 * q * h;
+    hull.vy /= 1 + 6.0 * q * h;
+    hull.va /= 1 + (6.5 * q + 1.0) * h;
+    // wave slope sways the hull
+    hull.vx += waterSlopeAt(hull.x) * 40 * q * h;
+  }
+  // welded (sleeping) cargo still weighs on the ship: apply each sleeper's
+  // gravity as an external force at its position (they are kinematic in the
+  // solver, so without this their load would vanish from the hull)
+  for (var bi = 1; bi < B.length; bi++) {
+    var sb = B[bi];
+    if (!sb.sleeping || sb.overboard || sb.dead) continue;
+    var Fw = sb.m * G;
+    hull.vy += Fw * hull.invM * h;
+    hull.va += ((sb.x - hull.x) * Fw) * hull.invI * h;
+  }
+  // ballast keel: explicit righting moment, stronger with upgrade
+  hull.va += -Math.sin(hull.a) * (1.2 + 0.6 * upgLvl('ballast')) * h * 2.6;
+  // mooring spring keeps her near the crane
+  hull.vx += (-2.2 * hull.x - 1.6 * hull.vx) * h;
+  // wind gust: horizontal force applied above the deck → heeling torque
+  if (wind.gustT > 0) {
+    var f = wind.gust * wind.dir;
+    hull.vx += f * 0.16 * h;
+    hull.va += f * 0.00055 * h;
+  }
+  // seagull standing on one side: real weight at an offset
+  if (gull.state === 'landed') {
+    var ca = Math.cos(hull.a), sa = Math.sin(hull.a);
+    var lx = gull.side * (hull.w / 2 - 12);
+    var rx = ca * lx - sa * (-hull.h / 2);
+    hull.vy += gull.w * G * hull.invM * h;
+    hull.va += (rx * gull.w * G) * hull.invI * h;
+  }
+}
+function applyCargoForces(b, h) {
+  b.vy += G * h;
+  if (b.vy > 640) b.vy = 640; // terminal fall speed — keeps landings thunky, not explosive
+  // partial buoyancy for cargo dipping into water (still colliding)
+  var wy = waterYAt(b.x);
+  var half = b.shape === 'circle' ? b.r : b.h / 2;
+  var depth = b.y - wy; // >0 means center below surface
+  if (depth > -half) {
+    var frac = clamp(0.5 + depth / (2 * half), 0, 1);
+    b.vy -= G * (RHO / b.dens) * frac * h;
+    b.vx /= 1 + 3.0 * frac * h;
+    b.vy /= 1 + 3.4 * frac * h;
+    b.va /= 1 + 2.0 * frac * h;
+  }
+  if (wind.gustT > 0 && b.y < waterYAt(b.x) - 4) {
+    b.vx += wind.gust * wind.dir * 0.10 * h;
+  }
+  if (b.touching) b.vx /= 1 + 1.5 * h; // cargo settles instead of surfing the deck
+  // barrels: rolling resistance so they settle instead of rolling forever
+  if (b.shape === 'circle' && b.touching) { b.va /= 1 + 4.5 * h; b.vx /= 1 + 0.8 * h; }
+}
+
+// ---------------------------------------------------------------- sleep (weld to hull frame)
+function trySleep(b, h) {
+  if (b === hull || b.overboard || b.dead || !hull) return;
+  var rvx = b.vx - hull.vx, rvy = b.vy - hull.vy;
+  if (b.touching && rvx * rvx + rvy * rvy < 36 && Math.abs(b.va - hull.va) < 0.25 &&
+      Math.abs(hull.va) < 0.15 && Math.abs(hull.a) < 0.35) {
+    b.sleepT += h;
+    if (b.sleepT > 0.4) {
+      b.sleeping = true;
+      b.invM = 0; b.invI = 0; // kinematic while asleep — supports neighbors without jitter
+      var c = Math.cos(-hull.a), s = Math.sin(-hull.a);
+      var dx = b.x - hull.x, dy = b.y - hull.y;
+      b.lx = c * dx - s * dy; b.ly = s * dx + c * dy; b.la = b.a - hull.a;
+    }
+  } else {
+    b.sleepT = 0;
+  }
+}
+function syncSleeper(b) {
+  var c = Math.cos(hull.a), s = Math.sin(hull.a);
+  b.x = hull.x + c * b.lx - s * b.ly;
+  b.y = hull.y + s * b.lx + c * b.ly;
+  b.a = hull.a + b.la;
+  var rx = b.x - hull.x, ry = b.y - hull.y;
+  b.vx = hull.vx - hull.va * ry;
+  b.vy = hull.vy + hull.va * rx;
+  b.va = hull.va;
+}
+
+// ---------------------------------------------------------------- physics step
+function stepPhysics(h) {
+  if (!hull) return;
+  if (Math.abs(hull.va) > 0.3 || Math.abs(hull.a) > 0.34) wakeAll();
+  var i, b;
+  for (i = 0; i < B.length; i++) {
+    b = B[i];
+    b.touching = false;
+    if (b.overboard || b.dead) continue;
+    if (b.sleeping) { syncSleeper(b); continue; }
+    if (b === hull) applyHullForces(h);
+    else applyCargoForces(b, h);
+  }
+  for (i = 0; i < B.length; i++) {
+    b = B[i];
+    if (b.overboard || b.dead || b.sleeping) continue;
+    b.vx = clamp(b.vx, -MAX_V, MAX_V);
+    b.vy = clamp(b.vy, -MAX_V, MAX_V);
+    b.va = clamp(b.va, -MAX_VA, MAX_VA);
+    b.x += b.vx * h; b.y += b.vy * h; b.a += b.va * h;
+    if (!isFinite(b.x) || !isFinite(b.y) || !isFinite(b.a)) { // paranoia net
+      b.x = 0; b.y = -120; b.a = 0; b.vx = b.vy = b.va = 0;
+    }
+  }
+  genContacts();
+  solveVelocity();
+  // energetic hits on a sleeper wake it (resting-support impulses do not)
+  for (i = 0; i < contacts.length; i++) {
+    var c = contacts[i];
+    if (c.a.sleeping && c.jn > c.a.m * G * PH * 9) wakeBody(c.a);
+    if (c.b.sleeping && c.jn > c.b.m * G * PH * 9) wakeBody(c.b);
+  }
+  solvePosition();
+  for (i = 1; i < B.length; i++) trySleep(B[i], h);
+}
+
+// ---------------------------------------------------------------- level state
+var state = 'title';        // title | play | win | lose | shop
+var phase = 'load';         // load | sail
+var prevScreen = 'title';
+var level = clamp(save.level || 1, 1, 9999);
+var quota = 4, supply = 7, lost = 0, delivered = 0;
+var manifest = [], mIdx = 0;
+var trolley = { x: 0, v: 95, dir: 1, ready: false, timer: 0.6, def: null, sway: 0, swayV: 0 };
+var timeScale = 1;
+var warnActive = false, savedPending = false;
+var capsizing = false, capsizeT = 0;
+var sailT = 0, ferryX = -9999, ferryOn = false;
+var winDelay = -1, loseDelay = -1, loseReason = 'capsize';
+var levelCoins = 0, winCoinShow = 0, winCoinTarget = 0;
+var night = false, lightAng = 0;
+var creakCD = 0, heartCD = 0, lastRoll = 0;
+var hudCache = { port: '', cargo: '', supply: '', coins: '' };
+var hintT = 0;
+
+// juice pools — initialized at declaration; render/update touch them from boot
+var particles = [], popups = [], ripples = [], smokes = [];
+var titleGulls = [], clouds = [];
+var shakeT = 0, shakeDur = 1, shakeMag = 0;
+var bgT = 0;
+
+function seedTitleDecor() {
+  var r = mulberry32(99 + (W | 0));
+  titleGulls = [];
+  clouds = [];
+  var i;
+  for (i = 0; i < 4; i++) {
+    titleGulls.push({ x: r() * W, y: 0.10 + r() * 0.16, ph: r() * TAU, sc: 0.7 + r() * 0.7, vx: 12 + r() * 22 });
+  }
+  for (i = 0; i < 5; i++) {
+    clouds.push({ x: r() * W, y: 0.06 + r() * 0.22, sc: 0.6 + r() * 1.1, vx: 4 + r() * 8 });
+  }
+}
+function addPopup(x, y, text, color, size, dur) {
+  popups.push({ x: x, y: y, text: text, color: color || '#fff', size: size || 18, t: 0, dur: dur || 1.1 });
+  if (popups.length > 24) popups.shift();
+}
+function addShake(mag, dur) { shakeMag = Math.max(shakeMag, mag); shakeDur = dur; shakeT = dur; }
+function splashAt(wxp, big) {
+  var sx = wx2s(wxp), sy = wy2s(waterYAt(wxp));
+  var n = big ? 26 : 14;
+  for (var i = 0; i < n; i++) {
+    var ang = -Math.PI / 2 + (Math.random() - 0.5) * 1.6;
+    var sp = (big ? 220 : 130) * (0.4 + Math.random() * 0.8);
+    particles.push({
+      x: sx, y: sy, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp,
+      t: 0, dur: 0.5 + Math.random() * 0.4, size: 2 + Math.random() * 3,
+      col: Math.random() < 0.5 ? '#bfe9ff' : '#ffffff', grav: 620,
+    });
+  }
+  ripples.push({ x: sx, y: sy, t: 0, dur: 0.9, r0: big ? 14 : 8, col: 'rgba(255,255,255,0.8)' });
+  if (particles.length > 220) particles.splice(0, particles.length - 220);
+}
+function burstAt(sx, sy, col, n) {
+  for (var i = 0; i < n; i++) {
+    var ang = Math.random() * TAU, sp = 60 + Math.random() * 200;
+    particles.push({
+      x: sx, y: sy, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - 60,
+      t: 0, dur: 0.4 + Math.random() * 0.5, size: 2 + Math.random() * 3.5, col: col, grav: 520,
+    });
+  }
+  if (particles.length > 220) particles.splice(0, particles.length - 220);
+}
+
+// ---------------------------------------------------------------- manifest gen
+var CRATE_COLS = ['#c58f52', '#b07c41', '#d29e63', '#9c6d38'];
+function genManifest(n) {
+  var r = mulberry32(n * 1013 + 77);
+  quota = Math.min(9, 3 + Math.ceil(n * 0.7));
+  supply = quota + 5;
+  var defs = [];
+  var barrels = n >= 3 ? (n >= 6 ? 2 : 1) : 0;
+  var golds = n >= 5 ? (n >= 9 ? 2 : 1) : 0;
+  var planks = n >= 2 ? 1 + (n % 2) : 0;
+  var frag = n >= 10 ? (n >= 15 ? 2 : 1) : 0;
+  var i;
+  for (i = 0; i < golds; i++) defs.push({ t: 'gold', w: 30, h: 26, dens: 1.05, val: 30, col: '#ffc93c' });
+  var cubes = supply - barrels - golds - planks - frag;
+  for (i = 0; i < cubes; i++) {
+    var s = 23 + Math.floor(r() * 10);
+    defs.push({ t: 'cube', w: s, h: s, dens: 0.5 + r() * 0.14, val: 10, col: CRATE_COLS[Math.floor(r() * CRATE_COLS.length)] });
+  }
+  for (i = 0; i < planks; i++) defs.push({ t: 'plank', w: 62 + Math.floor(r() * 12), h: 13, dens: 0.5, val: 12, col: '#deb373' });
+  for (i = 0; i < barrels; i++) defs.push({ t: 'barrel', r: 12 + Math.floor(r() * 3), dens: 0.62, val: 12, col: '#8a5a33' });
+  // shuffle the middle, keep golds early (heavy first) — then fragiles LAST (must go on top)
+  var mid = defs.slice(golds);
+  for (i = mid.length - 1; i > 0; i--) {
+    var j = Math.floor(r() * (i + 1)), tmp = mid[i]; mid[i] = mid[j]; mid[j] = tmp;
+  }
+  defs = defs.slice(0, golds).concat(mid);
+  for (i = 0; i < frag; i++) defs.push({ t: 'fragile', w: 27, h: 22, dens: 0.38, val: 15, col: '#f2ede4' });
+  return defs;
+}
+function spawnCrateBody(def, x, y) {
+  var b;
+  if (def.t === 'barrel') b = makeCircle(x, y, def.r, def.dens, 'barrel');
+  else b = makeBox(x, y, def.w, def.h, def.dens, def.t);
+  b.val = def.val; b.col = def.col;
+  if (def.t === 'barrel') { b.mu = 0.25; b.e = 0.12; }
+  if (def.t === 'gold') b.mu = 0.6;
+  if (def.t === 'fragile') { b.mu = 0.6; b.e = 0.02; }
+  if (def.t === 'plank') b.mu = 0.5;
+  b.landed = false;
+  B.push(b);
+  return b;
+}
+
+// ---------------------------------------------------------------- flow
+function startLevel(n) {
+  level = clamp(n, 1, 9999);
+  var r = mulberry32(level * 31 + 7);
+  B = [];
+  hull = makeHull();
+  B.push(hull);
+  manifest = genManifest(level);
+  mIdx = 0;
+  lost = 0; delivered = 0; levelCoins = 0;
+  capsizing = false; capsizeT = 0;
+  warnActive = false; savedPending = false;
+  timeScale = 1;
+  phase = 'load'; sailT = 0; ferryOn = false; ferryX = -9999;
+  WAKE.on = false; WAKE.amp = 0; WAKE.env = 0; WAKE.ph = 0;
+  WAVE.a1 = 3 + Math.min(5.5, level * 0.4);
+  WAVE.a2 = 1.5 + Math.min(2.8, level * 0.25);
+  wind.active = level >= 6;
+  wind.nextT = 5 + r() * 4; wind.gustT = 0; wind.warnT = 0; wind.gust = 0;
+  gull.state = 'none'; gull.nextT = 8 + r() * 6;
+  night = level >= 12 && level % 4 === 0;
+  lightAng = 0;
+  trolley.x = -trolleyRange();
+  trolley.dir = 1;
+  trolley.v = 92 + Math.min(58, level * 3);
+  trolley.ready = false; trolley.timer = 0.7; trolley.def = null; trolley.sway = 0; trolley.swayV = 0;
+  winDelay = -1; loseDelay = -1;
+  contacts.length = 0;
+  particles.length = 0; popups.length = 0; ripples.length = 0; smokes.length = 0;
+  state = 'play';
+  setScreens();
+  syncHud(true);
+  if (level <= 2) { hintTip.classList.add('show'); hintT = 5; } else hintTip.classList.remove('show');
+  track('level_start', { level: level });
+}
+function trolleyRange() { return hullHalfW() + 74; }
+function releaseCrate() {
+  if (state !== 'play' || phase !== 'load' || capsizing) return;
+  if (!trolley.ready || !trolley.def) return;
+  var def = trolley.def;
+  trolley.def = null; trolley.ready = false; trolley.timer = 0.72;
+  var b = spawnCrateBody(def, trolley.x, TROLLEY_WY + 26);
+  b.vx = trolley.v * trolley.dir * 0.22 + trolley.swayV * 5;
+  b.vy = 40;
+  b.va = (Math.random() - 0.5) * 0.3;
+  supply--;
+  sndDrop(); vibrate(8);
+  syncHud();
+}
+function loadNextCrate(dt) {
+  if (trolley.ready || phase !== 'load') return;
+  if (mIdx >= manifest.length || supply <= 0) return;
+  trolley.timer -= dt;
+  if (trolley.timer <= 0) {
+    trolley.def = manifest[mIdx++];
+    trolley.ready = true;
+    trolley.sway = 0; trolley.swayV = 0;
+  }
+}
+function aboardCount() {
+  if (!hull) return 0;
+  var n = 0;
+  for (var i = 1; i < B.length; i++) {
+    var b = B[i];
+    if (b.overboard || b.dead) continue;
+    if (Math.abs(b.x - hull.x) < hull.w * 0.72 && b.y < waterYAt(b.x) + 8) n++;
+  }
+  return n;
+}
+function airborneCount() {
+  var n = 0;
+  for (var i = 1; i < B.length; i++) {
+    var b = B[i];
+    if (b.overboard || b.dead) continue;
+    if (!b.touching && !b.sleeping) n++;
+  }
+  return n;
+}
+function beginSail() {
+  if (state !== 'play' || phase !== 'sail') {
+    if (state !== 'play' || capsizing) return;
+    if (aboardCount() < quota) return;
+    phase = 'sail'; sailT = 0;
+    WAKE.on = true; WAKE.amp = 8 + Math.min(8, level * 0.5); WAKE.env = 0; WAKE.ph = 0;
+    ferryOn = true; ferryX = -(W / 2) / Math.max(VS, 0.01) - 260;
+    wakeAll();
+    sndHorn(); vibrate(15);
+    sailBtn.classList.remove('show');
+    addPopup(W / 2, H * 0.3, 'WAKE TEST!', '#9fd8ff', 24, 1.3);
+  }
+}
+function finishSail() {
+  var aboard = aboardCount();
+  delivered = aboard;
+  var coins = 0;
+  for (var i = 1; i < B.length; i++) {
+    var b = B[i];
+    if (b.overboard || b.dead) continue;
+    if (Math.abs(b.x - hull.x) < hull.w * 0.72 && b.y < waterYAt(b.x) + 8) coins += b.val;
+  }
+  levelCoins = coins;
+  save.coins += coins; save.earned += coins;
+  var stars = lost === 0 ? 3 : (lost <= 1 ? 2 : 1);
+  state = 'win';
+  winCoinShow = 0; winCoinTarget = coins;
+  var prevPorts = portsDelivered();
+  save.level = level + 1;
+  if (save.level > save.best) save.best = save.level;
+  persist();
+  track('level_complete', { level: level, value: coins });
+  track('port_delivered', { value: aboard });
+  showWin(stars, aboard, portsDelivered() > prevPorts);
+  sndWin(); vibrate(30);
+}
+function portsDelivered() { return clamp(save.level - 1, 0, 9999); }
+function showWin(stars, aboard, newPort) {
+  setScreens();
+  var spans = starsEl ? starsEl.children : null;
+  for (var i = 0; i < 3; i++) {
+    if (spans && spans[i] && spans[i].classList) {
+      spans[i].classList.remove('on');
+      if (i < stars) { spans[i].classList.add('on'); sndStar(i); }
+    }
+  }
+  winSubEl.textContent = lost === 0 ? 'Perfect load — not a splinter lost!' :
+    (lost === 1 ? 'One crate went swimming. Forgiven.' : lost + ' crates sleep with the fishes.');
+  if (newPortEl && newPortEl.style) newPortEl.style.display = newPort ? 'inline-block' : 'none';
+  if (newPortEl) newPortEl.textContent = '🏘️ ' + portName(level) + ' LIT UP!';
+}
+function loseLevel(reason) {
+  if (state !== 'play') return;
+  loseReason = reason;
+  state = 'lose';
+  timeScale = 1;
+  persist();
+  track('game_over', { level: level });
+  if (reason === 'capsize') {
+    loseTitleEl.textContent = 'CAPSIZED! 🌊';
+    loseSubEl.textContent = 'The whole stack went for a swim in glorious slow motion. Keep your coins and try the port again.';
+  } else {
+    loseTitleEl.textContent = 'CARGO LOST! 📦';
+    loseSubEl.textContent = 'Too many crates overboard — the manifest can\'t be filled. The fish are thrilled. Try again!';
+  }
+  setScreens();
+  sndLose(); vibrate(60);
+}
+function startCapsize() {
+  if (capsizing) return;
+  capsizing = true; capsizeT = 0;
+  timeScale = 0.32;
+  wakeAll();
+  sailBtn.classList.remove('show');
+  addShake(9, 0.8);
+  addPopup(W / 2, H * 0.32, 'CAPSIZE!!', '#ff6b6b', 30, 2.0);
+  sndSplash(); sndCreak(1); vibrate(80);
+}
+
+// ---------------------------------------------------------------- update
+function updateTrolley(dt) {
+  if (phase !== 'load' || capsizing) return;
+  var range = trolleyRange();
+  var spd = trolley.v;
+  if (upgLvl('brake') > 0 && hull && Math.abs(trolley.x - hull.x) < hullHalfW() * 0.95) {
+    spd *= 1 - 0.16 * upgLvl('brake');
+  }
+  trolley.x += spd * trolley.dir * dt;
+  if (trolley.x > range) { trolley.x = range; trolley.dir = -1; }
+  if (trolley.x < -range) { trolley.x = -range; trolley.dir = 1; }
+  // cable sway (render flavor + tiny release english)
+  trolley.swayV += (-trolley.sway * 14 - trolley.swayV * 3 - trolley.dir * spd * 0.02) * dt;
+  trolley.sway += trolley.swayV * dt;
+  loadNextCrate(dt);
+}
+function updateWind(dt) {
+  if (!wind.active || phase === 'sail' || capsizing) return;
+  if (wind.gustT > 0) {
+    wind.gustT -= dt;
+    if (wind.gustT <= 0) { wind.gust = 0; }
+    return;
+  }
+  if (wind.warnT > 0) {
+    wind.warnT -= dt;
+    if (wind.warnT <= 0) {
+      wind.gustT = 1.3;
+      wind.gust = 50 + Math.min(110, level * 6);
+      wakeAll();
+      sndWind();
+    }
+    return;
+  }
+  wind.nextT -= dt;
+  if (wind.nextT <= 0) {
+    wind.nextT = 6 + Math.random() * 4;
+    wind.warnT = 0.9;
+    wind.dir = Math.random() < 0.5 ? -1 : 1;
+    addPopup(W / 2 + wind.dir * -W * 0.3, H * 0.34, wind.dir > 0 ? 'WIND →' : '← WIND', '#dff1ff', 20, 1.0);
+  }
+}
+function updateGull(dt) {
+  if (level < 8 || capsizing || !hull) { gull.state = 'none'; return; }
+  gull.ph += dt * 9;
+  if (gull.state === 'none') {
+    gull.nextT -= dt;
+    if (gull.nextT <= 0 && phase === 'load') {
+      gull.state = 'fly';
+      gull.side = Math.random() < 0.5 ? -1 : 1;
+      gull.x = -gull.side * (W / 2 / Math.max(VS, 0.01) + 60);
+      gull.y = TROLLEY_WY * 0.5;
+      sndGullCry();
+    }
+  } else if (gull.state === 'fly') {
+    var tx = gull.side * (hullHalfW() - 12);
+    var ty = hull.y - hull.h / 2 - 6;
+    gull.x += (tx - gull.x) * 2.4 * dt;
+    gull.y += (ty - gull.y) * 2.4 * dt;
+    if (Math.abs(gull.x - tx) < 6 && Math.abs(gull.y - ty) < 8) {
+      gull.state = 'landed'; gull.t = 2.5 + Math.random() * 2;
+      wakeAll();
+      addPopup(wx2s(gull.x), wy2s(gull.y) - 26, '🐦 +' + Math.round(gull.w), '#dff1ff', 14, 1.0);
+    }
+  } else if (gull.state === 'landed') {
+    gull.t -= dt;
+    var c = Math.cos(hull.a), s = Math.sin(hull.a);
+    var lx = gull.side * (hullHalfW() - 12);
+    gull.x = hull.x + c * lx - s * (-hull.h / 2 - 6);
+    gull.y = hull.y + s * lx + c * (-hull.h / 2 - 6);
+    if (gull.t <= 0 || Math.abs(hull.a) > 0.22 || phase === 'sail') {
+      gull.state = 'flee'; sndGullCry();
+    }
+  } else if (gull.state === 'flee') {
+    gull.x += gull.side * 260 * dt;
+    gull.y -= 190 * dt;
+    if (Math.abs(gull.x) > W / Math.max(VS, 0.01)) { gull.state = 'none'; gull.nextT = 9 + Math.random() * 7; }
+  }
+}
+function checkOverboardAndFragile(dt) {
+  if (!hull) return;
+  for (var i = B.length - 1; i >= 1; i--) {
+    var b = B[i];
+    if (b.dead) continue;
+    if (b.overboard) {
+      // comedic bobbing drift-away
+      b.obT += dt;
+      var wy = waterYAt(b.x);
+      b.y += ((wy - b.r * 0.35) - b.y) * 3 * dt;
+      b.x += b.obDir * 34 * dt;
+      b.a += b.obDir * 0.5 * dt;
+      if (b.obT > 6 || Math.abs(b.x) > (W / Math.max(VS, 0.01)) + 160) { B.splice(i, 1); }
+      continue;
+    }
+    // fragile crush/impact break
+    if (b.kind === 'fragile' && (b.crush > 0.35 || b.impulseFromAbove > b.m * 150)) {
+      b.dead = true;
+      lost++;
+      burstAt(wx2s(b.x), wy2s(b.y), '#f2ede4', 16);
+      addPopup(wx2s(b.x), wy2s(b.y) - 20, 'CRUNCH!', '#ff6b6b', 20, 1.1);
+      sndBreak(); vibrate(20);
+      B.splice(i, 1);
+      syncHud();
+      continue;
+    }
+    b.impulseFromAbove *= 0.7; // decay per frame
+    // overboard detection
+    var half = b.shape === 'circle' ? b.r : Math.min(b.w, b.h) / 2;
+    var wy2 = waterYAt(b.x);
+    var outside = Math.abs(b.x - hull.x) > hull.w / 2 + 26;
+    if (b.y - half * 0.2 > wy2 && (outside || b.y > hull.y + hull.h * 2)) {
+      b.overboard = true; b.obT = 0; b.obDir = b.x >= hull.x ? 1 : -1;
+      b.sleeping = false;
+      lost++;
+      splashAt(b.x, b.m > 700);
+      addPopup(wx2s(b.x), wy2s(wy2) - 26, 'OVERBOARD!', '#9fd8ff', 18, 1.2);
+      sndSplash(); vibrate(12);
+      addShake(3, 0.3);
+      syncHud();
+    }
+    // landing thunk (first touch)
+    if (!b.landed && b.touching) {
+      b.landed = true;
+      sndThunk(b.m);
+      vibrate(6);
+      var sp = Math.hypot(b.vx, b.vy);
+      if (sp > 90) addShake(clamp(b.m / 300, 1, 5), 0.25);
+      burstAt(wx2s(b.x), wy2s(b.y + (b.shape === 'circle' ? b.r : b.h / 2)), '#ffe9c9', 6);
+    }
+  }
+}
+function checkFailStates() {
+  if (!hull || state !== 'play') return;
+  // capsize
+  if (!capsizing && Math.abs(hull.a) > CAPSIZE_ANG) startCapsize();
+  if (capsizing) return; // capsizeT accumulates in update()
+  // roll warning / slow-mo drama
+  var roll = Math.abs(hull.a);
+  if (!warnActive && roll > WARN_ANG) {
+    warnActive = true; savedPending = true;
+    timeScale = 0.55;
+    addPopup(W / 2, H * 0.3, '⚠ TIPPING!', '#ffb62e', 24, 1.0);
+    vibrate(25);
+  }
+  if (warnActive) {
+    heartCD -= 1 / 60;
+    if (heartCD <= 0) { sndHeart(); heartCD = 0.75; }
+    if (roll < SAVED_ANG) {
+      warnActive = false;
+      timeScale = 1;
+      if (savedPending) {
+        savedPending = false;
+        addPopup(W / 2, H * 0.32, 'SAVED!', '#38d9c3', 26, 1.2);
+        sndSaved(); vibrate(15);
+      }
+    }
+  }
+  // creak with roll velocity
+  creakCD -= 1 / 60;
+  if (creakCD <= 0 && roll > 0.16 && roll > lastRoll + 0.004) {
+    sndCreak(roll); creakCD = 0.45;
+  }
+  lastRoll = roll;
+  // out of cargo?
+  if (phase === 'load' && supply <= 0 && !trolley.ready && airborneCount() === 0 && aboardCount() < quota && loseDelay < 0) {
+    loseDelay = 1.1;
+    addPopup(W / 2, H * 0.35, 'OUT OF CRATES!', '#ff6b6b', 22, 1.2);
+  }
+}
+function updateSail(dt) {
+  if (phase !== 'sail' || capsizing) return;
+  sailT += dt;
+  var k = clamp(sailT / 3, 0, 1);
+  WAKE.env = Math.sin(Math.PI * clamp(sailT / 3.4, 0, 1));
+  WAKE.ph += dt * 9;
+  ferryX += dt * (W / Math.max(VS, 0.01) + 520) / 3.4;
+  if (sailT >= 3.4 && state === 'play') finishSail();
+}
+
+function update(dt) {
+  bgT += dt;
+  waveT += dt * timeScale;
+  if (hintT > 0) { hintT -= dt; if (hintT <= 0) hintTip.classList.remove('show'); }
+
+  // shared juice timers (real time)
+  var i;
+  if (shakeT > 0) shakeT -= dt;
+  for (i = popups.length - 1; i >= 0; i--) { popups[i].t += dt; if (popups[i].t >= popups[i].dur) popups.splice(i, 1); }
+  for (i = ripples.length - 1; i >= 0; i--) { ripples[i].t += dt; if (ripples[i].t >= ripples[i].dur) ripples.splice(i, 1); }
+  for (i = particles.length - 1; i >= 0; i--) {
+    var p = particles[i];
+    p.t += dt;
+    if (p.t >= p.dur) { particles.splice(i, 1); continue; }
+    p.vy += (p.grav || 0) * dt;
+    p.x += p.vx * dt; p.y += p.vy * dt;
+  }
+  for (i = smokes.length - 1; i >= 0; i--) {
+    var sm = smokes[i];
+    sm.t += dt;
+    if (sm.t > sm.dur) { smokes.splice(i, 1); continue; }
+    sm.x += sm.vx * dt; sm.y += sm.vy * dt;
+  }
+  for (i = 0; i < titleGulls.length; i++) {
+    var tg = titleGulls[i];
+    tg.ph += dt * 8; tg.x += tg.vx * dt;
+    if (tg.x > W + 30) tg.x = -30;
+  }
+  for (i = 0; i < clouds.length; i++) {
+    clouds[i].x += clouds[i].vx * dt;
+    if (clouds[i].x > W + 90) clouds[i].x = -90;
+  }
+  if (night) lightAng += dt * 0.9;
+
+  if (state === 'title' || state === 'shop') return;
+
+  // win screen: coin count-up
+  if (state === 'win') {
+    if (winCoinShow < winCoinTarget) {
+      winCoinShow = Math.min(winCoinTarget, winCoinShow + dt * Math.max(30, winCoinTarget));
+      winCoinsEl.textContent = '+' + Math.round(winCoinShow) + ' 🪙';
+    }
+  }
+
+  if (state !== 'play' && state !== 'win' && state !== 'lose') return;
+
+  // physics — fixed substeps on scaled time (slow-mo scales the sim, not the UI)
+  var simDt = dt * timeScale;
+  var acc = clamp(simDt, 0, PH * 7);
+  while (acc > 1e-6) {
+    var h = Math.min(PH, acc);
+    stepPhysics(h);
+    acc -= h;
+  }
+
+  if (state === 'play') {
+    updateTrolley(dt * timeScale);
+    updateWind(dt);
+    updateGull(dt * timeScale);
+    updateSail(dt * timeScale);
+    checkOverboardAndFragile(dt * timeScale);
+    checkFailStates();
+
+    if (capsizing) {
+      capsizeT += dt;
+      if (capsizeT > 2.4) loseLevel('capsize');
+    }
+    if (loseDelay > 0) {
+      loseDelay -= dt;
+      if (loseDelay <= 0) loseLevel('cargo');
+    }
+    // hull funnel smoke
+    if (hull && Math.random() < dt * 6) {
+      var ca = Math.cos(hull.a), sa = Math.sin(hull.a);
+      var fx = hull.x + ca * (hull.w * 0.18) - sa * (-hull.h * 0.9);
+      var fy = hull.y + sa * (hull.w * 0.18) + ca * (-hull.h * 0.9);
+      smokes.push({ x: wx2s(fx), y: wy2s(fy), vx: (Math.random() - 0.5) * 8 - 6, vy: -22 - Math.random() * 10, t: 0, dur: 1.6, sc: 3 + Math.random() * 3 });
+      if (smokes.length > 30) smokes.shift();
+    }
+    // SAIL button visibility
+    var canSail = phase === 'load' && !capsizing && aboardCount() >= quota && airborneCount() === 0;
+    if (canSail && !sailBtn.classList.contains('show')) sailBtn.classList.add('show');
+    if (!canSail && sailBtn.classList.contains('show')) sailBtn.classList.remove('show');
+    syncHud();
+  }
+}
+
+// ---------------------------------------------------------------- hud & screens
+function syncHud(force) {
+  var sPort = String(level);
+  var sCargo = aboardCount() + '/' + quota;
+  var sSupply = String(Math.max(0, supply));
+  var sCoins = String(save.coins);
+  if (force || hudCache.port !== sPort) { hPort.textContent = sPort; hudCache.port = sPort; }
+  if (force || hudCache.cargo !== sCargo) { hCargo.textContent = sCargo; hudCache.cargo = sCargo; }
+  if (force || hudCache.supply !== sSupply) { hSupply.textContent = sSupply; hudCache.supply = sSupply; }
+  if (force || hudCache.coins !== sCoins) { hCoins.textContent = sCoins; hudCache.coins = sCoins; }
+}
+function setScreens() {
+  titleScreen.classList.toggle('show', state === 'title');
+  winScreen.classList.toggle('show', state === 'win');
+  loseScreen.classList.toggle('show', state === 'lose');
+  shopScreen.classList.toggle('show', state === 'shop');
+  hud.classList.toggle('show', state === 'play' || state === 'win');
+  if (state !== 'play') sailBtn.classList.remove('show');
+  if (state === 'title') {
+    bestLine.textContent = 'BEST PORT ' + save.best;
+    routeLine.textContent = '🏘️ ' + portsDelivered() + ' port' + (portsDelivered() === 1 ? '' : 's') + ' delivered · next: ' + portName(save.level);
+  }
+}
+function goTitle() {
+  state = 'title';
+  setScreens();
+}
+function startGame() { startLevel(save.level); }
+
+// ---------------------------------------------------------------- shop
+function openShop(from) {
+  prevScreen = from || 'title';
+  state = 'shop';
+  buildShop();
+  setScreens();
+}
+function closeShop() {
+  state = prevScreen === 'lose' ? 'lose' : 'title';
+  setScreens();
+}
+function buildShop() {
+  shopCoinsEl.textContent = '🪙 ' + save.coins;
+  shopListEl.innerHTML = '';
+  var head1 = document.createElement('div');
+  head1.className = 'shopHead'; head1.textContent = 'SHIP UPGRADES — visible in the sim';
+  shopListEl.appendChild(head1);
+  var i;
+  for (i = 0; i < UPGRADES.length; i++) buildUpgRow(UPGRADES[i]);
+  var head2 = document.createElement('div');
+  head2.className = 'shopHead'; head2.textContent = 'SHIP SKINS';
+  shopListEl.appendChild(head2);
+  for (i = 0; i < SKINS.length; i++) buildSkinRow(SKINS[i]);
+}
+function buildUpgRow(u) {
+  var lvl = upgLvl(u.k);
+  var row = document.createElement('div'); row.className = 'upRow';
+  var icon = document.createElement('div'); icon.className = 'upIcon'; icon.textContent = u.icon;
+  var mid = document.createElement('div'); mid.className = 'upMid';
+  var nm = document.createElement('div'); nm.className = 'upName'; nm.textContent = u.name;
+  var ds = document.createElement('div'); ds.className = 'upDesc'; ds.textContent = u.desc;
+  var lv = document.createElement('div'); lv.className = 'upLvl';
+  lv.textContent = 'LV ' + lvl + '/' + u.max;
+  mid.appendChild(nm); mid.appendChild(ds); mid.appendChild(lv);
+  var btn = document.createElement('button'); btn.className = 'buyBtn';
+  if (lvl >= u.max) { btn.textContent = 'MAX'; btn.className += ' max'; }
+  else {
+    var cost = u.costs[lvl];
+    btn.textContent = '🪙 ' + cost;
+    if (save.coins < cost) btn.className += ' off';
+    else {
+      btn.addEventListener('click', (function (uu, cc) {
+        return function (ev) {
+          if (ev && ev.stopPropagation) ev.stopPropagation();
+          initAudio();
+          if (save.coins < cc) return;
+          save.coins -= cc;
+          save.upg[uu.k] = upgLvl(uu.k) + 1;
+          persist();
+          track('upgrade_bought', { value: cc });
+          sndBuy(); vibrate(10);
+          buildShop();
+        };
+      })(u, cost));
+    }
+  }
+  row.appendChild(icon); row.appendChild(mid); row.appendChild(btn);
+  shopListEl.appendChild(row);
+}
+function skinOwned(k) { return k === 'tug' || !!save.skins[k]; }
+function buildSkinRow(sdef) {
+  var row = document.createElement('div'); row.className = 'upRow';
+  var icon = document.createElement('div'); icon.className = 'upIcon'; icon.textContent = sdef.icon;
+  var mid = document.createElement('div'); mid.className = 'upMid';
+  var nm = document.createElement('div'); nm.className = 'upName'; nm.textContent = sdef.name;
+  var ds = document.createElement('div'); ds.className = 'upDesc'; ds.textContent = sdef.desc;
+  mid.appendChild(nm); mid.appendChild(ds);
+  var btn = document.createElement('button'); btn.className = 'buyBtn';
+  if (save.skin === sdef.k) { btn.textContent = 'SAILING'; btn.className += ' max'; }
+  else if (skinOwned(sdef.k)) {
+    btn.textContent = 'USE'; btn.className += ' use';
+    btn.addEventListener('click', (function (kk) {
+      return function (ev) {
+        if (ev && ev.stopPropagation) ev.stopPropagation();
+        initAudio(); sndClick();
+        save.skin = kk; persist(); buildShop();
+      };
+    })(sdef.k));
+  } else {
+    btn.textContent = '🪙 ' + sdef.cost;
+    if (save.coins < sdef.cost) btn.className += ' off';
+    else {
+      btn.addEventListener('click', (function (sd) {
+        return function (ev) {
+          if (ev && ev.stopPropagation) ev.stopPropagation();
+          initAudio();
+          if (save.coins < sd.cost) return;
+          save.coins -= sd.cost;
+          save.skins[sd.k] = 1;
+          save.skin = sd.k;
+          persist();
+          track('upgrade_bought', { value: sd.cost });
+          sndBuy(); vibrate(10);
+          buildShop();
+        };
+      })(sdef));
+    }
+  }
+  row.appendChild(icon); row.appendChild(mid); row.appendChild(btn);
+  shopListEl.appendChild(row);
+}
+
+// ---------------------------------------------------------------- input
+cv.addEventListener('pointerdown', function (ev) {
+  if (ev && ev.preventDefault) ev.preventDefault();
+  initAudio();
+  if (state === 'play') releaseCrate();
+});
+cv.addEventListener('pointercancel', function () { /* tap-only input — nothing held */ });
+titleScreen.addEventListener('pointerdown', function (ev) {
+  var t = ev && ev.target;
+  if (t && (t.id === 'shopBtn' || (t.closest && t.closest('#footerBadge')))) return;
+  initAudio(); sndClick();
+  startGame();
+});
+el('shopBtn').addEventListener('click', function (ev) { if (ev && ev.stopPropagation) ev.stopPropagation(); initAudio(); sndClick(); openShop('title'); });
+el('loseShopBtn').addEventListener('click', function (ev) { if (ev && ev.stopPropagation) ev.stopPropagation(); initAudio(); sndClick(); openShop('lose'); });
+el('shopCloseBtn').addEventListener('click', function (ev) { if (ev && ev.stopPropagation) ev.stopPropagation(); initAudio(); sndClick(); closeShop(); });
+el('nextBtn').addEventListener('click', function (ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  initAudio(); sndClick();
+  startLevel(save.level);
+});
+el('retryBtn').addEventListener('click', function (ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  initAudio(); sndClick();
+  startLevel(level);
+});
+sailBtn.addEventListener('click', function (ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  initAudio();
+  beginSail();
+});
+muteBtn.addEventListener('click', function (ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  initAudio(); setMuted(!save.muted); sndClick();
+});
+document.addEventListener('contextmenu', function (ev) { ev.preventDefault(); });
+document.addEventListener('gesturestart', function (ev) { ev.preventDefault(); });
+document.addEventListener('touchmove', function (ev) { ev.preventDefault(); }, { passive: false });
+document.addEventListener('dblclick', function (ev) { ev.preventDefault(); });
+document.addEventListener('visibilitychange', function () {
+  if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+    lastT = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    if (ac) { try { if (ac.state === 'suspended') ac.resume(); } catch (e) { /* no-op */ } }
+  }
+});
+
+// ---------------------------------------------------------------- render helpers
+function rr(x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+var SKY_SETS = [
+  { top: '#7ec8e3', bot: '#ffd9a0', wat: '#2b9ec4', deep: '#134d70' }, // day
+  { top: '#f7a072', bot: '#ffd97d', wat: '#3a9bb5', deep: '#1a4463' }, // sunset
+  { top: '#c86b85', bot: '#ffb37d', wat: '#4a6fa5', deep: '#1c3557' }, // dusk
+  { top: '#8f6aae', bot: '#f78888', wat: '#3d5a8f', deep: '#182a4a' }, // violet eve
+];
+var NIGHT_SET = { top: '#0a1430', bot: '#1c2c55', wat: '#16305a', deep: '#060f24' };
+function skySet() {
+  if (night) return NIGHT_SET;
+  return SKY_SETS[(level - 1) % SKY_SETS.length];
+}
+function drawSky(ss) {
+  var g = ctx.createLinearGradient(0, 0, 0, WATERY);
+  g.addColorStop(0, ss.top);
+  g.addColorStop(1, ss.bot);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, WATERY);
+  if (night) {
+    var r = mulberry32(42);
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    for (var i = 0; i < 34; i++) {
+      var sx = r() * W, sy = r() * WATERY * 0.85;
+      var tw = 0.5 + Math.sin(bgT * 2 + i * 1.7) * 0.5;
+      ctx.globalAlpha = 0.25 + tw * 0.6;
+      ctx.fillRect(sx, sy, 2, 2);
+    }
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#f4f0dc';
+    ctx.beginPath(); ctx.arc(W * 0.78, WATERY * 0.26, 22, 0, TAU); ctx.fill();
+    ctx.fillStyle = NIGHT_SET.top;
+    ctx.beginPath(); ctx.arc(W * 0.78 + 9, WATERY * 0.26 - 4, 18, 0, TAU); ctx.fill();
+  } else {
+    ctx.fillStyle = 'rgba(255,236,170,0.9)';
+    ctx.beginPath(); ctx.arc(W * 0.76, WATERY * 0.3, 26, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(255,236,170,0.18)';
+    ctx.beginPath(); ctx.arc(W * 0.76, WATERY * 0.3, 52, 0, TAU); ctx.fill();
+  }
+  // drifting clouds
+  ctx.fillStyle = night ? 'rgba(190,205,235,0.12)' : 'rgba(255,255,255,0.5)';
+  for (var c = 0; c < clouds.length; c++) {
+    var cl = clouds[c];
+    var cy = cl.y * WATERY;
+    ctx.beginPath();
+    ctx.ellipse(cl.x, cy, 34 * cl.sc, 11 * cl.sc, 0, 0, TAU);
+    ctx.ellipse(cl.x + 22 * cl.sc, cy + 4 * cl.sc, 24 * cl.sc, 9 * cl.sc, 0, 0, TAU);
+    ctx.ellipse(cl.x - 24 * cl.sc, cy + 5 * cl.sc, 20 * cl.sc, 8 * cl.sc, 0, 0, TAU);
+    ctx.fill();
+  }
+}
+function drawHillsTown(ss) {
+  // distant hills
+  ctx.fillStyle = night ? 'rgba(20,36,66,0.9)' : 'rgba(40,86,120,0.42)';
+  ctx.beginPath();
+  ctx.moveTo(0, WATERY);
+  for (var x = 0; x <= W; x += 14) {
+    ctx.lineTo(x, WATERY - 26 - Math.sin(x * 0.011 + 1.2) * 18 - Math.sin(x * 0.027) * 9);
+  }
+  ctx.lineTo(W, WATERY);
+  ctx.closePath(); ctx.fill();
+  // tiny far town on the left shore
+  var bx = 8, r = mulberry32(7);
+  ctx.save();
+  for (var i = 0; i < 6; i++) {
+    var bw = 14 + r() * 12, bh = 16 + r() * 22;
+    ctx.fillStyle = night ? '#1b2a4c' : 'rgba(70,110,150,0.55)';
+    ctx.fillRect(bx, WATERY - bh, bw, bh);
+    if (night) {
+      ctx.fillStyle = 'rgba(255,220,130,' + (0.5 + 0.5 * Math.sin(bgT * 3 + i * 2.1)) + ')';
+      ctx.fillRect(bx + bw * 0.3, WATERY - bh + 4, 3, 3);
+    }
+    bx += bw + 4;
+  }
+  ctx.restore();
+  // lighthouse on the right shore
+  var lx = W - 34, lyB = WATERY + 2, lh = 58;
+  ctx.fillStyle = night ? '#dfe6f2' : '#f4f7fb';
+  ctx.beginPath();
+  ctx.moveTo(lx - 9, lyB); ctx.lineTo(lx + 9, lyB);
+  ctx.lineTo(lx + 6, lyB - lh); ctx.lineTo(lx - 6, lyB - lh);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#ff6b6b';
+  ctx.fillRect(lx - 8, lyB - lh * 0.42, 16, 9);
+  ctx.fillRect(lx - 7, lyB - lh * 0.78, 14, 8);
+  ctx.fillStyle = '#22314a';
+  ctx.fillRect(lx - 7, lyB - lh - 8, 14, 9);
+  ctx.fillStyle = night ? '#ffe9a3' : '#ffd97d';
+  ctx.fillRect(lx - 4, lyB - lh - 6, 8, 5);
+  if (night) {
+    // rotating beam sweep
+    var ba = Math.sin(lightAng) * 1.05 + Math.PI; // sweeps across the harbor
+    var bx0 = lx, by0 = lyB - lh - 3;
+    var len = W * 1.1;
+    var g = ctx.createLinearGradient(bx0, by0, bx0 + Math.cos(ba) * len, by0 + Math.sin(ba) * len * 0.22);
+    g.addColorStop(0, 'rgba(255,238,170,0.5)');
+    g.addColorStop(1, 'rgba(255,238,170,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(bx0, by0);
+    ctx.lineTo(bx0 + Math.cos(ba - 0.09) * len, by0 + Math.sin(ba - 0.09) * len * 0.22);
+    ctx.lineTo(bx0 + Math.cos(ba + 0.09) * len, by0 + Math.sin(ba + 0.09) * len * 0.22);
+    ctx.closePath(); ctx.fill();
+  }
+}
+function drawCrane() {
+  var y = CRANE_SY;
+  var rangePx = trolleyRange() * VS;
+  var x0 = W / 2 - rangePx - 26, x1 = W / 2 + rangePx + 26;
+  // legs
+  ctx.strokeStyle = '#22314a';
+  ctx.lineWidth = 7;
+  ctx.beginPath();
+  ctx.moveTo(x0 + 4, y); ctx.lineTo(x0 + 4, WATERY - 6);
+  ctx.moveTo(x1 - 4, y); ctx.lineTo(x1 - 4, WATERY - 6);
+  ctx.stroke();
+  ctx.strokeStyle = '#31435f';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(x0 + 4, y + 30); ctx.lineTo(x0 + 24, y);
+  ctx.moveTo(x1 - 4, y + 30); ctx.lineTo(x1 - 24, y);
+  ctx.stroke();
+  // beam with hazard hatching
+  ctx.fillStyle = '#31435f';
+  rr(x0 - 6, y - 14, x1 - x0 + 12, 16, 5); ctx.fill();
+  ctx.save();
+  rr(x0 - 6, y - 14, x1 - x0 + 12, 16, 5); ctx.clip();
+  ctx.strokeStyle = 'rgba(255,201,60,0.7)';
+  ctx.lineWidth = 5;
+  for (var i = -18; i < x1 - x0 + 30; i += 18) {
+    ctx.beginPath();
+    ctx.moveTo(x0 + i, y + 4); ctx.lineTo(x0 + i + 12, y - 16);
+    ctx.stroke();
+  }
+  ctx.restore();
+  // trolley
+  var tx = wx2s(trolley.x);
+  ctx.fillStyle = '#ffb62e';
+  rr(tx - 15, y - 6, 30, 15, 4); ctx.fill();
+  ctx.fillStyle = '#22314a';
+  ctx.beginPath(); ctx.arc(tx - 8, y + 10, 4, 0, TAU); ctx.arc(tx + 8, y + 10, 4, 0, TAU); ctx.fill();
+  // cable + hanging crate
+  if (trolley.ready && trolley.def) {
+    var sw = trolley.sway;
+    var hy = y + 26, hx = tx + sw * 26;
+    ctx.strokeStyle = '#22314a';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(tx, y + 9); ctx.lineTo(hx, hy); ctx.stroke();
+    ctx.save();
+    ctx.translate(hx, hy);
+    ctx.rotate(sw * 0.4);
+    drawCargoShape(trolley.def, VS);
+    ctx.restore();
+  } else if (phase === 'load' && supply > 0 && state === 'play') {
+    ctx.strokeStyle = 'rgba(34,49,74,0.5)';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(tx, y + 9); ctx.lineTo(tx, y + 18); ctx.stroke();
+  }
+}
+function drawCargoShape(def, sc) {
+  // draws a cargo def centered at origin (used for hanging crate + bodies)
+  var w, h;
+  if (def.t === 'barrel') {
+    var r = def.r * sc;
+    ctx.fillStyle = def.col;
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.28)';
+    ctx.lineWidth = 2 * sc;
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.62, 0, TAU); ctx.stroke();
+    ctx.strokeStyle = '#5b3a1e';
+    ctx.beginPath(); ctx.moveTo(-r, 0); ctx.lineTo(r, 0); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.beginPath(); ctx.arc(-r * 0.3, -r * 0.3, r * 0.32, Math.PI, Math.PI * 1.6); ctx.stroke();
+    return;
+  }
+  w = def.w * sc; h = def.h * sc;
+  if (def.t === 'gold') {
+    var g = ctx.createLinearGradient(0, -h / 2, 0, h / 2);
+    g.addColorStop(0, '#ffe27a'); g.addColorStop(1, '#e0a01f');
+    ctx.fillStyle = g;
+    rr(-w / 2, -h / 2, w, h, 3 * sc); ctx.fill();
+    ctx.strokeStyle = '#8a5f00'; ctx.lineWidth = 1.6 * sc;
+    rr(-w / 2, -h / 2, w, h, 3 * sc); ctx.stroke();
+    ctx.fillStyle = '#8a5f00';
+    ctx.font = '900 ' + Math.round(11 * sc) + 'px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('✦', 0, 1);
+    return;
+  }
+  if (def.t === 'fragile') {
+    ctx.fillStyle = '#f2ede4';
+    rr(-w / 2, -h / 2, w, h, 2.5 * sc); ctx.fill();
+    ctx.strokeStyle = '#c9c0ae'; ctx.lineWidth = 1.4 * sc;
+    rr(-w / 2, -h / 2, w, h, 2.5 * sc); ctx.stroke();
+    ctx.strokeStyle = '#ff6b6b'; ctx.lineWidth = 2 * sc;
+    ctx.beginPath();
+    ctx.moveTo(-w / 2 + 3 * sc, h / 2 - 3 * sc); ctx.lineTo(w / 2 - 3 * sc, -h / 2 + 3 * sc);
+    ctx.stroke();
+    ctx.fillStyle = '#ff6b6b';
+    ctx.font = '900 ' + Math.round(8 * sc) + 'px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('!', 0, 0);
+    return;
+  }
+  // cube / plank: wooden crate
+  ctx.fillStyle = def.col;
+  rr(-w / 2, -h / 2, w, h, 2.5 * sc); ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 1.6 * sc;
+  rr(-w / 2, -h / 2, w, h, 2.5 * sc); ctx.stroke();
+  if (def.t === 'cube') {
+    ctx.strokeStyle = 'rgba(0,0,0,0.18)';
+    ctx.beginPath();
+    ctx.moveTo(-w / 2, -h / 2); ctx.lineTo(w / 2, h / 2);
+    ctx.moveTo(w / 2, -h / 2); ctx.lineTo(-w / 2, h / 2);
+    ctx.stroke();
+  } else {
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+    ctx.beginPath();
+    ctx.moveTo(-w / 2 + w * 0.33, -h / 2); ctx.lineTo(-w / 2 + w * 0.33, h / 2);
+    ctx.moveTo(-w / 2 + w * 0.66, -h / 2); ctx.lineTo(-w / 2 + w * 0.66, h / 2);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+  ctx.beginPath(); ctx.moveTo(-w / 2 + 2 * sc, -h / 2 + 2 * sc); ctx.lineTo(w / 2 - 2 * sc, -h / 2 + 2 * sc); ctx.stroke();
+}
+function drawBody(b) {
+  ctx.save();
+  ctx.translate(wx2s(b.x), wy2s(b.y));
+  ctx.rotate(b.a);
+  if (b.overboard) ctx.globalAlpha = clamp(1 - (b.obT - 4) / 2, 0.15, 1);
+  var def = { t: b.kind, w: b.w, h: b.h, r: b.r, col: b.col };
+  if (b.shape === 'circle') def.t = 'barrel';
+  drawCargoShape(def, VS);
+  ctx.restore();
+  ctx.globalAlpha = 1;
+}
+function drawShip() {
+  if (!hull) return;
+  var hw = hull.w / 2 * VS, hh = hull.h / 2 * VS;
+  ctx.save();
+  ctx.translate(wx2s(hull.x), wy2s(hull.y));
+  ctx.rotate(hull.a);
+  var skin = save.skin;
+  // hull base — trapezoid with rounded bow/stern
+  var bodyCol = skin === 'junk' ? '#7a4b26' : (skin === 'paddle' ? '#f4f0e6' : '#3d5f85');
+  var bellyCol = skin === 'junk' ? '#5b3a1e' : (skin === 'paddle' ? '#c94f4f' : '#c0392b');
+  ctx.fillStyle = bodyCol;
+  ctx.beginPath();
+  ctx.moveTo(-hw, -hh);
+  ctx.lineTo(hw, -hh);
+  ctx.lineTo(hw - hh * 0.9, hh);
+  ctx.lineTo(-hw + hh * 0.9, hh);
+  ctx.closePath(); ctx.fill();
+  // belly stripe
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(-hw, -hh); ctx.lineTo(hw, -hh);
+  ctx.lineTo(hw - hh * 0.9, hh); ctx.lineTo(-hw + hh * 0.9, hh);
+  ctx.closePath(); ctx.clip();
+  ctx.fillStyle = bellyCol;
+  ctx.fillRect(-hw, hh * 0.15, hw * 2, hh);
+  ctx.restore();
+  // deck edge
+  ctx.fillStyle = skin === 'junk' ? '#9c6a3c' : (skin === 'paddle' ? '#d8cfc0' : '#ffc93c');
+  ctx.fillRect(-hw, -hh - 3 * VS, hw * 2, 4.5 * VS);
+  // portholes
+  ctx.fillStyle = 'rgba(255,255,255,0.75)';
+  for (var i = -2; i <= 2; i++) {
+    ctx.beginPath(); ctx.arc(i * hw * 0.32, hh * 0.05, 2.8 * VS, 0, TAU); ctx.fill();
+  }
+  // superstructure per skin (drawn above deck; cargo stacks around it visually)
+  if (skin === 'junk') {
+    ctx.strokeStyle = '#3a2413'; ctx.lineWidth = 3 * VS;
+    ctx.beginPath(); ctx.moveTo(hw * 0.42, -hh); ctx.lineTo(hw * 0.42, -hh - 46 * VS); ctx.stroke();
+    ctx.fillStyle = '#d8563e';
+    ctx.beginPath();
+    ctx.moveTo(hw * 0.44, -hh - 46 * VS);
+    ctx.quadraticCurveTo(hw * 0.98, -hh - 30 * VS, hw * 0.5, -hh - 4 * VS);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = 1.4 * VS;
+    for (var bj = 1; bj <= 3; bj++) {
+      ctx.beginPath();
+      ctx.moveTo(hw * 0.44, -hh - 46 * VS + bj * 10 * VS);
+      ctx.lineTo(hw * (0.5 + bj * 0.11), -hh - 46 * VS + bj * 11 * VS);
+      ctx.stroke();
+    }
+  } else if (skin === 'paddle') {
+    ctx.fillStyle = '#c94f4f';
+    ctx.fillRect(hw * 0.3, -hh - 26 * VS, 7 * VS, 24 * VS);
+    ctx.fillRect(hw * 0.52, -hh - 26 * VS, 7 * VS, 24 * VS);
+    ctx.fillStyle = '#22314a';
+    ctx.fillRect(hw * 0.28, -hh - 30 * VS, 11 * VS, 5 * VS);
+    ctx.fillRect(hw * 0.5, -hh - 30 * VS, 11 * VS, 5 * VS);
+    // paddle wheel — spins with hull horizontal speed
+    ctx.save();
+    ctx.translate(-hw * 0.55, hh * 0.1);
+    ctx.rotate(bgT * 2 + hull.x * 0.05);
+    ctx.strokeStyle = '#8a2f2f'; ctx.lineWidth = 3 * VS;
+    for (var sp = 0; sp < 6; sp++) {
+      ctx.rotate(TAU / 6);
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(hh * 1.15, 0); ctx.stroke();
+    }
+    ctx.strokeStyle = '#a83c3c';
+    ctx.beginPath(); ctx.arc(0, 0, hh * 1.15, 0, TAU); ctx.stroke();
+    ctx.restore();
+  } else {
+    // tug wheelhouse + funnel at the stern quarter
+    ctx.fillStyle = '#f4f0e6';
+    rr(hw * 0.36, -hh - 22 * VS, 26 * VS, 20 * VS, 3 * VS); ctx.fill();
+    ctx.fillStyle = '#22314a';
+    rr(hw * 0.36 + 5 * VS, -hh - 18 * VS, 8 * VS, 8 * VS, 2 * VS); ctx.fill();
+    ctx.fillStyle = '#c0392b';
+    rr(hw * 0.2, -hh - 30 * VS, 9 * VS, 26 * VS, 2 * VS); ctx.fill();
+    ctx.fillStyle = '#22314a';
+    ctx.fillRect(hw * 0.2 - 1 * VS, -hh - 32 * VS, 11 * VS, 4 * VS);
+  }
+  // bulwark lips — drawn to match their physical collision size
+  ctx.fillStyle = 'rgba(10,24,44,0.55)';
+  rr(-hw, -hh - 17 * VS, 7 * VS, 17 * VS, 2 * VS); ctx.fill();
+  rr(hw - 7 * VS, -hh - 17 * VS, 7 * VS, 17 * VS, 2 * VS); ctx.fill();
+  ctx.restore();
+}
+function drawFerry() {
+  if (!ferryOn) return;
+  var sx = wx2s(ferryX), sy = WATERY - 12;
+  ctx.save();
+  ctx.globalAlpha = 0.85;
+  ctx.fillStyle = night ? '#31435f' : '#4a6785';
+  ctx.beginPath();
+  ctx.moveTo(sx - 70, sy);
+  ctx.lineTo(sx + 70, sy);
+  ctx.lineTo(sx + 56, sy + 16);
+  ctx.lineTo(sx - 56, sy + 16);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#e8eef6';
+  ctx.fillRect(sx - 44, sy - 16, 88, 15);
+  ctx.fillStyle = '#22314a';
+  for (var i = 0; i < 6; i++) ctx.fillRect(sx - 38 + i * 14, sy - 12, 8, 7);
+  ctx.fillStyle = '#c0392b';
+  ctx.fillRect(sx + 20, sy - 26, 9, 11);
+  // churned wake behind
+  ctx.globalAlpha = 0.5;
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.ellipse(sx - 84, sy + 12, 26, 6, 0, 0, TAU);
+  ctx.ellipse(sx - 116, sy + 13, 18, 4, 0, 0, TAU);
+  ctx.fill();
+  ctx.restore();
+}
+function drawWater(ss) {
+  // surface polygon down to bottom of screen
+  var g = ctx.createLinearGradient(0, WATERY - 24, 0, H);
+  g.addColorStop(0, ss.wat);
+  g.addColorStop(1, ss.deep);
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(0, H);
+  var x;
+  for (x = 0; x <= W + 14; x += 14) {
+    var wxp = (x - W / 2) / VS;
+    ctx.lineTo(x, wy2s(waterYAt(wxp)));
+  }
+  ctx.lineTo(W, H);
+  ctx.closePath(); ctx.fill();
+  // foam line along the surface
+  ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (x = 0; x <= W + 14; x += 14) {
+    var wxp2 = (x - W / 2) / VS;
+    var sy = wy2s(waterYAt(wxp2));
+    if (x === 0) ctx.moveTo(x, sy); else ctx.lineTo(x, sy);
+  }
+  ctx.stroke();
+  // moon/sun glint
+  ctx.globalAlpha = night ? 0.18 : 0.22;
+  ctx.fillStyle = night ? '#f4f0dc' : '#ffd68c';
+  for (var i = 0; i < 8; i++) {
+    var ry = WATERY + 14 + i * 15;
+    if (ry > H - 6) break;
+    var rw = 22 + Math.sin(bgT * 2 + i * 1.4) * 10 + i * 2;
+    ctx.fillRect(W * 0.76 - rw / 2, ry, rw, 3.5);
+  }
+  ctx.globalAlpha = 1;
+}
+function drawWaterOverlay(ss) {
+  // translucent layer re-drawn OVER the ship so the submerged part reads underwater,
+  // and the waterline visually clings to the hull
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(0, H);
+  for (var x = 0; x <= W + 14; x += 14) {
+    var wxp = (x - W / 2) / VS;
+    ctx.lineTo(x, wy2s(waterYAt(wxp)));
+  }
+  ctx.lineTo(W, H);
+  ctx.closePath();
+  ctx.clip();
+  ctx.globalAlpha = 0.4;
+  var g = ctx.createLinearGradient(0, WATERY - 20, 0, H);
+  g.addColorStop(0, ss.wat);
+  g.addColorStop(1, ss.deep);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, WATERY - 60, W, H);
+  ctx.restore();
+  ctx.globalAlpha = 1;
+  // clingy foam blobs where the hull crosses the surface
+  if (hull) {
+    var c = Math.cos(hull.a), s = Math.sin(hull.a);
+    for (var side = -1; side <= 1; side += 2) {
+      var lx = side * hull.w / 2;
+      var ex = hull.x + c * lx, ey = hull.y + s * lx;
+      var wy = waterYAt(ex);
+      if (Math.abs(ey - wy) < hull.h) {
+        var sx = wx2s(ex), sy2 = wy2s(wy);
+        ctx.fillStyle = 'rgba(255,255,255,0.55)';
+        ctx.beginPath();
+        ctx.ellipse(sx, sy2, 9 + Math.sin(bgT * 7 + side) * 2.5, 3.4, 0, 0, TAU);
+        ctx.fill();
+      }
+    }
+  }
+}
+function drawGullSprite(sxp, syp, ph, sc, landed) {
+  ctx.strokeStyle = 'rgba(255,255,255,0.92)';
+  ctx.lineWidth = 2 * sc;
+  ctx.lineCap = 'round';
+  if (landed) {
+    ctx.fillStyle = '#f4f7fb';
+    ctx.beginPath(); ctx.ellipse(sxp, syp - 5 * sc, 6 * sc, 4.5 * sc, 0, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(sxp + 5 * sc, syp - 9 * sc, 2.8 * sc, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#ffb62e';
+    ctx.beginPath();
+    ctx.moveTo(sxp + 7.4 * sc, syp - 9 * sc);
+    ctx.lineTo(sxp + 11 * sc, syp - 8.4 * sc);
+    ctx.lineTo(sxp + 7.4 * sc, syp - 7.6 * sc);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#ffb62e'; ctx.lineWidth = 1.4 * sc;
+    ctx.beginPath(); ctx.moveTo(sxp - 2 * sc, syp - 1 * sc); ctx.lineTo(sxp - 2 * sc, syp);
+    ctx.moveTo(sxp + 2 * sc, syp - 1 * sc); ctx.lineTo(sxp + 2 * sc, syp); ctx.stroke();
+    return;
+  }
+  var flap = Math.sin(ph) * 0.7;
+  ctx.beginPath();
+  ctx.moveTo(sxp - 8 * sc, syp + flap * 4 * sc);
+  ctx.quadraticCurveTo(sxp - 3 * sc, syp - 4 * sc, sxp, syp);
+  ctx.quadraticCurveTo(sxp + 3 * sc, syp - 4 * sc, sxp + 8 * sc, syp + flap * 4 * sc);
+  ctx.stroke();
+}
+function drawPopups() {
+  for (var i = 0; i < popups.length; i++) {
+    var p = popups[i];
+    var k = p.t / p.dur;
+    var rise = smooth(clamp(k, 0, 1)) * 42;
+    var sc = k < 0.18 ? smooth(k / 0.18) * 1.22 : 1.22 - smooth((k - 0.18) / 0.82) * 0.24;
+    ctx.save();
+    ctx.globalAlpha = k > 0.7 ? 1 - (k - 0.7) / 0.3 : 1;
+    ctx.translate(p.x, p.y - rise);
+    ctx.scale(sc, sc);
+    ctx.font = '900 ' + p.size + 'px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+    ctx.strokeText(p.text, 0, 0);
+    ctx.fillStyle = p.color;
+    ctx.fillText(p.text, 0, 0);
+    ctx.restore();
+  }
+}
+function drawParticles() {
+  for (var i = 0; i < particles.length; i++) {
+    var p = particles[i];
+    var k = 1 - p.t / p.dur;
+    ctx.globalAlpha = k * 0.9;
+    ctx.fillStyle = p.col;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * (0.5 + k), 0, TAU);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+function drawRipples() {
+  for (var i = 0; i < ripples.length; i++) {
+    var r = ripples[i];
+    var k = r.t / r.dur;
+    ctx.globalAlpha = (1 - k) * 0.7;
+    ctx.strokeStyle = r.col;
+    ctx.lineWidth = 2.5 * (1 - k) + 0.8;
+    ctx.beginPath();
+    ctx.ellipse(r.x, r.y, r.r0 + k * 52, (r.r0 + k * 52) * 0.3, 0, 0, TAU);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+function drawSmoke() {
+  for (var i = 0; i < smokes.length; i++) {
+    var s = smokes[i];
+    var k = s.t / s.dur;
+    ctx.globalAlpha = (1 - k) * 0.35;
+    ctx.fillStyle = night ? '#aab6cc' : '#e8eef6';
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.sc * (1 + k * 2.2), 0, TAU);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+function drawWindStreaks() {
+  if (wind.gustT <= 0 && wind.warnT <= 0) return;
+  var str = wind.gustT > 0 ? 1 : 0.4;
+  ctx.strokeStyle = 'rgba(255,255,255,' + (0.3 * str) + ')';
+  ctx.lineWidth = 2;
+  var r = mulberry32(Math.floor(bgT * 9));
+  for (var i = 0; i < 7; i++) {
+    var y = H * 0.2 + r() * H * 0.35;
+    var x0 = r() * W;
+    var len = 30 + r() * 60;
+    ctx.beginPath();
+    ctx.moveTo(x0, y);
+    ctx.quadraticCurveTo(x0 + len * 0.5 * wind.dir, y - 4, x0 + len * wind.dir, y);
+    ctx.stroke();
+  }
+}
+
+// ---------------------------------------------------------------- title route map
+function drawTitleMap() {
+  var ss = SKY_SETS[(save.level - 1) % SKY_SETS.length];
+  drawSky(ss);
+  drawHillsTown(ss);
+  drawWater(ss);
+  // winding dotted route with ports, centered on current progress
+  var mapY0 = H * 0.55;
+  var span = 9; // ports visible
+  var first = Math.max(1, save.level - 4);
+  var stepW = W / (span - 1.2);
+  ctx.setLineDash([5, 7]);
+  ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  var i, px, py;
+  for (i = 0; i < span; i++) {
+    px = 26 + i * stepW * 0.92;
+    py = mapY0 + Math.sin((first + i) * 1.9) * H * 0.045;
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+  for (i = 0; i < span; i++) {
+    var pn = first + i;
+    px = 26 + i * stepW * 0.92;
+    py = mapY0 + Math.sin(pn * 1.9) * H * 0.045;
+    var deliveredPort = pn < save.level;
+    var current = pn === save.level;
+    if (deliveredPort) {
+      // animated tiny town
+      var r = mulberry32(pn * 55 + 3);
+      var bx = px - 13;
+      for (var b = 0; b < 3; b++) {
+        var bw = 7 + r() * 5, bh = 9 + r() * 9;
+        ctx.fillStyle = ['#ff8a5c', '#38d9c3', '#ffc93c'][b % 3];
+        ctx.fillRect(bx, py - 8 - bh, bw, bh);
+        ctx.fillStyle = 'rgba(255,240,180,' + (0.45 + 0.55 * Math.sin(bgT * 3.1 + pn + b * 2)) + ')';
+        ctx.fillRect(bx + 2, py - 8 - bh + 3, 2.5, 2.5);
+        bx += bw + 2.5;
+      }
+      ctx.fillStyle = '#ffc93c';
+      ctx.beginPath(); ctx.arc(px, py, 5.5, 0, TAU); ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(px, py, 5.5, 0, TAU); ctx.stroke();
+      // little flag
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.moveTo(px + 9, py - 8); ctx.lineTo(px + 9, py - 20); ctx.stroke();
+      ctx.fillStyle = '#ff6b6b';
+      ctx.beginPath();
+      ctx.moveTo(px + 9, py - 20);
+      ctx.lineTo(px + 17 + Math.sin(bgT * 5 + pn) * 1.5, py - 17);
+      ctx.lineTo(px + 9, py - 14);
+      ctx.closePath(); ctx.fill();
+    } else if (current) {
+      var pulse = 1 + Math.sin(bgT * 4) * 0.25;
+      ctx.fillStyle = '#ff6b6b';
+      ctx.beginPath(); ctx.arc(px, py, 6.5, 0, TAU); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,107,107,0.6)';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(px, py, 10 * pulse, 0, TAU); ctx.stroke();
+      ctx.fillStyle = '#fff';
+      ctx.font = '900 11px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText(portName(pn), clamp(px, 40, W - 40), py + 14);
+    } else {
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      ctx.beginPath(); ctx.arc(px, py, 4, 0, TAU); ctx.fill();
+    }
+  }
+  // bobbing hero ship on the water below
+  var shipY = wy2s(waterYAt(0)) + 26;
+  ctx.save();
+  ctx.translate(W / 2, shipY + Math.sin(bgT * 1.6) * 4);
+  ctx.rotate(Math.sin(bgT * 1.1) * 0.06);
+  var hw = 52, hh = 16;
+  ctx.fillStyle = '#3d5f85';
+  ctx.beginPath();
+  ctx.moveTo(-hw, -hh); ctx.lineTo(hw, -hh);
+  ctx.lineTo(hw - 13, hh); ctx.lineTo(-hw + 13, hh);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#ffc93c';
+  ctx.fillRect(-hw, -hh - 3, hw * 2, 4);
+  ctx.fillStyle = '#f4f0e6';
+  rr(6, -hh - 18, 22, 16, 3); ctx.fill();
+  ctx.fillStyle = '#c0392b';
+  rr(-12, -hh - 24, 8, 21, 2); ctx.fill();
+  // little crate stack for flavor
+  ctx.fillStyle = '#c58f52';
+  ctx.fillRect(-hw + 16, -hh - 13, 13, 13);
+  ctx.fillRect(-hw + 30, -hh - 13, 13, 13);
+  ctx.fillRect(-hw + 23, -hh - 26, 13, 13);
+  ctx.restore();
+  for (var g2 = 0; g2 < titleGulls.length; g2++) {
+    drawGullSprite(titleGulls[g2].x, titleGulls[g2].y * H, titleGulls[g2].ph, titleGulls[g2].sc, false);
+  }
+  drawPopups();
+}
+
+// ---------------------------------------------------------------- render
+function render() {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+
+  if (state === 'title' || state === 'shop' || !hull) {
+    drawTitleMap();
+    return;
+  }
+
+  var ss = skySet();
+  drawSky(ss);
+  drawHillsTown(ss);
+
+  var shx = 0, shy = 0;
+  if (shakeT > 0) {
+    var kk = shakeT / shakeDur;
+    shx = (Math.random() - 0.5) * 2 * shakeMag * kk;
+    shy = (Math.random() - 0.5) * 2 * shakeMag * kk;
+  } else {
+    shakeMag = 0;
+  }
+  ctx.save();
+  ctx.translate(shx, shy);
+
+  drawFerry();
+  drawWater(ss);
+  drawCrane();
+  drawShip();
+  for (var i = 1; i < B.length; i++) {
+    if (!B[i].dead && !B[i].overboard) drawBody(B[i]);
+  }
+  drawWaterOverlay(ss);
+  // overboard cargo bobs IN the water (drawn over the overlay, half sunk look)
+  for (var j = 1; j < B.length; j++) {
+    if (!B[j].dead && B[j].overboard) drawBody(B[j]);
+  }
+  if (gull.state !== 'none') drawGullSprite(wx2s(gull.x), wy2s(gull.y), gull.ph, 1.1, gull.state === 'landed');
+  drawRipples();
+  drawSmoke();
+  drawParticles();
+  drawWindStreaks();
+  drawPopups();
+  ctx.restore();
+
+  // roll-warning vignette + slow-mo tint
+  if (state === 'play' && (warnActive || capsizing)) {
+    var a = capsizing ? 0.22 : 0.12 + Math.sin(bgT * 5) * 0.05;
+    var vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.3, W / 2, H / 2, Math.max(W, H) * 0.72);
+    vg.addColorStop(0, 'rgba(255,30,60,0)');
+    vg.addColorStop(1, 'rgba(255,30,60,' + a + ')');
+    ctx.fillStyle = vg;
+    ctx.fillRect(0, 0, W, H);
+  }
+  // roll meter — a tiny inclinometer, pure canvas
+  if (state === 'play') {
+    var mx = W / 2, my = SAFE.t + 62;
+    ctx.globalAlpha = 0.9;
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(mx, my, 17, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
+    var frac = clamp(hull.a / CAPSIZE_ANG, -1, 1);
+    ctx.strokeStyle = Math.abs(frac) > 0.62 ? '#ff6b6b' : (Math.abs(frac) > 0.35 ? '#ffb62e' : '#38d9c3');
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.moveTo(mx, my);
+    var na = -Math.PI / 2 + frac * 0.62;
+    ctx.lineTo(mx + Math.cos(na) * 16, my + Math.sin(na) * 16);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+}
+
+// ---------------------------------------------------------------- main loop
+var lastT = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+var frameErrs = 0;
+function frame(now) {
+  // Re-arm in `finally`: one bad frame must never permanently blank the game.
+  try {
+    var dt = clamp((now - lastT) / 1000, 0, 0.05);
+    lastT = now;
+    update(dt);
+    render();
+  } catch (e) {
+    if (++frameErrs <= 3 && typeof console !== 'undefined' && console.error) {
+      console.error('[tippy] frame error:', e);
+    }
+  } finally {
+    requestAnimationFrame(frame);
+  }
+}
+
+// ---------------------------------------------------------------- boot
+resize();
+setMuted(!!save.muted);
+syncHud(true);
+goTitle();
+requestAnimationFrame(frame);
+
+</script>
+</body>
+</html>

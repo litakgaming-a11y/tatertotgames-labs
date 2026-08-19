@@ -1,0 +1,1913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Cut Loose — TaterTot Games Labs</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E✂️%3C/text%3E%3C/svg%3E">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;overflow:hidden;background:#241a2e;
+    touch-action:none;-webkit-user-select:none;user-select:none;
+    -webkit-tap-highlight-color:transparent;overscroll-behavior:none;position:fixed}
+  canvas{display:block;touch-action:none}
+  #badge{position:fixed;bottom:calc(10px + env(safe-area-inset-bottom));left:50%;
+    transform:translateX(-50%);font:700 12px "Trebuchet MS","Segoe UI",system-ui,sans-serif;
+    color:#ffe0b8;text-decoration:none;background:rgba(45,25,15,.55);
+    border:1px solid rgba(255,205,150,.35);border-radius:20px;padding:6px 14px;
+    letter-spacing:.5px;backdrop-filter:blur(4px);z-index:5;display:none;white-space:nowrap}
+  #badge:active{background:rgba(90,55,30,.7)}
+</style>
+<script src="/analytics.js" defer></script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<a id="badge" href="../../">🥔 TaterTot Games Labs</a>
+<script>
+'use strict';
+/* ============================================================
+   ✂️ CUT LOOSE — verlet rope-cutting delivery puzzles
+   One snip — physics does the rest.
+   ============================================================ */
+const TAU = Math.PI * 2;
+const SAVE_KEY = 'ttg_cutloose';
+const FONT = '"Trebuchet MS","Segoe UI",system-ui,sans-serif';
+
+/* ---- world (physics runs in fixed units so puzzles behave
+        identically on every screen) ---- */
+const WW = 420, WH = 640, FLOOR = 560;
+const GRAV = 900;            // wu/s^2
+const STEP = 1 / 120;        // physics substep
+const ITER = 6;              // constraint solver iterations / substep
+const MAXD = 12.5;           // max particle displacement per substep (velocity cap)
+const MAXC = 14;             // max constraint correction per iteration
+const CUT_R = 11;            // blade generosity radius (world units)
+const FRAY_T = 0.13;         // seconds of fray before the snap
+const DENT_FLOOR = 340;      // impact speed that dents on hard floor
+const DENT_TRUCK = 640;      // truck bed is cushioned
+const BOMB_DISTURB = 430;    // impact speed that sets off a bomb crate
+const REST_SPD = 85, REST_TIME = 0.45;
+const SLOWMO_TS = 0.35;
+
+/* ---------- tiny helpers ---------- */
+const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
+const lerp = (a, b, t) => a + (b - a) * t;
+const rnd = (a, b) => a + Math.random() * (b - a);
+const pick = arr => arr[(Math.random() * arr.length) | 0];
+const easeOutBack = t => { const c = 1.70158; t -= 1; return 1 + t * t * ((c + 1) * t + c); };
+const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+const hyp = Math.hypot;
+function vib(ms) { if (navigator.vibrate) { try { navigator.vibrate(ms); } catch (e) {} } }
+function seededRand(seed) { let s = seed >>> 0 || 1; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
+const clampC = v => clamp(v, -MAXC, MAXC);
+
+/* point-to-segment distance */
+function ptSeg(px, py, ax, ay, bx, by) {
+  const dx = bx - ax, dy = by - ay;
+  const L2 = dx * dx + dy * dy;
+  let t = L2 ? ((px - ax) * dx + (py - ay) * dy) / L2 : 0;
+  t = clamp(t, 0, 1);
+  return hyp(px - (ax + dx * t), py - (ay + dy * t));
+}
+function segsCross(ax, ay, bx, by, cx, cy, dx, dy) {
+  const d1 = (dx - cx) * (ay - cy) - (dy - cy) * (ax - cx);
+  const d2 = (dx - cx) * (by - cy) - (dy - cy) * (bx - cx);
+  const d3 = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
+  const d4 = (bx - ax) * (dy - ay) - (by - ay) * (dx - ax);
+  return ((d1 > 0) !== (d2 > 0)) && ((d3 > 0) !== (d4 > 0));
+}
+function segSegDist(ax, ay, bx, by, cx, cy, dx, dy) {
+  if (segsCross(ax, ay, bx, by, cx, cy, dx, dy)) return 0;
+  return Math.min(
+    ptSeg(ax, ay, cx, cy, dx, dy), ptSeg(bx, by, cx, cy, dx, dy),
+    ptSeg(cx, cy, ax, ay, bx, by), ptSeg(dx, dy, ax, ay, bx, by));
+}
+
+/* ---------- persistence (schema-repaired) ---------- */
+function loadStore() {
+  const def = { v: 1, best: 0, coins: 0, muted: false, col: [], up: { blade: 0, wrap: 0, slow: 0, mag: 0 } };
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (raw) {
+      const o = JSON.parse(raw);
+      if (o && typeof o === 'object') {
+        def.best = Math.max(0, o.best | 0);
+        def.coins = Math.max(0, o.coins | 0);
+        def.muted = !!o.muted;
+        if (Array.isArray(o.col)) def.col = o.col.map(x => !!x).slice(0, 12);
+        if (o.up && typeof o.up === 'object') {
+          def.up.blade = o.up.blade ? 1 : 0; def.up.wrap = o.up.wrap ? 1 : 0;
+          def.up.slow = o.up.slow ? 1 : 0; def.up.mag = o.up.mag ? 1 : 0;
+        }
+      }
+    }
+  } catch (e) {}
+  return def;
+}
+let store = loadStore();
+function saveStore() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(store)); } catch (e) {} }
+
+/* ---------- canvas (DPR-aware, EXPLICIT css pixel sizing) ---------- */
+const cvs = document.getElementById('c');
+const ctx = cvs.getContext('2d');
+const badge = document.getElementById('badge');
+const view = { W: 0, H: 0, dpr: 1, s: 1, ox: 0, oy: 0 };
+function resize() {
+  try {
+    view.dpr = Math.min(window.devicePixelRatio || 1, 3);
+    view.W = Math.max(1, window.innerWidth); view.H = Math.max(1, window.innerHeight);
+    cvs.width = Math.round(view.W * view.dpr);
+    cvs.height = Math.round(view.H * view.dpr);
+    cvs.style.width = view.W + 'px';       // explicit CSS pixels — shipped bug x2
+    cvs.style.height = view.H + 'px';
+    ctx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
+    view.s = Math.min(view.W / WW, view.H / WH);
+    view.ox = (view.W - WW * view.s) / 2;
+    view.oy = (view.H - WH * view.s) / 2;
+  } catch (e) {}
+}
+window.addEventListener('resize', () => { try { resize(); } catch (e) {} });
+window.addEventListener('orientationchange', () => { try { resize(); } catch (e) {} });
+const toWorld = (x, y) => ({ x: (x - view.ox) / view.s, y: (y - view.oy) / view.s });
+
+/* ---------- audio (WebAudio synth, hostile-env safe) ---------- */
+let AC = null, master = null, noiseBuf = null;
+let muted = store.muted;
+function ensureAudio() {
+  if (!AC) {
+    try {
+      AC = new (window.AudioContext || window.webkitAudioContext)();
+      master = AC.createGain();
+      master.gain.value = muted ? 0 : 0.5;
+      master.connect(AC.destination);
+      noiseBuf = AC.createBuffer(1, AC.sampleRate * 0.5, AC.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    } catch (e) { AC = null; }
+  }
+  if (AC && AC.state === 'suspended') { try { AC.resume(); } catch (e) {} }
+}
+function setMuted(m) { muted = m; store.muted = m; saveStore(); if (master) master.gain.value = m ? 0 : 0.5; }
+function tone(f0, f1, dur, type, vol, when) {
+  if (!AC || muted) return;
+  try {
+    const t = AC.currentTime + (when || 0);
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = type; o.frequency.setValueAtTime(Math.max(1, f0), t);
+    if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(Math.max(1, f1), t + dur);
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t + dur + 0.02);
+  } catch (e) {}
+}
+function noiseHit(dur, vol, freq, q, when) {
+  if (!AC || muted) return;
+  try {
+    const t = AC.currentTime + (when || 0);
+    const src = AC.createBufferSource(); src.buffer = noiseBuf;
+    const f = AC.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q || 1;
+    const g = AC.createGain();
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start(t); src.stop(t + dur + 0.02);
+  } catch (e) {}
+}
+const sfx = {
+  tap()      { tone(560, 780, 0.06, 'sine', 0.12); },
+  snip()     { noiseHit(0.05, 0.20, 5200, 3); tone(2400, 3300, 0.05, 'triangle', 0.10); },
+  blunt()    { tone(200, 160, 0.07, 'square', 0.08); },
+  fray()     { noiseHit(0.12, 0.10, 3300, 2.2); },
+  twang(p)   { const b = 260 * (p || 1); tone(b * 2.2, b * 0.8, 0.22, 'sawtooth', 0.14); tone(b * 3.1, b * 1.1, 0.14, 'triangle', 0.10, 0.01); noiseHit(0.08, 0.16, 2600, 1.6); },
+  creak()    { tone(120, 88, 0.5, 'sawtooth', 0.045); tone(63, 55, 0.5, 'sawtooth', 0.03, 0.04); },
+  thud()     { tone(140, 70, 0.14, 'square', 0.20); noiseHit(0.08, 0.14, 420, 1); },
+  dent()     { tone(170, 70, 0.18, 'square', 0.24); noiseHit(0.16, 0.22, 900, 0.9); },
+  broken()   { noiseHit(0.3, 0.28, 1400, 0.9); tone(300, 90, 0.34, 'sawtooth', 0.14); },
+  boing()    { tone(180, 720, 0.22, 'sine', 0.24); tone(360, 1100, 0.16, 'triangle', 0.10, 0.02); },
+  pop()      { tone(520, 180, 0.09, 'square', 0.20); noiseHit(0.06, 0.14, 2000, 1.2); },
+  boom()     { noiseHit(0.7, 0.5, 240, 0.6); tone(120, 32, 0.7, 'sawtooth', 0.30); },
+  slowmo()   { tone(900, 220, 0.5, 'sine', 0.14); },
+  ding(i)    { const b = 660 * Math.pow(1.12, Math.min(i || 0, 6)); tone(b, b, 0.14, 'sine', 0.22); tone(b * 2, b * 2, 0.20, 'triangle', 0.10, 0.06); },
+  deliver()  { [660, 830, 990].forEach((f, i) => tone(f, f, 0.14, 'triangle', 0.18, i * 0.07)); },
+  win()      { [523, 659, 784, 1047].forEach((f, i) => tone(f, f, 0.22, 'triangle', 0.20, i * 0.12)); tone(1319, 1319, 0.4, 'sine', 0.12, 0.5); },
+  lose()     { tone(420, 400, 0.18, 'triangle', 0.18); tone(310, 290, 0.22, 'triangle', 0.18, 0.18); tone(200, 150, 0.45, 'triangle', 0.16, 0.38); },
+  buy()      { [784, 988, 1175].forEach((f, i) => tone(f, f, 0.10, 'square', 0.10, i * 0.06)); tone(1568, 1568, 0.2, 'sine', 0.10, 0.18); },
+  denied()   { tone(170, 130, 0.09, 'square', 0.10); }
+};
+
+/* ---------- particles / popups / shake ---------- */
+const parts = [];
+function addParts(n, fn) { for (let i = 0; i < n; i++) parts.push(fn(i)); }
+const pops = [];
+function addPop(x, y, txt, col, size) { pops.push({ x, y, txt, col, size: size || 22, t: 0, life: 1.15 }); }
+let shakeT = 0, shakeMag = 0;
+function shake(t, m) { shakeT = Math.max(shakeT, t); shakeMag = Math.max(shakeMag, m); }
+
+/* ============================================================
+   LEVEL DEFINITIONS — 12 hand-authored, then procedural shifts.
+   Coordinates in world units (420 x 640, floor y=560).
+   Attach keys: tc/tl/tr/bc resolved from package size.
+   sol = intended cut sequence (also powers the winnability sim).
+   ============================================================ */
+const LEVELS = [
+  { item: '🫖', name: 'Teapot', gag: "Grandma's teapot. Still warm. Don't ask how.",
+    hint: 'Swipe through the rope to cut it!',
+    pkgs: [{ x: 210, y: 280, w: 54, h: 50, m: 5, at: ['tc'] }],
+    ropes: [{ a: { p: [210, 64] }, b: { b: 0, at: 'tc' }, slack: 1.02 }],
+    truck: { cx: 210 },
+    sol: [{ t: 0.6, r: 0 }] },
+
+  { item: '🧸', name: 'Teddy', gag: 'Sir Snuggles, veteran of 4,000 hugs.',
+    hint: 'Cut the left rope, then cut again at the top of the swing!',
+    pkgs: [{ x: 150, y: 280, w: 54, h: 50, m: 5, at: ['tl', 'tr'] }],
+    ropes: [{ a: { p: [80, 72] }, b: { b: 0, at: 'tl' }, slack: 1.01 },
+            { a: { p: [260, 72] }, b: { b: 0, at: 'tr' }, slack: 1.01 }],
+    truck: { cx: 348 },
+    sol: [{ t: 0.5, r: 0 }, { t: 2.05, r: 1 }] },
+
+  { item: '🏺', name: 'Vase', gag: "Ming dynasty. Or Tuesday's pottery class.",
+    hint: 'A bundled rope takes TWO swipes!',
+    pkgs: [{ x: 210, y: 280, w: 54, h: 50, m: 5, at: ['tc'] }],
+    ropes: [{ a: { p: [210, 64] }, b: { b: 0, at: 'tc' }, slack: 1.02, strands: 2 }],
+    truck: { cx: 210 },
+    sol: [{ t: 0.5, r: 0 }, { t: 1.1, r: 0 }] },
+
+  { item: '🐠', name: 'Aquarium', gag: 'One aquarium, water included. Mostly.',
+    hint: 'Cut the tether — the fan will carry it. Then cut the balloon!',
+    pkgs: [{ x: 110, y: 430, w: 54, h: 50, m: 5, at: ['tc', 'bc'] }],
+    balloons: [{ x: 110, y: 285 }],
+    ropes: [{ a: { bal: 0 }, b: { b: 0, at: 'tc' }, slack: 1.03 },
+            { a: { b: 0, at: 'bc' }, b: { p: [110, 548] }, slack: 1.0 }],
+    fans: [{ x: 0, y: 110, w: 420, h: 170, ax: 200, ay: 0 }],
+    statics: [{ x: 196, y: 330, w: 18, h: 230 }],
+    truck: { cx: 322 },
+    sol: [{ t: 0.4, r: 1 }, { t: 3.6, r: 0 }] },
+
+  { item: '🕰️', name: 'Clock', gag: 'Grandfather clock. Ticks with disapproval.',
+    hint: 'Cut the wall rope and let it swing under the pulley!',
+    pkgs: [{ x: 120, y: 300, w: 56, h: 56, m: 6, at: ['tl', 'tc'] }],
+    ropes: [{ a: { p: [46, 300] }, b: { b: 0, at: 'tl' }, slack: 1.0 },
+            { a: { p: [360, 540] }, b: { b: 0, at: 'tc' }, slack: 1.01, pul: [180, 64] }],
+    truck: { cx: 252 },
+    sol: [{ t: 0.5, r: 0 }, { t: 2.0, r: 1, f: 0.85 }] },
+
+  { item: '🤖', name: 'Robot', gag: 'Robot butler. Fears heights, ironically.',
+    hint: 'Drop it on the spring!',
+    pkgs: [{ x: 100, y: 270, w: 54, h: 50, m: 5, at: ['tc'] }],
+    ropes: [{ a: { p: [100, 64] }, b: { b: 0, at: 'tc' }, slack: 1.02 }],
+    springs: [{ x: 60, w: 84, nx: 0.55, ny: -0.835, sp: 800 }],
+    truck: { cx: 330 },
+    sol: [{ t: 0.5, r: 0 }] },
+
+  { item: '🪁', name: 'Kite', gag: 'A kite. We shipped the sky separately.',
+    hint: 'The fan will do the pushing!',
+    pkgs: [{ x: 90, y: 260, w: 54, h: 48, m: 5, at: ['tc'] }],
+    ropes: [{ a: { p: [90, 64] }, b: { b: 0, at: 'tc' }, slack: 1.02 }],
+    fans: [{ x: 0, y: 300, w: 420, h: 160, ax: 1100, ay: 0 }],
+    truck: { cx: 245 },
+    sol: [{ t: 0.5, r: 0 }] },
+
+  { item: '🎂', name: 'Wedding Cake', gag: '3 tiers, 0 regrets. Do not drop.',
+    hint: 'Swing it clear over the spikes!',
+    pkgs: [{ x: 140, y: 290, w: 56, h: 52, m: 5, at: ['tl', 'tr'] }],
+    ropes: [{ a: { p: [80, 70] }, b: { b: 0, at: 'tl' }, slack: 1.01 },
+            { a: { p: [270, 70] }, b: { b: 0, at: 'tr' }, slack: 1.01 }],
+    spikes: [{ x: 160, w: 135 }],
+    truck: { cx: 356 },
+    sol: [{ t: 0.5, r: 0 }, { t: 2.05, r: 1 }] },
+
+  { item: '🪩', name: 'Disco Ball', gag: 'Handles Saturday nights only.',
+    hint: 'The truck keeps moving — time your cut!',
+    pkgs: [{ x: 210, y: 270, w: 52, h: 50, m: 5, at: ['tc'] }],
+    ropes: [{ a: { p: [210, 64] }, b: { b: 0, at: 'tc' }, slack: 1.02 }],
+    truck: { cx: 210, move: { r: 105, s: 1.1 } },
+    sol: [{ t: 2.1, r: 0 }] },
+
+  { item: '🏆', name: 'Trophy', gag: 'Participation trophy. Handle like a winner.',
+    hint: "Careful — do NOT disturb the bomb crate! Swing the other way.",
+    pkgs: [{ x: 140, y: 290, w: 54, h: 50, m: 5, at: ['tl', 'tr'] }],
+    bombs: [{ x: 240, y: 370 }],
+    ropes: [{ a: { p: [90, 70] }, b: { b: 0, at: 'tl' }, slack: 1.01 },
+            { a: { p: [300, 70] }, b: { b: 0, at: 'tr' }, slack: 1.01 },
+            { a: { p: [240, 64] }, b: { b: 1, at: 'tc' }, slack: 1.02 }],
+    truck: { cx: 68 },
+    sol: [{ t: 0.5, r: 1 }, { t: 1.15, r: 0 }] },
+
+  { item: '🖼️', name: 'Painting', gag: 'Modern art. Or the packing slip. Unclear.',
+    hint: 'Two packages, one truck. Bottom one first!',
+    pkgs: [{ x: 210, y: 230, w: 56, h: 46, m: 5, at: ['tc', 'bc'] },
+           { x: 210, y: 356, w: 48, h: 44, m: 6, at: ['tc'] }],
+    ropes: [{ a: { p: [210, 64] }, b: { b: 0, at: 'tc' }, slack: 1.02 },
+            { a: { b: 0, at: 'bc' }, b: { b: 1, at: 'tc' }, slack: 1.03 }],
+    truck: { cx: 210 },
+    sol: [{ t: 0.5, r: 1 }, { t: 1.8, r: 0 }] },
+
+  { item: '🎹', name: 'Grand Piano', gag: "One grand piano. Every movie's favorite drop.",
+    hint: 'The big one. Balloon, bundle, pulley — in the right order!',
+    pkgs: [{ x: 200, y: 250, w: 86, h: 62, m: 9, at: ['tl', 'tc', 'tr'] }],
+    balloons: [{ x: 320, y: 150 }],
+    ropes: [{ a: { p: [60, 64] }, b: { b: 0, at: 'tl' }, slack: 1.01, strands: 2 },
+            { a: { p: [392, 310] }, b: { b: 0, at: 'tc' }, slack: 1.01, pul: [230, 56] },
+            { a: { bal: 0 }, b: { b: 0, at: 'tr' }, slack: 1.02 }],
+    truck: { cx: 285 },
+    sol: [{ t: 0.4, r: 2 }, { t: 1.0, r: 0 }, { t: 1.5, r: 0 }, { t: 3.1, r: 1, f: 0.85 }] }
+];
+const ATTACH = { tc: (w, h) => [0, -h * 0.42], tl: (w, h) => [-w * 0.34, -h * 0.4], tr: (w, h) => [w * 0.34, -h * 0.4], bc: (w, h) => [0, h * 0.42] };
+const UPGRADES = [
+  { key: 'blade', icon: '🔪', name: 'Sharper Blade', cost: 40, desc: 'Cut 2 ropes per swipe' },
+  { key: 'wrap', icon: '🫧', name: 'Bubble Wrap', cost: 50, desc: '+1 dent allowed' },
+  { key: 'slow', icon: '⏱️', name: 'Slow-Mo Charge', cost: 35, desc: 'Longer slow-mo' },
+  { key: 'mag', icon: '🧲', name: 'Magnet Truck', cost: 60, desc: 'Truck attracts packages' }
+];
+
+/* level def for any level number (13+ = shifted variations) */
+function levelDef(lv) {
+  const base = LEVELS[(lv - 1) % LEVELS.length];
+  if (lv <= LEVELS.length) return base;
+  const d = JSON.parse(JSON.stringify(base));
+  const rng = seededRand((lv * 2654435761) >>> 0);
+  const dx = Math.round((rng() - 0.5) * 30);          // whole-layout shift keeps solutions valid
+  const shiftX = x => clamp(x + dx, 20, WW - 20);
+  for (const p of d.pkgs) p.x = shiftX(p.x);
+  for (const b of (d.bombs || [])) b.x = shiftX(b.x);
+  for (const b of (d.balloons || [])) b.x = shiftX(b.x);
+  for (const r of d.ropes) {
+    if (r.a.p) r.a.p[0] = shiftX(r.a.p[0]);
+    if (r.b.p) r.b.p[0] = shiftX(r.b.p[0]);
+    if (r.pul) r.pul[0] = shiftX(r.pul[0]);
+    r.slack = (r.slack || 1) * (1 + (rng() - 0.5) * 0.02);
+  }
+  for (const s of (d.statics || [])) s.x += dx;
+  for (const s of (d.spikes || [])) s.x += dx;
+  for (const s of (d.springs || [])) s.x += dx;
+  d.truck.cx = clamp(d.truck.cx + dx, 70, WW - 70);
+  return d;
+}
+
+/* ============================================================
+   GAME STATE — everything the loop touches is initialized here.
+   ============================================================ */
+let scene = 'title';        // title | play | win | lose
+let game = null;
+let uiRects = {};
+let titleT = 0;
+let shelfMsg = null, shelfMsgT = 0;
+let winInfo = { coins: 0, stars: 0, newItem: null };
+
+function setScene(s) {
+  scene = s;
+  uiRects = {};
+  parts.length = 0; pops.length = 0;
+  badge.style.display = (s === 'title') ? 'block' : 'none';
+  if (s === 'title') { titleT = 0; shelfMsg = null; }
+  else titleT = 0;
+}
+
+/* ---------- physics builders ---------- */
+function attachOff(b, key) { const f = ATTACH[key] || ATTACH.tc; return f(b.w, b.h); }
+function attachWorld(b, ox, oy) {
+  const c = Math.cos(b.ang), s = Math.sin(b.ang);
+  return [b.x + ox * c - oy * s, b.y + ox * s + oy * c];
+}
+function endPos(g, e) {
+  if (e.k === 'pin') return [e.x, e.y];
+  if (e.k === 'bal') { const bl = g.balloons[e.i]; return [bl.x, bl.y]; }
+  const b = g.bodies[e.b]; return attachWorld(b, e.ox, e.oy);
+}
+function makeEnd(g, spec) {
+  if (spec.p) return { k: 'pin', x: spec.p[0], y: spec.p[1] };
+  if (spec.bal !== undefined) return { k: 'bal', i: spec.bal };
+  const b = g.bodies[spec.b];
+  const [ox, oy] = attachOff(b, spec.at);
+  return { k: 'body', b: spec.b, ox, oy };
+}
+function makeRope(g, def) {
+  const end0 = makeEnd(g, def.a), end1 = makeEnd(g, def.b);
+  const P0 = endPos(g, end0), P1 = endPos(g, end1);
+  const way = def.pul ? [P0, def.pul.slice(), P1] : [P0, P1];
+  let len = 0;
+  for (let i = 1; i < way.length; i++) len += hyp(way[i][0] - way[i - 1][0], way[i][1] - way[i - 1][1]);
+  len *= (def.slack || 1.02);
+  const n = clamp(Math.round(len / 20), 8, 14);          // 8–14 segments per brief
+  const pts = [], links = [];
+  /* place points along the waypoint polyline */
+  let total = 0; const cum = [0];
+  for (let i = 1; i < way.length; i++) { total += hyp(way[i][0] - way[i - 1][0], way[i][1] - way[i - 1][1]); cum.push(total); }
+  for (let i = 0; i <= n; i++) {
+    const d = total * i / n;
+    let w = 1; while (w < cum.length - 1 && cum[w] < d) w++;
+    const t = (d - cum[w - 1]) / Math.max(1e-6, cum[w] - cum[w - 1]);
+    pts.push({ x: lerp(way[w - 1][0], way[w][0], t), y: lerp(way[w - 1][1], way[w][1], t), px: 0, py: 0, inv: 4 });
+  }
+  for (const p of pts) { p.px = p.x; p.py = p.y; }
+  const segLen = len / n;
+  for (let i = 0; i < n; i++) links.push({ a: i, b: i + 1, len: segLen, alive: true, fray: 0, strain: 0 });
+  const pins = [];
+  if (end0.k === 'pin') { pts[0].inv = 0; pts[0].x = end0.x; pts[0].y = end0.y; }
+  if (end1.k === 'pin') { pts[n].inv = 0; pts[n].x = end1.x; pts[n].y = end1.y; }
+  if (def.pul) {
+    /* nearest interior particle rides the pulley wheel */
+    let bi = 1, bd = 1e9;
+    for (let i = 1; i < n; i++) { const d = hyp(pts[i].x - def.pul[0], pts[i].y - def.pul[1]); if (d < bd) { bd = d; bi = i; } }
+    pts[bi].inv = 0; pts[bi].x = def.pul[0]; pts[bi].y = def.pul[1];
+    pins.push({ i: bi, x: def.pul[0], y: def.pul[1] });
+  }
+  return { pts, links, end0, end1, pins, strands: def.strands || 1, pulley: def.pul ? def.pul.slice() : null, hitStroke: -1 };
+}
+
+function makeBody(d, kind) {
+  const w = d.w || 46, h = d.h || 46, m = d.m || (kind === 'bomb' ? 4 : 5);
+  return {
+    x: d.x, y: d.y, px: d.x, py: d.y, ang: 0, pang: 0,
+    w, h, m, inv: 1 / m, kind, item: d.item || '',
+    dents: 0, maxD: 1 + (store.up.wrap ? 1 : 0),
+    state: 'held',            // held|free|delivered|broken|lost
+    restT: 0, dentCd: 0, springCd: 0, airborne: true,
+    contact: '', hitV: 0, relX: 0, faceT: Math.random() * 9
+  };
+}
+
+function buildLevel(lv) {
+  const def = levelDef(lv);
+  const g = {
+    level: lv, def, simT: 0, acc: 0,
+    timescale: 1, slowT: 0,
+    bodies: [], ropes: [], balloons: [], statics: [], springs: [], fans: [], spikes: [],
+    truck: { cx: def.truck.cx, w: 116, bedY: 534, wallH: 56, move: def.truck.move || null, wheelA: 0, px: def.truck.cx },
+    supported: [], state: 'run', endT: -1, failMsg: '',
+    blade: { active: false, lx: 0, ly: 0, trail: [], cuts: 0, stroke: 0 },
+    introT: 1.5, creakT: 0, coinsEarned: 0, dentsTotal: 0, deliveredN: 0,
+    nanFixes: 0
+  };
+  for (const p of def.pkgs) { const b = makeBody(p, 'pkg'); b.item = def.item; g.bodies.push(b); }
+  for (const bm of (def.bombs || [])) g.bodies.push(makeBody({ x: bm.x, y: bm.y, w: 46, h: 46, m: 4 }, 'bomb'));
+  for (const bl of (def.balloons || [])) g.balloons.push({ x: bl.x, y: bl.y, px: bl.x, py: bl.y, inv: 0.15, r: 17, popped: false, hue: (bl.x * 7) % 360 });
+  for (const r of def.ropes) g.ropes.push(makeRope(g, r));
+  for (const s of (def.statics || [])) g.statics.push({ x: s.x, y: s.y, w: s.w, h: s.h });
+  for (const s of (def.springs || [])) g.springs.push({ x: s.x, w: s.w, nx: s.nx, ny: s.ny, sp: s.sp, animT: 0 });
+  for (const f of (def.fans || [])) g.fans.push({ x: f.x, y: f.y, w: f.w, h: f.h, ax: f.ax, ay: f.ay, ph: 0 });
+  for (const s of (def.spikes || [])) g.spikes.push({ x: s.x, w: s.w });
+  recomputeSupport(g);
+  window.TTG?.track('level_start', { level: lv });
+  return g;
+}
+
+/* ---------- support graph (which bodies still hang from something) ---------- */
+function recomputeSupport(g) {
+  const n = g.bodies.length;
+  const adj = []; for (let i = 0; i < n; i++) adj.push([]);
+  const rooted = new Array(n).fill(false);
+  const endNode = e => {
+    if (e.k === 'pin') return { t: 'a' };
+    if (e.k === 'bal') return g.balloons[e.i].popped ? { t: 'x' } : { t: 'a' };
+    return { t: 'b', i: e.b };
+  };
+  const join = (A, B) => {
+    if (A.t === 'b' && B.t === 'b') { adj[A.i].push(B.i); adj[B.i].push(A.i); }
+    else if (A.t === 'b' && B.t === 'a') rooted[A.i] = true;
+    else if (B.t === 'b' && A.t === 'a') rooted[B.i] = true;
+  };
+  for (const r of g.ropes) {
+    const bnds = [{ i: 0, nd: endNode(r.end0) }];
+    for (const mp of r.pins) bnds.push({ i: mp.i, nd: { t: 'a' } });
+    bnds.push({ i: r.pts.length - 1, nd: endNode(r.end1) });
+    bnds.sort((a, b) => a.i - b.i);
+    for (let s = 0; s < bnds.length - 1; s++) {
+      const i0 = bnds[s].i, i1 = bnds[s + 1].i;
+      if (i1 <= i0) continue;
+      let intact = true;
+      for (let l = i0; l < i1; l++) if (!r.links[l].alive) { intact = false; break; }
+      if (intact) join(bnds[s].nd, bnds[s + 1].nd);
+    }
+  }
+  const sup = rooted.slice(); const q = [];
+  for (let i = 0; i < n; i++) if (sup[i]) q.push(i);
+  while (q.length) { const i = q.pop(); for (const j of adj[i]) if (!sup[j]) { sup[j] = true; q.push(j); } }
+  g.supported = sup;
+}
+
+/* ---------- cutting ---------- */
+function bladeMax() { return store.up.blade ? 2 : 1; }
+function tryCutSeg(g, x0, y0, x1, y1) {
+  if (g.state !== 'run') return;
+  if (g.blade.cuts >= bladeMax()) return;
+  for (let ri = 0; ri < g.ropes.length; ri++) {
+    const r = g.ropes[ri];
+    if (r.hitStroke === g.blade.stroke) continue;   // one hit per rope per swipe
+    for (let li = 0; li < r.links.length; li++) {
+      const L = r.links[li];
+      if (!L.alive || L.fray > 0) continue;
+      const a = r.pts[L.a], b = r.pts[L.b];
+      if (segSegDist(x0, y0, x1, y1, a.x, a.y, b.x, b.y) < CUT_R) {
+        hitRope(g, ri, li);
+        r.hitStroke = g.blade.stroke;
+        g.blade.cuts++;
+        if (g.blade.cuts === 2) {
+          addPop((a.x + b.x) / 2, (a.y + b.y) / 2 - 34, 'DOUBLE SNIP!', '#ffd166', 22);
+          sfx.ding(3);
+        }
+        if (g.blade.cuts >= bladeMax()) return;
+        break;
+      }
+    }
+  }
+}
+function hitRope(g, ri, li) {
+  const r = g.ropes[ri];
+  const L = r.links[li];
+  const mx = (r.pts[L.a].x + r.pts[L.b].x) / 2, my = (r.pts[L.a].y + r.pts[L.b].y) / 2;
+  if (r.strands > 1) {
+    r.strands--;
+    sfx.snip(); sfx.fray(); vib(12);
+    addPop(mx, my - 24, 'ONE MORE!', '#ffe0b8', 15);
+    addParts(6, () => ({ type: 'fiber', x: mx + rnd(-4, 4), y: my + rnd(-4, 4), vx: rnd(-50, 50), vy: rnd(-70, -10), g: 300, life: rnd(0.3, 0.6), t: 0, size: rnd(1, 2.5), col: '#e8c890' }));
+    return;
+  }
+  L.fray = FRAY_T;
+  sfx.snip(); sfx.fray(); vib(10);
+  addParts(5, () => ({ type: 'fiber', x: mx + rnd(-3, 3), y: my + rnd(-3, 3), vx: rnd(-40, 40), vy: rnd(-60, -8), g: 300, life: rnd(0.25, 0.5), t: 0, size: rnd(1, 2.2), col: '#e8c890' }));
+}
+/* headless/scripted cut used by solutions + soak tests */
+function simCut(g, ri, frac) {
+  const r = g.ropes[ri];
+  if (!r) return;
+  if (r.strands > 1) { r.strands--; return; }
+  const want = clamp(Math.round((frac === undefined ? 0.5 : frac) * (r.links.length - 1)), 0, r.links.length - 1);
+  let bi = -1, bd = 1e9;
+  for (let i = 0; i < r.links.length; i++) {
+    if (!r.links[i].alive || r.links[i].fray > 0) continue;
+    const d = Math.abs(i - want);
+    if (d < bd) { bd = d; bi = i; }
+  }
+  if (bi >= 0) r.links[bi].fray = FRAY_T;
+}
+function snapLink(g, r, L) {
+  const prevSup = g.supported.slice();
+  L.alive = false;
+  recomputeSupport(g);
+  const a = r.pts[L.a], b = r.pts[L.b];
+  const dx = b.x - a.x, dy = b.y - a.y, d = hyp(dx, dy) || 1;
+  const wx = dx / d * 2.2, wy = dy / d * 2.2;   // recoil whip (verlet impulse)
+  if (a.inv) { a.px += wx; a.py += wy; }
+  if (b.inv) { b.px -= wx; b.py -= wy; }
+  sfx.twang(1 + (10 - Math.min(10, r.links.length)) * 0.05); vib(14);
+  const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+  addParts(8, () => ({ type: 'fiber', x: mx + rnd(-5, 5), y: my + rnd(-5, 5), vx: rnd(-90, 90), vy: rnd(-110, -20), g: 340, life: rnd(0.3, 0.7), t: 0, size: rnd(1, 2.6), col: pick(['#e8c890', '#d2a266', '#fff2d8']) }));
+  /* final-cut slow-mo: a package just lost its last support */
+  for (let i = 0; i < g.bodies.length; i++) {
+    const bd2 = g.bodies[i];
+    if (bd2.kind === 'pkg' && bd2.state !== 'delivered' && bd2.state !== 'broken' && prevSup[i] && !g.supported[i]) {
+      g.slowT = store.up.slow ? 1.7 : 0.9;
+      sfx.slowmo();
+    }
+  }
+}
+
+/* ---------- rigid-ish body helpers ---------- */
+function applyAt(b, rx, ry, cx, cy) {
+  b.x += cx; b.y += cy;
+  const dA = (rx * cy - ry * cx) / (rx * rx + ry * ry + 1400);
+  b.ang += clamp(dA, -0.06, 0.06);
+}
+function bodyCorners(b) {
+  const c = Math.cos(b.ang), s = Math.sin(b.ang);
+  const hw = b.w / 2, hh = b.h / 2, out = [];
+  for (const [sx, sy] of [[-hw, -hh], [hw, -hh], [hw, hh], [-hw, hh]]) {
+    out.push([b.x + sx * c - sy * s, b.y + sx * s + sy * c, sx, sy]);
+  }
+  return out;
+}
+function bodySpeed(b) { return hyp(b.x - b.px, b.y - b.py) / STEP; }
+
+function breakBody(g, b, msg) {
+  if (b.state === 'broken') return;
+  b.state = 'broken';
+  sfx.broken(); shake(0.3, 6); vib([20, 40, 30]);
+  addPop(b.x, b.y - 40, 'BROKEN!', '#ff8b7a', 24);
+  addParts(14, () => ({ type: 'shard', x: b.x + rnd(-20, 20), y: b.y + rnd(-16, 10), vx: rnd(-140, 140), vy: rnd(-240, -40), g: 500, life: rnd(0.4, 0.9), t: 0, size: rnd(2, 5), col: pick(['#d2a266', '#b0824c', '#e8c890']), rot: rnd(0, TAU), vr: rnd(-8, 8) }));
+  failLevel(g, msg || 'The package broke!');
+}
+function dentBody(g, b) {
+  b.dents++;
+  g.dentsTotal++;
+  b.dentCd = 0.45;
+  sfx.dent(); shake(0.2, 4); vib(24);
+  addPop(b.x, b.y - b.h, 'DENT!', '#ffb84d', 20);
+  addParts(6, () => ({ type: 'star', x: b.x + rnd(-16, 16), y: b.y - b.h / 2 + rnd(-6, 6), vx: rnd(-70, 70), vy: rnd(-140, -30), g: 380, life: rnd(0.35, 0.7), t: 0, size: rnd(6, 10), col: '#ffd166', rot: rnd(0, TAU), vr: rnd(-6, 6) }));
+  if (b.dents > b.maxD) breakBody(g, b);
+}
+function explodeBomb(g, b) {
+  if (g.state !== 'run') return;
+  b.state = 'broken';
+  sfx.boom(); shake(0.55, 12); vib([30, 40, 60, 40, 30]);
+  addParts(30, () => ({ type: 'boom', x: b.x + rnd(-8, 8), y: b.y + rnd(-8, 8), vx: rnd(-260, 260), vy: rnd(-300, 60), g: 260, life: rnd(0.4, 1), t: 0, size: rnd(3, 9), col: pick(['#ff9d4d', '#ffd166', '#ff6b5a', '#5a5a5a']) }));
+  failLevel(g, 'KABOOM! The bomb crate was disturbed!');
+}
+function failLevel(g, msg) {
+  if (g.state !== 'run') return;
+  g.state = 'lost'; g.failMsg = msg; g.endT = 1.1;
+}
+function deliverBody(g, b, i) {
+  b.state = 'delivered';
+  b.relX = b.x - g.truck.cx;
+  b.dentCd = 0; b.restT = 0;
+  g.deliveredN++;
+  const coins = 6 + Math.max(0, (b.maxD + 1 - b.dents)) * 4;
+  g.coinsEarned += coins;
+  store.coins += coins; saveStore();
+  window.TTG?.track('package_delivered', { value: b.dents });
+  sfx.deliver(); sfx.ding(g.deliveredN); vib([15, 30, 15]);
+  addPop(b.x, b.y - 60, 'DELIVERED!', '#7dffb0', 24);
+  addPop(b.x + 26, b.y - 88, '+' + coins + ' 🪙', '#ffe28a', 16);
+  addParts(26, () => ({ type: 'confetti', x: g.truck.cx + rnd(-50, 50), y: g.truck.bedY - 70, vx: rnd(-120, 120), vy: rnd(-260, -80), g: 300, life: rnd(0.8, 1.6), t: 0, size: rnd(3, 6), col: pick(['#ff8fa3', '#7dffb0', '#ffd166', '#8fc8ff', '#e6b3ff']), rot: rnd(0, TAU), vr: rnd(-9, 9) }));
+  const allDone = g.bodies.every(bd => bd.kind !== 'pkg' || bd.state === 'delivered');
+  if (allDone && g.state === 'run') { g.state = 'won'; g.endT = 1.2; }
+}
+
+/* ============================================================
+   PHYSICS STEP (fixed timestep, deterministic)
+   ============================================================ */
+function stepPhysics(g) {
+  const h = STEP;
+  /* truck movement (kinematic) */
+  const tr = g.truck;
+  tr.px = tr.cx;
+  if (tr.move) tr.cx = g.def.truck.cx + tr.move.r * Math.sin(tr.move.s * g.simT);
+  tr.wheelA += (tr.cx - tr.px) * 0.08;
+
+  /* fray timers -> snap */
+  for (const r of g.ropes) {
+    for (const L of r.links) {
+      if (L.fray > 0 && L.alive) {
+        L.fray -= h;
+        if (L.fray <= 0) snapLink(g, r, L);
+      }
+    }
+  }
+  /* spring anim timers */
+  for (const s of g.springs) if (s.animT > 0) s.animT -= h;
+
+  const inFan = (x, y) => {
+    for (const f of g.fans) if (x >= f.x && x <= f.x + f.w && y >= f.y && y <= f.y + f.h) return f;
+    return null;
+  };
+
+  /* integrate rope particles */
+  for (const r of g.ropes) {
+    for (const p of r.pts) {
+      if (!p.inv) continue;
+      let ax = 0, ay = GRAV;
+      const f = inFan(p.x, p.y);
+      if (f) { ax += f.ax; ay += f.ay; }
+      let vx = (p.x - p.px) * 0.996, vy = (p.y - p.py) * 0.996;
+      const sp = hyp(vx, vy);
+      if (sp > MAXD) { vx *= MAXD / sp; vy *= MAXD / sp; }
+      p.px = p.x; p.py = p.y;
+      p.x += vx + ax * h * h; p.y += vy + ay * h * h;
+      if (p.y > FLOOR - 1) { p.y = FLOOR - 1; p.px = lerp(p.px, p.x, 0.5); }
+      if (p.x < 2) p.x = 2; if (p.x > WW - 2) p.x = WW - 2;
+    }
+  }
+  /* integrate balloons (inverse gravity — strong enough to lift a 5-mass package plus its rope) */
+  for (const bl of g.balloons) {
+    if (bl.popped) continue;
+    let ax = 0, ay = -1200;
+    const f = inFan(bl.x, bl.y);
+    if (f) { ax += f.ax; ay += f.ay; }
+    let vx = (bl.x - bl.px) * 0.995, vy = (bl.y - bl.py) * 0.995;
+    const sp = hyp(vx, vy);
+    if (sp > MAXD) { vx *= MAXD / sp; vy *= MAXD / sp; }
+    bl.px = bl.x; bl.py = bl.y;
+    bl.x += vx + ax * h * h; bl.y += vy + ay * h * h;
+    if (bl.y < 26 || bl.x < -40 || bl.x > WW + 40) popBalloon(g, bl);
+  }
+  /* integrate bodies */
+  for (const b of g.bodies) {
+    if (b.state === 'delivered') { b.x = tr.cx + b.relX; b.px = b.x; b.py = b.y; continue; }
+    let ax = 0, ay = GRAV;
+    const f = inFan(b.x, b.y);
+    if (f) { ax += f.ax; ay += f.ay; }
+    /* magnet truck: gently steer falling packages */
+    if (store.up.mag && b.kind === 'pkg' && !g.supported[g.bodies.indexOf(b)] && b.y < tr.bedY && (b.y - b.py) > 0) {
+      const dx = tr.cx - b.x;
+      if (Math.abs(dx) < 150) ax += clamp(dx * 3, -260, 260);
+    }
+    let vx = (b.x - b.px) * 0.9985, vy = (b.y - b.py) * 0.9985;
+    const sp = hyp(vx, vy);
+    if (sp > MAXD) { vx *= MAXD / sp; vy *= MAXD / sp; }
+    b.px = b.x; b.py = b.y;
+    b.x += vx + ax * h * h; b.y += vy + ay * h * h;
+    let va = clamp((b.ang - b.pang) * 0.985, -0.2, 0.2);
+    b.pang = b.ang; b.ang += va;
+    if (b.dentCd > 0) b.dentCd -= h;
+    if (b.springCd > 0) b.springCd -= h;
+  }
+
+  /* constraint solving */
+  for (let it = 0; it < ITER; it++) {
+    for (const r of g.ropes) {
+      for (const L of r.links) {
+        if (!L.alive) continue;
+        const p1 = r.pts[L.a], p2 = r.pts[L.b];
+        const dx = p2.x - p1.x, dy = p2.y - p1.y;
+        const d = hyp(dx, dy);
+        if (d < 1e-6) continue;
+        L.strain = (d - L.len) / L.len;
+        if (d < L.len) continue;   // ropes pull, never push — a compressed stub must buckle, not prop bodies up like a rod
+        const diff = (d - L.len) / d;
+        const tot = p1.inv + p2.inv;
+        if (!tot) continue;
+        const c1 = p1.inv / tot, c2 = p2.inv / tot;
+        p1.x += clampC(dx * diff * c1); p1.y += clampC(dy * diff * c1);
+        p2.x -= clampC(dx * diff * c2); p2.y -= clampC(dy * diff * c2);
+      }
+      for (const mp of r.pins) { const p = r.pts[mp.i]; p.x = mp.x; p.y = mp.y; }
+      solveEnd(g, r, r.end0, r.pts[0]);
+      solveEnd(g, r, r.end1, r.pts[r.pts.length - 1]);
+    }
+  }
+
+  /* collisions */
+  for (let i = 0; i < g.bodies.length; i++) collideBody(g, g.bodies[i], i);
+  collideBodyPairs(g);
+
+  /* per-body state checks */
+  for (let i = 0; i < g.bodies.length; i++) bodyStateCheck(g, g.bodies[i], i);
+
+  /* NaN guard: freeze any corrupted particle instead of exploding */
+  for (const r of g.ropes) {
+    for (const p of r.pts) {
+      if (!isFinite(p.x) || !isFinite(p.y)) { p.x = p.px = clamp(p.px, 0, WW); p.y = p.py = clamp(p.py, 0, WH); g.nanFixes++; }
+    }
+  }
+  for (const b of g.bodies) {
+    if (!isFinite(b.x) || !isFinite(b.y) || !isFinite(b.ang)) {
+      b.x = b.px = clamp(b.px || WW / 2, 0, WW); b.y = b.py = clamp(b.py || WH / 2, 0, WH);
+      b.ang = b.pang = 0; g.nanFixes++;
+    }
+  }
+}
+
+function solveEnd(g, r, e, pt) {
+  if (e.k === 'pin') { pt.x = e.x; pt.y = e.y; return; }
+  if (e.k === 'bal') {
+    const bl = g.balloons[e.i];
+    if (bl.popped) return;
+    const dx = bl.x - pt.x, dy = bl.y - pt.y;
+    const tot = pt.inv + bl.inv;
+    if (!tot) return;
+    const cp = pt.inv / tot, cb = bl.inv / tot;
+    pt.x += clampC(dx * cp); pt.y += clampC(dy * cp);
+    bl.x -= clampC(dx * cb); bl.y -= clampC(dy * cb);
+    return;
+  }
+  const b = g.bodies[e.b];
+  if (b.state === 'delivered' || b.state === 'broken') { /* rope just follows */ }
+  const [ax, ay] = attachWorld(b, e.ox, e.oy);
+  const dx = ax - pt.x, dy = ay - pt.y;
+  const wb = (b.state === 'delivered') ? 0 : b.inv * 1.2;
+  const tot = pt.inv + wb;
+  if (!tot) return;
+  const cp = pt.inv / tot, cb = wb / tot;
+  pt.x += clampC(dx * cp); pt.y += clampC(dy * cp);
+  if (cb) applyAt(b, ax - b.x, ay - b.y, clampC(-dx * cb), clampC(-dy * cb));
+}
+
+function collideBody(g, b, bi) {
+  if (b.state === 'delivered') return;
+  const tr = g.truck;
+  const vyStep = (b.y - b.py) / STEP;
+  const speed = bodySpeed(b);
+  let contact = '';
+  const rects = [];
+  for (const s of g.statics) rects.push({ x: s.x, y: s.y, w: s.w, h: s.h, kind: 'static' });
+  /* truck: bed + two side walls (kinematic) */
+  rects.push({ x: tr.cx - tr.w / 2, y: tr.bedY, w: tr.w, h: 22, kind: 'bed' });
+  rects.push({ x: tr.cx - tr.w / 2 - 9, y: tr.bedY - tr.wallH, w: 9, h: tr.wallH + 20, kind: 'wall' });
+  rects.push({ x: tr.cx + tr.w / 2, y: tr.bedY - tr.wallH, w: 9, h: tr.wallH + 20, kind: 'wall' });
+
+  for (const [wx, wy, sx, sy] of bodyCorners(b)) {
+    const c = Math.cos(b.ang), s = Math.sin(b.ang);
+    const rx = sx * c - sy * s, ry = sx * s + sy * c;
+    /* springs first (they sit on the floor) */
+    let sprung = false;
+    for (const sp of g.springs) {
+      if (b.springCd <= 0 && wx >= sp.x && wx <= sp.x + sp.w && wy >= FLOOR - 20 && vyStep > 60) {
+        const v = sp.sp;
+        b.px = b.x - sp.nx * v * STEP;
+        b.py = b.y - sp.ny * v * STEP;
+        b.springCd = 0.5; sp.animT = 0.3;
+        sfx.boing(); vib(18); shake(0.15, 3);
+        addPop(wx, FLOOR - 40, 'BOING!', '#a4f7b0', 20);
+        sprung = true;
+      }
+    }
+    if (sprung) continue;
+    /* spikes */
+    for (const sk of g.spikes) {
+      if (wy > FLOOR - 14 && wx >= sk.x && wx <= sk.x + sk.w && b.kind === 'pkg') {
+        breakBody(g, b, 'Spiked! Ouch.');
+        return;
+      }
+    }
+    /* floor */
+    if (wy > FLOOR) {
+      applyAt(b, rx, ry, 0, -Math.min(wy - FLOOR, MAXC));
+      b.x -= (b.x - b.px) * 0.18;                 // friction
+      contact = contact || 'floor';
+    }
+    /* rects */
+    for (const rc of rects) {
+      if (wx > rc.x && wx < rc.x + rc.w && wy > rc.y && wy < rc.y + rc.h) {
+        const pl = wx - rc.x, pr = rc.x + rc.w - wx, pt2 = wy - rc.y, pb = rc.y + rc.h - wy;
+        const m = Math.min(pl, pr, pt2, pb);
+        if (m === pt2) { applyAt(b, rx, ry, 0, -Math.min(pt2, MAXC)); b.x -= (b.x - b.px) * 0.15; contact = contact || (rc.kind === 'bed' ? 'bed' : 'rect'); }
+        else if (m === pb) applyAt(b, rx, ry, 0, Math.min(pb, MAXC));
+        else if (m === pl) applyAt(b, rx, ry, -Math.min(pl, MAXC), 0);
+        else applyAt(b, rx, ry, Math.min(pr, MAXC), 0);
+      }
+    }
+  }
+  /* impact -> dent / bomb / bounce */
+  if (contact) {
+    if (b.airborne && vyStep > 120) {
+      b.hitV = vyStep;
+      const thresh = contact === 'bed' ? DENT_TRUCK : DENT_FLOOR;
+      if (b.kind === 'bomb' && vyStep > BOMB_DISTURB) { explodeBomb(g, b); return; }
+      if (b.kind === 'pkg' && b.state !== 'broken' && vyStep > thresh && b.dentCd <= 0) dentBody(g, b);
+      else if (vyStep > 200) sfx.thud();
+      /* small bounce */
+      b.py = b.y - (b.y - b.py) * -0.25;
+    }
+    b.airborne = false;
+  } else {
+    b.airborne = true;
+  }
+  b.contact = contact;
+}
+
+function collideBodyPairs(g) {
+  for (let i = 0; i < g.bodies.length; i++) {
+    for (let j = i + 1; j < g.bodies.length; j++) {
+      const A = g.bodies[i], B = g.bodies[j];
+      const ra = (A.w + A.h) / 4 * 0.92, rb = (B.w + B.h) / 4 * 0.92;
+      const dx = B.x - A.x, dy = B.y - A.y;
+      const d = hyp(dx, dy), minD = ra + rb;
+      if (d > minD || d < 1e-6) continue;
+      const relV = hyp((A.x - A.px) - (B.x - B.px), (A.y - A.py) - (B.y - B.py)) / STEP;
+      const pen = minD - d;
+      const nx = dx / d, ny = dy / d;
+      const wa = A.state === 'delivered' ? 0 : A.inv;
+      const wb = B.state === 'delivered' ? 0 : B.inv;
+      const tot = wa + wb;
+      if (!tot) continue;
+      const push = Math.min(pen, MAXC);
+      if (wa) { A.x -= nx * push * wa / tot; A.y -= ny * push * wa / tot; }
+      if (wb) { B.x += nx * push * wb / tot; B.y += ny * push * wb / tot; }
+      if (relV > 300) {
+        if (A.kind === 'bomb') { explodeBomb(g, A); return; }
+        if (B.kind === 'bomb') { explodeBomb(g, B); return; }
+        sfx.thud();
+      }
+    }
+  }
+}
+
+function bodyStateCheck(g, b, i) {
+  if (b.state === 'delivered' || b.state === 'broken') return;
+  b.state = g.supported[i] ? 'held' : 'free';
+  /* lost off-screen */
+  if (b.y < -110 || b.x < -90 || b.x > WW + 90) {
+    b.state = 'lost';
+    if (b.kind === 'pkg') failLevel(g, 'The package floated away!');
+    return;
+  }
+  /* delivery: resting inside the truck box */
+  if (b.kind !== 'pkg') return;
+  const tr = g.truck;
+  const inZone = Math.abs(b.x - tr.cx) < tr.w / 2 - 4 && b.y > tr.bedY - tr.wallH - 60 && b.y < tr.bedY + 4;
+  if (inZone && bodySpeed(b) < REST_SPD && !g.supported[i]) {
+    b.restT += STEP;
+    if (b.restT > REST_TIME) deliverBody(g, b, i);
+  } else b.restT = 0;
+}
+
+function popBalloon(g, bl) {
+  if (bl.popped) return;
+  bl.popped = true;
+  sfx.pop(); vib(10);
+  addParts(10, () => ({ type: 'shard', x: bl.x + rnd(-8, 8), y: bl.y + rnd(-8, 8), vx: rnd(-130, 130), vy: rnd(-130, 130), g: 200, life: rnd(0.3, 0.6), t: 0, size: rnd(2, 4), col: 'hsl(' + bl.hue + ',80%,65%)', rot: rnd(0, TAU), vr: rnd(-8, 8) }));
+  recomputeSupport(g);
+}
+
+/* ============================================================
+   GAME UPDATE (called from the loop AND from the test harness)
+   ============================================================ */
+function updateGame(dtReal) {
+  const g = game;
+  if (!g) return;
+  if (g.introT > 0) g.introT -= dtReal;
+  if (g.slowT > 0) g.slowT -= dtReal;
+  g.timescale = g.slowT > 0 ? SLOWMO_TS : 1;
+  g.acc += Math.min(dtReal, 0.033) * g.timescale;
+  let n = 0;
+  while (g.acc >= STEP && n < 6) {
+    if (g.state === 'run' || g.state === 'won' || g.state === 'lost') stepPhysics(g);
+    g.simT += STEP;
+    g.acc -= STEP;
+    n++;
+  }
+  if (g.acc > STEP * 6) g.acc = 0;
+  /* rope creak when heavily strained */
+  g.creakT -= dtReal;
+  if (g.creakT <= 0) {
+    for (const r of g.ropes) {
+      let mx = 0;
+      for (const L of r.links) if (L.alive) mx = Math.max(mx, L.strain);
+      if (mx > 0.05) { sfx.creak(); g.creakT = 0.9; break; }
+    }
+    if (g.creakT <= 0) g.creakT = 0.25;
+  }
+  /* end transition */
+  if (g.endT >= 0) {
+    g.endT -= dtReal;
+    if (g.endT <= 0) finishLevel(g.state === 'won' ? 'win' : 'lose');
+  }
+}
+
+function finishLevel(result) {
+  const g = game;
+  if (result === 'win') {
+    const lv = g.level;
+    const stars = g.dentsTotal === 0 ? 3 : (g.dentsTotal === 1 ? 2 : 1);
+    const bonus = 5;
+    g.coinsEarned += bonus; store.coins += bonus;
+    let newItem = null;
+    if (lv <= 12 && !store.col[lv - 1]) {
+      store.col[lv - 1] = true;
+      newItem = { icon: g.def.item, name: g.def.name };
+    }
+    store.best = Math.max(store.best, lv);
+    saveStore();
+    winInfo = { coins: g.coinsEarned, stars, newItem };
+    window.TTG?.track('level_complete', { level: lv, value: g.coinsEarned });
+    sfx.win(); vib([20, 40, 20, 40, 40]);
+    addParts(80, () => ({ type: 'confetti', x: rnd(0, view.W), y: rnd(-60, -5), vx: rnd(-40, 40), vy: rnd(60, 190), g: 40, life: rnd(1.6, 3), t: 0, size: rnd(3, 7), col: pick(['#ff8fa3', '#7dffb0', '#ffd166', '#8fc8ff', '#e6b3ff']), rot: rnd(0, TAU), vr: rnd(-8, 8) }));
+    setScene('win');
+    /* keep celebration confetti after scene switch cleared parts */
+    addParts(60, () => ({ type: 'confetti', x: rnd(0, view.W), y: rnd(-60, -5), vx: rnd(-40, 40), vy: rnd(60, 190), g: 40, life: rnd(1.6, 3), t: 0, size: rnd(3, 7), col: pick(['#ff8fa3', '#7dffb0', '#ffd166', '#8fc8ff', '#e6b3ff']), rot: rnd(0, TAU), vr: rnd(-8, 8) }));
+  } else {
+    window.TTG?.track('game_over', { level: g.level });
+    sfx.lose(); vib(60);
+    setScene('lose');
+  }
+}
+
+/* ============================================================
+   INPUT — Pointer Events, generous swipe blade
+   ============================================================ */
+function inRect(p, r) { return r && p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h; }
+let activePointer = -1;
+
+cvs.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  ensureAudio();
+  const p = { x: e.clientX, y: e.clientY };
+  if (inRect(p, uiRects.mute)) { setMuted(!muted); sfx.tap(); return; }
+
+  if (scene === 'title') { titlePointer(p); return; }
+  if (scene === 'play') {
+    if (inRect(p, uiRects.home)) { sfx.tap(); setScene('title'); return; }
+    if (inRect(p, uiRects.retry)) { sfx.tap(); game = buildLevel(game.level); return; }
+    if (game && game.state === 'run') {
+      activePointer = e.pointerId;
+      const w = toWorld(p.x, p.y);
+      game.blade.active = true;
+      game.blade.stroke++;
+      game.blade.cuts = 0;
+      game.blade.lx = w.x; game.blade.ly = w.y;
+      game.blade.trail = [{ x: w.x, y: w.y, t: 0 }];
+    }
+    return;
+  }
+  if (scene === 'win') {
+    if (inRect(p, uiRects.home)) { sfx.tap(); setScene('title'); return; }
+    sfx.tap(); game = buildLevel(game.level + 1); setScene('play'); return;
+  }
+  if (scene === 'lose') {
+    if (inRect(p, uiRects.home)) { sfx.tap(); setScene('title'); return; }
+    sfx.tap(); game = buildLevel(game.level); setScene('play'); return;
+  }
+}, { passive: false });
+
+cvs.addEventListener('pointermove', e => {
+  if (scene !== 'play' || !game || !game.blade.active || e.pointerId !== activePointer) return;
+  e.preventDefault();
+  const w = toWorld(e.clientX, e.clientY);
+  const b = game.blade;
+  const preCuts = b.cuts;
+  tryCutSeg(game, b.lx, b.ly, w.x, w.y);
+  if (b.cuts === preCuts && b.cuts >= bladeMax() && hyp(w.x - b.lx, w.y - b.ly) > 26) {
+    /* blade is spent this swipe: brief blunt feedback (rate-limited by distance) */
+  }
+  b.lx = w.x; b.ly = w.y;
+  b.trail.push({ x: w.x, y: w.y, t: 0 });
+  if (b.trail.length > 22) b.trail.shift();
+}, { passive: false });
+
+function endStroke() {
+  activePointer = -1;
+  if (game) game.blade.active = false;
+}
+cvs.addEventListener('pointerup', e => { if (e.pointerId === activePointer) endStroke(); });
+cvs.addEventListener('pointercancel', e => { if (e.pointerId === activePointer) endStroke(); });
+document.addEventListener('visibilitychange', () => {
+  endStroke();
+  if (!document.hidden && AC && AC.state === 'suspended') { try { AC.resume(); } catch (e) {} }
+});
+['touchstart', 'touchmove', 'gesturestart', 'contextmenu'].forEach(ev =>
+  document.addEventListener(ev, e => e.preventDefault(), { passive: false }));
+
+function titlePointer(p) {
+  if (inRect(p, uiRects.play)) {
+    sfx.tap(); vib(10);
+    game = buildLevel(store.best + 1);
+    setScene('play');
+    return;
+  }
+  for (let i = 0; i < 12; i++) {
+    if (inRect(p, uiRects['shelf' + i])) {
+      sfx.tap();
+      if (store.col[i]) { shelfMsg = LEVELS[i].item + ' ' + LEVELS[i].name + ' — ' + LEVELS[i].gag; }
+      else shelfMsg = '🔒 Deliver level ' + (i + 1) + "'s package to collect it!";
+      shelfMsgT = 4;
+      return;
+    }
+  }
+  for (let i = 0; i < UPGRADES.length; i++) {
+    if (inRect(p, uiRects['shop' + i])) {
+      const u = UPGRADES[i];
+      if (store.up[u.key]) { sfx.tap(); shelfMsg = u.icon + ' ' + u.name + ' — owned! ' + u.desc; shelfMsgT = 3; return; }
+      if (store.coins >= u.cost) {
+        store.coins -= u.cost; store.up[u.key] = 1; saveStore();
+        sfx.buy(); vib([10, 20, 10]);
+        window.TTG?.track('upgrade_bought', { value: u.cost });
+        shelfMsg = u.icon + ' ' + u.name + ' purchased! ' + u.desc;
+        shelfMsgT = 3;
+      } else {
+        sfx.denied();
+        shelfMsg = 'Need ' + u.cost + ' 🪙 for ' + u.name + ' (you have ' + store.coins + ')';
+        shelfMsgT = 3;
+      }
+      return;
+    }
+  }
+  /* tap anywhere else also starts */
+  sfx.tap(); vib(10);
+  game = buildLevel(store.best + 1);
+  setScene('play');
+}
+
+/* ============================================================
+   DRAWING
+   ============================================================ */
+function roundRect(x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function drawBackground(lv, t) {
+  const W = view.W, H = view.H;
+  const hue = (18 + lv * 23) % 360;
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, 'hsl(' + hue + ',30%,13%)');
+  bg.addColorStop(0.6, 'hsl(' + ((hue + 18) % 360) + ',26%,20%)');
+  bg.addColorStop(1, 'hsl(' + ((hue + 340) % 360) + ',24%,27%)');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+}
+
+function drawWarehouse(lv, t) {
+  const hue = (18 + lv * 23) % 360;
+  /* back wall panels */
+  ctx.strokeStyle = 'rgba(255,255,255,0.045)';
+  ctx.lineWidth = 2;
+  for (let x = 30; x < WW; x += 78) { ctx.beginPath(); ctx.moveTo(x, 46); ctx.lineTo(x, FLOOR); ctx.stroke(); }
+  for (let y = 140; y < FLOOR; y += 105) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(WW, y); ctx.stroke(); }
+  /* window light shaft */
+  ctx.fillStyle = 'rgba(255,235,180,0.05)';
+  ctx.beginPath();
+  ctx.moveTo(WW * 0.62, 46); ctx.lineTo(WW * 0.94, 46); ctx.lineTo(WW * 0.8, FLOOR); ctx.lineTo(WW * 0.5, FLOOR);
+  ctx.closePath(); ctx.fill();
+  /* ceiling beam */
+  const cg = ctx.createLinearGradient(0, 0, 0, 46);
+  cg.addColorStop(0, '#241a20'); cg.addColorStop(1, '#3b2c33');
+  ctx.fillStyle = cg;
+  ctx.fillRect(-10, -10, WW + 20, 56);
+  ctx.fillStyle = 'rgba(255,255,255,0.10)';
+  for (let x = 16; x < WW; x += 44) { ctx.beginPath(); ctx.arc(x, 36, 2.6, 0, TAU); ctx.fill(); }
+  ctx.fillStyle = 'hsla(' + hue + ',35%,60%,0.14)';
+  ctx.fillRect(-10, 44, WW + 20, 3);
+  /* floor */
+  const fg = ctx.createLinearGradient(0, FLOOR, 0, WH);
+  fg.addColorStop(0, 'hsl(' + ((hue + 340) % 360) + ',18%,30%)');
+  fg.addColorStop(1, 'hsl(' + ((hue + 340) % 360) + ',20%,18%)');
+  ctx.fillStyle = fg;
+  ctx.fillRect(-10, FLOOR, WW + 20, WH - FLOOR + 10);
+  ctx.strokeStyle = 'rgba(0,0,0,0.22)';
+  ctx.lineWidth = 2;
+  for (let x = -6; x < WW + 10; x += 52) { ctx.beginPath(); ctx.moveTo(x, FLOOR + 4); ctx.lineTo(x + 14, WH); ctx.stroke(); }
+  ctx.fillStyle = 'rgba(255,255,255,0.10)';
+  ctx.fillRect(-10, FLOOR, WW + 20, 3);
+}
+
+function drawTruck(g, t) {
+  const tr = g.truck;
+  const x = tr.cx, w = tr.w, by = tr.bedY, wh = tr.wallH;
+  /* zone glow */
+  if (g.state === 'run' && g.deliveredN < g.bodies.filter(b => b.kind === 'pkg').length) {
+    const pulse = 0.5 + 0.5 * Math.sin(t * 4);
+    const zg = ctx.createLinearGradient(0, by - wh - 60, 0, by);
+    zg.addColorStop(0, 'rgba(125,255,176,0)');
+    zg.addColorStop(1, 'rgba(125,255,176,' + (0.10 + pulse * 0.10) + ')');
+    ctx.fillStyle = zg;
+    ctx.fillRect(x - w / 2, by - wh - 60, w, wh + 60);
+    ctx.fillStyle = 'rgba(125,255,176,' + (0.5 + pulse * 0.4) + ')';
+    ctx.font = '900 15px ' + FONT;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('▼', x, by - wh - 70 - pulse * 5);
+  }
+  /* container */
+  const bodyG = ctx.createLinearGradient(0, by - wh, 0, by + 20);
+  bodyG.addColorStop(0, '#4e8f5c'); bodyG.addColorStop(1, '#2d5c3a');
+  ctx.fillStyle = bodyG;
+  roundRect(x - w / 2 - 9, by - wh, 9, wh + 20, 3); ctx.fill();
+  roundRect(x + w / 2, by - wh, 9, wh + 20, 3); ctx.fill();
+  roundRect(x - w / 2 - 9, by, w + 18, 22, 4); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.13)';
+  ctx.fillRect(x - w / 2 - 9, by - wh, 9, 6);
+  ctx.fillRect(x + w / 2, by - wh, 9, 6);
+  /* cab */
+  ctx.fillStyle = '#5da76c';
+  roundRect(x + w / 2 + 9, by - 12, 34, 34, 6); ctx.fill();
+  ctx.fillStyle = '#bfe8ff';
+  roundRect(x + w / 2 + 14, by - 7, 14, 12, 3); ctx.fill();
+  /* wheels */
+  ctx.fillStyle = '#20242c';
+  for (const wx of [x - w / 2 + 12, x + w / 2 - 12, x + w / 2 + 26]) {
+    ctx.beginPath(); ctx.arc(wx, by + 24, 10, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#8a93a5'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(wx, by + 24, 5, 0, TAU); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(wx, by + 24);
+    ctx.lineTo(wx + Math.cos(tr.wheelA) * 5, by + 24 + Math.sin(tr.wheelA) * 5);
+    ctx.stroke();
+  }
+  ctx.fillStyle = 'rgba(255,255,255,0.75)';
+  ctx.font = '900 9px ' + FONT;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('TATER EXPRESS', x, by + 11);
+}
+
+function drawStatics(g) {
+  for (const s of g.statics) {
+    const sg = ctx.createLinearGradient(s.x, 0, s.x + s.w, 0);
+    sg.addColorStop(0, '#6b5a4a'); sg.addColorStop(1, '#4a3d32');
+    ctx.fillStyle = sg;
+    roundRect(s.x, s.y, s.w, s.h, 3); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    ctx.fillRect(s.x, s.y, s.w, 4);
+  }
+  for (const sk of g.spikes) {
+    ctx.fillStyle = '#3a2a2a';
+    ctx.fillRect(sk.x, FLOOR - 4, sk.w, 6);
+    ctx.fillStyle = '#c9d2dd';
+    const n = Math.floor(sk.w / 14);
+    for (let i = 0; i < n; i++) {
+      const sx = sk.x + 7 + i * (sk.w - 14) / Math.max(1, n - 1);
+      ctx.beginPath();
+      ctx.moveTo(sx - 6, FLOOR - 2); ctx.lineTo(sx, FLOOR - 16); ctx.lineTo(sx + 6, FLOOR - 2);
+      ctx.closePath(); ctx.fill();
+    }
+  }
+  for (const sp of g.springs) {
+    const comp = sp.animT > 0 ? 1 - easeOutCubic(1 - sp.animT / 0.3) * 0.5 : 1;
+    const hh = 20 * comp;
+    ctx.strokeStyle = '#9aa7b8'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (let i = 0; i <= 8; i++) {
+      const zx = sp.x + sp.w * 0.2 + (i % 2) * sp.w * 0.6;
+      const zy = FLOOR - 2 - hh * i / 8;
+      if (i === 0) ctx.moveTo(zx, zy); else ctx.lineTo(zx, zy);
+    }
+    ctx.stroke();
+    ctx.fillStyle = '#d8b23e';
+    roundRect(sp.x, FLOOR - hh - 10, sp.w, 9, 4); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    roundRect(sp.x, FLOOR - hh - 10, sp.w, 3, 2); ctx.fill();
+    ctx.fillStyle = '#2a2018';
+    ctx.font = '900 9px ' + FONT;
+    ctx.textAlign = 'center';
+    ctx.fillText('▲▲', sp.x + sp.w / 2, FLOOR - hh - 3);
+  }
+  for (const f of g.fans) {
+    /* fan unit on the pushing side + streaks */
+    const dir = f.ax >= 0 ? 1 : -1;
+    const fx = dir === 1 ? f.x + 4 : f.x + f.w - 4;
+    const cy = f.y + f.h / 2;
+    ctx.fillStyle = '#39424f';
+    roundRect(fx - 14, cy - 26, 28, 52, 6); ctx.fill();
+    ctx.strokeStyle = '#96a5b8'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    for (let i = 0; i < 3; i++) {
+      const a = f.ph * 6 + i * TAU / 3;
+      ctx.beginPath();
+      ctx.moveTo(fx, cy);
+      ctx.lineTo(fx + Math.cos(a) * 11, cy + Math.sin(a) * 11);
+      ctx.stroke();
+    }
+    ctx.strokeStyle = 'rgba(200,225,255,0.14)';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 5; i++) {
+      const yy = f.y + f.h * (i + 0.5) / 5;
+      const off = ((f.ph * 130 + i * 67) % (f.w * 0.9));
+      const sx = dir === 1 ? f.x + off : f.x + f.w - off;
+      ctx.beginPath();
+      ctx.moveTo(sx, yy + Math.sin(f.ph * 3 + i) * 5);
+      ctx.lineTo(sx + 26 * dir, yy + Math.sin(f.ph * 3 + i) * 5);
+      ctx.stroke();
+    }
+  }
+  for (const r of g.ropes) {
+    if (!r.pulley) continue;
+    const [px2, py2] = r.pulley;
+    ctx.strokeStyle = '#5a4a3a'; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(px2, 44); ctx.lineTo(px2, py2 - 6); ctx.stroke();
+    ctx.fillStyle = '#7d8794';
+    ctx.beginPath(); ctx.arc(px2, py2, 12, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#39424f';
+    ctx.beginPath(); ctx.arc(px2, py2, 5, 0, TAU); ctx.fill();
+  }
+  /* anchor mounts */
+  for (const r of g.ropes) {
+    for (const e of [r.end0, r.end1]) {
+      if (e.k !== 'pin') continue;
+      ctx.fillStyle = '#6d7787';
+      ctx.beginPath(); ctx.arc(e.x, e.y, 5.5, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#39424f';
+      ctx.beginPath(); ctx.arc(e.x, e.y, 2.4, 0, TAU); ctx.fill();
+    }
+  }
+}
+
+function drawRopes(g, t) {
+  for (const r of g.ropes) {
+    /* runs of alive links */
+    let run = [];
+    const flush = () => {
+      if (run.length < 1) { run = []; return; }
+      drawRopeRun(r, run);
+      run = [];
+    };
+    for (let i = 0; i < r.links.length; i++) {
+      if (r.links[i].alive) run.push(i); else flush();
+    }
+    flush();
+    /* fraying links glow + fibers */
+    for (const L of r.links) {
+      if (!L.alive || L.fray <= 0) continue;
+      const a = r.pts[L.a], b = r.pts[L.b];
+      const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+      const k = 1 - L.fray / FRAY_T;
+      ctx.strokeStyle = 'rgba(255,255,255,' + (0.5 + k * 0.5) + ')';
+      ctx.lineWidth = 1.4;
+      for (let i = 0; i < 4; i++) {
+        const ang = t * 22 + i * 1.7;
+        ctx.beginPath();
+        ctx.moveTo(mx, my);
+        ctx.lineTo(mx + Math.cos(ang) * (3 + k * 6), my + Math.sin(ang) * (3 + k * 6));
+        ctx.stroke();
+      }
+    }
+  }
+}
+function drawRopeRun(r, run) {
+  const pts = r.pts;
+  const i0 = r.links[run[0]].a, i1 = r.links[run[run.length - 1]].b;
+  let maxStrain = 0;
+  for (const li of run) maxStrain = Math.max(maxStrain, r.links[li].strain);
+  const wh = clamp((maxStrain - 0.015) * 22, 0, 1);   // tension whitening
+  const R = Math.round(lerp(150, 255, wh)), G = Math.round(lerp(110, 250, wh)), B = Math.round(lerp(70, 240, wh));
+  const passes = r.strands > 1 ? [-1.7, 1.7] : [0];
+  for (const off of passes) {
+    ctx.strokeStyle = 'rgb(' + R + ',' + G + ',' + B + ')';
+    ctx.lineWidth = r.strands > 1 ? 2.6 : 3.2;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(pts[i0].x + off, pts[i0].y);
+    for (let i = i0 + 1; i <= i1; i++) {
+      const p = pts[i], q = pts[i - 1];
+      const mx2 = (p.x + q.x) / 2 + off, my2 = (p.y + q.y) / 2;
+      ctx.quadraticCurveTo(q.x + off, q.y, mx2, my2);
+    }
+    ctx.lineTo(pts[i1].x + off, pts[i1].y);
+    ctx.stroke();
+  }
+  /* frayed tufts at severed ends */
+  ctx.strokeStyle = '#e8c890'; ctx.lineWidth = 1.3;
+  for (const end of [[i0, run[0] > 0], [i1, run[run.length - 1] < r.links.length - 1]]) {
+    if (!end[1]) continue;
+    const p = pts[end[0]];
+    for (let i = 0; i < 3; i++) {
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(p.x + Math.cos(i * 2.2 + p.x) * 5, p.y + Math.sin(i * 2.2 + p.y) * 5);
+      ctx.stroke();
+    }
+  }
+}
+
+function drawBalloons(g, t) {
+  for (let i = 0; i < g.balloons.length; i++) {
+    const bl = g.balloons[i];
+    if (bl.popped) continue;
+    const bob = Math.sin(t * 2 + i * 2) * 2;
+    ctx.fillStyle = 'hsl(' + bl.hue + ',78%,62%)';
+    ctx.beginPath();
+    ctx.ellipse(bl.x, bl.y + bob, bl.r * 0.86, bl.r, 0, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.beginPath();
+    ctx.ellipse(bl.x - bl.r * 0.3, bl.y + bob - bl.r * 0.34, bl.r * 0.22, bl.r * 0.3, -0.5, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = 'hsl(' + bl.hue + ',70%,48%)';
+    ctx.beginPath();
+    ctx.moveTo(bl.x - 4, bl.y + bob + bl.r - 1);
+    ctx.lineTo(bl.x + 4, bl.y + bob + bl.r - 1);
+    ctx.lineTo(bl.x, bl.y + bob + bl.r + 6);
+    ctx.closePath(); ctx.fill();
+  }
+}
+
+function faceMood(g, b, i) {
+  if (b.state === 'broken') return 'ko';
+  if (b.state === 'delivered') return 'happy';
+  const sp = bodySpeed(b);
+  if (!g.supported[i] && b.airborne) return 'scared';
+  if (sp > 190) return 'worried';
+  return 'idle';
+}
+function drawBody(g, b, i, t) {
+  ctx.save();
+  ctx.translate(b.x, b.y);
+  ctx.rotate(b.ang);
+  const w = b.w, h = b.h;
+  if (b.kind === 'bomb') {
+    ctx.fillStyle = '#2c2c34';
+    roundRect(-w / 2, -h / 2, w, h, 7); ctx.fill();
+    ctx.strokeStyle = '#4a4a56'; ctx.lineWidth = 2;
+    roundRect(-w / 2 + 3, -h / 2 + 3, w - 6, h - 6, 5); ctx.stroke();
+    ctx.font = '400 ' + Math.round(h * 0.5) + 'px ' + FONT;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('💣', 0, 1);
+    const blink = Math.sin(t * 6) > 0;
+    ctx.fillStyle = blink ? '#ff5a4d' : '#742a24';
+    ctx.beginPath(); ctx.arc(w / 2 - 8, -h / 2 + 8, 3.4, 0, TAU); ctx.fill();
+    ctx.restore();
+    return;
+  }
+  /* cardboard box */
+  const squash = b.state === 'broken' ? 0.62 : 1;
+  ctx.scale(1, squash);
+  const cg = ctx.createLinearGradient(0, -h / 2, 0, h / 2);
+  cg.addColorStop(0, '#dcae70'); cg.addColorStop(1, '#b98a50');
+  ctx.fillStyle = cg;
+  roundRect(-w / 2, -h / 2, w, h, 6); ctx.fill();
+  ctx.strokeStyle = 'rgba(90,60,30,0.55)'; ctx.lineWidth = 2;
+  roundRect(-w / 2, -h / 2, w, h, 6); ctx.stroke();
+  /* tape */
+  ctx.fillStyle = 'rgba(245,235,210,0.55)';
+  ctx.fillRect(-w / 2, -3, w, 6);
+  ctx.fillRect(-3, -h / 2, 6, h);
+  /* dents (crumple marks) */
+  ctx.strokeStyle = 'rgba(70,45,20,0.65)'; ctx.lineWidth = 1.6;
+  for (let d = 0; d < b.dents; d++) {
+    const cx2 = (d % 2 === 0 ? -1 : 1) * w * 0.3, cy2 = -h * 0.28;
+    ctx.beginPath();
+    ctx.moveTo(cx2 - 6, cy2 + 4); ctx.lineTo(cx2, cy2 - 3); ctx.lineTo(cx2 + 5, cy2 + 3); ctx.lineTo(cx2 + 9, cy2 - 2);
+    ctx.stroke();
+  }
+  /* item sticker */
+  ctx.font = '400 ' + Math.round(h * 0.34) + 'px ' + FONT;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(b.item, 0, -h * 0.22);
+  /* face */
+  const mood = faceMood(g, b, i);
+  const fy = h * 0.14;
+  const vx = (b.x - b.px) / STEP;
+  const look = clamp(vx / 400, -1, 1) * 2.4;
+  ctx.fillStyle = '#3a2a18';
+  const blink = (Math.sin(t * 1.3 + b.faceT * 7) > 0.985) && mood === 'idle';
+  const eyeR = mood === 'scared' ? 5.2 : (mood === 'worried' ? 4.4 : 3.6);
+  for (const ex of [-w * 0.18, w * 0.18]) {
+    if (mood === 'ko') {
+      ctx.strokeStyle = '#3a2a18'; ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(ex - 4, fy - 4); ctx.lineTo(ex + 4, fy + 4);
+      ctx.moveTo(ex + 4, fy - 4); ctx.lineTo(ex - 4, fy + 4);
+      ctx.stroke();
+    } else if (mood === 'happy') {
+      ctx.strokeStyle = '#3a2a18'; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(ex, fy + 1, 4, Math.PI + 0.4, TAU - 0.4); ctx.stroke();
+    } else if (blink) {
+      ctx.fillRect(ex - 3.4, fy - 1, 6.8, 2);
+    } else {
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(ex, fy, eyeR, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#3a2a18';
+      ctx.beginPath(); ctx.arc(ex + look, fy + (mood === 'scared' ? 1 : 0), eyeR * 0.5, 0, TAU); ctx.fill();
+    }
+  }
+  /* brows when worried */
+  if (mood === 'worried' || mood === 'scared') {
+    ctx.strokeStyle = '#3a2a18'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+    const wob = Math.sin(t * 18) * 1.2;
+    for (const s of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(s * w * 0.18 - s * 4, fy - 7 + wob);
+      ctx.lineTo(s * w * 0.18 + s * 4, fy - 10 + wob);
+      ctx.stroke();
+    }
+  }
+  /* mouth */
+  ctx.strokeStyle = '#3a2a18'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+  ctx.beginPath();
+  if (mood === 'happy') ctx.arc(0, fy + 5, 5.5, 0.3, Math.PI - 0.3);
+  else if (mood === 'scared') { ctx.arc(0, fy + 8, 3.6, 0, TAU); }
+  else if (mood === 'worried') ctx.arc(0, fy + 11, 5, Math.PI + 0.4, TAU - 0.4);
+  else if (mood === 'ko') { ctx.moveTo(-4, fy + 8); ctx.lineTo(4, fy + 8); }
+  else ctx.arc(0, fy + 5, 4, 0.4, Math.PI - 0.4);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawBlade(g) {
+  const tr = g.blade.trail;
+  if (tr.length < 2) return;
+  for (let i = 1; i < tr.length; i++) {
+    const a = tr[i - 1], b = tr[i];
+    const k = i / tr.length;
+    ctx.strokeStyle = 'rgba(220,246,255,' + (k * 0.8) + ')';
+    ctx.lineWidth = 1 + k * 3.4;
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+  }
+  const tip = tr[tr.length - 1];
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.beginPath(); ctx.arc(tip.x, tip.y, 3, 0, TAU); ctx.fill();
+}
+
+function updateDrawParts(dt) {
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const p = parts[i];
+    p.t += dt;
+    if (p.t >= p.life) { parts.splice(i, 1); continue; }
+    p.vy += (p.g || 0) * dt;
+    p.x += p.vx * dt; p.y += p.vy * dt;
+    if (p.rot !== undefined) p.rot += (p.vr || 0) * dt;
+    const a = 1 - p.t / p.life;
+    ctx.globalAlpha = a;
+    ctx.fillStyle = p.col;
+    if (p.type === 'confetti' || p.type === 'shard') {
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot || 0);
+      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.7);
+      ctx.restore();
+    } else if (p.type === 'star') {
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot || 0);
+      ctx.font = '400 ' + p.size + 'px ' + FONT;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('✦', 0, 0);
+      ctx.restore();
+    } else {
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, TAU); ctx.fill();
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+function updateDrawPops(dt) {
+  for (let i = pops.length - 1; i >= 0; i--) {
+    const p = pops[i];
+    p.t += dt;
+    if (p.t >= p.life) { pops.splice(i, 1); continue; }
+    const k = p.t / p.life;
+    const sc = k < 0.2 ? easeOutBack(k / 0.2) : 1;
+    ctx.save();
+    ctx.globalAlpha = k > 0.7 ? (1 - k) / 0.3 : 1;
+    ctx.translate(p.x, p.y - easeOutCubic(k) * 34);
+    ctx.scale(sc, sc);
+    ctx.font = '900 ' + p.size + 'px ' + FONT;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(30,15,25,0.8)';
+    ctx.strokeText(p.txt, 0, 0);
+    ctx.fillStyle = p.col;
+    ctx.fillText(p.txt, 0, 0);
+    ctx.restore();
+  }
+}
+
+function drawMuteBtn(x, y) {
+  uiRects.mute = { x: x - 22, y: y - 22, w: 44, h: 44 };
+  ctx.font = '400 21px ' + FONT;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.globalAlpha = 0.85;
+  ctx.fillText(muted ? '🔇' : '🔊', x, y);
+  ctx.globalAlpha = 1;
+}
+
+function drawHUD(g, t) {
+  const W = view.W;
+  const top = 34;
+  /* home + retry (>=44px targets) */
+  uiRects.home = { x: 8, y: top - 22, w: 44, h: 44 };
+  uiRects.retry = { x: 56, y: top - 22, w: 44, h: 44 };
+  ctx.font = '400 21px ' + FONT;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.globalAlpha = 0.85;
+  ctx.fillText('🏠', 30, top);
+  ctx.fillText('↻', 78, top);
+  ctx.globalAlpha = 1;
+  drawMuteBtn(W - 30, top);
+  /* level + coins */
+  ctx.font = '900 17px ' + FONT;
+  ctx.fillStyle = '#ffe9c8';
+  ctx.fillText('LEVEL ' + g.level, W / 2, top - 8);
+  ctx.font = '700 13px ' + FONT;
+  ctx.fillStyle = '#ffd166';
+  ctx.fillText('🪙 ' + store.coins, W / 2, top + 13);
+  /* package status dots */
+  const pkgs = g.bodies.filter(b => b.kind === 'pkg');
+  const dx0 = W / 2 - (pkgs.length - 1) * 12;
+  for (let i = 0; i < pkgs.length; i++) {
+    const b = pkgs[i];
+    ctx.font = '400 13px ' + FONT;
+    ctx.fillText(b.state === 'delivered' ? '✅' : (b.state === 'broken' ? '💥' : '📦'), dx0 + i * 24, top + 33);
+  }
+  /* slow-mo vignette */
+  if (g.slowT > 0) {
+    const a = clamp(g.slowT * 2, 0, 0.5);
+    const vg = ctx.createRadialGradient(W / 2, view.H / 2, view.H * 0.25, W / 2, view.H / 2, view.H * 0.75);
+    vg.addColorStop(0, 'rgba(80,140,255,0)');
+    vg.addColorStop(1, 'rgba(60,90,220,' + a * 0.5 + ')');
+    ctx.fillStyle = vg;
+    ctx.fillRect(0, 0, W, view.H);
+    ctx.font = '900 13px ' + FONT;
+    ctx.fillStyle = 'rgba(190,215,255,' + (0.4 + 0.3 * Math.sin(t * 10)) + ')';
+    ctx.fillText('S L O W - M O', W / 2, view.H - 46);
+  }
+  /* intro banner + hint */
+  if (g.introT > 0) {
+    const k = 1 - g.introT / 1.5;
+    const a = k < 0.85 ? clamp(k / 0.12, 0, 1) : clamp((1 - k) / 0.15, 0, 1);
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.font = '900 ' + clamp(W * 0.09, 30, 46) + 'px ' + FONT;
+    ctx.lineWidth = 8; ctx.strokeStyle = 'rgba(30,15,25,0.8)';
+    ctx.strokeText(g.def.item + ' ' + g.def.name, W / 2, view.H * 0.3);
+    const tg = ctx.createLinearGradient(0, view.H * 0.3 - 24, 0, view.H * 0.3 + 24);
+    tg.addColorStop(0, '#ffffff'); tg.addColorStop(1, '#ffca7a');
+    ctx.fillStyle = tg;
+    ctx.fillText(g.def.item + ' ' + g.def.name, W / 2, view.H * 0.3);
+    ctx.restore();
+  }
+  if (g.simT < 5 && g.def.hint) {
+    ctx.globalAlpha = g.simT < 4.4 ? 1 : (5 - g.simT) / 0.6;
+    ctx.font = '700 ' + clamp(W * 0.035, 13, 16) + 'px ' + FONT;
+    ctx.fillStyle = '#ffe0b8';
+    ctx.fillText(g.def.hint, W / 2, view.H * 0.3 + 40);
+    ctx.globalAlpha = 1;
+  }
+}
+
+function drawPlay(dt, t) {
+  const g = game;
+  drawBackground(g.level, t);
+  let sx = 0, sy = 0;
+  if (shakeT > 0) {
+    shakeT -= dt;
+    const m = shakeMag * clamp(shakeT / 0.3, 0, 1);
+    sx = rnd(-m, m); sy = rnd(-m, m);
+    if (shakeT <= 0) shakeMag = 0;
+  }
+  ctx.save();
+  ctx.translate(view.ox + sx, view.oy + sy);
+  ctx.scale(view.s, view.s);
+  for (const f of g.fans) f.ph += dt;
+  drawWarehouse(g.level, t);
+  drawStatics(g);
+  drawTruck(g, t);
+  drawRopes(g, t);
+  drawBalloons(g, t);
+  for (let i = 0; i < g.bodies.length; i++) drawBody(g, g.bodies[i], i, t);
+  if (g.blade.active) drawBlade(g);
+  for (const p of g.blade.trail) p.t += dt;
+  if (!g.blade.active && g.blade.trail.length) g.blade.trail.shift();
+  updateDrawParts(dt);
+  updateDrawPops(dt);
+  ctx.restore();
+  drawHUD(g, t);
+}
+
+/* ---------- title screen: courier office + shelf of curiosities ---------- */
+function drawTitle(dt, t) {
+  const W = view.W, H = view.H;
+  titleT += dt;
+  drawBackground(store.best + 1, t);
+  /* faint warehouse flavor */
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 2;
+  for (let x = 30; x < W; x += 90) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+
+  /* logo */
+  const bounce = 1 + Math.sin(titleT * 2.4) * 0.03;
+  const entry = easeOutBack(clamp(titleT / 0.7, 0, 1));
+  ctx.save();
+  ctx.translate(W / 2, H * 0.11);
+  ctx.scale(bounce * entry, bounce * entry);
+  ctx.rotate(Math.sin(titleT * 1.7) * 0.02);
+  const ls = clamp(W * 0.105, 32, 64);
+  ctx.font = '900 ' + ls + 'px ' + FONT;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.lineWidth = ls * 0.22; ctx.lineJoin = 'round';
+  ctx.strokeStyle = 'rgba(40,18,26,0.9)';
+  ctx.strokeText('CUT LOOSE', 0, 0);
+  const lg = ctx.createLinearGradient(0, -ls * 0.6, 0, ls * 0.6);
+  lg.addColorStop(0, '#ffffff'); lg.addColorStop(0.55, '#ffd18a'); lg.addColorStop(1, '#ef8d4e');
+  ctx.fillStyle = lg;
+  ctx.fillText('CUT LOOSE', 0, 0);
+  ctx.font = '400 ' + ls * 0.6 + 'px ' + FONT;
+  ctx.fillText('✂️', ls * 3.1, -ls * 0.3);
+  ctx.restore();
+  ctx.font = '700 ' + clamp(W * 0.032, 12, 15) + 'px ' + FONT;
+  ctx.fillStyle = 'rgba(255,224,184,0.8)';
+  ctx.fillText('one snip — physics does the rest', W / 2, H * 0.11 + ls * 0.85);
+
+  /* play button */
+  const nextLv = store.best + 1;
+  const bw = clamp(W * 0.5, 190, 250), bh = 56;
+  const bx = W / 2 - bw / 2, by = H * 0.205;
+  uiRects.play = { x: bx - 8, y: by - 8, w: bw + 16, h: bh + 16 };
+  const bp = 1 + Math.sin(titleT * 4) * 0.03;
+  ctx.save();
+  ctx.translate(W / 2, by + bh / 2); ctx.scale(bp, bp); ctx.translate(-W / 2, -(by + bh / 2));
+  ctx.fillStyle = '#e0563e';
+  roundRect(bx, by, bw, bh, 28); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.22)';
+  roundRect(bx, by, bw, bh / 2, 28); ctx.fill();
+  ctx.font = '900 21px ' + FONT;
+  ctx.fillStyle = '#fff';
+  ctx.fillText('▶ PLAY  LEVEL ' + nextLv, W / 2, by + bh / 2 + 1);
+  ctx.restore();
+
+  /* coins + best */
+  ctx.font = '700 15px ' + FONT;
+  ctx.fillStyle = '#ffd166';
+  ctx.fillText('🪙 ' + store.coins + (store.best > 0 ? '   ·   best level ' + store.best : ''), W / 2, H * 0.205 + 80);
+
+  drawShelf(W, H, t);
+  drawShop(W, H, t);
+
+  /* shelf/shop message */
+  if (shelfMsgT > 0) {
+    shelfMsgT -= dt;
+    ctx.font = '700 ' + clamp(W * 0.032, 12, 15) + 'px ' + FONT;
+    ctx.fillStyle = 'rgba(255,236,200,' + clamp(shelfMsgT, 0, 1) + ')';
+    const msg = shelfMsg || '';
+    ctx.fillText(msg.length > 52 ? msg.slice(0, 52) + '…' : msg, W / 2, H * 0.60);
+    if (msg.length > 52) ctx.fillText(msg.slice(52), W / 2, H * 0.60 + 18);
+  }
+  drawMuteBtn(W - 30, 30);
+}
+
+function drawShelf(W, H, t) {
+  const collected = store.col.filter(Boolean).length;
+  const sy0 = H * 0.315;
+  ctx.font = '800 ' + clamp(W * 0.034, 13, 16) + 'px ' + FONT;
+  ctx.fillStyle = '#e8c890';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('— SHELF OF CURIOSITIES  ' + collected + '/12 —', W / 2, sy0 - 14);
+  const cols = 6, rows = 2;
+  const cw = Math.min(58, (W - 40) / cols);
+  const gx0 = W / 2 - cols * cw / 2;
+  for (let r = 0; r < rows; r++) {
+    /* wooden plank */
+    const py = sy0 + r * (cw + 26) + cw;
+    ctx.fillStyle = '#7a5533';
+    roundRect(gx0 - 10, py, cols * cw + 20, 8, 4); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    roundRect(gx0 - 10, py, cols * cw + 20, 3, 2); ctx.fill();
+    for (let c = 0; c < cols; c++) {
+      const i = r * cols + c;
+      const x = gx0 + c * cw, y = sy0 + r * (cw + 26);
+      uiRects['shelf' + i] = { x: x - 2, y: y - 4, w: cw + 4, h: cw + 12 };
+      const got = !!store.col[i];
+      ctx.font = '400 ' + Math.round(cw * 0.62) + 'px ' + FONT;
+      if (got) {
+        const bob = Math.sin(t * 2 + i) * 2;
+        ctx.fillText(LEVELS[i].item, x + cw / 2, y + cw / 2 + bob);
+      } else {
+        ctx.globalAlpha = 0.28;
+        ctx.fillText('❔', x + cw / 2, y + cw / 2);
+        ctx.globalAlpha = 1;
+      }
+    }
+  }
+}
+
+function drawShop(W, H, t) {
+  const sy0 = H * 0.635;
+  ctx.font = '800 ' + clamp(W * 0.034, 13, 16) + 'px ' + FONT;
+  ctx.fillStyle = '#e8c890';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('— DEPOT UPGRADES —', W / 2, sy0 - 4);
+  const cw = clamp(W * 0.22, 78, 100), ch = clamp(H * 0.115, 74, 92);
+  const gap = 8;
+  const totW = 4 * cw + 3 * gap;
+  let gx0 = W / 2 - totW / 2, rows1 = true;
+  if (totW > W - 12) { rows1 = false; gx0 = W / 2 - (2 * cw + gap) / 2; }
+  for (let i = 0; i < 4; i++) {
+    const u = UPGRADES[i];
+    const owned = !!store.up[u.key];
+    const afford = store.coins >= u.cost;
+    const x = rows1 ? gx0 + i * (cw + gap) : gx0 + (i % 2) * (cw + gap);
+    const y = rows1 ? sy0 + 12 : sy0 + 12 + Math.floor(i / 2) * (ch + gap);
+    uiRects['shop' + i] = { x, y, w: cw, h: ch };
+    ctx.fillStyle = owned ? 'rgba(70,120,80,0.5)' : 'rgba(60,38,48,0.72)';
+    roundRect(x, y, cw, ch, 12); ctx.fill();
+    ctx.strokeStyle = owned ? 'rgba(140,230,160,0.6)' : (afford ? 'rgba(255,209,102,0.55)' : 'rgba(160,130,140,0.35)');
+    ctx.lineWidth = 2;
+    roundRect(x, y, cw, ch, 12); ctx.stroke();
+    ctx.font = '400 24px ' + FONT;
+    ctx.fillText(u.icon, x + cw / 2, y + ch * 0.26);
+    ctx.font = '800 ' + clamp(cw * 0.115, 9, 11) + 'px ' + FONT;
+    ctx.fillStyle = '#ffe9c8';
+    ctx.fillText(u.name, x + cw / 2, y + ch * 0.55);
+    ctx.font = '800 12px ' + FONT;
+    ctx.fillStyle = owned ? '#8fe6a0' : (afford ? '#ffd166' : '#a08a92');
+    ctx.fillText(owned ? '✓ OWNED' : '🪙 ' + u.cost, x + cw / 2, y + ch * 0.8);
+  }
+}
+
+/* ---------- win / lose screens ---------- */
+function drawEndScreen(dt, t, isWin) {
+  const W = view.W, H = view.H;
+  titleT += dt;
+  drawBackground(game.level, t);
+  ctx.save();
+  ctx.translate(view.ox, view.oy);
+  ctx.scale(view.s, view.s);
+  drawWarehouse(game.level, t);
+  drawStatics(game);
+  drawTruck(game, t);
+  for (let i = 0; i < game.bodies.length; i++) drawBody(game, game.bodies[i], i, t);
+  ctx.restore();
+
+  ctx.fillStyle = 'rgba(20,8,16,0.62)';
+  ctx.fillRect(0, 0, W, H);
+
+  const pw = clamp(W * 0.82, 260, 420), ph = clamp(H * 0.52, 310, 400);
+  const px2 = W / 2 - pw / 2, py2 = H / 2 - ph / 2;
+  const entry = easeOutBack(clamp(titleT / 0.5, 0, 1));
+  ctx.save();
+  ctx.translate(W / 2, H / 2); ctx.scale(entry, entry); ctx.translate(-W / 2, -H / 2);
+  ctx.fillStyle = 'rgba(52,30,40,0.94)';
+  roundRect(px2, py2, pw, ph, 22); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,205,150,0.45)'; ctx.lineWidth = 2;
+  roundRect(px2, py2, pw, ph, 22); ctx.stroke();
+
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = '900 ' + clamp(W * 0.07, 26, 38) + 'px ' + FONT;
+  const tg2 = ctx.createLinearGradient(0, py2 + 20, 0, py2 + 70);
+  tg2.addColorStop(0, '#ffffff');
+  tg2.addColorStop(1, isWin ? '#ffd18a' : '#ffb0a0');
+  ctx.fillStyle = tg2;
+  ctx.fillText(isWin ? 'DELIVERED!' : 'OOPS!', W / 2, py2 + 48);
+
+  if (isWin) {
+    for (let i = 0; i < 3; i++) {
+      const sx = W / 2 + (i - 1) * 58;
+      const sy = py2 + 102 + (i === 1 ? -8 : 0);
+      const sd = clamp((titleT - 0.4 - i * 0.25) / 0.3, 0, 1);
+      const ss = easeOutBack(sd) * (i === 1 ? 1.25 : 1);
+      ctx.save();
+      ctx.translate(sx, sy); ctx.scale(ss, ss);
+      ctx.font = '400 42px ' + FONT;
+      ctx.globalAlpha = i < winInfo.stars ? 1 : 0.22;
+      ctx.fillText(i < winInfo.stars ? '⭐' : '☆', 0, 0);
+      ctx.restore();
+      if (i < winInfo.stars && sd > 0 && sd < 0.15) sfx.tap();
+    }
+    /* coin count-up */
+    const cc = Math.round(winInfo.coins * clamp((titleT - 0.8) / 0.9, 0, 1));
+    ctx.font = '900 22px ' + FONT;
+    ctx.fillStyle = '#ffd166';
+    ctx.fillText('+' + cc + ' 🪙', W / 2, py2 + 152);
+    if (winInfo.newItem) {
+      const np = 1 + Math.sin(titleT * 6) * 0.05;
+      ctx.save();
+      ctx.translate(W / 2, py2 + 190); ctx.scale(np, np);
+      ctx.font = '800 15px ' + FONT;
+      ctx.fillStyle = '#8fe6a0';
+      ctx.fillText('🎉 NEW SHELF ITEM: ' + winInfo.newItem.icon + ' ' + winInfo.newItem.name + '!', 0, 0);
+      ctx.restore();
+    }
+  } else {
+    ctx.font = '400 50px ' + FONT;
+    ctx.fillText('📦💔', W / 2, py2 + 104);
+    ctx.font = '700 ' + clamp(W * 0.038, 14, 17) + 'px ' + FONT;
+    ctx.fillStyle = '#ffcfc2';
+    ctx.fillText(game.failMsg || 'The package broke!', W / 2, py2 + 152);
+    ctx.font = '700 13px ' + FONT;
+    ctx.fillStyle = 'rgba(255,224,184,0.7)';
+    ctx.fillText('Retries are free — no package left behind!', W / 2, py2 + 178);
+  }
+
+  /* main button */
+  const bw = 190, bh = 52;
+  const bx = W / 2 - bw / 2, by = py2 + ph - 82;
+  const bp = 1 + Math.sin(titleT * 4) * 0.03;
+  ctx.save();
+  ctx.translate(W / 2, by + bh / 2); ctx.scale(bp, bp); ctx.translate(-W / 2, -(by + bh / 2));
+  ctx.fillStyle = isWin ? '#3fae6c' : '#e0563e';
+  roundRect(bx, by, bw, bh, 26); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  roundRect(bx, by, bw, bh / 2, 26); ctx.fill();
+  ctx.font = '900 20px ' + FONT;
+  ctx.fillStyle = '#fff';
+  ctx.fillText(isWin ? 'NEXT LEVEL ▶' : '↻ RETRY', W / 2, by + bh / 2 + 1);
+  ctx.restore();
+
+  /* home */
+  const hw = 130, hh = 44;
+  uiRects.home = { x: W / 2 - hw / 2, y: py2 + ph - 30, w: hw, h: hh };
+  ctx.font = '700 14px ' + FONT;
+  ctx.fillStyle = 'rgba(255,224,184,0.8)';
+  ctx.fillText('🏠 depot', W / 2, py2 + ph - 12);
+
+  ctx.restore();
+  updateDrawParts(dt);
+  drawMuteBtn(W - 30, 30);
+}
+
+/* ============================================================
+   MAIN LOOP — re-arms in finally, 3-error cap on logging
+   ============================================================ */
+let last = performance.now();
+let elapsed = 0;
+let frameErrs = 0;
+function frame(now) {
+  try { frameBody(now); }
+  catch (e) { if (++frameErrs <= 3 && window.console) console.error('[cutloose] frame error:', e); }
+  finally { requestAnimationFrame(frame); }
+}
+function frameBody(now) {
+  const dt = Math.min((now - last) / 1000, 0.033);
+  last = now;
+  elapsed += dt;
+  ctx.clearRect(0, 0, view.W, view.H);
+  if (scene === 'play' && game) {
+    updateGame(dt);
+    drawPlay(dt, elapsed);
+  } else if (scene === 'title') {
+    drawTitle(dt, elapsed);
+    updateDrawParts(dt);
+  } else if ((scene === 'win' || scene === 'lose') && game) {
+    drawEndScreen(dt, elapsed, scene === 'win');
+    updateDrawPops(dt);
+  }
+}
+
+resize();
+setScene('title');
+requestAnimationFrame(frame);
+
+/* ---------- headless test hook (used by the verification harness) ---------- */
+window.__cutloose__ = {
+  start(lv) { game = buildLevel(lv); scene = 'play'; return game; },
+  step(dt) { updateGame(dt); },
+  cut(ri, frac) { if (game) simCut(game, ri, frac); },
+  game: () => game,
+  scene: () => scene,
+  setScene,
+  levelDef, LEVELS,
+  world: { WW, WH, FLOOR, STEP, MAXD },
+  errs: () => frameErrs
+};
+</script>
+</body>
+</html>

@@ -1,13 +1,13 @@
-# TaterTot Games Labs — 17 Hybrid-Casual MVP Concepts
+# TaterTot Games Labs — 20 Hybrid-Casual MVP Concepts
 
-Seventeen original hybrid-casual concepts, deliberately **not** clones of the current top-grossing
-pack (no screws, no color-block boards, no hole-swallowing, no hexa-sorting), spanning seventeen
+Twenty original hybrid-casual concepts, deliberately **not** clones of the current top-grossing
+pack (no screws, no color-block boards, no hole-swallowing, no hexa-sorting), spanning twenty
 distinct mechanic classes. Each follows the proven
 hybrid-casual formula: **one instantly-readable hyper-casual mechanic as the hook** (the "game
 feature as ad" — the first 3 seconds of gameplay *is* the creative), plus a **meta layer** that
 carries retention and monetization.
 
-All seventeen are live and playable in this repo (`games/<slug>/`), each as a single self-contained
+All twenty are live and playable in this repo (`games/<slug>/`), each as a single self-contained
 HTML5 file: mobile-first, one-hand controls, WebAudio-synthesized SFX, haptics, and localStorage
 progression. Hosted on Cloudflare so every build is instantly testable online.
 
@@ -289,6 +289,54 @@ Sessions/DAU **4** · ARPDAU **$0.09–0.14** · LTV(90d) **$0.60** · Year-1 at
 
 ---
 
+## 18. 🏜️ Sandfall *(wave 4 — granular simulation)*
+
+| | |
+|---|---|
+| **Genre** | Falling-sand routing puzzle + sand-art collection |
+| **Hyper-casual hook** | *Draw a ledge — a hundred thousand grains obey.* Real falling-sand simulation: piles form true slopes, streams fork around obstacles, and every shelf you draw redirects the flow. The simulation is the ad. |
+| **Concept** | Colored sand pours from spouts; draw eroding shelf lines with limited ink to route each stream into its matching jar. Wrong color contaminates (recoverable, costs quota). Fans, acid pools and moving jars escalate. Jars visibly fill in strata. |
+| **Meta layer** | Completed jars keep their actual poured strata pattern and join a Terrarium Shelf — every jar is unique, which makes the collection screenshot bait. Material unlocks (glow, heavy, galaxy sand) and four upgrade tracks. |
+| **Research grounding** | Merges the two cheapest-CPI creative classes in the report: satisfying-reveal ASMR (the sand hiss and pile) and zero-explanation physics. The material system is the live-ops engine the report says separates hits from clones. |
+| **Why it can win** | Erosion makes every shelf a temporary decision, so mastery is continuous re-routing rather than solved-once puzzles — the highest replay density of the physics wave. |
+
+**Projected stats** — CPI **$0.25–0.45** · D1 **52%** · D7 **19%** · D30 **7%** · Session **11 min** ·
+Sessions/DAU **4.6** · ARPDAU **$0.11–0.17** · LTV(90d) **$0.80** · Year-1 at scale: **10–17M downloads, $6–10M net**
+
+---
+
+## 19. ⛵ Tippy Ship *(wave 4 — buoyancy + rigid stacking)*
+
+| | |
+|---|---|
+| **Genre** | Physics cargo-loading + shipping-route builder |
+| **Hyper-casual hook** | *Load the boat. Don't tip the boat.* The ship genuinely floats — every crate makes it sit lower and list further, and everyone on Earth understands a boat about to tip. |
+| **Concept** | Tap to drop crates from an auto-swinging crane onto a floating hull with real buoyancy and roll torque. Mixed cargo (rolling barrels, heavy gold, fragile top-only crates), then a wake test before the ship sails. Capsizes are slow-mo comedy. |
+| **Meta layer** | A shipping-route map where delivered ports light up with animated towns, plus sim-visible upgrades (Wider Hull, Ballast, Rubber Deck, Crane Brake) and ship skins. |
+| **Research grounding** | The near-capsize recovery ("SAVED!") is the purest near-miss moment in the portfolio — the exact ventral-striatum trigger from the research addendum — and fail-forward comedy keeps retries frictionless. |
+| **Why it can win** | Stacking + buoyancy doubles the tension of either alone; every new cargo type (ice, animals, magnets) is a composable content drop, giving it the longest live-ops runway of the wave. |
+
+**Projected stats** — CPI **$0.30–0.50** · D1 **50%** · D7 **18%** · D30 **7%** · Session **10 min** ·
+Sessions/DAU **4.4** · ARPDAU **$0.12–0.18** · LTV(90d) **$0.82** · Year-1 at scale: **8–14M downloads, $6–10M net**
+
+---
+
+## 20. ✂️ Cut Loose *(wave 4 — verlet rope dynamics)*
+
+| | |
+|---|---|
+| **Genre** | Rope-cutting order/timing puzzle + curiosity collection |
+| **Hyper-casual hook** | *One snip — physics does the rest.* Packages hang in webs of taut rope; swipe the right rope at the right moment and the swing lands them on the truck. |
+| **Concept** | Verlet ropes with pulleys, balloons and springs suspend faced packages. The puzzle is cut ORDER and TIMING — cut at the pendulum's apex to fling. Bundled ropes, moving trucks, fans, bomb crates and counterweight chains escalate. Two dents breaks a package; retries are free. |
+| **Meta layer** | Every delivered package is themed (piano, aquarium, wedding cake…) and joins a shelf of curiosities with a one-line gag. Upgrades: Sharper Blade, Bubble Wrap, Slow-Mo Charge, Magnet Truck. |
+| **Research grounding** | Cut-the-Rope proved the input's decade-long durability; this rebuilds it around flinging rather than feeding, adding the timing micro-skill the research ties to Pop-the-Lock-style mastery loops. |
+| **Why it can win** | Rope systems compose combinatorially so level variety is near-free, and the slow-mo final cut gives every level a clip-worthy money shot. |
+
+**Projected stats** — CPI **$0.30–0.55** · D1 **49%** · D7 **18%** · D30 **6.5%** · Session **9 min** ·
+Sessions/DAU **4.5** · ARPDAU **$0.10–0.16** · LTV(90d) **$0.70** · Year-1 at scale: **7–13M downloads, $5–8M net**
+
+---
+
 ## Portfolio strategy
 
 | Game | Primary KPI bet | Monetization center of gravity |
@@ -310,8 +358,11 @@ Sessions/DAU **4** · ARPDAU **$0.09–0.14** · LTV(90d) **$0.60** · Year-1 at
 | Bloom Drop | Best D30 (Peggle loop + garden) | Rewarded (+seed) + luck IAP |
 | Harbor Hustle | D7 (mastery curve) | Rewarded (strike) + town IAP |
 | Beam Team | Screenshot virality | No-ads IAP + beam cosmetics |
+| Sandfall | Lowest CPI (ASMR physics) + replay density | Interstitials + material/ink IAP |
+| Tippy Ship | Near-miss compulsion + live-ops runway | Rewarded (retry sail) + hull IAP |
+| Cut Loose | Clip virality (slow-mo money shot) | Rewarded (slow-mo) + blade IAP |
 
-**Test plan:** all seventeen are shipped to Cloudflare and instrumented. Run $200–500 creative probes
+**Test plan:** all twenty are shipped to Cloudflare and instrumented. Run $200–500 creative probes
 per concept on TikTok/Meta targeting CPI + 3-day retention; kill or double-down at 2 weeks; winners
 get live-ops (daily events, seasonal skins, leaderboards) and a native wrapper for store launch.
 
@@ -319,7 +370,9 @@ With seventeen concepts the portfolio is now wide enough to test by *mechanic cl
 title — probe one representative per class first (Sky Bloom for spectacle, Bloom Drop for
 aim-and-bounce, Parcel Panic for routing, Fold Friends for zen-collection), then fund siblings of
 whichever class clears the greenlight gate. The research gate is unchanged and applies to all
-seventeen: **D1 ≥ 30%, D7 ≥ 15%, CPI ≤ $1.50** before any further meta investment.
+twenty: **D1 ≥ 30%, D7 ≥ 15%, CPI ≤ $1.50** before any further meta investment. Wave 4 adds a
+physics-class probe (Sandfall for granular ASMR, Tippy Ship for buoyancy comedy, Cut Loose for
+rope timing) — see [CONCEPTS-WAVE4.md](CONCEPTS-WAVE4.md) for the full physics-first thesis.
 
 > Wave-3 stats extend the abbreviated projections in [CONCEPTS-WAVE3.md](CONCEPTS-WAVE3.md) with
 > Sessions/DAU, LTV and year-1 estimates, derived from each concept's D30 and ARPDAU on the same

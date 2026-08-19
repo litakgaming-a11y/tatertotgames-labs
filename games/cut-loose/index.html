@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Puff Puff Fit — TaterTot Games Labs</title>
-<meta name="description" content="Hold to inflate, release before the pop. Risk-vs-greed puzzle prototype from the TaterTot Games Labs testing arena — playable in your browser.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎈</text></svg>">
+<title>Cut Loose — TaterTot Games Labs</title>
+<meta name="description" content="One snip — physics does the rest. Verlet rope puzzle prototype from the TaterTot Games Labs testing arena — playable in your browser.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✂️</text></svg>">
 <style>
   :root{--bg:#0d0b16;--bg2:#151127;--card:#1c1734;--card2:#241d44;--line:rgba(255,255,255,.08);
-    --ink:#f6f3ff;--muted:#9a91c4;--dim:#6e659b;--accent:#ff5d8f;--r:20px}
+    --ink:#f6f3ff;--muted:#9a91c4;--dim:#6e659b;--accent:#f0a3b8;--r:20px}
   *{margin:0;padding:0;box-sizing:border-box}
   html{-webkit-text-size-adjust:100%}
   body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
     -webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden;position:relative}
   body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
-    background:radial-gradient(900px 480px at 12% -6%, #ff5d8f26, transparent 62%),
+    background:radial-gradient(900px 480px at 12% -6%, #f0a3b826, transparent 62%),
       radial-gradient(760px 420px at 106% 8%, rgba(76,201,240,.10), transparent 60%),
       linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%)}
   .wrap{max-width:1000px;margin:0 auto;padding:20px 18px 80px}
@@ -36,7 +36,7 @@
   .badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
   .b{padding:6px 13px;border-radius:999px;font-size:.68rem;font-weight:800;letter-spacing:.08em;
     text-transform:uppercase;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--muted)}
-  .b.acc{background:#ff5d8f1f;border-color:#ff5d8f55;color:#ff5d8f}
+  .b.acc{background:#f0a3b81f;border-color:#f0a3b855;color:#f0a3b8}
   h1{font-size:clamp(2rem,6vw,3rem);font-weight:900;letter-spacing:-.03em;line-height:1.02}
   .hook{margin-top:10px;font-size:1.02rem;font-weight:800;color:var(--accent)}
   .lede{margin-top:16px;color:var(--muted);font-size:1rem;line-height:1.68}
@@ -64,7 +64,7 @@
     background:rgba(255,255,255,.035);border:1px solid var(--line);color:var(--muted);
     font-size:.95rem;line-height:1.55}
   ol.steps .n{flex:0 0 26px;height:26px;border-radius:50%;display:grid;place-items:center;
-    background:#ff5d8f22;color:#ff5d8f;font-weight:900;font-size:.82rem}
+    background:#f0a3b822;color:#f0a3b8;font-weight:900;font-size:.82rem}
 
   ul.feats{list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   @media (max-width:700px){ ul.feats{grid-template-columns:1fr} }
@@ -72,7 +72,7 @@
     background:rgba(255,255,255,.035);border:1px solid var(--line);
     color:var(--muted);font-size:.9rem;line-height:1.5}
   ul.feats li::before{content:"";position:absolute;left:15px;top:17px;width:9px;height:9px;border-radius:3px;
-    background:#ff5d8f;box-shadow:0 0 10px #ff5d8f88}
+    background:#f0a3b8;box-shadow:0 0 10px #f0a3b888}
 
   .metaBox{padding:18px 20px;border-radius:16px;background:linear-gradient(160deg,var(--card),var(--card2));
     border:1px solid var(--line);color:var(--muted);font-size:.95rem;line-height:1.62}
@@ -95,21 +95,21 @@
   <div class="hero">
     <div>
       <div class="shotFrame">
-        <img src="../../assets/shots/puff-puff-fit.png" width="645" height="1146"
-             alt="Puff Puff Fit gameplay screenshot">
+        <img src="../../assets/shots/cut-loose.png" width="645" height="1146"
+             alt="Cut Loose gameplay screenshot">
         <span class="shotTag">Actual gameplay</span>
       </div>
     </div>
     <div>
       <div class="badges">
-        <span class="b acc">Wave 1</span>
-        <span class="b">Risk-vs-greed puzzle</span>
-        <span class="b">10–25s rounds</span>
+        <span class="b acc">Wave 4</span>
+        <span class="b">Verlet rope puzzle</span>
+        <span class="b">20–35s deliveries</span>
       </div>
-      <h1>🎈 Puff Puff Fit</h1>
-      <p class="hook">Hold to inflate, release before the pop</p>
-      <p class="lede">A squishy blob sits in a chamber ringed with spikes. Hold anywhere and it inflates; let go and it locks in place. Fill enough of the chamber to clear the round — but every extra millimetre of greed brings the blob closer to a spike, and a pop costs a heart.</p>
-      <p class="why"><b>Why it works:</b> The whole game is one button and one decision: take the safe fill, or push for the perfect. That near-miss tension is the same greed loop that drives the genre's best performers, and failure is instant and comedic rather than punishing.</p>
+      <h1>✂️ Cut Loose</h1>
+      <p class="hook">One snip — physics does the rest</p>
+      <p class="lede">Packages hang in webs of taut rope — anchored, pulleyed, balloon-lifted, spring-loaded. Swipe to cut. The puzzle is order and timing: cut the left rope and the package pendulums; cut the second at the swing's apex and physics flings it onto the truck. Cut the wrong one first and enjoy the show.</p>
+      <p class="why"><b>Why it works:</b> Cut-the-Rope proved the input's decade-long durability; this rebuilds it around flinging rather than feeding, and the slow-motion final cut gives every level a clip-worthy money shot. Rope systems compose combinatorially, so level variety is nearly free.</p>
       <div class="playRow">
         <a class="play" href="play">▶ PLAY NOW</a>
         <span class="note">Runs in your browser · no install · works on phones</span>
@@ -120,32 +120,32 @@
   <section>
     <h2>How to play</h2>
     <ol class="steps">
-        <li><span class="n">1</span><span>Press and hold anywhere to start inflating the blob.</span></li>
-        <li><span class="n">2</span><span>Watch the fill meter and the spikes — the blob's eyes widen as it gets close.</span></li>
-        <li><span class="n">3</span><span>Release before you touch a spike. Fill 92%+ for a PERFECT and triple coins.</span></li>
+        <li><span class="n">1</span><span>Swipe through a rope to cut it — bundled ropes take two swipes.</span></li>
+        <li><span class="n">2</span><span>Time the final cut at the swing's apex to fling the package home.</span></li>
+        <li><span class="n">3</span><span>Land in the truck intact: two dents and it breaks. Retries are free.</span></li>
     </ol>
   </section>
 
   <section>
     <h2>What's in it</h2>
     <ul class="feats">
-      <li>Wobbly 14-vertex blob with real squash and stretch</li>
-      <li>Eyes that track the nearest spike and widen with danger</li>
-      <li>Procedural chambers with orbiting spike balls from level 3</li>
-      <li>Perfect-fill confetti cannons and a coin multiplier</li>
-      <li>Seven unlockable blob skins, from Lemon to Galaxy to Ghost</li>
-      <li>Verified winnable: a 200-round sweep across levels 1–50 found zero unwinnable rounds</li>
+      <li>Verlet rope physics with sag, tension whitening and fray-then-snap</li>
+      <li>Balloons lift when ballast is cut; springs launch; pulleys redirect</li>
+      <li>Packages have faces — worried mid-swing, relieved on landing</li>
+      <li>Slow-motion on each package's final cut</li>
+      <li>Moving trucks, fans, spike strips and bomb crates you must not disturb</li>
+      <li>Counterweight chains where one package's platform is another's ballast</li>
     </ul>
   </section>
 
   <section>
     <h2>The meta layer</h2>
-    <div class="metaBox">Coins earned each round feed a skin shop with seven collectable blobs, each with its own palette, face and particle signature.</div>
+    <div class="metaBox">Every delivered package is themed — piano, aquarium, wedding cake, grandfather clock — and joins a shelf of curiosities with a one-line gag. Upgrades: Sharper Blade, Bubble Wrap, Slow-Mo Charge, Magnet Truck.</div>
   </section>
 
   <div class="nav">
-    <a href="../cut-loose/"><span>Previous</span>← ✂️ Cut Loose</a>
-    <a class="r" href="../topple-party/"><span>Next</span>🁢 Topple Party →</a>
+    <a href="../tippy-ship/"><span>Previous</span>← ⛵ Tippy Ship</a>
+    <a class="r" href="../puff-puff-fit/"><span>Next</span>🎈 Puff Puff Fit →</a>
   </div>
 
   <footer>

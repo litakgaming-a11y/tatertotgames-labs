@@ -2,7 +2,7 @@
 
 ### ▶ Play now: **https://tatertotgames-labs.pages.dev**
 
-Seventeen original **hybrid-casual** game prototypes — playable instantly in the browser, hosted on
+Twenty original **hybrid-casual** game prototypes — playable instantly in the browser, hosted on
 Cloudflare. Each game is one self-contained HTML file: zero dependencies, mobile-first one-hand
 controls, WebAudio-synthesized sound, haptics, particles everywhere, and persistent meta
 progression in localStorage.
@@ -37,9 +37,18 @@ an explanation of how it works — the links below go there.
 | ⛴️ **Harbor Hustle** | Tap boats to stop and go | Harbor town build-out | [play](https://tatertotgames-labs.pages.dev/games/harbor-hustle/) |
 | 🔦 **Beam Team** | Tap mirrors to reroute the beam | Lighthouse Village | [play](https://tatertotgames-labs.pages.dev/games/beam-team/) |
 
+### Wave 4 — physics-first
+
+| Game | Hook | Meta | Play |
+|---|---|---|---|
+| 🏜️ **Sandfall** | Draw ledges, route falling sand | Terrarium Shelf of unique jars | [play](https://tatertotgames-labs.pages.dev/games/sandfall/) |
+| ⛵ **Tippy Ship** | Load the boat, don't tip it | Shipping route map + hull upgrades | [play](https://tatertotgames-labs.pages.dev/games/tippy-ship/) |
+| ✂️ **Cut Loose** | Snip ropes in the right order | Shelf of curiosities | [play](https://tatertotgames-labs.pages.dev/games/cut-loose/) |
+
 ## Docs
 
 - [CONCEPTS.md](CONCEPTS.md) — the 7 shipped MVP concepts with hooks, meta design, and projected KPIs
+- [CONCEPTS-WAVE4.md](CONCEPTS-WAVE4.md) — 3 physics-first build briefs (granular sim, buoyancy, verlet ropes)
 - [CONCEPTS-WAVE3.md](CONCEPTS-WAVE3.md) — 10 build-ready briefs for the next wave (design only,
   no code), including the platform integration contract and stability rules a coding model must follow
 - [RESEARCH.md](RESEARCH.md) — deep research on top-grossing hybrid-casual games (Color Block Jam,
