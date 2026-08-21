@@ -190,7 +190,32 @@ Per-region instrumentation brief:
 
 Comfortably inside the 150 MB install target with room for region additions post-launch.
 
-## 10. Style guardrails
+## 10. The art service is a hard dependency — plan for it failing
+
+Street Baron gave PixelLab a large share of its art and then lost access: `list_projects` returned 0 projects and no org, and stayed that way. Four bugs went permanently art-blocked, and **the single most important art slot in the game — the gacha pull image — shipped as a blank purple square** ([15-lessons-from-prior-builds.md L21](15-lessons-from-prior-builds.md)).
+
+Tippy Ship gives PixelLab *everything on screen*, which is a larger exposure than SB had. Four rules:
+
+1. **Front-load generation, not polish.** Every gameplay-critical sprite — the style anchor, all 5 cargo types, the starter hulls, the crane, core UI — is generated and **committed during M1**, not M5. Polish can trail; existence cannot.
+2. **Nothing on screen during a run may depend on future generation.** If it renders in a run, it is in the repo.
+3. **Placeholders are designed placeholders.** A legible grey silhouette at the correct footprint, never a blank coloured square. A designed placeholder ships without embarrassment; a blank square does not.
+4. **Cargo silhouettes are gameplay information** (§4). They are the first assets generated and the last permitted to change.
+
+## 11. Sprite atlasing
+
+Rent Baron ran 384 `SpriteRenderer`s with no atlases, up to one bind each, before consolidating into 4 `SpriteAtlas`es ([15-lessons-from-prior-builds.md L12](15-lessons-from-prior-builds.md)). With 168 hull parts plus cargo, towns and parallax, Tippy Ship is in the same territory.
+
+| Atlas | Contents |
+|---|---|
+| `Atlas_Hulls` | 168 hull parts + 5 crane variants |
+| `Atlas_Cargo` | 24 cargo + ice overlays |
+| `Atlas_Towns` | 20 silhouettes + animated micro-elements |
+| `Atlas_Parallax` | Per-region skies, hills, weather |
+| `Atlas_UI` | Icons, frames, fonts |
+
+**Point-filtered, uncompressed, 4096 max.** Rent Baron's report is explicit that uncompressed is *correct* for point-filtered pixel art — the texture memory is cheap and compression artefacts on hard pixel edges are not. Draw calls end up bounded by atlas pages rather than by object count.
+
+## 12. Style guardrails
 
 1. **Silhouette before detail.** If a sprite is unreadable as a black shape at 50% size, it fails.
 2. **The waterline is sacred.** Nothing may reduce its contrast — not weather, not fog, not vignette, not UI.

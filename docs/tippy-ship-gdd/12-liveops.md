@@ -43,7 +43,7 @@ Missing a day resets to 1. **Streak Insurance** (rewarded ad, once per week) pre
 
 ## 2. Weekly Regatta
 
-The standout feature, and the cheapest one in the plan to author.
+**Committed v1.0 scope.** On the never-cut list in [14-milestones-cutlist.md §2](14-milestones-cutlist.md) — the standout feature, and the cheapest one in the plan to author.
 
 ```
 🏁  WEEKLY REGATTA — Seed #37              2d 14h remaining
@@ -68,9 +68,19 @@ Every player gets the **identical** run: same hull at the same tier regardless o
 
 This matters enormously in a game with an idle economy — it is the one surface where a day-3 player can beat a day-300 player, and that possibility is worth a great deal of engagement.
 
-### Anti-cheat
+### Anti-cheat — the client never states a score
 
-Submissions carry the input tape. `validateRegattaSubmission` re-simulates it headless in Cloud Code and compares against the claimed score within a 2% tolerance band. A mismatch is rejected with a reason code. See [10-tech-architecture.md §5](10-tech-architecture.md).
+**A submission carries the tape and nothing else.** The server re-simulates it headless in Cloud Code and *derives* the score. There is no claimed value, so there is nothing to tolerance-check.
+
+This is a deliberate change from an earlier draft, which had the client submit a tape plus a claimed score validated within a 2% band. Kinfold established the better pattern ([15-lessons-from-prior-builds.md L3](15-lessons-from-prior-builds.md)): *the client names the stage, and the server re-runs the fight from the authoritative save to derive what it was worth.* Applying it here removes two problems at once — the "my score was 0.3% off and got rejected" support ticket disappears, and cross-platform float drift stops being an anti-cheat concern and becomes what it actually is, a display concern.
+
+**Adoption is decided here, not left to a code comment.** The client shows a provisional local score immediately, and **adopts the server's number as authoritative** when the response returns. Kinfold's equivalent issue (P-068) is still open years on, purely because "the client must adopt the returned state" lived in a class comment and was never specified. So, explicitly: **the server's score is the score.** If they disagree, the client is wrong and updates silently.
+
+Rejection reason codes: `MALFORMED_TAPE`, `WRONG_SEED`, `TAPE_TOO_LONG`, `SIM_DIVERGED`, `DUPLICATE_SUBMISSION`. All are surfaced to analytics as `regatta_rejected`.
+
+If schedule pressure forces cut #5, launch validation degrades to the **ceiling heuristic** — the week's seed is simulated once offline to establish a plausible maximum, submissions above it are rejected, the top percentile is flagged for review, and malformed tapes are rejected. Every tape is retained either way, so exact re-simulation lands retroactively in v1.1. The Regatta itself ships regardless. See [14-milestones-cutlist.md §2.1](14-milestones-cutlist.md).
+
+If schedule pressure forces cut #5, launch validation degrades to the **ceiling heuristic** — the week's seed is simulated once offline to establish a plausible maximum, submissions above it are rejected, the top percentile is flagged for review, and malformed tapes are rejected. Every tape is retained either way, so exact re-simulation lands retroactively in v1.1. The Regatta itself ships regardless. See [14-milestones-cutlist.md §2.1](14-milestones-cutlist.md).
 
 Because the top runs are replayable, they are also **watchable** — which turns the leaderboard into content. A player who watches the #1 run learns something, which is the best possible retention outcome from a competitive feature.
 

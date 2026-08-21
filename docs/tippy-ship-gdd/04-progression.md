@@ -86,7 +86,7 @@ A typical run: 9–20 crates × ~3 events = **~300 bytes**. A player with 90 rat
 Tap any route on the world map and the auto-ship visibly replays your best load in miniature, in a small inset. The idle layer becomes *literally* your past skill, on screen, earning. This is the feature that makes the thesis land emotionally rather than as a spreadsheet.
 
 **2 — Anti-cheat.**
-Weekly Regatta submissions are re-simulated server-side in Cloud Code against the same deterministic sim. A tape that does not reproduce its claimed score is rejected. See [12-liveops.md §3](12-liveops.md).
+Weekly Regatta submissions carry **the tape only** — the client never states a score. Cloud Code re-simulates the tape against the same deterministic sim and *derives* the result, so there is no claimed value to dispute. See [12-liveops.md §2](12-liveops.md) and [15-lessons-from-prior-builds.md L3](15-lessons-from-prior-builds.md).
 
 **3 — Ghost comparison.**
 Race your own best on a route, shown as a translucent overlay hull. Also used for "watch the #1 run" in the Regatta.

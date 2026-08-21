@@ -28,7 +28,8 @@ Source prototype: [`games/tippy-ship/play.html`](../../games/tippy-ship/play.htm
 | 11 | [Art Pipeline](11-art-pipeline.md) | PixelLab / Higgsfield / ElevenLabs allocation, palette LUTs |
 | 12 | [Live Ops](12-liveops.md) | Daily Contract, Weekly Regatta, Tide Pass, Remote Config surface |
 | 13 | [Analytics & KPIs](13-analytics-kpi.md) | Event taxonomy, the five questions, soft-launch gates |
-| 14 | [Milestones & Cut List](14-milestones-cutlist.md) | 26-week plan, cut order, risk register |
+| 14 | [Milestones & Cut List](14-milestones-cutlist.md) | 27-week plan, cut order with blast radius, risk register |
+| 15 | [Lessons From Prior Builds](15-lessons-from-prior-builds.md) | 28 mistakes already made in BlockRise / Gloamdelve / Kinfold / Mogul / One Armed Army / Rent Baron / Street Baron — and what changed here because of them |
 
 **Tuning tables:** [physics-constants](tuning/physics-constants.md) · [economy-tables](tuning/economy-tables.md)
 

@@ -194,6 +194,33 @@ Generation brief per region, via `compose_music`: specify BPM, key, instrumentat
 
 Total ≈ 90 SFX assets, ~18 MB.
 
+### Import settings — this is a project-ending bug if it is wrong
+
+Rent Baron had **six** music clips at `DecompressOnLoad` sitting at **≈140 MB resident**; switching to streaming Vorbis brought it to **<1 MB** ([15-lessons-from-prior-builds.md L11](15-lessons-from-prior-builds.md)).
+
+That is ~23 MB resident per clip. **Tippy Ship specifies 32 stems.** At that rate the naive import is roughly **750 MB resident** on a device with a 3 GB floor — not a performance regression but an instant out-of-memory kill, and one that would surface late, on hardware, during M5.
+
+| Asset class | Load type | Compression |
+|---|---|---|
+| Music stems | **Streaming** | Vorbis q0.7 |
+| Ambience loops | **Streaming** | Vorbis q0.6 |
+| SFX (short, frequent) | Decompress On Load | Vorbis q0.5 |
+| Creak / thunk families | Decompress On Load | Vorbis q0.5 |
+
+**Only the current region's 4 stems are resident.** Region transitions cross-fade and unload the outgoing set. A CI check fails the build if any clip longer than 5 s is not set to Streaming — see [10-tech-architecture.md §8](10-tech-architecture.md).
+
+### Colour assignment — route every channel through `Srgb()`
+
+The project renders in linear colour space, so colours assigned from code display **gamma-lifted**. Mogul logged this as a critical gotcha that cost three debug loops: a 0.075 navy displayed as roughly a 0.3 washed grey, and low-alpha white overlays were far worse ([15-lessons-from-prior-builds.md L14](15-lessons-from-prior-builds.md)).
+
+The Tension Bus assigns colour from code **every frame** — vignette hue, rail rim-light, inclinometer zone bands. Getting this wrong washes out the game's primary danger signal, and it would read as a design failure rather than a colour-space bug.
+
+```csharp
+static Color Srgb(Color c) => c.linear;   // one helper, no exceptions
+```
+
+Every `ITensionChannel` that touches colour routes through it. Never assign a literal `Color` to a material or `VisualElement` from sim or bus code. The vignette is validated against reference screenshots in both themes during M1.
+
 ### Mix rules
 
 - **The creak is the tension instrument.** It sits in a dedicated 400 Hz–2 kHz band and everything else ducks around it. When the boat is in trouble, the creak is the loudest thing in the mix.

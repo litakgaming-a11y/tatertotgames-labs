@@ -363,6 +363,21 @@ Without this, tuning silently drifts during the port and the game's feel is lost
 
 Run in CI on every commit touching the sim. A failure is a **build blocker**, not a warning.
 
+### The harness must cross the serialisation boundary
+
+Kinfold shipped a re-simulation feature whose determinism test **could not see the bug that broke it**, and would never have seen it ([15-lessons-from-prior-builds.md L1](15-lessons-from-prior-builds.md)). A ghost was "a snapshot + a seed, re-simulated"; the snapshot's `ToJson` silently dropped four fields, so every ghost re-simulated a *different fight than its owner actually fought*. The test re-ran an **in-memory** ghost against itself, never crossing JSON — the only place anything could be lost — so it stayed green for months.
+
+> **The rule, in the words of the log that earned it:** *when a thing is defined by surviving a boundary, the test has to cross the boundary.*
+
+A `RunTape` is that exact thing. Therefore:
+
+1. The parity harness replays from **serialised tape bytes**, never an in-memory struct.
+2. A reflection test asserts every field of `RunSetup` and `RunTape` appears in the written payload — it **fails on any newly added field** until that field is written *and* read back.
+3. One test round-trips a tape through JSON *and* through the Cloud Code path, asserting an identical **event log**, not merely an identical final score. A matching score with a divergent log means the two runs differed and happened to land on the same number.
+4. Tapes written before a field existed back-fill to a **defined default**, never to zero. Kinfold's all-zero fallback produced units weaker than anything else in the game.
+
+A determinism test that does not serialise is only testing that the sim is a pure function, which was never in doubt.
+
 ### Expected divergence sources, in order of likelihood
 
 1. `Rigidbody2D.inertia` silently reverting to auto — check first, always.
@@ -380,9 +395,26 @@ Replays, the Weekly Regatta and server-side validation all depend on the sim bei
 - `Time.deltaTime`, `Time.time`, `Time.realtimeSinceStartup`
 - `UnityEngine.Random`, `System.Random` without an explicit seed
 - `DateTime.Now`
-- Iteration over `Dictionary` or `HashSet` where order affects results
+- Iteration over `Dictionary` or `HashSet` where order affects results — see below, this one has bitten a sibling project three times in one system
 - Any physics query returning results in unspecified order
 - `float` parsing from localised strings
+
+### Hash-container order is a simulation bug, not a style issue
+
+Gloamdelve shipped three separate determinism leaks of exactly this kind, all inside the system its determinism rule existed to protect ([15-lessons-from-prior-builds.md L2](15-lessons-from-prior-builds.md)). The shape: `Dictionary.Values` copied to a `List`, then picked **by index**. Removing an entry permutes the buckets, so the same seed produced a different outcome — and because the save serialiser recompacted the map on reload, **a save/load changed the answer**.
+
+Two accepted fixes, no others:
+
+```csharp
+// (a) impose a total order before use — ids are unique, so this is total
+candidates.Sort((a, b) => string.CompareOrdinal(a.Id, b.Id));
+
+// (b) iterate a fixed enum order and look up
+foreach (CargoType t in Enum.GetValues(typeof(CargoType)))
+    if (stock.TryGetValue(t, out var n) && n > 0) list.Add(t);
+```
+
+Never expose a `Dictionary.Values` or `HashSet` enumeration from a sim type at all — not even as a read-only property. The leak in Gloamdelve escaped through exactly such a `Snapshot` property.
 
 **Required:**
 

@@ -74,6 +74,18 @@ Maximum depth from home to a run: **3 taps** (map → route → deploy → sail)
 4. **The crane occupies the top 25%.** Touch anywhere in the play area, not just on the crane.
 5. Minimum touch target 44 × 44 px.
 
+### Three layout rules that are scar tissue
+
+Street Baron's `BUGS.md` records a UI pass that closed roughly twenty bugs at once by finding one root cause. All three rules below come from that ([15-lessons-from-prior-builds.md L17–L20](15-lessons-from-prior-builds.md)).
+
+**Lock the reference resolution in week one of M1.** SB's `PanelSettings.referenceResolution` was 360×780 while every mockup was authored on a 540×960 canvas, so all UI rendered **~1.37× oversized** — the single root cause behind most of an entire annotated-screenshot bug batch. Set `ScaleWithScreenSize` @ **540×960**, assert it in a test, and author every mockup on that canvas. A one-line setting that costs weeks when wrong.
+
+**Nav clearance is a token, not a per-panel fix.** SB fixed "panel clipped by the bottom nav" three separate times (B10, B39, B55); the third entry reads *"verify ALL panels clear the nav."* Here there is one `--safe-bottom` token derived from nav height plus the device safe-area inset, every overlay derives its bottom from it, no panel hardcodes a value, and a test enumerates every panel asserting its content rect clears the nav.
+
+**A feedback class can go silently invisible.** SB's `.sb-toast` used `align-self: center` on an absolutely-positioned element, giving it zero width — so *every* toast in the game was invisible over open panels, found only incidentally. This design rests entirely on feedback landing, so a PlayMode smoke test fires one of each class — popup, toast, particle burst, coach mark, inclinometer flash — and asserts non-zero resolved bounds and non-zero opacity.
+
+Also: **UITK scroll views are dead on touch without drag-scroll.** Add it to the shared scroll component once, before building any scrolling screen.
+
 ### The bubble inclinometer
 
 A real ship's clinometer. It is the single most important HUD element and it is why pixel art works for this game.
