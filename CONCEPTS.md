@@ -1,13 +1,13 @@
-# TaterTot Games Labs — 20 Hybrid-Casual MVP Concepts
+# TaterTot Games Labs — 21 Hybrid-Casual MVP Concepts
 
-Twenty original hybrid-casual concepts, deliberately **not** clones of the current top-grossing
-pack (no screws, no color-block boards, no hole-swallowing, no hexa-sorting), spanning twenty
+Twenty-one original hybrid-casual concepts, deliberately **not** clones of the current top-grossing
+pack (no screws, no color-block boards, no hole-swallowing, no hexa-sorting), spanning twenty-one
 distinct mechanic classes. Each follows the proven
 hybrid-casual formula: **one instantly-readable hyper-casual mechanic as the hook** (the "game
 feature as ad" — the first 3 seconds of gameplay *is* the creative), plus a **meta layer** that
 carries retention and monetization.
 
-All twenty are live and playable in this repo (`games/<slug>/`), each as a single self-contained
+All twenty-one are live and playable in this repo (`games/<slug>/`), each as a single self-contained
 HTML5 file: mobile-first, one-hand controls, WebAudio-synthesized SFX, haptics, and localStorage
 progression. Hosted on Cloudflare so every build is instantly testable online.
 
@@ -337,6 +337,23 @@ Sessions/DAU **4.5** · ARPDAU **$0.10–0.16** · LTV(90d) **$0.70** · Year-1 
 
 ---
 
+## 21. 🛡️ Return Fire *(wave 5 — reflection dynamics + momentum transfer)*
+
+| | |
+|---|---|
+| **Genre** | Deflection combat + fortress rebuild meta |
+| **Hyper-casual hook** | *They brought the ammo. You just aim it back.* A war game with **no weapon**: one shield, a wall of incoming fire, and every shot you deflect detonates the machine that fired it. |
+| **Concept** | Drag to swing a shield around your core. Reflection is real — angle of incidence mirrors across the surface normal, and your swipe velocity is *added* to the returned shot, so a hard flick sends it back screaming. Perfect parries freeze the frame and pay 2.5x. Five projectile types (bullets, rockets, ricocheting saw blades, chargeable energy orbs, arcing mortars), armored enemies that only crack to their own ammo, and a boss every fifth wave. |
+| **Meta layer** | The Bastion — a fortress on the title screen rebuilt across 12 stages from salvaged scrap — plus four sim-visible upgrade tracks (Shield Arc, Kinetic Gain, Core Plating, Overheat Charge) and milestone shield skins. |
+| **Research grounding** | Combat monetizes rewarded video far harder than puzzle (continue-after-death, 2x scrap, boss retry) while the one-verb deflection hook keeps CPI in casual rather than midcore territory. The boss cadence creates natural session bookends; OVERHEAT is the engineered release valve at the top of the intensity curve. |
+| **Why it can win** | The inversion is the moat: every competitor hands you a gun. Here the enemy army supplies all the ammunition and destroys itself — instantly readable in a 3-second creative, and the deflection verb composes with any future projectile, element or shield module, giving it the longest live-ops runway in the portfolio. |
+
+**Projected stats** — CPI **$0.35–0.60** · D1 **54%** · D7 **21%** · D30 **8.5%** · Session **13 min** ·
+Sessions/DAU **5.2** · ARPDAU **$0.16–0.24** · LTV(90d) **$1.10** (highest in the portfolio) ·
+Year-1 at scale: **7–13M downloads, $8–14M net**
+
+---
+
 ## Portfolio strategy
 
 | Game | Primary KPI bet | Monetization center of gravity |
@@ -361,8 +378,9 @@ Sessions/DAU **4.5** · ARPDAU **$0.10–0.16** · LTV(90d) **$0.70** · Year-1 
 | Sandfall | Lowest CPI (ASMR physics) + replay density | Interstitials + material/ink IAP |
 | Tippy Ship | Near-miss compulsion + live-ops runway | Rewarded (retry sail) + hull IAP |
 | Cut Loose | Clip virality (slow-mo money shot) | Rewarded (slow-mo) + blade IAP |
+| Return Fire | Highest LTV (combat rewarded-video) | Rewarded (continue, 2x scrap) + skin IAP |
 
-**Test plan:** all twenty are shipped to Cloudflare and instrumented. Run $200–500 creative probes
+**Test plan:** all twenty-one are shipped to Cloudflare and instrumented. Run $200–500 creative probes
 per concept on TikTok/Meta targeting CPI + 3-day retention; kill or double-down at 2 weeks; winners
 get live-ops (daily events, seasonal skins, leaderboards) and a native wrapper for store launch.
 
@@ -370,7 +388,7 @@ With seventeen concepts the portfolio is now wide enough to test by *mechanic cl
 title — probe one representative per class first (Sky Bloom for spectacle, Bloom Drop for
 aim-and-bounce, Parcel Panic for routing, Fold Friends for zen-collection), then fund siblings of
 whichever class clears the greenlight gate. The research gate is unchanged and applies to all
-twenty: **D1 ≥ 30%, D7 ≥ 15%, CPI ≤ $1.50** before any further meta investment. Wave 4 adds a
+twenty-one: **D1 ≥ 30%, D7 ≥ 15%, CPI ≤ $1.50** before any further meta investment. Wave 4 adds a
 physics-class probe (Sandfall for granular ASMR, Tippy Ship for buoyancy comedy, Cut Loose for
 rope timing) — see [CONCEPTS-WAVE4.md](CONCEPTS-WAVE4.md) for the full physics-first thesis.
 

@@ -105,6 +105,7 @@
   .h12{color:#a5b4fc} .h13{color:#fda4af} .h14{color:#7dd3fc} .h15{color:#fcd34d}
   .h16{color:#93c5fd} .h17{color:#fde68a}
   .h18{color:#f4c27a} .h19{color:#7cd4f0} .h20{color:#f0a3b8}
+  .h21{color:#ff6b4a}
 
   /* ---------- footer ---------- */
   .docs{margin-top:56px;padding:22px;border-radius:var(--r);border:1px solid var(--line);
@@ -128,9 +129,9 @@
       readable hook with a real meta underneath — built for the thumb, instrumented end to end,
       and playable right now.</p>
     <div class="stats">
-      <div class="stat"><b>20</b><span>Prototypes</span></div>
-      <div class="stat"><b>4</b><span>Waves</span></div>
-      <div class="stat"><b>20</b><span>Mechanics</span></div>
+      <div class="stat"><b>21</b><span>Prototypes</span></div>
+      <div class="stat"><b>5</b><span>Waves</span></div>
+      <div class="stat"><b>21</b><span>Mechanics</span></div>
       <div class="stat"><b>0</b><span>Installs needed</span></div>
     </div>
   </header>
@@ -664,7 +665,6 @@
   <div class="grid">
 
     <a class="card" href="games/sandfall/">
-      <span class="badge new">New</span>
       <span class="art"><svg viewBox="0 0 320 180" aria-label="Colored sand streams routed by drawn shelves into jars">
         <defs><linearGradient id="g18" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stop-color="#2a1f4a"/><stop offset="1" stop-color="#4a2f5c"/></linearGradient></defs>
@@ -698,7 +698,6 @@
     </a>
 
     <a class="card" href="games/tippy-ship/">
-      <span class="badge new">New</span>
       <span class="art"><svg viewBox="0 0 320 180" aria-label="A crane loading crates onto a listing ship">
         <defs><linearGradient id="g19" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stop-color="#ffcf8a"/><stop offset="1" stop-color="#2e7fb8"/></linearGradient></defs>
@@ -731,7 +730,6 @@
     </a>
 
     <a class="card" href="games/cut-loose/">
-      <span class="badge new">New</span>
       <span class="art"><svg viewBox="0 0 320 180" aria-label="A package swinging on ropes above a delivery truck">
         <defs><linearGradient id="g20" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stop-color="#241d44"/><stop offset="1" stop-color="#3a2a56"/></linearGradient></defs>
@@ -767,11 +765,65 @@
     </a>
   </div>
 
+
+  <!-- ============ WAVE 5 ============ -->
+  <div class="wave"><h2>Wave 5</h2><span class="note">Deflection combat</span><span class="rule"></span></div>
+  <div class="grid">
+
+    <a class="card" href="games/return-fire/">
+      <span class="badge new">New</span>
+      <span class="art"><svg viewBox="0 0 320 180" aria-label="A shield deflecting incoming fire back at machine enemies">
+        <defs>
+          <linearGradient id="g21" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#2a1020"/><stop offset="1" stop-color="#4a1c18"/></linearGradient>
+          <radialGradient id="c21" cx=".5" cy=".5">
+            <stop offset="0" stop-color="#fff3c4"/><stop offset="1" stop-color="#ff6b4a"/></radialGradient>
+        </defs>
+        <rect width="320" height="180" fill="url(#g21)"/>
+        <g fill="#1a0c16" opacity=".85">
+          <rect y="150" width="320" height="30"/>
+          <path d="M0 150l26-16 22 16zM250 150l30-20 34 20z"/></g>
+        <g fill="#6b3a4a" opacity=".55">
+          <rect x="14" y="26" width="26" height="20" rx="3"/><rect x="286" y="34" width="24" height="18" rx="3"/>
+          <rect x="150" y="14" width="28" height="18" rx="3"/></g>
+        <g stroke="#ff9d6b" stroke-width="3" stroke-linecap="round" opacity=".9">
+          <path d="M40 46l38 34"/><path d="M172 32l-18 42"/><path d="M286 52l-42 30"/></g>
+        <g fill="#ffd166"><circle cx="80" cy="82" r="4"/><circle cx="152" cy="76" r="4"/><circle cx="242" cy="84" r="4"/></g>
+        <g transform="translate(160 140)">
+          <circle cx="0" cy="0" r="22" fill="url(#c21)"/>
+          <circle cx="0" cy="0" r="30" fill="none" stroke="#ff6b4a" stroke-width="2" opacity=".45"/>
+          <circle cx="0" cy="0" r="9" fill="#fff" opacity=".9"/></g>
+        <g transform="translate(160 140) rotate(-24)">
+          <path d="M-42-52a56 56 0 0 1 84 0" fill="none" stroke="#7cd4f0" stroke-width="11" stroke-linecap="round"/>
+          <path d="M-42-52a56 56 0 0 1 84 0" fill="none" stroke="#e8fbff" stroke-width="4" stroke-linecap="round"/></g>
+        <g stroke="#fff3c4" stroke-width="4" stroke-linecap="round">
+          <path d="M138 92L96 40"/></g>
+        <g stroke="#ffe14d" stroke-width="2" stroke-linecap="round" opacity=".8">
+          <path d="M132 98l-30-38"/></g>
+        <g transform="translate(96 40)">
+          <circle cx="0" cy="0" r="13" fill="#ffe14d" opacity=".35"/>
+          <g stroke="#fff3c4" stroke-width="2.5" stroke-linecap="round">
+            <path d="M0 0l-13-9M0 0l13-9M0 0l-9 13M0 0l9 13M0 0l0-16"/></g>
+          <circle cx="0" cy="0" r="5" fill="#fff"/></g>
+        <g fill="#ffb08a" opacity=".9"><circle cx="76" cy="24" r="2.6"/><circle cx="112" cy="66" r="2"/>
+          <circle cx="60" cy="58" r="2.2"/><circle cx="126" cy="30" r="1.8"/></g>
+        <text x="160" y="24" font-size="13" font-weight="bold" fill="#ff9d6b" text-anchor="middle" opacity=".85">COMBO x7</text>
+      </svg></span>
+      <div class="body">
+        <span class="hook h21">No weapon — send it back</span>
+        <h3>Return Fire</h3>
+        <p>A war game where you never fire a shot. Swing your shield to deflect incoming rounds — your swipe speed rides along — and the machine army destroys itself with its own ammunition.</p>
+        <div class="meta"><span class="tag">Reflection physics · Bastion rebuild</span><span class="play">PLAY →</span></div>
+      </div>
+    </a>
+  </div>
+
   <div class="docs">
     <h4>Lab notes</h4>
     <a href="CONCEPTS.md">Shipped concepts &amp; projected KPIs</a>
     <a href="CONCEPTS-WAVE3.md">Wave 3 design briefs</a>
     <a href="CONCEPTS-WAVE4.md">Wave 4 physics briefs</a>
+    <a href="CONCEPTS-WAVE5.md">Wave 5 combat brief</a>
     <a href="RESEARCH.md">Hybrid-casual market research</a>
     <a href="ANALYTICS.md">Analytics &amp; privacy model</a>
   </div>

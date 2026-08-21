@@ -2,7 +2,7 @@
 
 ### ▶ Play now: **https://tatertotgames-labs.pages.dev**
 
-Twenty original **hybrid-casual** game prototypes — playable instantly in the browser, hosted on
+Twenty-one original **hybrid-casual** game prototypes — playable instantly in the browser, hosted on
 Cloudflare. Each game is one self-contained HTML file: zero dependencies, mobile-first one-hand
 controls, WebAudio-synthesized sound, haptics, particles everywhere, and persistent meta
 progression in localStorage.
@@ -45,9 +45,16 @@ an explanation of how it works — the links below go there.
 | ⛵ **Tippy Ship** | Load the boat, don't tip it | Shipping route map + hull upgrades | [play](https://tatertotgames-labs.pages.dev/games/tippy-ship/) |
 | ✂️ **Cut Loose** | Snip ropes in the right order | Shelf of curiosities | [play](https://tatertotgames-labs.pages.dev/games/cut-loose/) |
 
+### Wave 5 — deflection combat
+
+| Game | Hook | Meta | Play |
+|---|---|---|---|
+| 🛡️ **Return Fire** | No weapon — deflect their ammo back | The Bastion fortress rebuild | [play](https://tatertotgames-labs.pages.dev/games/return-fire/) |
+
 ## Docs
 
-- [CONCEPTS.md](CONCEPTS.md) — the 7 shipped MVP concepts with hooks, meta design, and projected KPIs
+- [CONCEPTS.md](CONCEPTS.md) — all 21 shipped concepts with hooks, meta design, and projected KPIs
+- [CONCEPTS-WAVE5.md](CONCEPTS-WAVE5.md) — Return Fire brief (reflection dynamics + momentum transfer)
 - [CONCEPTS-WAVE4.md](CONCEPTS-WAVE4.md) — 3 physics-first build briefs (granular sim, buoyancy, verlet ropes)
 - [CONCEPTS-WAVE3.md](CONCEPTS-WAVE3.md) — 10 build-ready briefs for the next wave (design only,
   no code), including the platform integration contract and stability rules a coding model must follow
