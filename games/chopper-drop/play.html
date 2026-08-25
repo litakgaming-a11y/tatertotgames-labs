@@ -1,0 +1,2788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Chopper Drop</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚁</text></svg>">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body {
+    width:100%; height:100%; overflow:hidden; position:fixed;
+    background:#070b09; touch-action:none;
+    -webkit-user-select:none; user-select:none;
+    font-family:'Segoe UI', system-ui, -apple-system, sans-serif;
+    color:#e9f0e2;
+  }
+  canvas { position:fixed; inset:0; display:block; touch-action:none; }
+
+  /* ---------- HUD ---------- */
+  #hud {
+    position:fixed; top:0; left:0; right:0; z-index:10;
+    display:flex; justify-content:space-between; align-items:flex-start;
+    padding:calc(8px + env(safe-area-inset-top)) 12px 8px;
+    pointer-events:none; opacity:0; transition:opacity .4s ease;
+    text-shadow:0 2px 8px rgba(0,0,0,.85);
+  }
+  #hud.show { opacity:1; }
+  /* keep the fuel chip clear of the 44px mute button in the corner */
+  #hud > .hudBox + .hudBox { margin-right:calc(50px + env(safe-area-inset-right)); }
+  .hudBox {
+    background:rgba(10,20,14,.55); border:1px solid rgba(150,200,140,.25);
+    border-radius:14px; padding:6px 12px; font-size:14px; font-weight:700;
+    backdrop-filter:blur(4px); line-height:1.5;
+  }
+  #hudMission { color:#bfe08a; letter-spacing:1px; }
+  #hudQuota   { color:#ffd76b; }
+  #hudHull span.gone { opacity:.2; filter:grayscale(1); }
+  #hudSalv    { color:#ffd76b; }
+  #fuelWrap {
+    width:104px; height:11px; margin-top:5px; border-radius:6px;
+    background:rgba(0,0,0,.5); border:1px solid rgba(150,200,140,.3); overflow:hidden;
+  }
+  #fuelBar {
+    height:100%; width:100%; border-radius:5px;
+    background:linear-gradient(90deg,#6fe07a,#c8f06a);
+    transition:width .18s linear, background .3s ease;
+  }
+  #fuelWrap.low #fuelBar { background:linear-gradient(90deg,#ff8a4b,#ffd24b); animation:fuelBlink .55s steps(2) infinite; }
+  #fuelWrap.crit #fuelBar { background:linear-gradient(90deg,#ff4b5c,#ff8a4b); animation:fuelBlink .3s steps(2) infinite; }
+  @keyframes fuelBlink { 0%{opacity:1;} 50%{opacity:.35;} 100%{opacity:1;} }
+  #fuelLabel { font-size:11px; letter-spacing:2px; color:#a9c49a; }
+
+  /* ---------- Controls ---------- */
+  #winchBtn {
+    position:fixed; z-index:30; right:calc(12px + env(safe-area-inset-right));
+    bottom:calc(18px + env(safe-area-inset-bottom));
+    width:74px; height:74px; border-radius:50%;
+    border:1px solid rgba(150,200,140,.4); background:rgba(14,26,18,.68);
+    color:#dff0c8; font-family:inherit; font-weight:800; font-size:11px; letter-spacing:1px;
+    display:none; align-items:center; justify-content:center; flex-direction:column; gap:2px;
+    backdrop-filter:blur(4px); cursor:pointer; touch-action:none;
+  }
+  #winchBtn.show { display:flex; }
+  #winchBtn:active { transform:scale(.9); background:rgba(40,70,40,.8); }
+  #winchBtn .wIco { font-size:22px; line-height:1; }
+  #hintBar {
+    position:fixed; z-index:12; left:0; right:0; bottom:calc(24px + env(safe-area-inset-bottom));
+    text-align:center; font-size:13px; font-weight:700; letter-spacing:1px; color:#cfe3b6;
+    text-shadow:0 2px 10px rgba(0,0,0,.9); pointer-events:none;
+    opacity:0; transition:opacity .5s ease; padding:0 90px;
+  }
+  #hintBar.show { opacity:.95; }
+
+  /* ---------- Screens ---------- */
+  .screen {
+    position:fixed; inset:0; z-index:20;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:16px; padding:calc(20px + env(safe-area-inset-top)) 22px calc(20px + env(safe-area-inset-bottom));
+    text-align:center;
+    background:radial-gradient(ellipse at 50% 32%, rgba(28,44,26,.55), rgba(4,8,6,.86));
+    transition:opacity .35s ease, transform .35s ease;
+  }
+  .screen.hidden { opacity:0; pointer-events:none; transform:scale(1.04); }
+
+  #logo {
+    font-size:clamp(38px, 9.5vw, 74px); font-weight:900; letter-spacing:2px; line-height:1.02;
+    background:linear-gradient(180deg,#f2ffcf 0%, #b9e06a 45%, #ffb347 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 4px 18px rgba(170,220,90,.35));
+    animation:logoBob 2.6s ease-in-out infinite;
+  }
+  @keyframes logoBob {
+    0%,100% { transform:translateY(0) rotate(-1.4deg) scale(1); }
+    50%     { transform:translateY(-13px) rotate(1.4deg) scale(1.03); }
+  }
+  .tagline { font-size:13px; color:#98ab8c; letter-spacing:3px; text-transform:uppercase; }
+
+  .btn {
+    pointer-events:auto; cursor:pointer; border:none; outline:none;
+    font-family:inherit; font-weight:800; letter-spacing:1px;
+    color:#10200f; font-size:20px; padding:16px 42px; border-radius:999px; min-height:48px;
+    background:linear-gradient(180deg,#dcff9a,#9ede4b 60%,#6cc23a);
+    box-shadow:0 6px 0 #3f7a24, 0 10px 30px rgba(130,220,80,.32);
+    transition:transform .12s ease, box-shadow .12s ease, filter .12s ease;
+    animation:btnPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes btnPulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
+  .btn:active { transform:scale(.94) translateY(3px); box-shadow:0 2px 0 #3f7a24; }
+  .btn.secondary {
+    background:linear-gradient(180deg,#ffdc9a,#ffb84b 60%,#ff9a3a);
+    box-shadow:0 6px 0 #b86a1b, 0 10px 30px rgba(255,170,60,.3);
+    animation:none; font-size:17px; padding:13px 30px;
+  }
+  .btn.secondary:active { box-shadow:0 2px 0 #b86a1b; }
+  .btn.ghost {
+    background:rgba(150,200,140,.12); color:#bcd4a8; font-size:14px; padding:11px 24px;
+    box-shadow:inset 0 0 0 2px rgba(150,200,140,.35); animation:none;
+  }
+  .btn.ghost:active { transform:scale(.94); }
+  .btn:disabled { filter:grayscale(.8) brightness(.6); animation:none; cursor:default; }
+
+  #bestLine { font-size:15px; color:#cfe0c0; font-weight:700; }
+  #bestLine b { color:#ffd76b; }
+
+  #footerBadge {
+    position:absolute; bottom:calc(12px + env(safe-area-inset-bottom)); left:0; right:0;
+    display:flex; justify-content:center; pointer-events:none;
+  }
+  #footerBadge a {
+    pointer-events:auto; text-decoration:none; color:#98ab8c; font-size:12px; font-weight:700;
+    letter-spacing:1px; background:rgba(12,20,14,.6); border:1px solid rgba(150,200,140,.25);
+    padding:7px 16px; border-radius:999px; transition:color .2s, border-color .2s;
+  }
+  #footerBadge a:hover { color:#e6ffd0; border-color:rgba(180,230,140,.6); }
+  #footerBadge a::before { content:'🥔 '; }
+
+  /* ---------- Base / upgrades ---------- */
+  #base h2 { font-size:27px; font-weight:900; color:#dcff9a; letter-spacing:2px; text-shadow:0 3px 14px rgba(160,220,80,.3); }
+  #baseSalv { font-size:17px; font-weight:800; color:#ffd76b; }
+  #baseStage { font-size:13px; color:#a9c49a; font-weight:700; letter-spacing:1px; }
+  .tabRow { display:flex; gap:8px; pointer-events:auto; }
+  .tab {
+    cursor:pointer; border:none; font-family:inherit; font-weight:800; font-size:13px;
+    letter-spacing:1px; color:#bcd4a8; background:rgba(150,200,140,.1);
+    box-shadow:inset 0 0 0 2px rgba(150,200,140,.3); border-radius:999px; padding:10px 18px; min-height:44px;
+  }
+  .tab.on { color:#10200f; background:linear-gradient(180deg,#dcff9a,#9ede4b); box-shadow:none; }
+  #panelWrap { width:min(460px,94vw); max-height:52vh; overflow-y:auto; pointer-events:auto;
+    -webkit-overflow-scrolling:touch; display:flex; flex-direction:column; gap:10px; }
+  .upCard {
+    display:flex; align-items:center; gap:11px; text-align:left;
+    background:rgba(18,30,20,.85); border:1px solid rgba(150,200,140,.26);
+    border-radius:16px; padding:11px 13px;
+  }
+  .upIcon { font-size:28px; width:42px; text-align:center; filter:drop-shadow(0 2px 8px rgba(255,255,255,.2)); }
+  .upInfo { flex:1; min-width:0; }
+  .upName { font-weight:800; font-size:15px; }
+  .upDesc { font-size:12px; color:#9db28f; margin-top:2px; }
+  .pips { display:flex; gap:4px; margin-top:6px; }
+  .pip { width:20px; height:7px; border-radius:4px; background:rgba(150,200,140,.18); }
+  .pip.on { background:linear-gradient(90deg,#dcff9a,#6cc23a); box-shadow:0 0 8px rgba(140,220,90,.6); }
+  .buyBtn {
+    cursor:pointer; border:none; font-family:inherit; font-weight:800; font-size:13px;
+    color:#10200f; padding:12px 13px; border-radius:12px; min-width:78px; min-height:44px;
+    background:linear-gradient(180deg,#ffe08a,#ffb84b); box-shadow:0 3px 0 #b8761b;
+  }
+  .buyBtn:active { transform:scale(.93) translateY(2px); box-shadow:0 1px 0 #b8761b; }
+  .buyBtn:disabled { filter:grayscale(.85) brightness(.55); cursor:default; }
+  .buyBtn.maxed { background:linear-gradient(180deg,#b6f0a0,#5fc24b); box-shadow:0 3px 0 #2f7a24; }
+  .stageRow {
+    display:flex; align-items:center; gap:11px; text-align:left;
+    background:rgba(18,30,20,.8); border:1px solid rgba(150,200,140,.22);
+    border-radius:14px; padding:10px 12px;
+  }
+  .stageRow.done { border-color:rgba(150,220,110,.55); background:rgba(30,54,28,.85); }
+  .stageRow.locked { opacity:.55; }
+  .rosterRow {
+    display:flex; align-items:center; gap:10px; text-align:left;
+    background:rgba(18,30,20,.8); border:1px solid rgba(150,200,140,.2);
+    border-radius:12px; padding:8px 12px; font-size:14px;
+  }
+  .rosterRow b { color:#dcff9a; }
+  .rosterRow .cnt { margin-left:auto; color:#ffd76b; font-weight:800; font-size:13px; }
+  .emptyNote { font-size:13px; color:#8fa383; padding:14px; }
+
+  /* ---------- Win / Lose ---------- */
+  #win h2 { font-size:33px; font-weight:900; color:#c6ff9a; letter-spacing:2px; text-shadow:0 4px 18px rgba(150,255,110,.35); animation:logoBob 2.2s ease-in-out infinite; }
+  #lose h2 { font-size:28px; font-weight:900; color:#ff9e8f; letter-spacing:2px; text-shadow:0 4px 18px rgba(255,110,90,.35); }
+  #stars { font-size:44px; letter-spacing:8px; height:58px; }
+  #stars span { display:inline-block; opacity:0; transform:scale(3) rotate(-30deg); transition:opacity .3s ease, transform .45s cubic-bezier(.2,2.2,.4,1); color:#39432f; }
+  #stars span.lit { color:#ffd76b; text-shadow:0 0 24px rgba(255,210,90,.85); }
+  #stars span.pop { opacity:1; transform:scale(1) rotate(0deg); }
+  #winSalvLine { font-size:20px; font-weight:800; color:#ffd76b; }
+  #winRoster { font-size:13px; color:#bcd4a8; max-width:330px; line-height:1.6; }
+  #loseHint { font-size:14px; color:#9db28f; max-width:320px; line-height:1.5; }
+
+  /* ---------- Mute ---------- */
+  #muteBtn {
+    position:fixed; top:calc(10px + env(safe-area-inset-top)); right:calc(12px + env(safe-area-inset-right));
+    z-index:40; width:44px; height:44px; border-radius:50%; border:1px solid rgba(150,200,140,.3);
+    background:rgba(12,22,14,.6); color:#d6e8c4; font-size:19px; cursor:pointer;
+    backdrop-filter:blur(4px); display:none;
+  }
+  #muteBtn.show { display:block; }
+  #muteBtn:active { transform:scale(.88); }
+  @media (max-height:520px) { #logo { font-size:clamp(30px,7vw,48px); } .screen { gap:10px; } #panelWrap { max-height:44vh; } }
+</style>
+<script src="/analytics.js" defer></script>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="hud">
+  <div class="hudBox">
+    <div id="hudMission">MISSION 1</div>
+    <div id="hudQuota">🎖️ 0 / 3</div>
+    <div id="hudHull">🛡️<span>▮</span><span>▮</span><span>▮</span></div>
+  </div>
+  <div class="hudBox" style="text-align:right;">
+    <div id="hudSalv">🔩 0</div>
+    <div id="fuelLabel">FUEL</div>
+    <div id="fuelWrap"><div id="fuelBar"></div></div>
+  </div>
+</div>
+
+<div id="hintBar"></div>
+<button id="winchBtn"><span class="wIco">⬍</span><span id="winchLbl">WINCH</span></button>
+<button id="muteBtn" class="show">🔊</button>
+
+<div id="title" class="screen">
+  <div id="logo">CHOPPER<br>DROP</div>
+  <div class="tagline">drag &middot; swing &middot; extract</div>
+  <button id="playBtn" class="btn">TAP TO PLAY</button>
+  <button id="baseBtn" class="btn secondary">🏕️ FORWARD BASE</button>
+  <div id="bestLine">BEST MISSION <b id="titleBest">1</b> &nbsp;&middot;&nbsp; 🔩 <b id="titleSalv">0</b> &nbsp;&middot;&nbsp; 🎖️ <b id="titleSaved">0</b></div>
+  <div id="footerBadge"><a href="../../">TaterTot Games Labs</a></div>
+</div>
+
+<div id="base" class="screen hidden">
+  <h2>🏕️ FORWARD BASE</h2>
+  <div id="baseSalv">🔩 0 salvage</div>
+  <div id="baseStage">STAGE 0 / 12</div>
+  <div class="tabRow">
+    <button class="tab on" id="tabUp">UPGRADES</button>
+    <button class="tab" id="tabBuild">REBUILD</button>
+    <button class="tab" id="tabRoster">ROSTER</button>
+  </div>
+  <div id="panelWrap"></div>
+  <button id="baseBack" class="btn ghost">← BACK</button>
+</div>
+
+<div id="win" class="screen hidden">
+  <h2>EXTRACTION COMPLETE</h2>
+  <div id="stars"><span>★</span><span>★</span><span>★</span></div>
+  <div id="winSalvLine">+&nbsp;<span id="winSalv">0</span> 🔩</div>
+  <div id="winRoster"></div>
+  <button id="nextBtn" class="btn">NEXT MISSION →</button>
+  <button id="winBaseBtn" class="btn secondary">🏕️ BASE</button>
+  <button id="winTitleBtn" class="btn ghost">TITLE</button>
+</div>
+
+<div id="lose" class="screen hidden">
+  <h2>BIRD IS DOWN</h2>
+  <div id="loseHint"></div>
+  <button id="retryBtn" class="btn">RETRY</button>
+  <button id="loseBaseBtn" class="btn secondary">🏕️ BASE</button>
+  <button id="loseTitleBtn" class="btn ghost">TITLE</button>
+</div>
+
+<script>
+'use strict';
+/* ================================================================
+   CHOPPER DROP — TaterTot Games Labs
+   Flight-lite rescue arcade. The tethered load is the antagonist.
+   Single file, zero deps. All art canvas-drawn, all audio synthesized.
+   ================================================================ */
+
+// ---------------- utils ----------------
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const lerp  = (a, b, t) => a + (b - a) * t;
+const rand  = (a, b) => a + Math.random() * (b - a);
+const randI = (a, b) => Math.floor(rand(a, b + 1));
+const pick  = arr => arr[Math.floor(Math.random() * arr.length)];
+const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+const easeOutBack  = t => 1 + 2.7 * Math.pow(t - 1, 3) + 1.7 * Math.pow(t - 1, 2);
+const TAU = Math.PI * 2;
+const fin = v => (typeof v === 'number' && isFinite(v));
+
+function vibrate(ms) {
+  try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) { /* no haptics */ }
+}
+
+// deterministic per-mission RNG so a retry is the same map
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// ---------------- save ----------------
+const SAVE_KEY = 'ttg_chopper';
+const UP_KEYS = ['damp', 'fuel', 'hull', 'winch'];
+const MAX_UP = 5;
+const BASE_STAGES = 12;
+const DEFAULT_SAVE = {
+  salv: 0, mission: 1, best: 1, saved: 0, mute: false, stage: 0,
+  up: { damp: 0, fuel: 0, hull: 0, winch: 0 },
+  roster: []
+};
+
+function cloneDefault() { return JSON.parse(JSON.stringify(DEFAULT_SAVE)); }
+
+function loadSave() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return cloneDefault();
+    const parsed = JSON.parse(raw);
+    const s = cloneDefault();
+    if (!parsed || typeof parsed !== 'object') return s;
+    if (fin(parsed.salv))    s.salv    = clamp(parsed.salv | 0, 0, 99999999);
+    if (fin(parsed.mission)) s.mission = clamp(parsed.mission | 0, 1, 9999);
+    if (fin(parsed.best))    s.best    = clamp(parsed.best | 0, 1, 9999);
+    if (fin(parsed.saved))   s.saved   = clamp(parsed.saved | 0, 0, 9999999);
+    if (fin(parsed.stage))   s.stage   = clamp(parsed.stage | 0, 0, BASE_STAGES);
+    if (typeof parsed.mute === 'boolean') s.mute = parsed.mute;
+    if (parsed.up && typeof parsed.up === 'object') {
+      for (const k of UP_KEYS) if (fin(parsed.up[k])) s.up[k] = clamp(parsed.up[k] | 0, 0, MAX_UP);
+    }
+    if (Array.isArray(parsed.roster)) {
+      for (const r of parsed.roster) {
+        if (!r || typeof r !== 'object') continue;
+        const n = typeof r.n === 'string' ? r.n.slice(0, 22) : null;
+        if (!n) continue;
+        s.roster.push({ n: n, c: fin(r.c) ? clamp(r.c | 0, 1, 9999) : 1 });
+        if (s.roster.length >= 60) break;
+      }
+    }
+    return s;
+  } catch (e) { return cloneDefault(); }
+}
+function persist() {
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { /* storage unavailable */ }
+}
+let S = loadSave();
+
+// upgrade-derived sim values (these genuinely change the physics)
+function upVals() {
+  return {
+    loadDamp:  0.22 + 0.20 * S.up.damp,     // 1/s velocity damping on the tethered load
+    fuelMul:   1 + 0.13 * S.up.fuel,        // tank size multiplier (budget is per-route)
+    hullMax:   3 + (S.up.hull >= 3 ? 1 : 0) + (S.up.hull >= 5 ? 1 : 0),
+    hullSoak:  0.80 - 0.09 * S.up.hull,     // chance a tracer hit actually bites
+    winchRate: 46 + 13 * S.up.winch         // cable units per second
+  };
+}
+
+// ---------------- audio ----------------
+let AC = null, master = null, rotorGain = null, rotorOsc = null, rotorLFO = null,
+    rotorFilt = null, noiseBuf = null, windGain = null, windFilt = null;
+
+function ensureAudio() {
+  if (AC) { if (AC.state === 'suspended') { try { AC.resume(); } catch (e) { /* ignore */ } } return; }
+  const Ctor = (typeof window !== 'undefined') && (window.AudioContext || window.webkitAudioContext);
+  if (!Ctor) return;
+  try {
+    AC = new Ctor();
+    master = AC.createGain();
+    master.gain.value = S.mute ? 0 : 0.5;
+    master.connect(AC.destination);
+
+    const len = Math.max(1, Math.floor(AC.sampleRate));
+    noiseBuf = AC.createBuffer(1, len, AC.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+
+    // rotor thrum: low osc + chop LFO through a lowpass
+    rotorOsc = AC.createOscillator();
+    rotorOsc.type = 'sawtooth';
+    rotorOsc.frequency.value = 58;
+    rotorFilt = AC.createBiquadFilter();
+    rotorFilt.type = 'lowpass'; rotorFilt.frequency.value = 340; rotorFilt.Q.value = 3;
+    rotorGain = AC.createGain(); rotorGain.gain.value = 0;
+    const lfoGain = AC.createGain(); lfoGain.gain.value = 0.5;
+    rotorLFO = AC.createOscillator(); rotorLFO.type = 'sine'; rotorLFO.frequency.value = 11;
+    rotorLFO.connect(lfoGain); lfoGain.connect(rotorGain.gain);
+    rotorOsc.connect(rotorFilt); rotorFilt.connect(rotorGain); rotorGain.connect(master);
+    rotorOsc.start(); rotorLFO.start();
+
+    // wind bed for gusty missions
+    const wsrc = AC.createBufferSource();
+    wsrc.buffer = noiseBuf; wsrc.loop = true;
+    windFilt = AC.createBiquadFilter();
+    windFilt.type = 'bandpass'; windFilt.frequency.value = 420; windFilt.Q.value = 0.7;
+    windGain = AC.createGain(); windGain.gain.value = 0;
+    wsrc.connect(windFilt); windFilt.connect(windGain); windGain.connect(master);
+    wsrc.start();
+  } catch (e) { AC = null; master = null; rotorGain = null; windGain = null; }
+}
+
+function audible() { return !!(AC && master && !S.mute); }
+
+function tone(freq, dur, type, vol, opts) {
+  if (!audible()) return;
+  opts = opts || {};
+  try {
+    const t0 = AC.currentTime + (opts.delay || 0);
+    const o = AC.createOscillator();
+    const g = AC.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(Math.max(20, freq), t0);
+    if (opts.slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(20, opts.slideTo), t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.linearRampToValueAtTime(vol, t0 + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(master);
+    o.start(t0); o.stop(t0 + dur + 0.05);
+  } catch (e) { /* audio hiccup is never fatal */ }
+}
+
+function noiseBurst(dur, vol, freq, opts) {
+  if (!audible() || !noiseBuf) return;
+  opts = opts || {};
+  try {
+    const t0 = AC.currentTime + (opts.delay || 0);
+    const src = AC.createBufferSource();
+    src.buffer = noiseBuf; src.loop = true;
+    const f = AC.createBiquadFilter();
+    f.type = opts.type || 'lowpass';
+    f.frequency.setValueAtTime(Math.max(30, freq), t0);
+    if (opts.slideTo) f.frequency.exponentialRampToValueAtTime(Math.max(30, opts.slideTo), t0 + dur);
+    const g = AC.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.linearRampToValueAtTime(vol, t0 + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start(t0); src.stop(t0 + dur + 0.06);
+  } catch (e) { /* ignore */ }
+}
+
+function setRotor(level, pitch) {
+  if (!AC || !rotorGain) return;
+  try {
+    const t = AC.currentTime;
+    rotorGain.gain.setTargetAtTime(S.mute ? 0 : clamp(level, 0, 1) * 0.13, t, 0.09);
+    if (rotorOsc) rotorOsc.frequency.setTargetAtTime(clamp(pitch, 30, 130), t, 0.12);
+    if (rotorLFO) rotorLFO.frequency.setTargetAtTime(clamp(9 + pitch * 0.06, 8, 20), t, 0.15);
+  } catch (e) { /* ignore */ }
+}
+function setWind(level) {
+  if (!AC || !windGain) return;
+  try { windGain.gain.setTargetAtTime(S.mute ? 0 : clamp(level, 0, 1) * 0.09, AC.currentTime, 0.3); } catch (e) { /* ignore */ }
+}
+
+function sfxClick() { tone(560, 0.05, 'square', 0.07); tone(820, 0.05, 'sine', 0.05); }
+function sfxWinch(dir) {
+  tone(dir > 0 ? 300 : 210, 0.16, 'square', 0.055, { slideTo: dir > 0 ? 460 : 150 });
+  noiseBurst(0.14, 0.05, 1800, { type: 'bandpass', slideTo: 900 });
+}
+function sfxHook() {
+  tone(700, 0.1, 'triangle', 0.16, { slideTo: 1020 });
+  tone(1040, 0.16, 'sine', 0.1, { delay: 0.08 });
+  noiseBurst(0.1, 0.06, 2600, { type: 'highpass' });
+}
+function sfxDeliver(n) {
+  const base = 523 * Math.pow(2, clamp(n - 1, 0, 7) / 12);
+  tone(base, 0.24, 'triangle', 0.2);
+  tone(base * 1.5, 0.28, 'sine', 0.12, { delay: 0.07 });
+}
+function sfxHit() {
+  noiseBurst(0.3, 0.28, 2400, { slideTo: 200 });
+  tone(150, 0.28, 'square', 0.16, { slideTo: 60 });
+}
+function sfxTracer() {
+  tone(1500, 0.14, 'sine', 0.05, { slideTo: 420 });
+  noiseBurst(0.09, 0.04, 3000, { type: 'highpass' });
+}
+function sfxBoom() {
+  noiseBurst(0.75, 0.42, 1500, { slideTo: 70 });
+  tone(95, 0.7, 'sine', 0.34, { slideTo: 30 });
+  tone(62, 0.5, 'square', 0.12, { slideTo: 24 });
+}
+function sfxThud(v) {
+  const k = clamp(v / 260, 0.1, 1);
+  noiseBurst(0.16 + 0.2 * k, 0.1 + 0.22 * k, 700 + 500 * k, { slideTo: 90 });
+  tone(120 - 40 * k, 0.2, 'sine', 0.1 + 0.1 * k, { slideTo: 50 });
+}
+function sfxKlaxon() {
+  tone(440, 0.3, 'square', 0.09, { slideTo: 300 });
+  tone(300, 0.3, 'square', 0.07, { delay: 0.3, slideTo: 440 });
+}
+function sfxTouchdown() {
+  noiseBurst(0.5, 0.16, 500, { slideTo: 120 });
+  tone(180, 0.45, 'sine', 0.16, { slideTo: 90 });
+}
+function sfxWin() {
+  const notes = [392, 523, 659, 784, 1047];
+  notes.forEach((n, i) => {
+    tone(n, 0.32, 'triangle', 0.18, { delay: i * 0.1 });
+    tone(n / 2, 0.32, 'sine', 0.09, { delay: i * 0.1 });
+  });
+}
+function sfxLose() {
+  tone(300, 0.35, 'triangle', 0.16, { slideTo: 210 });
+  tone(210, 0.6, 'triangle', 0.16, { slideTo: 110, delay: 0.3 });
+  noiseBurst(0.9, 0.12, 900, { slideTo: 80, delay: 0.2 });
+}
+function sfxBuy() {
+  tone(520, 0.1, 'square', 0.09);
+  tone(780, 0.12, 'square', 0.09, { delay: 0.08 });
+  tone(1040, 0.2, 'triangle', 0.13, { delay: 0.16 });
+}
+function sfxDenied() { tone(170, 0.15, 'square', 0.09, { slideTo: 110 }); }
+
+// ---------------- canvas ----------------
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+let W = 360, H = 640, DPR = 1, SCALE = 1, VW = 360, VH = 640;
+
+function resize() {
+  try {
+    DPR = Math.min((window.devicePixelRatio || 1), 2.5);
+    W = Math.max(1, window.innerWidth || 360);
+    H = Math.max(1, window.innerHeight || 640);
+    cv.width = Math.round(W * DPR);
+    cv.height = Math.round(H * DPR);
+    // EXPLICIT CSS pixel sizing — without this the canvas renders at DPR size.
+    cv.style.width = W + 'px';
+    cv.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    SCALE = clamp(Math.min(H / 660, W / 430), 0.30, 3.2);
+    VW = W / SCALE; VH = H / SCALE;
+  } catch (e) { /* never let a resize kill the game */ }
+}
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', resize);
+
+// ---------------- tuning constants ----------------
+const GRAV      = 900;    // world units / s^2 on the tethered load
+const CH_ACCX   = 700;    // chopper steering accel
+const CH_ACCY   = 820;   // must out-lift the heaviest cargo, but only just
+const CH_DRAGX  = 2.6;    // 1/s
+const CH_DRAGY  = 2.9;
+const CH_MAXVX  = 330;
+const CH_MAXVY  = 300;
+const CH_MASS   = 5.2;
+const CH_INV    = 1 / CH_MASS;
+const HOOK_MASS = 0.35;
+const SUB_DT    = 1 / 180;      // fixed physics substep
+const MAX_SUBS  = 10;           // cap substeps per frame
+const SOLVE_IT  = 5;            // constraint iterations
+const MAX_CORR  = 26;           // max positional correction per iteration (world units)
+const CH_CORR   = 2.2;          // max chopper displacement per iteration
+const MAX_PV    = 900;          // hard velocity cap on tether particles
+const CABLE_MIN = 42;
+const CABLE_MAX = 176;
+const GROUND_Y  = 520;
+const SEG       = 24;           // terrain sample spacing
+const CH_R      = 17;           // chopper collision radius
+const PAD_W     = 92;
+
+const CARGO = {
+  hook:      { m: HOOK_MASS, r: 6,  label: 'HOOK',         person: 0, salv: 0,  windK: 1.6 },
+  grunt:     { m: 1.6, r: 9,  label: 'RIFLEMAN',      person: 1, salv: 26, windK: 1.05 },
+  medic:     { m: 1.0, r: 8,  label: 'MEDIC',         person: 1, salv: 34, windK: 1.55 },
+  crate:     { m: 3.4, r: 14, label: 'SUPPLY CRATE',  person: 0, salv: 44, windK: 0.45 },
+  drum:      { m: 2.4, r: 11, label: 'FUEL DRUM',     person: 0, salv: 56, windK: 0.7, volatile: 1 },
+  stretcher: { m: 1.5, r: 10, label: 'STRETCHER',     person: 2, salv: 62, windK: 0.85, two: 1 }
+};
+
+const NAMES = ['REYES', 'OKAFOR', 'HALE', 'BRENNAN', 'DIAZ', 'NOVAK', 'PATEL', 'SOTO', 'KIM',
+  'WHITAKER', 'ANDERS', 'MOREAU', 'TANAKA', 'FINCH', 'OSEI', 'LUND', 'CRUZ', 'BAILEY',
+  'DRAKE', 'ELLIS', 'VOSS', 'MARSH', 'QUINN', 'RIVERA', 'STOKES', 'WEBB', 'YOON', 'ZANE',
+  'ABBOT', 'CALLOW', 'DUNNE', 'FARRO'];
+
+// ---------------- game state (ALL loop-touched fields initialized here) ----------------
+const G = {
+  screen: 'title',            // title | base | playing | win | lose
+  baseFrom: 'title',
+  baseTab: 'up',
+  mission: 1,
+  time: 0,
+  missionT: 0,
+  len: 2400,
+  lzX: 1200,
+  lzY: GROUND_Y - 6,
+  gh: [], ch: [], nSeg: 0,
+  hasCeiling: false,
+  U: upVals(),
+  chopper: { x: 400, y: 300, vx: 0, vy: 0, tilt: 0, rotor: 0, hull: 3, hullMax: 3,
+             invT: 0, down: false, downT: 0, landed: false, spin: 0 },
+  parts: [],                  // tether particles (0 = hook/load, 1 = stretcher foot)
+  cables: [],                 // [{ox, oy, p}]
+  bar: null,                  // rigid link for the stretcher
+  cable: { len: 110, target: 110, dir: -1 },
+  cargo: null,                // active cargo descriptor or null
+  cargoNames: [],
+  carry: null,                // the survivor/cargo entry currently on the hook
+  padCrew: [],                // figures that piled out at the LZ
+  survivors: [],
+  shooters: [],
+  tracers: [],
+  towers: [],
+  debris: [],
+  quota: 3,
+  delivered: 0,
+  rescuedNames: [],
+  fuel: 100, fuelMax: 100, fuelWarn: 0, klaxT: 0,
+  cam: { x: 0, y: 0 },
+  steer: { x: 0, y: 0 },
+  steerT: { x: 0, y: 0 },
+  autoSteer: null,
+  input: { active: false, id: -1, ax: 0, ay: 0, cx: 0, cy: 0, t0: 0, moved: 0 },
+  keys: { l: 0, r: 0, u: 0, d: 0 },
+  wind: 0, windCur: 0, windPhase: 0,
+  fireLull: 0,
+  flood: -1, floodRate: 0,
+  night: 0,
+  convoy: false,
+  shakeT: 0, shakeMag: 0,
+  slowmo: 0, vign: 0, flash: 0,
+  particles: [], popups: [], grass: [], clouds: [],
+  hint: '', hintT: 0,
+  endT: -1, endKind: '',
+  starCount: 0, salvEarned: 0,
+  nanResets: 0,
+  physAcc: 0,
+  bgA: '#16311f', bgB: '#3b4a2c', skyA: '#8fbcd6', skyB: '#dfe9c8'
+};
+
+let frameErrs = 0;
+
+// ---------------- terrain helpers ----------------
+function groundAt(x) {
+  const n = G.gh.length;
+  if (n === 0) return GROUND_Y;
+  const fx = clamp(x / SEG, 0, n - 1.001);
+  const i = fx | 0;
+  const t = fx - i;
+  const a = G.gh[i], b = G.gh[Math.min(n - 1, i + 1)];
+  const v = a + (b - a) * t;
+  return fin(v) ? v : GROUND_Y;
+}
+function ceilAt(x) {
+  const n = G.ch.length;
+  if (n === 0 || !G.hasCeiling) return -4000;
+  const fx = clamp(x / SEG, 0, n - 1.001);
+  const i = fx | 0;
+  const t = fx - i;
+  const a = G.ch[i], b = G.ch[Math.min(n - 1, i + 1)];
+  const v = a + (b - a) * t;
+  return fin(v) ? v : -4000;
+}
+function ceilAtRaw(x) {
+  const n = G.ch.length;
+  if (n === 0) return -4000;
+  const fx = clamp(x / SEG, 0, n - 1.001);
+  const i = fx | 0;
+  const t = fx - i;
+  const a = G.ch[i], b = G.ch[Math.min(n - 1, i + 1)];
+  const v = a + (b - a) * t;
+  return fin(v) ? v : -4000;
+}
+
+// solid top surface at x accounting for standing towers (returns the y a body rests on)
+function surfaceAt(x) {
+  let y = groundAt(x);
+  for (let i = 0; i < G.towers.length; i++) {
+    const t = G.towers[i];
+    if (t.state === 'down') continue;
+    if (x > t.x - t.w * 0.5 && x < t.x + t.w * 0.5) y = Math.min(y, t.top);
+  }
+  return y;
+}
+
+// ---------------- mission configuration ----------------
+function missionCfg(m) {
+  m = clamp(m | 0, 1, 9999);
+  const convoy = (m % 5 === 0);
+  const t = Math.min(1, (m - 1) / 18);          // difficulty ramp 0..1
+  const len = Math.round(convoy ? 2600 + 96 * Math.min(m, 20) : 1900 + 78 * Math.min(m, 20));
+  const quota = clamp(2 + Math.floor(m / 3), 2, 5) + (convoy ? 1 : 0);
+  // a convoy escort is already the long-pressure mission — never flood it too
+  const flood = (m >= 8 && m % 4 === 2 && !convoy) ? 1 : 0;
+  return {
+    m: m, convoy: convoy, t: t, len: len, quota: quota,
+    // a rising flood and a canyon roof would squeeze the corridor shut — never both
+    ceiling: m >= 3 && !flood,
+    ceilTight: t,                                // 0..1, how low the canyon roof comes
+    wind: m >= 4 ? 26 + 54 * t : 0,
+    night: (m >= 6 && (m % 3 === 0 || (m >= 12 && m % 4 === 1))) ? 1 : 0,
+    flood: flood,
+    // never stack two environmental catastrophes: a flooding map keeps its buildings
+    collapse: (m >= 7 && !flood) ? clamp(1 + Math.floor((m - 7) / 3), 1, 4) : 0,
+    // the water drove most of them off the low ground
+    shooters: m >= 2 ? clamp(Math.floor((m - 1) / 2.2) - (flood ? 1 : 0), flood ? 0 : 1, 4) : 0,
+    // fuel budget is derived from the actual work: quota round-trips + map length,
+    // so no mission is ever short of the fuel it physically needs.
+    fuel: 0.5 + 0.15 * quota + len / 10000 + 0.12 * t,
+    types: (function () {
+      const list = ['grunt'];
+      if (m >= 2) list.push('medic');
+      if (m >= 3) list.push('crate');
+      if (m >= 5) list.push('drum');
+      if (m >= 6) list.push('stretcher');
+      return list;
+    })()
+  };
+}
+
+// ---------------- world generation ----------------
+function genMission(m) {
+  const cfg = missionCfg(m);
+  const R = mulberry32((cfg.m * 7919 + 13) | 0);
+  G.mission = cfg.m;
+  G.convoy = cfg.convoy;
+  G.len = cfg.len;
+  G.nSeg = Math.ceil(G.len / SEG) + 2;
+  G.hasCeiling = cfg.ceiling;
+  G.U = upVals();
+
+  // --- ground heightmap ---
+  G.gh = [];
+  let h = GROUND_Y - 10;
+  let drift = 0;
+  for (let i = 0; i < G.nSeg; i++) {
+    const x = i * SEG;
+    drift += (R() - 0.5) * 10;
+    drift = clamp(drift, -8, 8);
+    h += drift * 0.55;
+    // long rolling shape + occasional mesa
+    const roll = Math.sin(x * 0.0031 + cfg.m) * 26 + Math.sin(x * 0.0009 + 2.2) * 34;
+    let y = clamp(GROUND_Y - 14 + roll * 0.6 + (h - (GROUND_Y - 10)) * 0.5, 330, GROUND_Y + 40);
+    G.gh.push(y);
+  }
+  // --- ceiling (canyon roof) ---
+  G.ch = [];
+  for (let i = 0; i < G.nSeg; i++) {
+    const x = i * SEG;
+    if (!cfg.ceiling) { G.ch.push(-4000); continue; }
+    const gy = G.gh[i];
+    // gap narrows with difficulty; pinch points where the swing arc barely fits
+    const pinch = 0.5 + 0.5 * Math.sin(x * 0.0042 + cfg.m * 1.7);
+    const gap = lerp(360, 190, cfg.ceilTight) - pinch * lerp(40, 96, cfg.ceilTight);
+    G.ch.push(clamp(gy - Math.max(150, gap), -60, 320));
+  }
+
+  // --- landing zone ---
+  G.lzX = Math.round(cfg.convoy ? G.len * 0.9 : G.len * 0.5);
+  // flatten the pad
+  const pi = Math.round(G.lzX / SEG);
+  let padY = G.gh[clamp(pi, 0, G.nSeg - 1)];
+  // on flood maps the LZ sits on a mesa: the water must never swallow the pad
+  if (cfg.flood) padY = Math.min(padY, GROUND_Y - 246);
+  // flat pad with SLOPED shoulders — never a sheer cliff to fly into
+  const PAD_FLAT = 4, PAD_RAMP = 7;
+  for (let i = pi - PAD_FLAT - PAD_RAMP; i <= pi + PAD_FLAT + PAD_RAMP; i++) {
+    if (i < 0 || i >= G.nSeg) continue;
+    const d = Math.abs(i - pi);
+    let k = d <= PAD_FLAT ? 1 : clamp(1 - (d - PAD_FLAT) / PAD_RAMP, 0, 1);
+    k = k * k * (3 - 2 * k);
+    G.gh[i] = lerp(G.gh[i], padY, k);
+  }
+  G.lzY = padY - 6;
+  if (cfg.ceiling) for (let i = pi - 4; i <= pi + 4; i++) if (i >= 0 && i < G.nSeg) G.ch[i] = Math.min(G.ch[i], padY - 300);
+
+  // --- survivors / cargo ---
+  G.survivors = [];
+  G.quota = cfg.quota;
+  const n = cfg.quota + (cfg.convoy ? 0 : 1);   // one spare so a lost drum is not fatal
+  const used = {};
+  for (let i = 0; i < n; i++) {
+    let sx;
+    if (cfg.convoy) sx = G.len * (0.44 + 0.34 * (i / Math.max(1, n - 1))) + (R() - 0.5) * 90;
+    else {
+      const side = (i % 2 === 0) ? -1 : 1;
+      const f = 0.14 + 0.36 * (i / Math.max(1, n));
+      sx = G.lzX + side * G.len * f + (R() - 0.5) * 100;
+    }
+    sx = clamp(sx, 150, G.len - 150);
+    if (Math.abs(sx - G.lzX) < 180) sx += (sx < G.lzX ? -220 : 220);
+    sx = clamp(sx, 150, G.len - 150);
+    const type = cfg.types[Math.floor(R() * cfg.types.length)] || 'grunt';
+    const cd = CARGO[type];
+    const names = [];
+    for (let k = 0; k < cd.person; k++) {
+      let nm = NAMES[Math.floor(R() * NAMES.length)];
+      let guard = 0;
+      while (used[nm] && guard++ < 16) nm = NAMES[Math.floor(R() * NAMES.length)];
+      used[nm] = 1;
+      names.push(nm);
+    }
+    G.survivors.push({
+      x: sx, y: surfaceAt(sx) - 12, type: type, names: names, taken: false, done: false, lost: false,
+      wave: R() * TAU, flareT: R() * 2, r: cd.r
+    });
+  }
+
+  // --- shooters (tracer arcs, never near the LZ) ---
+  G.shooters = [];
+  for (let i = 0; i < cfg.shooters; i++) {
+    let sx = 200 + R() * (G.len - 400);
+    if (Math.abs(sx - G.lzX) < 260) sx += 320;
+    sx = clamp(sx, 160, G.len - 160);
+    G.shooters.push({ x: sx, y: surfaceAt(sx) - 10, t: R() * 2.2, rate: lerp(4.6, 3.2, cfg.t), aim: 0, muzzle: 0 });
+  }
+
+  // --- collapsing structures ---
+  G.towers = [];
+  for (let i = 0; i < cfg.collapse; i++) {
+    let tx = 260 + R() * (G.len - 520);
+    if (Math.abs(tx - G.lzX) < 220) tx += 300;
+    tx = clamp(tx, 200, G.len - 200);
+    const gy = groundAt(tx);
+    let hgt = 120 + R() * 110;
+    // a tower must never seal a canyon: always leave a flyable corridor above it
+    if (cfg.ceiling) hgt = Math.min(hgt, Math.max(50, gy - ceilAtRaw(tx) - 150));
+    G.towers.push({ x: tx, w: 40 + R() * 22, top: gy - hgt, base: gy, state: 'stand', t: 0, lean: 0, warn: 0 });
+  }
+
+  // --- environment ---
+  G.wind = cfg.wind;
+  G.windPhase = R() * TAU;
+  G.windCur = 0;
+  G.night = cfg.night;
+  G.flood = cfg.flood ? GROUND_Y + 60 : -1;
+  G.floodRate = cfg.flood ? lerp(1.8, 3.2, cfg.t) : 0;
+
+  // --- grass tufts for rotor wash ---
+  G.grass = [];
+  for (let x = 40; x < G.len; x += 26) {
+    G.grass.push({ x: x, y: groundAt(x), b: 0, h: 7 + R() * 9, s: R() * TAU });
+  }
+  G.clouds = [];
+  for (let i = 0; i < 9; i++) {
+    G.clouds.push({ x: R() * G.len, y: 30 + R() * 150, s: 0.5 + R() * 1.1, w: 60 + R() * 90 });
+  }
+
+  // --- fuel budget derived from THIS map's actual geometry, so every mission
+  // physically has the fuel the route needs (margin tightens as difficulty rises) ---
+  const legs = G.survivors.map(s => Math.abs(s.x - G.lzX)).sort((a, b) => a - b);
+  let travel = 0;
+  for (let i = 0; i < Math.min(G.quota, legs.length); i++) travel += 2 * legs[i];
+  const seconds = travel / 175 + G.quota * 5.5 + 14;
+  const generosity = 1.42 - 0.28 * cfg.t;
+  G.fuelMax = Math.max(60, Math.round(seconds * 2.35 * generosity * G.U.fuelMul));
+  G.fuel = G.fuelMax;
+
+  // palette per mission
+  const hue = (cfg.m * 37) % 360;
+  if (cfg.night) { G.skyA = '#0b1430'; G.skyB = '#182a3c'; G.bgA = '#0a1712'; G.bgB = '#102016'; }
+  else if (hue < 120) { G.skyA = '#7fb3d5'; G.skyB = '#e6e3bd'; G.bgA = '#20422a'; G.bgB = '#4a5a30'; }
+  else if (hue < 240) { G.skyA = '#c98f5a'; G.skyB = '#f2d9a5'; G.bgA = '#3a3320'; G.bgB = '#5d4a29'; }
+  else { G.skyA = '#6f92b8'; G.skyB = '#cfd9dd'; G.bgA = '#2a3a3a'; G.bgB = '#42553f'; }
+}
+
+// ---------------- tether construction ----------------
+function makeParticle(x, y, type) {
+  const cd = CARGO[type] || CARGO.hook;
+  return {
+    x: x, y: y, px: x, py: y, vx: 0, vy: 0,
+    m: cd.m, inv: 1 / cd.m, r: cd.r, windK: cd.windK,
+    type: type, grounded: 0, impact: 0, wet: 0
+  };
+}
+
+function resetTether() {
+  const ch = G.chopper;
+  G.parts = [makeParticle(ch.x, ch.y + G.cable.len, 'hook')];
+  G.cables = [{ ox: 0, oy: 7, p: 0 }];
+  G.bar = null;
+  G.cargo = null;
+  G.cargoNames = [];
+  G.carry = null;
+}
+
+function attachCargo(type, names) {
+  const cd = CARGO[type];
+  if (!cd) return;
+  const ch = G.chopper;
+  const p0 = G.parts[0] || makeParticle(ch.x, ch.y + G.cable.len, 'hook');
+  p0.type = type; p0.m = cd.m; p0.inv = 1 / cd.m; p0.r = cd.r; p0.windK = cd.windK;
+  G.parts = [p0];
+  G.cables = [{ ox: cd.two ? -13 : 0, oy: 7, p: 0 }];
+  G.bar = null;
+  if (cd.two) {
+    // stretcher: a second particle on a second cable + a rigid bar => refuses to rotate
+    const p1 = makeParticle(p0.x + 30, p0.y, type);
+    p1.m = cd.m; p1.inv = 1 / cd.m; p1.r = cd.r;
+    G.parts.push(p1);
+    G.cables.push({ ox: 13, oy: 7, p: 1 });
+    G.bar = { a: 0, b: 1, rest: 30 };
+  }
+  G.cargo = { type: type, cd: cd, names: (names || []).slice() };
+  G.cargoNames = (names || []).slice();
+}
+
+function releaseCargo() {
+  const p0 = G.parts[0];
+  const cd = CARGO.hook;
+  if (p0) { p0.type = 'hook'; p0.m = cd.m; p0.inv = 1 / cd.m; p0.r = cd.r; p0.windK = cd.windK; }
+  G.parts = p0 ? [p0] : [makeParticle(G.chopper.x, G.chopper.y + G.cable.len, 'hook')];
+  G.cables = [{ ox: 0, oy: 7, p: 0 }];
+  G.bar = null;
+  G.cargo = null;
+  G.cargoNames = [];
+}
+
+// ---------------- physics ----------------
+function sanitizeTether(reason) {
+  // Last-ditch guard: if any number went non-finite, rebuild the tether under the chopper.
+  const ch = G.chopper;
+  if (!fin(ch.x) || !fin(ch.y)) { ch.x = clamp(G.lzX, 0, G.len); ch.y = G.lzY - 140; }
+  if (!fin(ch.vx)) ch.vx = 0;
+  if (!fin(ch.vy)) ch.vy = 0;
+  for (let i = 0; i < G.parts.length; i++) {
+    const p = G.parts[i];
+    if (!fin(p.x) || !fin(p.y) || !fin(p.vx) || !fin(p.vy)) {
+      p.x = ch.x + (i === 0 ? 0 : 26); p.y = ch.y + G.cable.len;
+      p.px = p.x; p.py = p.y; p.vx = 0; p.vy = 0;
+      G.nanResets++;
+    }
+  }
+  if (!fin(G.cable.len)) G.cable.len = 110;
+  if (reason && window.console && G.nanResets < 4) console.warn('[chopper] tether sanitized:', reason);
+}
+
+function physicsStep(h) {
+  const ch = G.chopper;
+  const U = G.U;
+  const cx0 = ch.x, cy0 = ch.y;
+
+  // ---- chopper integration ----
+  let ax = 0, ay = 0;
+  if (!ch.down) {
+    ax = G.steer.x * CH_ACCX;
+    ay = G.steer.y * CH_ACCY;
+  } else {
+    // autorotation: almost no authority, sinks
+    ax = G.steer.x * 90;
+    ay = 210;
+  }
+  ax += G.windCur * 0.30;
+  ch.vx += ax * h; ch.vy += ay * h;
+  ch.vx -= ch.vx * CH_DRAGX * h;
+  ch.vy -= ch.vy * (ch.down ? 1.1 : CH_DRAGY) * h;
+  ch.vx = clamp(ch.vx, -CH_MAXVX, CH_MAXVX);
+  ch.vy = clamp(ch.vy, -CH_MAXVY, CH_MAXVY);
+  ch.x += ch.vx * h; ch.y += ch.vy * h;
+
+  // ---- tether particles ----
+  const parts = G.parts;
+  for (let i = 0; i < parts.length; i++) {
+    const p = parts[i];
+    p.px = p.x; p.py = p.y;
+    p.vy += GRAV * h;
+    p.vx += G.windCur * p.windK * h;
+    // damping — this is the dial the Cable Damping upgrade turns
+    const dk = U.loadDamp;
+    p.vx -= p.vx * dk * h;
+    p.vy -= p.vy * dk * h;
+    if (G.flood > 0 && p.y > G.flood) {
+      p.vy -= 520 * h;                 // buoyancy
+      p.vx -= p.vx * 3.4 * h;
+      p.vy -= p.vy * 3.4 * h;
+      p.wet = 1;
+    } else p.wet = 0;
+    p.vx = clamp(p.vx, -MAX_PV, MAX_PV);
+    p.vy = clamp(p.vy, -MAX_PV, MAX_PV);
+    p.x += p.vx * h;
+    p.y += p.vy * h;
+  }
+
+  // ---- constraint solve (mass-weighted => the load's reaction moves the chopper) ----
+  const L = clamp(G.cable.len, CABLE_MIN, CABLE_MAX);
+  const chW = CH_INV * (ch.down ? 0.45 : 1);
+  for (let it = 0; it < SOLVE_IT; it++) {
+    for (let c = 0; c < G.cables.length; c++) {
+      const cab = G.cables[c];
+      const p = parts[cab.p];
+      if (!p) continue;
+      const axp = ch.x + cab.ox, ayp = ch.y + cab.oy;
+      let dx = p.x - axp, dy = p.y - ayp;
+      let d = Math.sqrt(dx * dx + dy * dy);
+      if (!fin(d)) { sanitizeTether('solve'); return; }
+      if (d < 1e-5) { dx = 0; dy = 1e-5; d = 1e-5; }
+      if (d <= L) continue;                    // rope: slack does nothing
+      const nx = dx / d, ny = dy / d;
+      const diff = Math.min(d - L, MAX_CORR);
+      const wA = chW, wB = p.inv;
+      const sum = (wA + wB) || 1;
+      const mvA = Math.min(diff * (wA / sum), CH_CORR);
+      const mvB = diff * (wB / sum);
+      ch.x += nx * mvA; ch.y += ny * mvA;
+      p.x -= nx * mvB; p.y -= ny * mvB;
+    }
+    // rigid bar (stretcher stays level and refuses to rotate)
+    if (G.bar) {
+      const a = parts[G.bar.a], b = parts[G.bar.b];
+      if (a && b) {
+        let dx = b.x - a.x, dy = b.y - a.y;
+        let d = Math.sqrt(dx * dx + dy * dy);
+        if (!fin(d)) { sanitizeTether('bar'); return; }
+        if (d < 1e-5) { dx = 1e-5; d = 1e-5; }
+        const diff = clamp(d - G.bar.rest, -MAX_CORR, MAX_CORR);
+        const nx = dx / d, ny = dy / d;
+        const s = 0.5 * diff;
+        a.x += nx * s; a.y += ny * s;
+        b.x -= nx * s; b.y -= ny * s;
+        // keep it horizontal: pull the vertical difference out
+        const midY = (a.y + b.y) * 0.5;
+        a.y = lerp(a.y, midY, 0.55);
+        b.y = lerp(b.y, midY, 0.55);
+      }
+    }
+  }
+
+  // ---- particle collisions with the world ----
+  for (let i = 0; i < parts.length; i++) {
+    const p = parts[i];
+    const gy = surfaceAt(p.x) - p.r;
+    p.impact = 0;
+    if (p.y > gy) {
+      const impactV = Math.abs(p.y - p.py) / h;
+      p.y = gy;
+      p.impact = impactV;
+      p.grounded = 1;
+    } else p.grounded = 0;
+    const cy = ceilAt(p.x) + p.r;
+    if (G.hasCeiling && p.y < cy) { p.impact = Math.max(p.impact, Math.abs(p.y - p.py) / h); p.y = cy; }
+    if (p.x < p.r) p.x = p.r;
+    if (p.x > G.len - p.r) p.x = G.len - p.r;
+  }
+
+  enforceCableBounds();
+
+  // ---- velocity derivation (PBD): constraint corrections become real velocity ----
+  ch.vx = (ch.x - cx0) / h;
+  ch.vy = (ch.y - cy0) / h;
+  if (!fin(ch.vx)) ch.vx = 0;
+  if (!fin(ch.vy)) ch.vy = 0;
+  ch.vx = clamp(ch.vx, -CH_MAXVX * 1.4, CH_MAXVX * 1.4);
+  ch.vy = clamp(ch.vy, -CH_MAXVY * 1.4, CH_MAXVY * 1.4);
+
+  for (let i = 0; i < parts.length; i++) {
+    const p = parts[i];
+    let vx = (p.x - p.px) / h;
+    let vy = (p.y - p.py) / h;
+    if (!fin(vx) || !fin(vy)) { sanitizeTether('vel'); continue; }
+    if (p.grounded) { vx *= (1 - clamp(5.5 * h, 0, 1)); if (vy > 0) vy = -vy * 0.12; }
+    const sp = Math.sqrt(vx * vx + vy * vy);
+    if (sp > MAX_PV) { vx *= MAX_PV / sp; vy *= MAX_PV / sp; }
+    p.vx = vx; p.vy = vy;
+  }
+}
+
+// Hard bound: the cable can NEVER stretch past 2%, whatever moved the anchor.
+// A load pinned by terrain drags the CHOPPER instead of stretching the rope.
+// Called at the end of every substep AND after frame-level chopper collision push-out.
+function enforceCableBounds() {
+  const ch = G.chopper;
+  const parts = G.parts;
+  const L = clamp(G.cable.len, CABLE_MIN, CABLE_MAX);
+  const lim = L * 1.02;
+  for (let c = 0; c < G.cables.length; c++) {
+    const cab = G.cables[c];
+    const p = parts[cab.p];
+    if (!p) continue;
+    let axp = ch.x + cab.ox, ayp = ch.y + cab.oy;
+    let dx = p.x - axp, dy = p.y - ayp;
+    let d = Math.sqrt(dx * dx + dy * dy);
+    if (!fin(d) || d < 1e-5) continue;
+    if (d <= lim) continue;
+    // 1) pull the load in, then re-seat it on the terrain
+    let s = L / d;
+    p.x = axp + dx * s; p.y = ayp + dy * s;
+    const gy2 = surfaceAt(p.x) - p.r;
+    if (p.y > gy2) p.y = gy2;
+    const cy2 = ceilAt(p.x) + p.r;
+    if (G.hasCeiling && p.y < cy2) p.y = cy2;
+    // 2) still stretched => the load is snagged: yank the chopper toward it
+    dx = p.x - axp; dy = p.y - ayp;
+    d = Math.sqrt(dx * dx + dy * dy);
+    if (fin(d) && d > lim) {
+      const nx = dx / d, ny = dy / d;
+      // mass-weighted: a snagged crate really does stop you, a dangling hook does not
+      const massW = clamp(p.m / (p.m + CH_MASS), 0, 1);
+      const pull = Math.min(d - L, 2.5) * massW;
+      ch.x += nx * pull; ch.y += ny * pull;
+      axp = ch.x + cab.ox; ayp = ch.y + cab.oy;
+      dx = p.x - axp; dy = p.y - ayp;
+      d = Math.sqrt(dx * dx + dy * dy);
+    }
+    // 3) absolute guarantee: project the load, terrain or not
+    if (fin(d) && d > lim) {
+      s = L / d;
+      p.x = axp + dx * s; p.y = ayp + dy * s;
+    }
+  }
+}
+
+// swing energy proxy — used for the damping readout and by the physics soak test
+function swingMetric() {
+  const p = G.parts[0];
+  if (!p) return 0;
+  const dx = p.x - G.chopper.x;
+  const dy = Math.max(1, p.y - G.chopper.y);
+  const ang = Math.atan2(dx, dy);
+  const rel = Math.hypot(p.vx - G.chopper.vx, p.vy - G.chopper.vy);
+  return Math.abs(ang) * 90 + rel * 0.22;
+}
+
+// ---------------- fx helpers ----------------
+function shake(mag, t) { G.shakeMag = Math.max(G.shakeMag, mag); G.shakeT = Math.max(G.shakeT, t); }
+function popup(x, y, text, col) {
+  G.popups.push({ x: x, y: y, text: text, col: col || '#ffd76b', t: 0, life: 1.15 });
+  if (G.popups.length > 30) G.popups.shift();
+}
+function spark(x, y, n, col, spd, kind) {
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * TAU, s = rand(0.2, 1) * (spd || 160);
+    G.particles.push({
+      x: x, y: y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - (kind === 'dust' ? 20 : 0),
+      t: 0, life: rand(0.3, 0.9), r: rand(1.4, 3.6), col: col || '#ffd27a', kind: kind || 'spark'
+    });
+  }
+  if (G.particles.length > 420) G.particles.splice(0, G.particles.length - 420);
+}
+
+function hullHit(n, reason) {
+  const ch = G.chopper;
+  if (ch.down || G.endT >= 0) return;
+  if (ch.invT > 0) return;
+  ch.hull -= n;
+  ch.invT = 1.25;
+  G.fireLull = 2.0;          // the guns lose you for a moment after a hit — recovery window
+  G.vign = 1;
+  G.flash = 0.5;
+  shake(11, 0.34);
+  vibrate(45);
+  sfxHit();
+  spark(ch.x, ch.y, 14, '#ffd27a', 220);
+  popup(ch.x, ch.y - 30, reason || 'HULL HIT', '#ff9e8f');
+  if (ch.hull <= 0) {
+    ch.hull = 0;
+    ch.down = true;
+    ch.downT = 0;
+    G.hint = 'AUTOROTATING — BRACE';
+    G.hintT = 3;
+    sfxLose();
+  }
+}
+
+// ---------------- mission lifecycle ----------------
+function startMission(m) {
+  m = clamp(m | 0, 1, 9999);
+  genMission(m);
+  const U = G.U;
+  const ch = G.chopper;
+  ch.x = clamp(G.lzX, 60, G.len - 60);
+  ch.y = G.lzY - 150;
+  ch.vx = 0; ch.vy = 0; ch.tilt = 0; ch.rotor = 0;
+  ch.hullMax = U.hullMax; ch.hull = U.hullMax;
+  ch.invT = 1.2; ch.down = false; ch.downT = 0; ch.landed = false; ch.spin = 0;
+  G.cable.len = 110; G.cable.target = 110; G.cable.dir = -1;
+  resetTether();
+  G.parts[0].x = ch.x; G.parts[0].y = ch.y + G.cable.len;
+  G.parts[0].px = G.parts[0].x; G.parts[0].py = G.parts[0].y;
+  G.delivered = 0;
+  G.rescuedNames = [];
+  G.padCrew = [];
+  G.tracers = [];
+  G.debris = [];
+  G.particles = [];
+  G.popups = [];
+  G.fuel = G.fuelMax;   // genMission sized the tank from the route
+  G.fuelWarn = 0; G.klaxT = 0;
+  G.missionT = 0;
+  G.physAcc = 0;
+  G.endT = -1; G.endKind = '';
+  G.salvEarned = 0; G.starCount = 0;
+  G.slowmo = 0; G.vign = 0; G.flash = 0;
+  G.shakeT = 0; G.shakeMag = 0;
+  G.steer.x = 0; G.steer.y = 0; G.steerT.x = 0; G.steerT.y = 0;
+  G.input.active = false; G.input.id = -1; G.input.moved = 0;
+  G.cam.x = ch.x; G.cam.y = ch.y;
+  setScreen('playing');          // hides the menus, shows the HUD + winch control
+  G.hint = G.convoy ? 'CONVOY ESCORT — LONG FERRY, CLOCK NEVER STOPS'
+    : (m === 1 ? 'DRAG TO FLY · TAP TO WINCH · HOOK THEM, FLY THEM HOME' : missionBrief(m));
+  G.hintT = m === 1 ? 6 : 4;
+  window.TTG?.track('level_start', { level: m });
+}
+
+function missionBrief(m) {
+  const c = missionCfg(m);
+  if (c.flood) return 'FLOOD RISING — GET THEM OUT';
+  if (c.night) return 'NIGHT EXTRACTION — SEARCHLIGHT ONLY';
+  if (c.collapse) return 'STRUCTURES UNSTABLE — DO NOT LOITER';
+  if (c.wind > 55) return 'HEAVY CROSSWIND — THE LOAD WILL FIGHT YOU';
+  if (c.ceiling) return 'TIGHT CANYON — MIND THE SWING ARC';
+  return 'EXTRACT THE QUOTA, THEN LAND ON THE PAD';
+}
+
+function finishMission(kind) {
+  if (G.endT >= 0) return;
+  G.endKind = kind;
+  G.endT = kind === 'win' ? 1.35 : 1.0;
+  if (kind === 'win') { G.slowmo = 1.35; sfxTouchdown(); shake(7, 0.4); }
+}
+
+function commitWin() {
+  const U = G.U;
+  const fuelPct = clamp(G.fuel / Math.max(1, G.fuelMax), 0, 1);
+  let stars = 1;
+  if (G.chopper.hull >= G.chopper.hullMax) stars++;
+  if (fuelPct > 0.3) stars++;
+  G.starCount = stars;
+  const bonus = Math.round(60 + 22 * G.mission + fuelPct * 70 + (stars - 1) * 40);
+  G.salvEarned += bonus;
+  S.salv += G.salvEarned;
+  S.saved += G.rescuedNames.length;
+  for (const nm of G.rescuedNames) {
+    let e = null;
+    for (const r of S.roster) if (r.n === nm) { e = r; break; }
+    if (e) e.c++;
+    else { S.roster.push({ n: nm, c: 1 }); if (S.roster.length > 60) S.roster.shift(); }
+  }
+  S.mission = G.mission + 1;
+  S.best = Math.max(S.best, S.mission);
+  persist();
+  window.TTG?.track('level_complete', { level: G.mission, value: G.salvEarned });
+  window.TTG?.track('extraction_complete', { value: G.rescuedNames.length });
+  sfxWin();
+  setScreen('win');
+}
+
+function commitLose() {
+  window.TTG?.track('game_over', { level: G.mission });
+  S.salv += Math.round(G.salvEarned * 0.4);
+  persist();
+  setScreen('lose');
+}
+
+// ---------------- input -> steering ----------------
+const STICK_R = 74;         // px of drag for full deflection
+
+function computeSteerTarget() {
+  if (G.autoSteer) {                       // attract-mode / harness pilot
+    G.steerT.x = clamp(fin(G.autoSteer.x) ? G.autoSteer.x : 0, -1, 1);
+    G.steerT.y = clamp(fin(G.autoSteer.y) ? G.autoSteer.y : 0, -1, 1);
+    return;
+  }
+  const I = G.input;
+  let sx = 0, sy = 0;
+  if (I.active) {
+    let dx = I.cx - I.ax, dy = I.cy - I.ay;
+    const d = Math.hypot(dx, dy);
+    if (d > STICK_R) {
+      // anchor drift keeps the stick from ever feeling stuck at the rim
+      const over = d - STICK_R;
+      I.ax += (dx / d) * over;
+      I.ay += (dy / d) * over;
+      dx = (dx / d) * STICK_R; dy = (dy / d) * STICK_R;
+    }
+    sx = dx / STICK_R; sy = dy / STICK_R;
+  }
+  const K = G.keys;
+  if (K.l || K.r || K.u || K.d) {
+    sx = clamp(sx + (K.r ? 1 : 0) - (K.l ? 1 : 0), -1, 1);
+    sy = clamp(sy + (K.d ? 1 : 0) - (K.u ? 1 : 0), -1, 1);
+  }
+  const mag = Math.hypot(sx, sy);
+  if (mag > 1) { sx /= mag; sy /= mag; }
+  G.steerT.x = fin(sx) ? sx : 0;
+  G.steerT.y = fin(sy) ? sy : 0;
+}
+
+function toggleWinch() {
+  G.cable.dir = -G.cable.dir;
+  G.cable.target = G.cable.dir < 0 ? CABLE_MIN + 6 : CABLE_MAX - 8;
+  sfxWinch(G.cable.dir);
+  vibrate(12);
+}
+
+// gentle idle patrol so the title screen shows the mechanic off
+function demoSteer(dt) {
+  const ch = G.chopper;
+  const p = G.parts[0];
+  const t = G.time;
+  const tx = G.lzX + Math.sin(t * 0.33) * Math.min(300, G.len * 0.16);
+  const ty = (G.hasCeiling ? (ceilAt(ch.x) + groundAt(ch.x)) * 0.5 : groundAt(ch.x) - 210) + Math.sin(t * 0.7) * 26;
+  let sx = clamp((tx - ch.x) / 200, -1, 1) * 0.55;
+  let sy = clamp((ty - ch.y) / 130, -1, 1) * 0.6;
+  if (p) sx += clamp((p.x - ch.x) / 160, -0.4, 0.4) * 0.35;   // lazy anti-sway
+  G.steerT.x = clamp(sx, -1, 1);
+  G.steerT.y = clamp(sy, -1, 1);
+  if (G.screen !== 'playing') G.fuel = G.fuelMax;   // attract mode only
+}
+
+// ---------------- systems ----------------
+function updatePickups() {
+  const hook = G.parts[0];
+  if (!hook || G.chopper.down) return;
+  if (!G.cargo) {
+    for (let i = 0; i < G.survivors.length; i++) {
+      const s = G.survivors[i];
+      if (s.taken || s.done) continue;
+      const d = Math.hypot(hook.x - s.x, hook.y - s.y);
+      if (d < 30 + s.r) {
+        s.taken = true;
+        G.carry = s;
+        attachCargo(s.type, s.names);
+        hook.x = s.x; hook.y = s.y; hook.px = s.x; hook.py = s.y;
+        hook.vx *= 0.3; hook.vy *= 0.3;
+        sfxHook();
+        vibrate(22);
+        popup(s.x, s.y - 26, CARGO[s.type].label + ' ON THE HOOK', '#dcff9a');
+        spark(s.x, s.y, 8, '#dcff9a', 90, 'dust');
+        G.hint = 'FLY WITH THE SWING TO AMPLIFY · INTO IT TO KILL IT';
+        G.hintT = 2.6;
+        break;
+      }
+    }
+    return;
+  }
+  // ---- delivery at the LZ ----
+  const ch = G.chopper;
+  const load = G.parts[0];
+  const overPad = Math.abs(ch.x - G.lzX) < PAD_W * 0.62;
+  const loadLow = load.y > G.lzY - 58;
+  const slow = Math.hypot(ch.vx, ch.vy) < 165;
+  if (overPad && loadLow && slow) {
+    const cd = G.cargo.cd;
+    const names = G.cargo.names.slice();
+    G.delivered++;
+    G.salvEarned += cd.salv;
+    for (const nm of names) {
+      G.rescuedNames.push(nm);
+      G.padCrew.push({ x: G.lzX + rand(-34, 34), y: G.lzY, t: 0, name: nm, ph: Math.random() * TAU });
+    }
+    if (!cd.person) G.padCrew.push({ x: G.lzX + rand(-30, 30), y: G.lzY, t: 0, name: '', crate: 1, ph: 0 });
+    if (G.carry) { G.carry.done = true; G.carry = null; }
+    releaseCargo();
+    sfxDeliver(G.delivered);
+    vibrate(30);
+    popup(G.lzX, G.lzY - 90, '+' + cd.salv + ' 🔩', '#ffd76b');
+    spark(G.lzX, G.lzY - 8, 16, '#dcff9a', 140, 'dust');
+    // the ground crew patches you up as they unload — every second body out
+    if (G.delivered % (G.convoy ? 1 : 2) === 0 && G.chopper.hull < G.chopper.hullMax) {
+      G.chopper.hull++;
+      popup(G.lzX, G.lzY - 122, '+1 HULL PATCHED', '#9ede4b');
+      tone(520, 0.14, 'triangle', 0.14); tone(780, 0.18, 'sine', 0.1, { delay: 0.1 });
+    }
+    if (G.delivered >= G.quota) {
+      G.hint = 'QUOTA CLEAR — SET DOWN ON THE PAD';
+      G.hintT = 4;
+    } else {
+      G.hint = (G.quota - G.delivered) + ' MORE TO EXTRACT';
+      G.hintT = 2.2;
+    }
+  }
+}
+
+function updateChopperWorld(dt) {
+  const ch = G.chopper;
+  if (ch.invT > 0) ch.invT -= dt;
+
+  const onPad = Math.abs(ch.x - G.lzX) < PAD_W * 0.62;
+  const gy = surfaceAt(ch.x) - CH_R;
+  if (ch.y > gy) {
+    const vy = ch.vy, vx = ch.vx;
+    ch.y = gy;
+    const soft = Math.abs(vy) < 155 && Math.abs(vx) < 130;
+    if (ch.down) {
+      ch.vy = 0; ch.vx *= 0.4;
+      ch.downT += dt;
+      spark(ch.x, ch.y + 12, 3, '#c8b48a', 90, 'dust');
+      if (ch.downT > 0.55) finishMission('lose');
+    } else if (onPad && soft) {
+      ch.vy = 0; ch.vx *= 0.5;
+      ch.landed = true;
+      if (G.delivered >= G.quota && !G.cargo) {
+        popup(G.lzX, G.lzY - 110, 'TOUCHDOWN', '#c6ff9a');
+        finishMission('win');
+      } else if (G.hintT <= 0) {
+        G.hint = G.cargo ? 'DROP THE LOAD ON THE PAD' : (G.quota - G.delivered) + ' STILL OUT THERE';
+        G.hintT = 1.8;
+      }
+    } else {
+      ch.vy = -Math.abs(vy) * 0.25;
+      ch.vx *= 0.55;
+      // a gentle set-down anywhere is free; only real impacts cost hull
+      if (Math.abs(vy) > 200 || Math.abs(vx) > 250) hullHit(2, 'HARD IMPACT');
+      else if (Math.abs(vy) > 125 || Math.abs(vx) > 170) hullHit(1, 'GROUND STRIKE');
+      spark(ch.x, ch.y + 10, 8, '#c8b48a', 130, 'dust');
+    }
+  } else ch.landed = false;
+
+  if (G.hasCeiling) {
+    const cy = ceilAt(ch.x) + CH_R;
+    if (ch.y < cy) {
+      const vy = ch.vy;
+      ch.y = cy; ch.vy = Math.abs(vy) * 0.25;
+      if (Math.abs(vy) > 90) hullHit(1, 'ROTOR STRIKE');   // a graze is just sparks
+      spark(ch.x, ch.y - 12, 8, '#b7a98c', 140, 'dust');
+    }
+  }
+  for (let i = 0; i < G.towers.length; i++) {
+    const t = G.towers[i];
+    if (t.state === 'down') continue;
+    if (ch.x > t.x - t.w * 0.5 - CH_R && ch.x < t.x + t.w * 0.5 + CH_R && ch.y + CH_R > t.top) {
+      ch.x += ch.x < t.x ? -6 : 6;
+      ch.vx = (ch.x < t.x ? -1 : 1) * 90;
+      hullHit(1, 'STRUCTURE STRIKE');
+    }
+  }
+  if (G.flood > 0 && ch.y + CH_R > G.flood) {
+    ch.y = G.flood - CH_R;
+    ch.vy = -80;
+    hullHit(1, 'WATER STRIKE');
+    spark(ch.x, G.flood, 12, '#9fd8ff', 150);
+  }
+  ch.x = clamp(ch.x, 30, G.len - 30);
+  ch.y = clamp(ch.y, -220, GROUND_Y + 120);
+
+  // tilt / rotor visuals
+  const tgt = ch.down ? 0 : G.steer.x * 0.42 + clamp(ch.vx / 800, -0.12, 0.12);
+  ch.tilt = lerp(ch.tilt, tgt, 1 - Math.exp(-9 * dt));
+  ch.rotor += dt * (ch.down ? 12 : 44);
+  if (ch.down) ch.spin += dt * 1.4;
+}
+
+function updateLoadImpacts() {
+  for (let i = 0; i < G.parts.length; i++) {
+    const p = G.parts[i];
+    if (p.impact > 150) {
+      if (p.type === 'drum' && p.impact > 230) {
+        // fuel drum detonates on a hard slam — cargo lost, hull rocked
+        spark(p.x, p.y, 34, '#ffb347', 320);
+        spark(p.x, p.y, 18, '#ff6a3a', 220);
+        sfxBoom(); shake(20, 0.6); G.flash = 1; vibrate([25, 40, 25]);
+        popup(p.x, p.y - 34, 'DRUM LOST', '#ff9e8f');
+        if (G.carry) { G.carry.done = true; G.carry.lost = true; G.carry = null; }
+        releaseCargo();
+        const d = Math.hypot(G.chopper.x - p.x, G.chopper.y - p.y);
+        if (d < 80) hullHit(1, 'BLAST WAVE');   // losing the drum is punishment enough
+      } else if (p.impact > 210) {
+        sfxThud(p.impact);
+        spark(p.x, p.y, 7, '#c8b48a', 110, 'dust');
+        if (p.type !== 'hook' && CARGO[p.type] && CARGO[p.type].person) popup(p.x, p.y - 26, 'EASY!', '#ffd76b');
+      } else if (p.impact > 150) {
+        sfxThud(p.impact * 0.6);
+        spark(p.x, p.y, 4, '#c8b48a', 80, 'dust');
+      }
+      p.impact = 0;
+    }
+  }
+}
+
+function updateShooters(dt) {
+  const ch = G.chopper;
+  if (G.fireLull > 0) G.fireLull -= dt;
+  // only the two closest positions engage at once — sustained pressure, not a firing squad
+  let n1 = -1, n2 = -1, d1 = 1e9, d2 = 1e9;
+  for (let i = 0; i < G.shooters.length; i++) {
+    const d = Math.abs(ch.x - G.shooters[i].x);
+    if (d < d1) { d2 = d1; n2 = n1; d1 = d; n1 = i; }
+    else if (d < d2) { d2 = d; n2 = i; }
+  }
+  for (let i = 0; i < G.shooters.length; i++) {
+    const s = G.shooters[i];
+    if (s.muzzle > 0) s.muzzle -= dt;
+    const dx = ch.x - s.x, dy = ch.y - s.y;
+    // lobbed fire has a ceiling: climbing is a real (if slower, swingier) answer to it
+    const inRange = Math.abs(dx) < 380 && (s.y - ch.y) < 300 && !ch.down && G.missionT > 2.5 &&
+                    G.fireLull <= 0 && (i === n1 || i === n2);
+    if (!inRange) continue;
+    s.t -= dt;
+    if (s.t > 0) continue;
+    s.t = s.rate * rand(0.8, 1.4);
+    s.muzzle = 0.12;
+    // lob a tracer arc that leads the chopper — deliberately sloppy: it is pressure,
+    // not a sniper. Error grows with range so standing off is genuinely safer.
+    const T = clamp(Math.hypot(dx, dy) / 420, 0.4, 1.5);
+    // spread is expressed in WORLD UNITS AT THE TARGET (not velocity), so the miss
+    // distance is predictable: ~60u up close, ~155u at max range vs a 19u hitbox.
+    const spread = 90 + Math.abs(dx) * 0.30;
+    const px = dx + ch.vx * T * rand(0.15, 0.7) + rand(-spread, spread);
+    const py = dy + ch.vy * T * 0.4 + rand(-spread * 0.7, spread * 0.7);
+    const g = 300;
+    const vx = px / T;
+    const vy = (py - 0.5 * g * T * T) / T;
+    G.tracers.push({ x: s.x, y: s.y - 10, vx: vx, vy: vy, t: 0, life: 3.2, trail: [] });
+    if (G.tracers.length > 26) G.tracers.shift();
+    sfxTracer();
+    G.vign = Math.max(G.vign, 0.65);
+  }
+  const ch2 = G.chopper;
+  for (let i = G.tracers.length - 1; i >= 0; i--) {
+    const tr = G.tracers[i];
+    tr.vy += 300 * dt;
+    tr.x += tr.vx * dt; tr.y += tr.vy * dt;
+    tr.t += dt;
+    tr.trail.push(tr.x, tr.y);
+    if (tr.trail.length > 16) tr.trail.splice(0, 2);
+    const d = Math.hypot(tr.x - ch2.x, tr.y - ch2.y);
+    if (d < CH_R + 2 && !ch2.down) {
+      if (Math.random() < G.U.hullSoak) hullHit(1, 'TAKING FIRE');
+      else { spark(tr.x, tr.y, 8, '#ffd27a', 150); popup(ch2.x, ch2.y - 28, 'PLATING HELD', '#bcd4a8'); }
+      G.tracers.splice(i, 1); continue;
+    }
+    if (tr.t > tr.life || tr.y > surfaceAt(tr.x) || tr.x < 0 || tr.x > G.len) {
+      spark(tr.x, Math.min(tr.y, surfaceAt(tr.x)), 5, '#ffd27a', 110);
+      G.tracers.splice(i, 1);
+    }
+  }
+  if (G.vign > 0) G.vign = Math.max(0, G.vign - dt * 0.8);
+}
+
+function updateTowers(dt) {
+  const ch = G.chopper;
+  for (let i = 0; i < G.towers.length; i++) {
+    const t = G.towers[i];
+    if (t.state === 'stand') {
+      if (Math.abs(ch.x - t.x) < 145 && ch.y < t.base) {
+        t.warn += dt;
+        if (t.warn > 1.3) {
+          t.state = 'falling'; t.t = 0;
+          noiseBurst(1.1, 0.3, 420, { slideTo: 90 });
+          shake(9, 0.5);
+          G.hint = 'STRUCTURE COMING DOWN'; G.hintT = 1.8;
+        }
+      } else t.warn = Math.max(0, t.warn - dt * 0.5);
+    } else if (t.state === 'falling') {
+      t.t += dt;
+      t.lean = clamp(t.t / 1.05, 0, 1);
+      if (Math.random() < dt * 26) {
+        const dy = t.top + Math.random() * (t.base - t.top);
+        G.debris.push({ x: t.x + rand(-t.w * 0.5, t.w * 0.5), y: dy, vx: rand(-40, 40), vy: rand(0, 60),
+                        t: 0, life: 2.4, r: rand(4, 11), rot: Math.random() * TAU, spin: rand(-4, 4) });
+      }
+      if (t.t > 1.05) {
+        t.state = 'down';
+        t.top = t.base - 16;
+        spark(t.x, t.base - 8, 26, '#b7a98c', 200, 'dust');
+        noiseBurst(0.7, 0.28, 300, { slideTo: 70 });
+        shake(14, 0.5);
+      }
+    }
+  }
+  for (let i = G.debris.length - 1; i >= 0; i--) {
+    const d = G.debris[i];
+    d.vy += 700 * dt;
+    d.x += d.vx * dt; d.y += d.vy * dt; d.rot += d.spin * dt; d.t += dt;
+    const gy = groundAt(d.x);
+    if (d.y > gy - d.r) { d.y = gy - d.r; d.vy *= -0.25; d.vx *= 0.6; }
+    if (Math.hypot(d.x - ch.x, d.y - ch.y) < CH_R + d.r && !ch.down) hullHit(1, 'DEBRIS');
+    if (d.t > d.life) G.debris.splice(i, 1);
+  }
+}
+
+function updateFuel(dt) {
+  if (G.chopper.down) return;
+  const mag = Math.hypot(G.steer.x, G.steer.y);
+  const burn = 1.30 + 1.15 * mag + (G.cargo ? 0.32 : 0);
+  G.fuel = Math.max(0, G.fuel - burn * dt);
+  const pct = G.fuel / Math.max(1, G.fuelMax);
+  if (pct < 0.25 && pct > 0) {
+    G.klaxT -= dt;
+    if (G.klaxT <= 0) { G.klaxT = pct < 0.12 ? 0.85 : 1.5; sfxKlaxon(); }
+    if (!G.fuelWarn) { G.fuelWarn = 1; G.hint = 'FUEL LOW — GET HOME'; G.hintT = 2.5; }
+  }
+  if (G.fuel <= 0 && !G.chopper.down) {
+    G.chopper.down = true; G.chopper.downT = 0;
+    G.hint = 'FUEL STARVED — AUTOROTATING'; G.hintT = 3;
+    sfxLose();
+  }
+}
+
+function updateEnvironment(dt) {
+  G.windPhase += dt * 0.55;
+  const gust = 0.55 + 0.45 * Math.sin(G.windPhase) + 0.18 * Math.sin(G.windPhase * 2.7 + 1.1);
+  G.windCur = G.wind * gust;
+  setWind(clamp(Math.abs(G.windCur) / 90, 0, 1));
+  if (G.flood > 0) {
+    G.flood = Math.max(GROUND_Y - 200, G.flood - G.floodRate * dt);
+    for (const s of G.survivors) if (!s.taken && s.y > G.flood - 12) s.y = G.flood - 12;
+  }
+}
+
+function updateFx(dt) {
+  // rotor wash: flatten grass, kick dust
+  const ch = G.chopper;
+  const gy = groundAt(ch.x);
+  const alt = gy - ch.y;
+  for (let i = 0; i < G.grass.length; i++) {
+    const g = G.grass[i];
+    const dx = g.x - ch.x;
+    if (Math.abs(dx) < 180 && alt < 210 && alt > -20) {
+      const f = (1 - Math.abs(dx) / 180) * (1 - clamp(alt / 210, 0, 1));
+      g.b = lerp(g.b, clamp(dx / 60, -1, 1) * f * 1.5, 1 - Math.exp(-9 * dt));
+    } else g.b = lerp(g.b, 0, 1 - Math.exp(-4 * dt));
+  }
+  if (alt < 130 && alt > 0 && Math.random() < dt * 30 && G.screen === 'playing') {
+    const side = Math.random() < 0.5 ? -1 : 1;
+    G.particles.push({
+      x: ch.x + side * rand(6, 40), y: gy - rand(0, 6),
+      vx: side * rand(50, 150), vy: rand(-40, -6),
+      t: 0, life: rand(0.4, 1.0), r: rand(3, 8), col: '#cbbc95', kind: 'dust'
+    });
+  }
+  for (let i = G.particles.length - 1; i >= 0; i--) {
+    const p = G.particles[i];
+    p.t += dt;
+    if (p.kind === 'dust') { p.vy += 40 * dt; p.vx *= (1 - 1.6 * dt); p.r += 9 * dt; }
+    else p.vy += 460 * dt;
+    p.x += p.vx * dt; p.y += p.vy * dt;
+    if (p.t >= p.life) G.particles.splice(i, 1);
+  }
+  for (let i = G.popups.length - 1; i >= 0; i--) {
+    const q = G.popups[i];
+    q.t += dt;
+    if (q.t >= q.life) G.popups.splice(i, 1);
+  }
+  for (let i = 0; i < G.padCrew.length; i++) G.padCrew[i].t += dt;
+  if (G.shakeT > 0) { G.shakeT -= dt; if (G.shakeT <= 0) G.shakeMag = 0; }
+  if (G.flash > 0) G.flash = Math.max(0, G.flash - dt * 2.4);
+  if (G.hintT > 0) G.hintT -= dt;
+}
+
+function updateCamera(dt) {
+  const ch = G.chopper;
+  let tx = ch.x + ch.vx * 0.28;
+  let ty = ch.y + 46 + (G.parts[0] ? (G.parts[0].y - ch.y) * 0.22 : 0);
+  const halfW = VW * 0.5, halfH = VH * 0.5;
+  let loX = halfW, hiX = G.len - halfW;
+  tx = (loX > hiX) ? G.len * 0.5 : clamp(tx, loX, hiX);
+  let loY = halfH - 210, hiY = (GROUND_Y + 90) - halfH;
+  ty = (loY > hiY) ? (loY + hiY) * 0.5 : clamp(ty, loY, hiY);
+  const k = 1 - Math.exp(-7 * dt);
+  G.cam.x = fin(G.cam.x) ? lerp(G.cam.x, tx, k) : tx;
+  G.cam.y = fin(G.cam.y) ? lerp(G.cam.y, ty, k) : ty;
+}
+
+// ---------------- main update ----------------
+function update(dt) {
+  G.time += dt;
+  computeSteerTarget();
+  const playing = (G.screen === 'playing');
+  if (!playing || G.endT >= 0) demoSteer(dt);
+  const k = 1 - Math.exp(-13 * dt);
+  G.steer.x = lerp(G.steer.x, G.steerT.x, k);
+  G.steer.y = lerp(G.steer.y, G.steerT.y, k);
+
+  updateEnvironment(dt);
+
+  // winch travel
+  const rate = G.U.winchRate;
+  if (G.cable.len < G.cable.target) G.cable.len = Math.min(G.cable.target, G.cable.len + rate * dt);
+  else if (G.cable.len > G.cable.target) G.cable.len = Math.max(G.cable.target, G.cable.len - rate * dt);
+  G.cable.len = clamp(G.cable.len, CABLE_MIN, CABLE_MAX);
+
+  // fixed-substep physics
+  const scale = G.slowmo > 0 ? 0.34 : 1;
+  if (G.slowmo > 0) G.slowmo = Math.max(0, G.slowmo - dt);
+  G.physAcc += dt * scale;
+  if (G.physAcc > SUB_DT * MAX_SUBS) G.physAcc = SUB_DT * MAX_SUBS;
+  let subs = 0;
+  while (G.physAcc >= SUB_DT && subs < MAX_SUBS) { physicsStep(SUB_DT); G.physAcc -= SUB_DT; subs++; }
+  sanitizeTether(null);
+
+  if (playing) {
+    if (G.endT < 0) {
+      G.missionT += dt;
+      updateFuel(dt);
+      updatePickups();
+      updateShooters(dt);
+      updateTowers(dt);
+    }
+    updateChopperWorld(dt);
+    enforceCableBounds();   // the collision push-out above moved the anchor
+    updateLoadImpacts();
+    if (G.endT >= 0) {
+      G.endT -= dt;
+      if (G.endT <= 0) {
+        G.endT = -1;
+        if (G.endKind === 'win') commitWin(); else commitLose();
+      }
+    }
+  } else {
+    updateChopperWorld(dt);
+    enforceCableBounds();
+    updateLoadImpacts();
+  }
+
+  updateFx(dt);
+  updateCamera(dt);
+
+  // rotor audio pitches with tilt + effort
+  const eff = Math.hypot(G.steer.x, G.steer.y);
+  setRotor(G.chopper.down ? 0.25 : (playing ? 0.85 + 0.15 * eff : 0.4),
+           52 + eff * 16 + Math.abs(G.chopper.tilt) * 26 + (G.cargo ? 6 : 0));
+  updateHud();
+}
+
+// ================================================================
+//                            RENDERING
+// ================================================================
+function rgba(r, g, b, a) { return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')'; }
+
+function drawSky() {
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, G.skyA);
+  g.addColorStop(1, G.skyB);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+  // sun / moon
+  const sx = W * 0.78, sy = H * 0.16;
+  const rg = ctx.createRadialGradient(sx, sy, 2, sx, sy, 90);
+  rg.addColorStop(0, G.night ? 'rgba(220,230,255,.85)' : 'rgba(255,244,200,.95)');
+  rg.addColorStop(1, 'rgba(255,244,200,0)');
+  ctx.fillStyle = rg;
+  ctx.fillRect(sx - 95, sy - 95, 190, 190);
+}
+
+function drawClouds() {
+  ctx.save();
+  ctx.globalAlpha = G.night ? 0.18 : 0.5;
+  ctx.fillStyle = G.night ? '#8ea7c8' : '#ffffff';
+  for (let i = 0; i < G.clouds.length; i++) {
+    const c = G.clouds[i];
+    const px = (c.x - G.cam.x * 0.25) * SCALE + W * 0.5;
+    const py = (c.y - G.cam.y * 0.12) * SCALE + H * 0.5;
+    const w = c.w * SCALE * c.s, h = w * 0.32;
+    if (px < -w * 2 || px > W + w * 2) continue;
+    ctx.beginPath();
+    ctx.ellipse(px, py, w * 0.5, h * 0.6, 0, 0, TAU);
+    ctx.ellipse(px + w * 0.3, py + h * 0.1, w * 0.34, h * 0.5, 0, 0, TAU);
+    ctx.ellipse(px - w * 0.3, py + h * 0.12, w * 0.3, h * 0.44, 0, 0, TAU);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawParallax() {
+  // two far ridge layers
+  const layers = [{ p: 0.35, c: G.night ? '#0d1a26' : '#7d8f6a', off: 60, amp: 46 },
+                  { p: 0.55, c: G.night ? '#101f19' : '#5c6f47', off: 20, amp: 62 }];
+  for (const L of layers) {
+    ctx.fillStyle = L.c;
+    ctx.beginPath();
+    ctx.moveTo(0, H);
+    const baseY = (GROUND_Y - L.off - G.cam.y) * SCALE + H * 0.5;
+    for (let px = 0; px <= W + 12; px += 18) {
+      const wx = (px - W * 0.5) / SCALE + G.cam.x * L.p;
+      const y = baseY - (Math.sin(wx * 0.0042 + L.p * 9) * L.amp + Math.sin(wx * 0.0011) * L.amp * 0.7) * SCALE;
+      ctx.lineTo(px, y);
+    }
+    ctx.lineTo(W, H);
+    ctx.closePath();
+    ctx.fill();
+  }
+}
+
+function worldTransform() {
+  let sx = 0, sy = 0;
+  if (G.shakeT > 0) {
+    const m = G.shakeMag * clamp(G.shakeT / 0.35, 0, 1);
+    sx = rand(-m, m); sy = rand(-m, m);
+  }
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.translate(W * 0.5 + sx, H * 0.5 + sy);
+  ctx.scale(SCALE, SCALE);
+  ctx.translate(-G.cam.x, -G.cam.y);
+}
+
+function drawTerrain() {
+  const x0 = G.cam.x - VW * 0.5 - 60, x1 = G.cam.x + VW * 0.5 + 60;
+  const i0 = clamp(Math.floor(x0 / SEG), 0, G.nSeg - 1);
+  const i1 = clamp(Math.ceil(x1 / SEG), 0, G.nSeg - 1);
+  // ground
+  const gg = ctx.createLinearGradient(0, GROUND_Y - 220, 0, GROUND_Y + 120);
+  gg.addColorStop(0, G.bgB);
+  gg.addColorStop(1, G.bgA);
+  ctx.fillStyle = gg;
+  ctx.beginPath();
+  ctx.moveTo(i0 * SEG, GROUND_Y + 200);
+  for (let i = i0; i <= i1; i++) ctx.lineTo(i * SEG, G.gh[i]);
+  ctx.lineTo(i1 * SEG, GROUND_Y + 200);
+  ctx.closePath();
+  ctx.fill();
+  // rim light on the ground edge
+  ctx.strokeStyle = G.night ? 'rgba(140,190,160,.35)' : 'rgba(215,235,170,.75)';
+  ctx.lineWidth = 2.4;
+  ctx.beginPath();
+  for (let i = i0; i <= i1; i++) { if (i === i0) ctx.moveTo(i * SEG, G.gh[i]); else ctx.lineTo(i * SEG, G.gh[i]); }
+  ctx.stroke();
+  // ceiling
+  if (G.hasCeiling) {
+    const cg = ctx.createLinearGradient(0, -160, 0, 320);
+    cg.addColorStop(0, G.bgA);
+    cg.addColorStop(1, G.bgB);
+    ctx.fillStyle = cg;
+    ctx.beginPath();
+    ctx.moveTo(i0 * SEG, -600);
+    for (let i = i0; i <= i1; i++) ctx.lineTo(i * SEG, G.ch[i]);
+    ctx.lineTo(i1 * SEG, -600);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(200,220,160,.35)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = i0; i <= i1; i++) { if (i === i0) ctx.moveTo(i * SEG, G.ch[i]); else ctx.lineTo(i * SEG, G.ch[i]); }
+    ctx.stroke();
+  }
+}
+
+function drawGrass() {
+  const x0 = G.cam.x - VW * 0.5 - 30, x1 = G.cam.x + VW * 0.5 + 30;
+  ctx.strokeStyle = G.night ? 'rgba(110,150,110,.6)' : 'rgba(150,190,90,.85)';
+  ctx.lineWidth = 1.8;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  for (let i = 0; i < G.grass.length; i++) {
+    const g = G.grass[i];
+    if (g.x < x0 || g.x > x1) continue;
+    const sway = Math.sin(G.time * 1.6 + g.s) * 1.6 + G.windCur * 0.02;
+    const bx = g.x + (g.b * 10 + sway);
+    ctx.moveTo(g.x, g.y);
+    ctx.quadraticCurveTo(g.x + g.b * 5, g.y - g.h * 0.6, bx, g.y - g.h * (1 - Math.abs(g.b) * 0.55));
+  }
+  ctx.stroke();
+}
+
+function drawFlood() {
+  if (G.flood <= 0) return;
+  const y = G.flood;
+  const g = ctx.createLinearGradient(0, y - 10, 0, GROUND_Y + 140);
+  g.addColorStop(0, 'rgba(120,190,220,.55)');
+  g.addColorStop(1, 'rgba(30,80,120,.75)');
+  ctx.fillStyle = g;
+  ctx.fillRect(G.cam.x - VW, y, VW * 2, GROUND_Y + 200 - y);
+  ctx.strokeStyle = 'rgba(220,250,255,.6)';
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  for (let px = G.cam.x - VW; px < G.cam.x + VW; px += 14) {
+    const wy = y + Math.sin(px * 0.05 + G.time * 2.2) * 2.6;
+    if (px === G.cam.x - VW) ctx.moveTo(px, wy); else ctx.lineTo(px, wy);
+  }
+  ctx.stroke();
+}
+
+function drawTowers() {
+  for (let i = 0; i < G.towers.length; i++) {
+    const t = G.towers[i];
+    ctx.save();
+    if (t.state === 'down') {
+      ctx.fillStyle = '#5a5344';
+      ctx.beginPath();
+      ctx.moveTo(t.x - t.w * 0.9, t.base);
+      ctx.lineTo(t.x - t.w * 0.4, t.base - 18);
+      ctx.lineTo(t.x + t.w * 0.5, t.base - 14);
+      ctx.lineTo(t.x + t.w, t.base);
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+      continue;
+    }
+    ctx.translate(t.x, t.base);
+    if (t.state === 'falling') ctx.rotate(t.lean * 1.35);
+    else if (t.warn > 0.3) ctx.translate(Math.sin(G.time * 40) * t.warn * 1.6, 0);
+    const h = t.base - t.top;
+    ctx.fillStyle = '#6d6552';
+    ctx.fillRect(-t.w * 0.5, -h, t.w, h);
+    ctx.fillStyle = '#565040';
+    for (let y = -h + 12; y < -6; y += 22) ctx.fillRect(-t.w * 0.5, y, t.w, 3);
+    ctx.fillStyle = 'rgba(20,24,18,.55)';
+    for (let y = -h + 16; y < -20; y += 34) ctx.fillRect(-t.w * 0.25, y, t.w * 0.22, 12);
+    ctx.fillStyle = '#7d7460';
+    ctx.fillRect(-t.w * 0.62, -h - 8, t.w * 1.24, 10);
+    if (t.warn > 0.3 && t.state === 'stand') {
+      ctx.globalAlpha = 0.4 + 0.4 * Math.sin(G.time * 14);
+      ctx.fillStyle = '#ffb347';
+      ctx.fillRect(-t.w * 0.5, -h - 8, t.w, 4);
+    }
+    ctx.restore();
+  }
+  for (let i = 0; i < G.debris.length; i++) {
+    const d = G.debris[i];
+    ctx.save();
+    ctx.translate(d.x, d.y); ctx.rotate(d.rot);
+    ctx.fillStyle = '#6d6552';
+    ctx.fillRect(-d.r, -d.r * 0.7, d.r * 2, d.r * 1.4);
+    ctx.restore();
+  }
+}
+
+// ---- toy-like figures, deliberately bloodless ----
+function drawFigure(x, y, col, wave, thumbs) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.fillStyle = 'rgba(0,0,0,.2)';
+  ctx.beginPath(); ctx.ellipse(0, 1, 8, 2.6, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = col;
+  ctx.beginPath();
+  ctx.roundRect ? ctx.roundRect(-4.5, -14, 9, 12, 3) : ctx.rect(-4.5, -14, 9, 12);
+  ctx.fill();
+  ctx.fillStyle = '#e3c9a0';
+  ctx.beginPath(); ctx.arc(0, -17, 4, 0, TAU); ctx.fill();
+  ctx.fillStyle = col;
+  ctx.beginPath(); ctx.arc(0, -18.5, 4.6, Math.PI, TAU); ctx.fill();   // helmet
+  ctx.strokeStyle = col; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(-4, -11);
+  if (wave !== undefined) ctx.lineTo(-9, -18 + Math.sin(wave) * 4); else ctx.lineTo(-8, -6);
+  ctx.moveTo(4, -11);
+  if (thumbs) ctx.lineTo(8, -19); else ctx.lineTo(8, -6);
+  ctx.stroke();
+  if (thumbs) { ctx.fillStyle = '#e3c9a0'; ctx.beginPath(); ctx.arc(8.5, -20, 2.2, 0, TAU); ctx.fill(); }
+  ctx.strokeStyle = '#4b4a38';
+  ctx.beginPath(); ctx.moveTo(-2.5, -2); ctx.lineTo(-3.5, 1); ctx.moveTo(2.5, -2); ctx.lineTo(3.5, 1); ctx.stroke();
+  ctx.restore();
+}
+
+function drawCargoBody(p, type, other) {
+  const cd = CARGO[type] || CARGO.hook;
+  ctx.save();
+  if (type === 'hook') {
+    ctx.translate(p.x, p.y);
+    ctx.strokeStyle = '#cfd6c4'; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(0, 0, 4.4, -0.4, Math.PI * 1.35); ctx.stroke();
+    ctx.fillStyle = '#9aa38c';
+    ctx.fillRect(-2, -8, 4, 5);
+  } else if (type === 'crate') {
+    ctx.translate(p.x, p.y);
+    ctx.fillStyle = '#8a6a3c'; ctx.fillRect(-14, -13, 28, 26);
+    ctx.fillStyle = '#6f5330'; ctx.fillRect(-14, -3, 28, 4);
+    ctx.strokeStyle = '#c8b48a'; ctx.lineWidth = 2;
+    ctx.strokeRect(-14, -13, 28, 26);
+    ctx.fillStyle = '#dcff9a'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('AMMO', 0, 9);
+  } else if (type === 'drum') {
+    ctx.translate(p.x, p.y);
+    ctx.fillStyle = '#c4472e'; ctx.fillRect(-9, -12, 18, 24);
+    ctx.fillStyle = '#e0653f'; ctx.fillRect(-9, -12, 5, 24);
+    ctx.fillStyle = '#f2d9a5'; ctx.fillRect(-9, -3, 18, 4);
+    ctx.strokeStyle = '#7c2b1a'; ctx.lineWidth = 1.6; ctx.strokeRect(-9, -12, 18, 24);
+  } else if (type === 'stretcher') {
+    if (other) {
+      const mx = (p.x + other.x) * 0.5, my = (p.y + other.y) * 0.5;
+      const ang = Math.atan2(other.y - p.y, other.x - p.x);
+      ctx.translate(mx, my); ctx.rotate(ang);
+      const len = Math.hypot(other.x - p.x, other.y - p.y) + 12;
+      ctx.fillStyle = '#5c6b4a'; ctx.fillRect(-len * 0.5, -3, len, 6);
+      ctx.fillStyle = '#d9dcc6'; ctx.fillRect(-len * 0.42, -9, len * 0.84, 7);
+      ctx.fillStyle = '#e3c9a0'; ctx.beginPath(); ctx.arc(-len * 0.3, -11, 4, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#c94a4a'; ctx.fillRect(len * 0.05, -8, 5, 5); ctx.fillRect(len * 0.075, -10.5, 1.6, 10);
+    }
+  } else {
+    const col = type === 'medic' ? '#e8ecdd' : '#6f8a4c';
+    drawFigure(p.x, p.y + 8, col, G.time * 6, false);
+    if (type === 'medic') {
+      ctx.fillStyle = '#c94a4a';
+      ctx.fillRect(p.x - 1, p.y - 2, 2, 6); ctx.fillRect(p.x - 3, p.y, 6, 2);
+    }
+  }
+  ctx.restore();
+}
+
+function drawShadowFor(x, y, r, alphaScale) {
+  const gy = surfaceAt(x);
+  const h = clamp((gy - y) / 300, 0, 1);
+  ctx.save();
+  ctx.globalAlpha = (1 - h) * 0.42 * (alphaScale || 1);
+  ctx.fillStyle = '#0b1408';
+  ctx.beginPath();
+  ctx.ellipse(x, gy - 2, r * (1 + h * 1.5), r * 0.35 * (1 + h * 0.6), 0, 0, TAU);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawCable() {
+  const ch = G.chopper;
+  const L = G.cable.len;
+  for (let c = 0; c < G.cables.length; c++) {
+    const cab = G.cables[c];
+    const p = G.parts[cab.p];
+    if (!p) continue;
+    const ax = ch.x + cab.ox * Math.cos(ch.tilt) - cab.oy * Math.sin(ch.tilt);
+    const ay = ch.y + cab.ox * Math.sin(ch.tilt) + cab.oy * Math.cos(ch.tilt);
+    const d = Math.hypot(p.x - ax, p.y - ay);
+    const slack = clamp((L - d) / Math.max(20, L), 0, 1);
+    const taut = slack < 0.035;
+    ctx.strokeStyle = taut ? 'rgba(255,236,180,.95)' : 'rgba(190,196,175,.75)';
+    ctx.lineWidth = taut ? 2.4 : 1.7;
+    ctx.beginPath();
+    ctx.moveTo(ax, ay);
+    if (taut) ctx.lineTo(p.x, p.y);
+    else {
+      const mx = (ax + p.x) * 0.5, my = (ay + p.y) * 0.5 + slack * L * 0.55;
+      ctx.quadraticCurveTo(mx, my, p.x, p.y);
+    }
+    ctx.stroke();
+    if (taut) {
+      ctx.strokeStyle = 'rgba(255,255,255,.35)';
+      ctx.lineWidth = 0.9;
+      ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(p.x, p.y); ctx.stroke();
+    }
+  }
+}
+
+function drawChopper() {
+  const ch = G.chopper;
+  ctx.save();
+  ctx.translate(ch.x, ch.y);
+  ctx.rotate(ch.tilt + (ch.down ? Math.sin(ch.spin * 3) * 0.25 : 0));
+  const hit = ch.invT > 0 && Math.floor(G.time * 22) % 2 === 0;
+  const body = hit ? '#ffb9a8' : '#4d5c3a';
+  // tail boom
+  ctx.fillStyle = body;
+  ctx.beginPath();
+  ctx.moveTo(-6, -4); ctx.lineTo(-40, -2); ctx.lineTo(-40, 3); ctx.lineTo(-6, 7);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#3c4a2c';
+  ctx.beginPath(); ctx.moveTo(-38, -3); ctx.lineTo(-46, -13); ctx.lineTo(-42, 2); ctx.closePath(); ctx.fill();
+  // tail rotor
+  ctx.save();
+  ctx.translate(-43, -6); ctx.rotate(ch.rotor * 2.4);
+  ctx.strokeStyle = 'rgba(220,230,200,.55)'; ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.moveTo(-7, 0); ctx.lineTo(7, 0); ctx.moveTo(0, -7); ctx.lineTo(0, 7); ctx.stroke();
+  ctx.restore();
+  // fuselage
+  const bg = ctx.createLinearGradient(0, -12, 0, 12);
+  bg.addColorStop(0, hit ? '#ffd0c0' : '#61713f');
+  bg.addColorStop(1, hit ? '#c98070' : '#333f24');
+  ctx.fillStyle = bg;
+  ctx.beginPath(); ctx.ellipse(0, 0, 20, 11, 0, 0, TAU); ctx.fill();
+  // cockpit glass
+  ctx.fillStyle = 'rgba(150,210,235,.9)';
+  ctx.beginPath(); ctx.ellipse(9, -1, 8, 6.5, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.35)';
+  ctx.beginPath(); ctx.ellipse(11, -3, 3.4, 2, -0.4, 0, TAU); ctx.fill();
+  // skids
+  ctx.strokeStyle = '#2b3320'; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(-12, 11); ctx.lineTo(-10, 16); ctx.moveTo(10, 11); ctx.lineTo(9, 16);
+  ctx.moveTo(-16, 16); ctx.lineTo(15, 16);
+  ctx.stroke();
+  // winch drum
+  ctx.fillStyle = '#8a9472';
+  ctx.fillRect(-4, 8, 8, 5);
+  // main rotor
+  ctx.save();
+  const sp = Math.sin(ch.rotor * 6);
+  ctx.globalAlpha = 0.55;
+  ctx.fillStyle = '#cdd6bd';
+  ctx.beginPath(); ctx.ellipse(0, -14, 46 * (0.55 + 0.45 * Math.abs(sp)), 2.4, 0, 0, TAU); ctx.fill();
+  ctx.globalAlpha = 0.25;
+  ctx.beginPath(); ctx.ellipse(0, -14, 46, 4.5, 0, 0, TAU); ctx.fill();
+  ctx.restore();
+  ctx.fillStyle = '#39442a';
+  ctx.fillRect(-3, -16, 6, 6);
+  // damage smoke marker
+  if (ch.hull <= 1 || ch.down) {
+    ctx.globalAlpha = 0.5 + 0.4 * Math.sin(G.time * 9);
+    ctx.fillStyle = '#ff6a3a';
+    ctx.beginPath(); ctx.arc(-6, -6, 2.4, 0, TAU); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+  ctx.restore();
+  if ((ch.hull <= 1 || ch.down) && Math.random() < 0.4) {
+    G.particles.push({ x: ch.x - 8, y: ch.y - 4, vx: rand(-20, 5), vy: rand(-30, -8),
+      t: 0, life: rand(0.5, 1.1), r: rand(3, 7), col: '#5a5a5a', kind: 'dust' });
+  }
+}
+
+function drawPad() {
+  const x = G.lzX, y = G.lzY;
+  ctx.save();
+  // pad slab
+  ctx.fillStyle = '#4a4f3c';
+  ctx.fillRect(x - PAD_W * 0.5, y - 4, PAD_W, 10);
+  ctx.save();
+  ctx.translate(x, y + 1);
+  ctx.scale(1, 0.4);
+  ctx.strokeStyle = G.delivered >= G.quota ? '#9ede4b' : '#c8cdb4';
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(0, 0, 26, 0, TAU); ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle = G.delivered >= G.quota ? '#c6ff9a' : '#dfe4cc';
+  ctx.font = 'bold 15px sans-serif'; ctx.textAlign = 'center';
+  ctx.save(); ctx.translate(x, y + 4); ctx.scale(1, 0.45); ctx.fillText('H', 0, 5); ctx.restore();
+  // green smoke marker
+  const puff = (G.time * 0.9) % 1;
+  ctx.globalAlpha = 0.35 * (1 - puff);
+  ctx.fillStyle = '#8dff9a';
+  ctx.beginPath(); ctx.arc(x + PAD_W * 0.45, y - 20 - puff * 60, 8 + puff * 22, 0, TAU); ctx.fill();
+  ctx.globalAlpha = 1;
+  // beacon
+  ctx.fillStyle = Math.floor(G.time * 2) % 2 ? '#ffd76b' : '#7a6a2a';
+  ctx.fillRect(x - PAD_W * 0.5 - 4, y - 14, 4, 10);
+  ctx.fillRect(x + PAD_W * 0.5, y - 14, 4, 10);
+  ctx.restore();
+  drawForwardBase(x, y);
+  // delivered crew waving from the pad
+  for (let i = 0; i < G.padCrew.length; i++) {
+    const c = G.padCrew[i];
+    const t = Math.min(1, c.t / 0.5);
+    const yy = c.y - easeOutBack(t) * 2;
+    if (c.crate) {
+      ctx.fillStyle = '#8a6a3c'; ctx.fillRect(c.x - 8, yy - 13, 16, 14);
+      ctx.strokeStyle = '#c8b48a'; ctx.lineWidth = 1.4; ctx.strokeRect(c.x - 8, yy - 13, 16, 14);
+    } else {
+      drawFigure(c.x, yy, '#6f8a4c', undefined, c.t % 3 < 1.6);
+    }
+  }
+}
+
+function drawForwardBase(x, y) {
+  const st = S.stage;
+  ctx.save();
+  ctx.translate(x, y);
+  if (st >= 1) { ctx.fillStyle = '#3f4634'; ctx.fillRect(-PAD_W * 0.62, -6, PAD_W * 1.24, 6); }
+  if (st >= 2) {  // tents
+    ctx.fillStyle = '#6b7350';
+    for (const tx of [-118, -92]) {
+      ctx.beginPath(); ctx.moveTo(tx, -2); ctx.lineTo(tx + 11, -22); ctx.lineTo(tx + 22, -2); ctx.closePath(); ctx.fill();
+    }
+  }
+  if (st >= 3) {  // hangar
+    ctx.fillStyle = '#59614a';
+    ctx.beginPath(); ctx.moveTo(72, -2); ctx.lineTo(72, -32); ctx.quadraticCurveTo(102, -52, 132, -32); ctx.lineTo(132, -2); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#2f3628'; ctx.fillRect(92, -26, 22, 24);
+  }
+  if (st >= 4) {  // radar
+    ctx.save(); ctx.translate(-150, -2);
+    ctx.strokeStyle = '#7c8468'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -34); ctx.stroke();
+    ctx.translate(0, -34); ctx.rotate(Math.sin(G.time * 0.7) * 0.8);
+    ctx.fillStyle = '#9aa38c';
+    ctx.beginPath(); ctx.ellipse(0, 0, 6, 13, 0.4, 0, TAU); ctx.fill();
+    ctx.restore();
+  }
+  if (st >= 5) {  // fuel depot
+    ctx.fillStyle = '#5d6a45';
+    ctx.fillRect(146, -26, 34, 24);
+    ctx.fillStyle = '#c4472e'; ctx.fillRect(150, -22, 8, 18); ctx.fillRect(162, -22, 8, 18);
+  }
+  if (st >= 6) {  // barracks
+    ctx.fillStyle = '#4f573e'; ctx.fillRect(-92, -30, 54, 28);
+    ctx.fillStyle = '#2f3628'; ctx.fillRect(-78, -20, 10, 18);
+    ctx.fillStyle = '#8ea77a'; ctx.fillRect(-58, -24, 10, 8);
+  }
+  if (st >= 7) {  // watchtower
+    ctx.strokeStyle = '#6b7350'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(196, -2); ctx.lineTo(204, -44); ctx.moveTo(216, -2); ctx.lineTo(208, -44); ctx.stroke();
+    ctx.fillStyle = '#59614a'; ctx.fillRect(196, -56, 20, 14);
+  }
+  if (st >= 8) {  // sandbags
+    ctx.fillStyle = '#8a8259';
+    for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.ellipse(-40 + i * 13, -5, 7, 4.5, 0, 0, TAU); ctx.fill(); }
+    for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.ellipse(-34 + i * 13, -13, 7, 4.5, 0, 0, TAU); ctx.fill(); }
+  }
+  if (st >= 9) {  // windsock
+    ctx.strokeStyle = '#8a9472'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(60, -2); ctx.lineTo(60, -40); ctx.stroke();
+    const wsw = clamp(G.windCur / 60, -1, 1);
+    ctx.fillStyle = '#ff9a3a';
+    ctx.beginPath(); ctx.moveTo(60, -40); ctx.lineTo(60 + 22 * (wsw || 0.5), -34 + Math.sin(G.time * 3) * 2); ctx.lineTo(60, -32); ctx.closePath(); ctx.fill();
+  }
+  if (st >= 10) { // floodlights
+    for (const lx of [-170, 190]) {
+      ctx.strokeStyle = '#6b7350'; ctx.lineWidth = 2.4;
+      ctx.beginPath(); ctx.moveTo(lx, -2); ctx.lineTo(lx, -48); ctx.stroke();
+      ctx.fillStyle = '#ffeeb0'; ctx.fillRect(lx - 5, -54, 10, 7);
+      ctx.globalAlpha = 0.16; ctx.fillStyle = '#fff3c0';
+      ctx.beginPath(); ctx.moveTo(lx, -47); ctx.lineTo(lx - 40, -2); ctx.lineTo(lx + 40, -2); ctx.closePath(); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  }
+  if (st >= 11) { // supply stack
+    ctx.fillStyle = '#8a6a3c';
+    ctx.fillRect(30, -16, 15, 14); ctx.fillRect(46, -16, 15, 14); ctx.fillRect(38, -30, 15, 14);
+  }
+  if (st >= 12) { // flag
+    ctx.strokeStyle = '#cfd6c4'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-10, -2); ctx.lineTo(-10, -58); ctx.stroke();
+    ctx.fillStyle = '#dcff9a';
+    ctx.beginPath(); ctx.moveTo(-10, -58); ctx.lineTo(-10 + 26 + Math.sin(G.time * 3) * 3, -52); ctx.lineTo(-10, -44); ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawSurvivors() {
+  for (let i = 0; i < G.survivors.length; i++) {
+    const s = G.survivors[i];
+    if (s.taken || s.done) continue;
+    const cd = CARGO[s.type];
+    if (cd.person) {
+      drawFigure(s.x, s.y + 12, s.type === 'medic' ? '#e8ecdd' : '#6f8a4c', G.time * 5 + s.wave, false);
+      if (cd.two) {
+        ctx.fillStyle = '#d9dcc6';
+        ctx.fillRect(s.x + 10, s.y + 4, 26, 6);
+        ctx.fillStyle = '#e3c9a0';
+        ctx.beginPath(); ctx.arc(s.x + 15, s.y + 1, 3.4, 0, TAU); ctx.fill();
+      }
+    } else if (s.type === 'crate') {
+      ctx.fillStyle = '#8a6a3c'; ctx.fillRect(s.x - 13, s.y - 1, 26, 24);
+      ctx.strokeStyle = '#c8b48a'; ctx.lineWidth = 2; ctx.strokeRect(s.x - 13, s.y - 1, 26, 24);
+    } else {
+      ctx.fillStyle = '#c4472e'; ctx.fillRect(s.x - 9, s.y, 18, 24);
+      ctx.fillStyle = '#f2d9a5'; ctx.fillRect(s.x - 9, s.y + 9, 18, 4);
+    }
+    // signal flare beacon so nobody is ever hidden
+    const t = (G.time * 0.55 + s.flareT) % 1;
+    ctx.save();
+    ctx.globalAlpha = 0.5 * (1 - t);
+    ctx.fillStyle = '#ff9a3a';
+    ctx.beginPath(); ctx.arc(s.x, s.y - 22 - t * 46, 4 + t * 9, 0, TAU); ctx.fill();
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = '#ffd76b';
+    ctx.beginPath(); ctx.arc(s.x, s.y - 20, 2.6, 0, TAU); ctx.fill();
+    ctx.restore();
+  }
+}
+
+function drawShooters() {
+  for (let i = 0; i < G.shooters.length; i++) {
+    const s = G.shooters[i];
+    ctx.save();
+    ctx.translate(s.x, s.y + 12);
+    ctx.fillStyle = 'rgba(0,0,0,.2)';
+    ctx.beginPath(); ctx.ellipse(0, 1, 8, 2.6, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#7a5c47';
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-4.5, -14, 9, 12, 3) : ctx.rect(-4.5, -14, 9, 12); ctx.fill();
+    ctx.fillStyle = '#e3c9a0'; ctx.beginPath(); ctx.arc(0, -17, 4, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#5c4636'; ctx.beginPath(); ctx.arc(0, -18.5, 4.6, Math.PI, TAU); ctx.fill();
+    ctx.strokeStyle = '#3d3128'; ctx.lineWidth = 2.2;
+    ctx.beginPath(); ctx.moveTo(-2, -12); ctx.lineTo(9, -19); ctx.stroke();
+    if (s.muzzle > 0) {
+      ctx.fillStyle = '#ffe08a';
+      ctx.beginPath(); ctx.arc(10, -19.5, 3 + s.muzzle * 22, 0, TAU); ctx.fill();
+    }
+    ctx.restore();
+  }
+  // tracer arcs
+  for (let i = 0; i < G.tracers.length; i++) {
+    const tr = G.tracers[i];
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,190,90,.35)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let j = 0; j < tr.trail.length; j += 2) {
+      if (j === 0) ctx.moveTo(tr.trail[j], tr.trail[j + 1]); else ctx.lineTo(tr.trail[j], tr.trail[j + 1]);
+    }
+    ctx.stroke();
+    ctx.fillStyle = '#ffe9a8';
+    ctx.beginPath(); ctx.arc(tr.x, tr.y, 3, 0, TAU); ctx.fill();
+    ctx.globalAlpha = 0.35; ctx.fillStyle = '#ffb347';
+    ctx.beginPath(); ctx.arc(tr.x, tr.y, 7, 0, TAU); ctx.fill();
+    ctx.restore();
+  }
+}
+
+function drawParticles() {
+  for (let i = 0; i < G.particles.length; i++) {
+    const p = G.particles[i];
+    const a = 1 - p.t / p.life;
+    ctx.globalAlpha = clamp(a, 0, 1) * (p.kind === 'dust' ? 0.5 : 1);
+    ctx.fillStyle = p.col;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r * (p.kind === 'dust' ? 1 : a), 0, TAU); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawPopups() {
+  ctx.textAlign = 'center';
+  for (let i = 0; i < G.popups.length; i++) {
+    const q = G.popups[i];
+    const t = q.t / q.life;
+    ctx.globalAlpha = clamp(1 - t * t, 0, 1);
+    ctx.fillStyle = q.col;
+    ctx.font = 'bold 15px system-ui, sans-serif';
+    ctx.fillText(q.text, q.x, q.y - easeOutCubic(t) * 34);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawNight() {
+  if (!G.night) return;
+  const ch = G.chopper;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.fillStyle = 'rgba(6,12,30,.74)';
+  ctx.fillRect(0, 0, W, H);
+  const sx = (ch.x - G.cam.x) * SCALE + W * 0.5;
+  const sy = (ch.y - G.cam.y) * SCALE + H * 0.5;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  // searchlight cone straight down from the belly
+  const reach = 300 * SCALE;
+  const gsp = ctx.createLinearGradient(sx, sy, sx, sy + reach);
+  gsp.addColorStop(0, 'rgba(255,244,200,.30)');
+  gsp.addColorStop(1, 'rgba(255,244,200,0)');
+  ctx.fillStyle = gsp;
+  ctx.beginPath();
+  ctx.moveTo(sx - 12 * SCALE, sy);
+  ctx.lineTo(sx - 130 * SCALE, sy + reach);
+  ctx.lineTo(sx + 130 * SCALE, sy + reach);
+  ctx.lineTo(sx + 12 * SCALE, sy);
+  ctx.closePath();
+  ctx.fill();
+  const rg = ctx.createRadialGradient(sx, sy, 4, sx, sy, 190 * SCALE);
+  rg.addColorStop(0, 'rgba(255,240,200,.35)');
+  rg.addColorStop(1, 'rgba(255,240,200,0)');
+  ctx.fillStyle = rg;
+  ctx.fillRect(sx - 200 * SCALE, sy - 200 * SCALE, 400 * SCALE, 400 * SCALE);
+  ctx.restore();
+}
+
+function drawOverlays() {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  // under-fire vignette
+  if (G.vign > 0.02) {
+    const g = ctx.createRadialGradient(W * 0.5, H * 0.5, Math.min(W, H) * 0.28, W * 0.5, H * 0.5, Math.max(W, H) * 0.72);
+    g.addColorStop(0, 'rgba(255,60,60,0)');
+    g.addColorStop(1, 'rgba(255,50,50,' + (0.42 * G.vign).toFixed(3) + ')');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+  }
+  // fuel-critical amber pulse
+  if (G.screen === 'playing' && G.fuel / Math.max(1, G.fuelMax) < 0.12) {
+    const a = 0.16 + 0.1 * Math.sin(G.time * 8);
+    const g = ctx.createRadialGradient(W * 0.5, H * 0.5, Math.min(W, H) * 0.34, W * 0.5, H * 0.5, Math.max(W, H) * 0.7);
+    g.addColorStop(0, 'rgba(255,170,60,0)');
+    g.addColorStop(1, 'rgba(255,170,60,' + a.toFixed(3) + ')');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  }
+  if (G.flash > 0.01) {
+    ctx.fillStyle = 'rgba(255,240,200,' + (0.5 * G.flash).toFixed(3) + ')';
+    ctx.fillRect(0, 0, W, H);
+  }
+  // steering stick feedback
+  if (G.input.active && G.screen === 'playing') {
+    ctx.save();
+    ctx.globalAlpha = 0.3;
+    ctx.strokeStyle = '#dcff9a'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(G.input.ax, G.input.ay, STICK_R, 0, TAU); ctx.stroke();
+    ctx.globalAlpha = 0.55;
+    ctx.fillStyle = '#dcff9a';
+    ctx.beginPath(); ctx.arc(G.input.ax + G.steer.x * STICK_R, G.input.ay + G.steer.y * STICK_R, 15, 0, TAU); ctx.fill();
+    ctx.restore();
+  }
+  // off-screen objective arrow
+  if (G.screen === 'playing') {
+    let tx = null, ty = null, col = '#ffd76b';
+    if (G.cargo || G.delivered >= G.quota) { tx = G.lzX; ty = G.lzY; col = '#9ede4b'; }
+    else {
+      let bd = 1e9;
+      for (const s of G.survivors) {
+        if (s.taken || s.done) continue;
+        const d = Math.abs(s.x - G.chopper.x);
+        if (d < bd) { bd = d; tx = s.x; ty = s.y; }
+      }
+    }
+    if (tx !== null) {
+      const sx = (tx - G.cam.x) * SCALE + W * 0.5;
+      if (sx < 40 || sx > W - 40) {
+        const edge = sx < 40 ? 30 : W - 30;
+        const sy = clamp((ty - G.cam.y) * SCALE + H * 0.5, 90, H - 110);
+        ctx.save();
+        ctx.translate(edge, sy);
+        ctx.rotate(sx < 40 ? Math.PI : 0);
+        ctx.globalAlpha = 0.55 + 0.25 * Math.sin(G.time * 5);
+        ctx.fillStyle = col;
+        ctx.beginPath(); ctx.moveTo(12, 0); ctx.lineTo(-8, -10); ctx.lineTo(-8, 10); ctx.closePath(); ctx.fill();
+        ctx.restore();
+      }
+    }
+  }
+}
+
+function draw() {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  drawSky();
+  drawClouds();
+  drawParallax();
+  worldTransform();
+  drawTerrain();
+  drawGrass();
+  drawTowers();
+  drawPad();
+  drawSurvivors();
+  drawShooters();
+  // shadows for depth
+  const load = G.parts[0];
+  if (load) drawShadowFor(load.x, load.y, (load.r || 6) + 3, 1);
+  if (G.parts[1]) drawShadowFor(G.parts[1].x, G.parts[1].y, (G.parts[1].r || 6) + 3, 1);
+  drawShadowFor(G.chopper.x, G.chopper.y, 20, 0.8);
+  drawFlood();
+  drawCable();
+  if (load) drawCargoBody(load, load.type, G.parts[1]);
+  drawChopper();
+  drawParticles();
+  drawPopups();
+  drawNight();
+  drawOverlays();
+}
+
+// ================================================================
+//                        DOM / SCREENS / META
+// ================================================================
+const $ = id => document.getElementById(id);
+const el = {
+  hud: $('hud'), hudMission: $('hudMission'), hudQuota: $('hudQuota'), hudHull: $('hudHull'),
+  hudSalv: $('hudSalv'), fuelWrap: $('fuelWrap'), fuelBar: $('fuelBar'),
+  hintBar: $('hintBar'), winchBtn: $('winchBtn'), winchLbl: $('winchLbl'),
+  title: $('title'), base: $('base'), win: $('win'), lose: $('lose'),
+  titleBest: $('titleBest'), titleSalv: $('titleSalv'), titleSaved: $('titleSaved'),
+  baseSalv: $('baseSalv'), baseStage: $('baseStage'), panelWrap: $('panelWrap'),
+  tabUp: $('tabUp'), tabBuild: $('tabBuild'), tabRoster: $('tabRoster'),
+  stars: $('stars'), winSalv: $('winSalv'), winRoster: $('winRoster'),
+  loseHint: $('loseHint'), muteBtn: $('muteBtn')
+};
+
+const UPGRADES = [
+  { key: 'damp', icon: '🪢', name: 'Cable Damping', base: 60,
+    desc: l => 'Load settles ' + Math.round((0.22 + 0.20 * l) / 0.22 * 100 - 100) + '% faster' },
+  { key: 'fuel', icon: '⛽', name: 'Fuel Cell', base: 52,
+    desc: l => '+' + (13 * l) + '% fuel on every sortie' },
+  { key: 'hull', icon: '🛡️', name: 'Hull Plating', base: 78,
+    desc: l => (3 + (l >= 3 ? 1 : 0) + (l >= 5 ? 1 : 0)) + ' hull · ' + Math.round(l * 10) + '% shots shrug off' },
+  { key: 'winch', icon: '⚙️', name: 'Winch Speed', base: 48,
+    desc: l => (46 + 13 * l) + ' cable units / sec' }
+];
+function upCost(u, lvl) { return Math.round(u.base * Math.pow(1.75, lvl)); }
+
+const STAGES = [
+  { n: 'Landing Pad',   i: '🅷', c: 90 },
+  { n: 'Tent Line',     i: '⛺', c: 150 },
+  { n: 'Hangar',        i: '🏚️', c: 240 },
+  { n: 'Radar Mast',    i: '📡', c: 360 },
+  { n: 'Fuel Depot',    i: '🛢️', c: 520 },
+  { n: 'Barracks',      i: '🏠', c: 720 },
+  { n: 'Watchtower',    i: '🗼', c: 960 },
+  { n: 'Sandbag Berm',  i: '🧱', c: 1250 },
+  { n: 'Windsock',      i: '🎏', c: 1600 },
+  { n: 'Floodlights',   i: '💡', c: 2050 },
+  { n: 'Supply Stack',  i: '📦', c: 2600 },
+  { n: 'Colours',       i: '🚩', c: 3300 }
+];
+
+function setScreen(name) {
+  G.screen = name;
+  el.title.classList.toggle('hidden', name !== 'title');
+  el.base.classList.toggle('hidden', name !== 'base');
+  el.win.classList.toggle('hidden', name !== 'win');
+  el.lose.classList.toggle('hidden', name !== 'lose');
+  el.hud.classList.toggle('show', name === 'playing');
+  el.winchBtn.classList.toggle('show', name === 'playing');
+  if (name !== 'playing') { el.hintBar.classList.remove('show'); }
+  if (name === 'title') {
+    el.titleBest.textContent = S.best;
+    el.titleSalv.textContent = S.salv;
+    el.titleSaved.textContent = S.saved;
+  }
+  if (name === 'win') showWin();
+  if (name === 'lose') showLose();
+  if (name === 'base') renderBase();
+}
+
+function showWin() {
+  const spans = el.stars.children;
+  for (let i = 0; i < spans.length; i++) {
+    spans[i].className = '';
+    (function (i) {
+      setTimeout(function () {
+        if (!spans[i]) return;
+        spans[i].className = i < G.starCount ? 'lit pop' : 'pop';
+        if (i < G.starCount) tone(660 + i * 180, 0.2, 'triangle', 0.16);
+      }, 260 + i * 230);
+    })(i);
+  }
+  const target = G.salvEarned;
+  let shown = 0;
+  const t0 = performance.now();
+  el.winSalv.textContent = '0';
+  function countUp() {
+    const k = clamp((performance.now() - t0) / 900, 0, 1);
+    shown = Math.round(target * easeOutCubic(k));
+    el.winSalv.textContent = shown;
+    if (k < 1 && G.screen === 'win') requestAnimationFrame(countUp);
+  }
+  requestAnimationFrame(countUp);
+  const names = G.rescuedNames.slice(0, 6);
+  const left = G.survivors.filter(s => !s.done && !s.taken).length;
+  el.winRoster.innerHTML = (names.length
+      ? '🎖️ ABOARD: ' + names.map(n => '<b>' + n + '</b>').join(' · ')
+      : 'CARGO DELIVERED')
+    + (left ? '<br><span style="color:#9db28f">' + left + ' left in the field</span>' : '');
+}
+
+function showLose() {
+  const tips = [
+    'Fly INTO the swing to kill it — chasing the load is how you damp it.',
+    'Short cable = stiff and controllable. Long cable = reach for the pickup.',
+    'A heavy crate steals your climb. Winch it in before you go vertical.',
+    'Fuel burns faster the harder you steer. Smooth is cheap.',
+    'Tracer arcs are lobbed — break your line, do not out-run them.',
+    'Deliberately pendulum the load to swing it over an obstacle.'
+  ];
+  const left = G.survivors.filter(s => !s.done).length;
+  el.loseHint.innerHTML = (left ? left + ' still in the field. ' : '') +
+    tips[Math.floor(Math.random() * tips.length)];
+}
+
+function renderBase() {
+  el.baseSalv.textContent = '🔩 ' + S.salv + ' salvage';
+  el.baseStage.textContent = 'STAGE ' + S.stage + ' / ' + BASE_STAGES +
+    (S.stage >= BASE_STAGES ? ' · BASE COMPLETE' : ' · NEXT: ' + STAGES[S.stage].n);
+  el.tabUp.classList.toggle('on', G.baseTab === 'up');
+  el.tabBuild.classList.toggle('on', G.baseTab === 'build');
+  el.tabRoster.classList.toggle('on', G.baseTab === 'roster');
+  let html = '';
+  if (G.baseTab === 'up') {
+    for (const u of UPGRADES) {
+      const lvl = S.up[u.key];
+      const maxed = lvl >= MAX_UP;
+      const cost = maxed ? 0 : upCost(u, lvl);
+      let pips = '';
+      for (let i = 0; i < MAX_UP; i++) pips += '<div class="pip' + (i < lvl ? ' on' : '') + '"></div>';
+      html += '<div class="upCard"><div class="upIcon">' + u.icon + '</div>' +
+        '<div class="upInfo"><div class="upName">' + u.name + '</div>' +
+        '<div class="upDesc">' + u.desc(Math.min(MAX_UP, lvl + (maxed ? 0 : 1))) + '</div>' +
+        '<div class="pips">' + pips + '</div></div>' +
+        (maxed ? '<button class="buyBtn maxed" disabled>MAX</button>'
+               : '<button class="buyBtn" data-buy="' + u.key + '"' + (S.salv < cost ? ' disabled' : '') +
+                 '>🔩 ' + cost + '</button>') + '</div>';
+    }
+  } else if (G.baseTab === 'build') {
+    for (let i = 0; i < STAGES.length; i++) {
+      const st = STAGES[i];
+      const done = i < S.stage;
+      const next = i === S.stage;
+      html += '<div class="stageRow' + (done ? ' done' : (next ? '' : ' locked')) + '">' +
+        '<div class="upIcon">' + st.i + '</div>' +
+        '<div class="upInfo"><div class="upName">' + (i + 1) + '. ' + st.n + '</div>' +
+        '<div class="upDesc">' + (done ? 'Built' : next ? 'Ready to raise' : 'Locked') + '</div></div>' +
+        (done ? '<button class="buyBtn maxed" disabled>✔</button>'
+              : next ? '<button class="buyBtn" data-build="1"' + (S.salv < st.c ? ' disabled' : '') + '>🔩 ' + st.c + '</button>'
+                     : '<button class="buyBtn" disabled>🔒</button>') + '</div>';
+    }
+  } else {
+    const list = S.roster.slice().sort((a, b) => b.c - a.c);
+    if (!list.length) html = '<div class="emptyNote">No personnel on the roster yet. Every soul you winch out lands here — and they remember.</div>';
+    for (const r of list) {
+      html += '<div class="rosterRow">🎖️ <b>' + r.n + '</b><span class="cnt">' + r.c + ' rescue' + (r.c > 1 ? 's' : '') + '</span></div>';
+    }
+  }
+  el.panelWrap.innerHTML = html;
+}
+
+el.panelWrap.addEventListener('click', e => {
+  const t = e.target;
+  if (!t || !t.getAttribute) return;
+  const key = t.getAttribute('data-buy');
+  if (key) {
+    const u = UPGRADES.filter(x => x.key === key)[0];
+    if (!u) return;
+    const lvl = S.up[key];
+    if (lvl >= MAX_UP) return;
+    const cost = upCost(u, lvl);
+    if (S.salv < cost) { sfxDenied(); return; }
+    S.salv -= cost;
+    S.up[key] = lvl + 1;
+    G.U = upVals();
+    persist();
+    sfxBuy(); vibrate(25);
+    window.TTG?.track('upgrade_bought', { level: S.mission, value: cost });
+    renderBase();
+    return;
+  }
+  if (t.getAttribute('data-build')) {
+    if (S.stage >= BASE_STAGES) return;
+    const cost = STAGES[S.stage].c;
+    if (S.salv < cost) { sfxDenied(); return; }
+    S.salv -= cost;
+    S.stage++;
+    persist();
+    sfxBuy(); vibrate([20, 40, 20]);
+    window.TTG?.track('upgrade_bought', { level: S.mission, value: cost });
+    renderBase();
+  }
+});
+
+// ---------------- HUD ----------------
+const hudCache = { m: -1, q: '', h: -1, s: -1, f: -1, hint: '', cls: '' };
+function updateHud() {
+  if (G.mission !== hudCache.m) { hudCache.m = G.mission; el.hudMission.textContent = (G.convoy ? 'CONVOY ' : 'MISSION ') + G.mission; }
+  const q = '🎖️ ' + G.delivered + ' / ' + G.quota;
+  if (q !== hudCache.q) { hudCache.q = q; el.hudQuota.textContent = q; }
+  const ch = G.chopper;
+  if (ch.hull !== hudCache.h) {
+    hudCache.h = ch.hull;
+    let s = '🛡️';
+    for (let i = 0; i < ch.hullMax; i++) s += '<span' + (i < ch.hull ? '' : ' class="gone"') + '>▮</span>';
+    el.hudHull.innerHTML = s;
+  }
+  const salv = S.salv + G.salvEarned;
+  if (salv !== hudCache.s) { hudCache.s = salv; el.hudSalv.textContent = '🔩 ' + salv; }
+  const pct = clamp(G.fuel / Math.max(1, G.fuelMax), 0, 1);
+  const pr = Math.round(pct * 100);
+  if (pr !== hudCache.f) {
+    hudCache.f = pr;
+    el.fuelBar.style.width = pr + '%';
+    const cls = pr < 12 ? 'crit' : pr < 25 ? 'low' : '';
+    if (cls !== hudCache.cls) { hudCache.cls = cls; el.fuelWrap.className = cls; }
+  }
+  const hintOn = G.hintT > 0 && G.screen === 'playing';
+  if (hintOn && G.hint !== hudCache.hint) { hudCache.hint = G.hint; el.hintBar.textContent = G.hint; }
+  el.hintBar.classList.toggle('show', hintOn);
+  const lbl = G.cable.dir < 0 ? 'REEL OUT' : 'REEL IN';
+  if (el.winchLbl.textContent !== lbl) el.winchLbl.textContent = lbl;
+}
+
+// ---------------- input ----------------
+function releaseInput() {
+  G.input.active = false;
+  G.input.id = -1;
+  G.steerT.x = 0; G.steerT.y = 0;
+  G.keys.l = G.keys.r = G.keys.u = G.keys.d = 0;
+}
+
+function onDown(e) {
+  ensureAudio();
+  if (G.screen !== 'playing') return;
+  const I = G.input;
+  if (I.active) return;
+  I.active = true;
+  I.id = (e.pointerId === undefined ? 0 : e.pointerId);
+  I.ax = I.cx = e.clientX;
+  I.ay = I.cy = e.clientY;
+  I.t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+  I.moved = 0;
+  if (cv.setPointerCapture && e.pointerId !== undefined) { try { cv.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ } }
+}
+function onMove(e) {
+  const I = G.input;
+  if (!I.active) return;
+  if (e.pointerId !== undefined && I.id !== e.pointerId) return;
+  I.moved += Math.hypot(e.clientX - I.cx, e.clientY - I.cy);
+  I.cx = e.clientX; I.cy = e.clientY;
+}
+function onUp(e) {
+  const I = G.input;
+  if (!I.active) return;
+  if (e && e.pointerId !== undefined && I.id !== e.pointerId) return;
+  const dt = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - I.t0;
+  const tap = I.moved < 16 && dt < 280;
+  releaseInput();
+  if (tap && G.screen === 'playing') toggleWinch();
+}
+cv.addEventListener('pointerdown', onDown);
+window.addEventListener('pointermove', onMove);
+window.addEventListener('pointerup', onUp);
+window.addEventListener('pointercancel', onUp);
+cv.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+window.addEventListener('contextmenu', e => e.preventDefault());
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { releaseInput(); }
+  else {
+    last = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    G.physAcc = 0;
+    releaseInput();
+    if (AC && AC.state === 'suspended') { try { AC.resume(); } catch (e) { /* ignore */ } }
+  }
+});
+window.addEventListener('blur', releaseInput);
+
+window.addEventListener('keydown', e => {
+  const k = e.key;
+  if (k === 'ArrowLeft' || k === 'a' || k === 'A') G.keys.l = 1;
+  else if (k === 'ArrowRight' || k === 'd' || k === 'D') G.keys.r = 1;
+  else if (k === 'ArrowUp' || k === 'w' || k === 'W') G.keys.u = 1;
+  else if (k === 'ArrowDown' || k === 's' || k === 'S') G.keys.d = 1;
+  else if (k === ' ' || k === 'Enter') {
+    ensureAudio();
+    if (G.screen === 'playing') toggleWinch();
+    else if (G.screen === 'title') startMission(S.mission);
+    e.preventDefault();
+  }
+});
+window.addEventListener('keyup', e => {
+  const k = e.key;
+  if (k === 'ArrowLeft' || k === 'a' || k === 'A') G.keys.l = 0;
+  else if (k === 'ArrowRight' || k === 'd' || k === 'D') G.keys.r = 0;
+  else if (k === 'ArrowUp' || k === 'w' || k === 'W') G.keys.u = 0;
+  else if (k === 'ArrowDown' || k === 's' || k === 'S') G.keys.d = 0;
+});
+
+el.winchBtn.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); ensureAudio(); toggleWinch(); });
+el.winchBtn.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); });
+
+function bindTap(id, fn) {
+  const node = $(id);
+  if (!node) return;
+  node.addEventListener('click', () => { ensureAudio(); sfxClick(); fn(); });
+}
+bindTap('playBtn', () => startMission(S.mission));
+bindTap('baseBtn', () => { G.baseFrom = 'title'; setScreen('base'); });
+bindTap('baseBack', () => setScreen(G.baseFrom === 'playing' ? 'title' : G.baseFrom));
+bindTap('nextBtn', () => startMission(S.mission));
+bindTap('winBaseBtn', () => { G.baseFrom = 'win'; setScreen('base'); });
+bindTap('winTitleBtn', () => setScreen('title'));
+bindTap('retryBtn', () => startMission(G.mission));
+bindTap('loseBaseBtn', () => { G.baseFrom = 'lose'; setScreen('base'); });
+bindTap('loseTitleBtn', () => setScreen('title'));
+el.tabUp.addEventListener('click', () => { ensureAudio(); sfxClick(); G.baseTab = 'up'; renderBase(); });
+el.tabBuild.addEventListener('click', () => { ensureAudio(); sfxClick(); G.baseTab = 'build'; renderBase(); });
+el.tabRoster.addEventListener('click', () => { ensureAudio(); sfxClick(); G.baseTab = 'roster'; renderBase(); });
+
+el.muteBtn.addEventListener('click', () => {
+  ensureAudio();
+  S.mute = !S.mute;
+  persist();
+  if (master) { try { master.gain.value = S.mute ? 0 : 0.5; } catch (e) { /* ignore */ } }
+  if (S.mute) setRotor(0, 52);
+  el.muteBtn.textContent = S.mute ? '🔇' : '🔊';
+  if (!S.mute) sfxClick();
+});
+el.muteBtn.textContent = S.mute ? '🔇' : '🔊';
+
+// ---------------- main loop ----------------
+let last = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+function frame(now) {
+  // Re-arm in `finally`: one bad frame must never permanently blank the game.
+  try {
+    const dt = clamp((now - last) / 1000, 0, 0.034);
+    last = now;
+    update(dt);
+    draw();
+  } catch (e) {
+    if (++frameErrs <= 3 && typeof console !== 'undefined') console.error('[chopper] frame error:', e);
+  } finally {
+    requestAnimationFrame(frame);
+  }
+}
+
+// ---------------- boot ----------------
+resize();
+genMission(S.mission);
+G.chopper.x = G.lzX;
+G.chopper.y = G.lzY - 170;
+G.fuel = G.fuelMax = 100;
+resetTether();
+G.parts[0].x = G.chopper.x; G.parts[0].y = G.chopper.y + G.cable.len;
+G.parts[0].px = G.parts[0].x; G.parts[0].py = G.parts[0].y;
+G.cam.x = G.chopper.x; G.cam.y = G.chopper.y;
+G.padCrew = [];
+setScreen('title');
+requestAnimationFrame(frame);
+
+// ---------------- test hooks (harness only; harmless in production) ----------------
+window.__CHOPPER__ = {
+  G: G, S: S, CARGO: CARGO,
+  consts: { SUB_DT: SUB_DT, CABLE_MIN: CABLE_MIN, CABLE_MAX: CABLE_MAX, MAX_PV: MAX_PV, CH_R: CH_R, GROUND_Y: GROUND_Y },
+  update: update, draw: draw, physicsStep: physicsStep,
+  startMission: startMission, missionCfg: missionCfg, genMission: genMission,
+  attachCargo: attachCargo, releaseCargo: releaseCargo, toggleWinch: toggleWinch,
+  setScreen: setScreen, groundAt: groundAt, ceilAt: ceilAt, surfaceAt: surfaceAt,
+  swingMetric: swingMetric, upVals: upVals, persist: persist,
+  setSteer: function (x, y) { G.steerT.x = clamp(x, -1, 1); G.steerT.y = clamp(y, -1, 1); G.steer.x = G.steerT.x; G.steer.y = G.steerT.y; },
+  setWinchTarget: function (v) { G.cable.target = clamp(v, CABLE_MIN, CABLE_MAX); },
+  cableLen: function (i) {
+    const cab = G.cables[i || 0];
+    if (!cab) return 0;
+    const p = G.parts[cab.p];
+    if (!p) return 0;
+    return Math.hypot(p.x - (G.chopper.x + cab.ox), p.y - (G.chopper.y + cab.oy));
+  },
+  loadSpeed: function () { const p = G.parts[0]; return p ? Math.hypot(p.vx, p.vy) : 0; },
+  nanResets: function () { return G.nanResets; }
+};
+</script>
+</body>
+</html>

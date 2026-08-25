@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Return Fire — TaterTot Games Labs</title>
-<meta name="description" content="No weapon — send it back. Deflection combat prototype from the TaterTot Games Labs testing arena — playable in your browser.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
+<title>Broadside Baron — TaterTot Games Labs</title>
+<meta name="description" content="Fire at the top of the swell. Rhythm gunnery prototype from the TaterTot Games Labs testing arena — playable in your browser.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏴‍☠️</text></svg>">
 <style>
   :root{--bg:#0d0b16;--bg2:#151127;--card:#1c1734;--card2:#241d44;--line:rgba(255,255,255,.08);
-    --ink:#f6f3ff;--muted:#9a91c4;--dim:#6e659b;--accent:#ff6b4a;--r:20px}
+    --ink:#f6f3ff;--muted:#9a91c4;--dim:#6e659b;--accent:#ffc46b;--r:20px}
   *{margin:0;padding:0;box-sizing:border-box}
   html{-webkit-text-size-adjust:100%}
   body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
     -webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden;position:relative}
   body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
-    background:radial-gradient(900px 480px at 12% -6%, #ff6b4a26, transparent 62%),
+    background:radial-gradient(900px 480px at 12% -6%, #ffc46b26, transparent 62%),
       radial-gradient(760px 420px at 106% 8%, rgba(124,212,240,.10), transparent 60%),
       linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%)}
   .wrap{max-width:1000px;margin:0 auto;padding:20px 18px 80px}
@@ -36,7 +36,7 @@
   .badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
   .b{padding:6px 13px;border-radius:999px;font-size:.68rem;font-weight:800;letter-spacing:.08em;
     text-transform:uppercase;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--muted)}
-  .b.acc{background:#ff6b4a1f;border-color:#ff6b4a55;color:#ff6b4a}
+  .b.acc{background:#ffc46b1f;border-color:#ffc46b55;color:#ffc46b}
   h1{font-size:clamp(2rem,6vw,3rem);font-weight:900;letter-spacing:-.03em;line-height:1.02}
   .hook{margin-top:10px;font-size:1.02rem;font-weight:800;color:var(--accent)}
   .lede{margin-top:16px;color:var(--muted);font-size:1rem;line-height:1.68}
@@ -64,7 +64,7 @@
     background:rgba(255,255,255,.035);border:1px solid var(--line);color:var(--muted);
     font-size:.95rem;line-height:1.55}
   ol.steps .n{flex:0 0 26px;height:26px;border-radius:50%;display:grid;place-items:center;
-    background:#ff6b4a22;color:#ff6b4a;font-weight:900;font-size:.82rem}
+    background:#ffc46b22;color:#ffc46b;font-weight:900;font-size:.82rem}
 
   ul.feats{list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   @media (max-width:700px){ ul.feats{grid-template-columns:1fr} }
@@ -72,7 +72,7 @@
     background:rgba(255,255,255,.035);border:1px solid var(--line);
     color:var(--muted);font-size:.9rem;line-height:1.5}
   ul.feats li::before{content:"";position:absolute;left:15px;top:17px;width:9px;height:9px;border-radius:3px;
-    background:#ff6b4a;box-shadow:0 0 10px #ff6b4a88}
+    background:#ffc46b;box-shadow:0 0 10px #ffc46b88}
 
   .metaBox{padding:18px 20px;border-radius:16px;background:linear-gradient(160deg,var(--card),var(--card2));
     border:1px solid var(--line);color:var(--muted);font-size:.95rem;line-height:1.62}
@@ -95,21 +95,21 @@
   <div class="hero">
     <div>
       <div class="shotFrame">
-        <img src="../../assets/shots/return-fire.png" width="645" height="1146"
-             alt="Return Fire gameplay screenshot">
+        <img src="../../assets/shots/broadside-baron.png" width="645" height="1146"
+             alt="Broadside Baron gameplay screenshot">
         <span class="shotTag">Actual gameplay</span>
       </div>
     </div>
     <div>
       <div class="badges">
-        <span class="b acc">Wave 5</span>
-        <span class="b">Deflection combat</span>
-        <span class="b">35–60s waves</span>
+        <span class="b acc">Wave 6</span>
+        <span class="b">Rhythm gunnery</span>
+        <span class="b">40–70s duels</span>
       </div>
-      <h1>🛡️ Return Fire</h1>
-      <p class="hook">No weapon — send it back</p>
-      <p class="lede">A machine army rings your core and opens fire, and you are never given a gun. You get a shield on an orbit and one job: angle it. Reflection is real — the angle you present decides where a shot goes, and the speed of your swipe rides along with it, so a hard flick returns a round faster and hotter than it arrived.</p>
-      <p class="why"><b>Why it works:</b> Every competitor in this space hands you a weapon. Here the enemy supplies all the ammunition and destroys itself with it — an inversion that reads instantly in three seconds of footage. The perfect-parry freeze-frame is the dopamine core, and OVERHEAT is the engineered release valve at the top of the intensity curve.</p>
+      <h1>🏴‍☠️ Broadside Baron</h1>
+      <p class="hook">Fire at the top of the swell</p>
+      <p class="lede">Your galleon rides a living swell, and the roll of the hull physically aims your cannons. Tap and every gun fires in sequence like a drumroll — each shot leaving at its own elevation, so a volley loosed at the crest arcs across the water and one fired in the trough ploughs straight into it.</p>
+      <p class="why"><b>Why it works:</b> Rhythm games hand you an abstract beat. This one hands you the sea: the metronome is a physical thing you watch rolling under your feet, so it teaches itself in a single wave cycle. Land the apex and the whole broadside collapses into one simultaneous roar — the skill ceiling and the money shot in the same moment.</p>
       <div class="playRow">
         <a class="play" href="play">▶ PLAY NOW</a>
         <span class="note">Runs in your browser · no install · works on phones</span>
@@ -120,32 +120,32 @@
   <section>
     <h2>How to play</h2>
     <ol class="steps">
-        <li><span class="n">1</span><span>Drag anywhere to swing your shield around the core.</span></li>
-        <li><span class="n">2</span><span>Angle it to send incoming fire back into whatever shot it — swipe hard for more return speed.</span></li>
-        <li><span class="n">3</span><span>Parry within a hair of impact for a PERFECT: freeze-frame, bullet-time, 2.5x damage.</span></li>
+        <li><span class="n">1</span><span>Watch the swell — your hull rolls with it and your guns follow.</span></li>
+        <li><span class="n">2</span><span>Tap to fire a broadside; hit the crest for a PERFECT VOLLEY at double damage.</span></li>
+        <li><span class="n">3</span><span>Hold to brace against rough seas, swipe to change range and dodge their guns.</span></li>
     </ol>
   </section>
 
   <section>
     <h2>What's in it</h2>
     <ul class="feats">
-      <li>Real reflection physics — incidence mirrors across the shield normal</li>
-      <li>Your swipe velocity transfers into the shot you return</li>
-      <li>Five projectile types: bullets, rockets, ricocheting saw blades, chargeable orbs, arcing mortars</li>
-      <li>Armored enemies that only crack to their own ammunition type</li>
-      <li>A boss every fifth wave with pattern shifts at 66% and 33% health</li>
-      <li>OVERHEAT: eight clean deflections turns every parry perfect for four seconds</li>
+      <li>The ocean swell is the metronome — physical, visible, no timing bar</li>
+      <li>Each cannon fires at its own elevation, so volleys genuinely spread</li>
+      <li>Positional damage: waterline hits flood, mast hits drop sails</li>
+      <li>Roguelite voyages across branching maps of battles, merchants and storms</li>
+      <li>Stacking crew-card drafts — Powder Monkey, Bosun, Chain Shot, Kraken's Luck</li>
+      <li>Fog banks where you fire on the sound of gunports alone</li>
     </ul>
   </section>
 
   <section>
     <h2>The meta layer</h2>
-    <div class="metaBox">Scrap salvaged from wreckage rebuilds The Bastion — a fortress on the title screen that rises across twelve stages. Four sim-visible upgrade tracks (Shield Arc, Kinetic Gain, Core Plating, Overheat Charge) plus milestone shield skins.</div>
+    <div class="metaBox">Plunder survives every run and rebuilds your home Port across twelve stages — docks, tavern, shipwright, lighthouse — alongside permanent upgrades to hull, powder quality, crew quarters and spyglass, plus ship skins earned by voyage milestones.</div>
   </section>
 
   <div class="nav">
-    <a href="../cut-loose/"><span>Previous</span>← ✂️ Cut Loose</a>
-    <a class="r" href="../broadside-baron/"><span>Next</span>🏴‍☠️ Broadside Baron →</a>
+    <a href="../return-fire/"><span>Previous</span>← 🛡️ Return Fire</a>
+    <a class="r" href="../siege-pile/"><span>Next</span>⚔️ Siege Pile →</a>
   </div>
 
   <footer>

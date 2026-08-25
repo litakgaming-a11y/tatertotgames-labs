@@ -1,13 +1,13 @@
-# TaterTot Games Labs — 21 Hybrid-Casual MVP Concepts
+# TaterTot Games Labs — 24 Hybrid-Casual MVP Concepts
 
-Twenty-one original hybrid-casual concepts, deliberately **not** clones of the current top-grossing
-pack (no screws, no color-block boards, no hole-swallowing, no hexa-sorting), spanning twenty-one
+Twenty-four original hybrid-casual concepts, deliberately **not** clones of the current top-grossing
+pack (no screws, no color-block boards, no hole-swallowing, no hexa-sorting), spanning twenty-four
 distinct mechanic classes. Each follows the proven
 hybrid-casual formula: **one instantly-readable hyper-casual mechanic as the hook** (the "game
 feature as ad" — the first 3 seconds of gameplay *is* the creative), plus a **meta layer** that
 carries retention and monetization.
 
-All twenty-one are live and playable in this repo (`games/<slug>/`), each as a single self-contained
+All twenty-four are live and playable in this repo (`games/<slug>/`), each as a single self-contained
 HTML5 file: mobile-first, one-hand controls, WebAudio-synthesized SFX, haptics, and localStorage
 progression. Hosted on Cloudflare so every build is instantly testable online.
 
@@ -354,6 +354,54 @@ Year-1 at scale: **7–13M downloads, $8–14M net**
 
 ---
 
+## 22. 🏴‍☠️ Broadside Baron *(wave 6 — rhythm × artillery × roguelite)*
+
+| | |
+|---|---|
+| **Genre** | Naval gunnery duel with a roguelite voyage spine |
+| **Hyper-casual hook** | *Fire at the top of the swell.* The ocean rolls your hull, the roll aims your cannons — so the rhythm is **physical and visible** rather than an abstract timing bar. |
+| **Concept** | Tap to fire a broadside: every cannon fires in sequence like a drumroll, each using its own elevation at its own instant. Hit the roll apex and the sequence collapses into one simultaneous roar at double damage. Hold to brace, swipe to change range band, and dodge readable incoming volleys. Damage is positional — waterline floods, masts drop sails, decks lose crew. |
+| **Meta layer** | Runs are branching voyages (battle / merchant / storm / derelict) with stacking crew-card drafts; plunder carries into a home Port rebuilt across 12 stages plus permanent upgrades and ship skins. |
+| **Research grounding** | Adds the portfolio's first **roguelite run structure** — the strongest known session-length and return-rate driver in mid-core hybrid — while the swell hook keeps the first 3 seconds readable enough for casual CPI. |
+| **Why it can win** | Nobody has made the metronome a physical object you can see. It teaches itself in one wave cycle, and crew cards give it a content runway that composes indefinitely. |
+
+**Projected stats** — CPI **$0.40–0.65** · D1 **51%** · D7 **20%** · D30 **8%** · Session **14 min** ·
+Sessions/DAU **4.8** · ARPDAU **$0.15–0.23** · LTV(90d) **$1.05** · Year-1 at scale: **6–11M downloads, $7–12M net**
+
+---
+
+## 23. ⚔️ Siege Pile *(wave 6 — ragdoll physics × horde siege × emergent terrain)*
+
+| | |
+|---|---|
+| **Genre** | Catapult siege where your own army becomes the level |
+| **Hyper-casual hook** | *Fling knights at the wall. They pile up. The pile becomes the ladder.* |
+| **Concept** | Drag-and-release launches an articulated ragdoll knight. Those that clear the wall count toward capture; those that fall short **pile at the base as solid collision** — then stand up and brace, organising themselves into a climbable ramp. Tap mid-flight to tuck for a higher bounce off the heap. Defenders shove piles over, moats swallow short throws entirely, and keeps demand three knights on a plate at once. |
+| **Meta layer** | The Warband roster with drafted knight types (Heavy, Tumbler, wall-sticking Grappler, Standard-Bearer), four upgrade tracks, and a conquest map that fills in as you advance. |
+| **Research grounding** | Failure-arc creatives drive +65–78% IPM per the research addendum, and here **failure is literally productive** — a short throw is construction material, so the fail state is both funny and useful, which is the retry engine. |
+| **Why it can win** | Emergent terrain nobody else is doing: the level builds itself out of your mistakes, so no two assaults look alike and every run generates its own screenshot. |
+
+**Projected stats** — CPI **$0.28–0.48** · D1 **53%** · D7 **19%** · D30 **7.5%** · Session **11 min** ·
+Sessions/DAU **5** · ARPDAU **$0.13–0.19** · LTV(90d) **$0.88** · Year-1 at scale: **9–16M downloads, $6–11M net**
+
+---
+
+## 24. 🚁 Chopper Drop *(wave 6 — flight-lite × tethered pendulum × extraction arcade)*
+
+| | |
+|---|---|
+| **Genre** | Rescue-under-fire where your own cargo is the antagonist |
+| **Hyper-casual hook** | *The load swings. The clock runs. Fly anyway.* One-finger flight with a winch cable underneath, and the thing dangling from it has real inertia. |
+| **Concept** | Drag to steer; a hooked squad member becomes a genuine pendulum whose reaction force fights you. Damping is the skill — fly into the swing to kill it, with it to amplify, and advanced players deliberately pendulum a load over an obstacle. Tap to winch in or out, trading control against reach. Cargo changes the physics: a medic swings fast, a crate drags you down, a fuel drum explodes on impact, a stretcher on two cables refuses to rotate. |
+| **Meta layer** | Forward Base rebuilt across 12 stages, four sim-changing upgrades, and a persistent roster of **named rescued personnel** — the nurture hook that makes losing one sting. |
+| **Research grounding** | The tension source is unusual and entirely player-authored: you are fighting your own momentum, not an enemy, which makes near-misses feel earned rather than dealt. Collection/nurture metas are the highest-retention layer in the report. |
+| **Why it can win** | Nothing in the casual space makes the *payload* the opponent. The skill ceiling (deliberate pendulum swings) is deep, while the floor stays one-finger simple. |
+
+**Projected stats** — CPI **$0.38–0.60** · D1 **49%** · D7 **19%** · D30 **7.5%** · Session **12 min** ·
+Sessions/DAU **4.6** · ARPDAU **$0.14–0.21** · LTV(90d) **$0.92** · Year-1 at scale: **6–11M downloads, $6–10M net**
+
+---
+
 ## Portfolio strategy
 
 | Game | Primary KPI bet | Monetization center of gravity |
@@ -379,8 +427,11 @@ Year-1 at scale: **7–13M downloads, $8–14M net**
 | Tippy Ship | Near-miss compulsion + live-ops runway | Rewarded (retry sail) + hull IAP |
 | Cut Loose | Clip virality (slow-mo money shot) | Rewarded (slow-mo) + blade IAP |
 | Return Fire | Highest LTV (combat rewarded-video) | Rewarded (continue, 2x scrap) + skin IAP |
+| Broadside Baron | Session length (roguelite runs) | Rewarded (revive run) + crew/ship IAP |
+| Siege Pile | Failure-arc creative IPM | Rewarded (+knights) + warband IAP |
+| Chopper Drop | Nurture retention (named roster) | Rewarded (+fuel) + base IAP |
 
-**Test plan:** all twenty-one are shipped to Cloudflare and instrumented. Run $200–500 creative probes
+**Test plan:** all twenty-four are shipped to Cloudflare and instrumented. Run $200–500 creative probes
 per concept on TikTok/Meta targeting CPI + 3-day retention; kill or double-down at 2 weeks; winners
 get live-ops (daily events, seasonal skins, leaderboards) and a native wrapper for store launch.
 
@@ -388,7 +439,7 @@ With seventeen concepts the portfolio is now wide enough to test by *mechanic cl
 title — probe one representative per class first (Sky Bloom for spectacle, Bloom Drop for
 aim-and-bounce, Parcel Panic for routing, Fold Friends for zen-collection), then fund siblings of
 whichever class clears the greenlight gate. The research gate is unchanged and applies to all
-twenty-one: **D1 ≥ 30%, D7 ≥ 15%, CPI ≤ $1.50** before any further meta investment. Wave 4 adds a
+twenty-four: **D1 ≥ 30%, D7 ≥ 15%, CPI ≤ $1.50** before any further meta investment. Wave 4 adds a
 physics-class probe (Sandfall for granular ASMR, Tippy Ship for buoyancy comedy, Cut Loose for
 rope timing) — see [CONCEPTS-WAVE4.md](CONCEPTS-WAVE4.md) for the full physics-first thesis.
 

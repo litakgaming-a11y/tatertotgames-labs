@@ -2,7 +2,7 @@
 
 ### ▶ Play now: **https://tatertotgames-labs.pages.dev**
 
-Twenty-one original **hybrid-casual** game prototypes — playable instantly in the browser, hosted on
+Twenty-four original **hybrid-casual** game prototypes — playable instantly in the browser, hosted on
 Cloudflare. Each game is one self-contained HTML file: zero dependencies, mobile-first one-hand
 controls, WebAudio-synthesized sound, haptics, particles everywhere, and persistent meta
 progression in localStorage.
@@ -51,9 +51,18 @@ an explanation of how it works — the links below go there.
 |---|---|---|---|
 | 🛡️ **Return Fire** | No weapon — deflect their ammo back | The Bastion fortress rebuild | [play](https://tatertotgames-labs.pages.dev/games/return-fire/) |
 
+### Wave 6 — genre mashups
+
+| Game | Hook | Meta | Play |
+|---|---|---|---|
+| 🏴‍☠️ **Broadside Baron** | Fire at the top of the swell | Roguelite voyages + home Port | [play](https://tatertotgames-labs.pages.dev/games/broadside-baron/) |
+| ⚔️ **Siege Pile** | Knights pile up into their own ladder | Warband roster + conquest map | [play](https://tatertotgames-labs.pages.dev/games/siege-pile/) |
+| 🚁 **Chopper Drop** | The swinging load is the enemy | Forward Base + rescued roster | [play](https://tatertotgames-labs.pages.dev/games/chopper-drop/) |
+
 ## Docs
 
-- [CONCEPTS.md](CONCEPTS.md) — all 21 shipped concepts with hooks, meta design, and projected KPIs
+- [CONCEPTS.md](CONCEPTS.md) — all 24 shipped concepts with hooks, meta design, and projected KPIs
+- [CONCEPTS-WAVE6.md](CONCEPTS-WAVE6.md) — 3 genre-mashup briefs (pirate rhythm-artillery, medieval ragdoll siege, military tethered flight)
 - [CONCEPTS-WAVE5.md](CONCEPTS-WAVE5.md) — Return Fire brief (reflection dynamics + momentum transfer)
 - [CONCEPTS-WAVE4.md](CONCEPTS-WAVE4.md) — 3 physics-first build briefs (granular sim, buoyancy, verlet ropes)
 - [CONCEPTS-WAVE3.md](CONCEPTS-WAVE3.md) — 10 build-ready briefs for the next wave (design only,
