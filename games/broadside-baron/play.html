@@ -1686,9 +1686,8 @@ function updateBattle(dt) {
         fireFoeDeck(f, f.deckNext);
         f.deckNext++;
         f.salvo--;
-        f.salvoT = 0.62;
-        if (f.salvo > 0) f.targetBand = Math.random() < 0.6 ? band : (1 - band);
-        else f.reloadT = f.reload * rnd(0.9, 1.25);
+        f.salvoT = 0.5;
+        if (f.salvo <= 0) f.reloadT = f.reload * rnd(0.9, 1.25);
       }
     } else if (f.teleT > 0) {
       f.teleT -= dt;
