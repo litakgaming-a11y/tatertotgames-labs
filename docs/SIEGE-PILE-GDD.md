@@ -1,8 +1,9 @@
 # SIEGE PILE — Game Design Document
 
 **From arena prototype to full mid-core physics siege game**
+**v1.3 — "braced" is gone: landed units now hold Defensive Stance (shields up) and form a climbable shield roof.**
 **v1.2 — city, world map AND the catapult raid are 3D. The raid conversion is specified, not yet built.**
-Version 1.2 · TaterTot Games Labs · Unity 6 URP — 3D throughout
+Version 1.3 · TaterTot Games Labs · Unity 6 URP — 3D throughout
 
 > The arena prototype ([games/siege-pile/](../games/siege-pile/)) proved the core toy: launched
 > ragdoll knights that pile into climbable terrain, verified to physical equilibrium (residual
@@ -187,11 +188,11 @@ walking calamities with their own problems (§5.4). Numbers in §6.
 
 | Tier | Unit | Gimmick |
 |---|---|---|
-| T1 | **Ragged Lad** | A peasant with a plank. Swings wide; hits allies ~as often as enemies. |
-| T2 | **Rusty Knight** | The prototype's knight. Bonks, tumbles, helmet pops off. |
-| T3 | **Man-at-Arms** | Actually blocks sometimes. Shield can deflect friendly arrows (emergent!). |
+| T1 | **Ragged Lad** | A peasant with a plank and no shield. Swings wide; hits allies ~as often as enemies. In Defensive Stance he holds the plank over his head, which helps nobody. |
+| T2 | **Rusty Knight** | **Shielded** (badly). The prototype's knight: bonks, tumbles, helmet pops off, holds a roof that visibly sags. |
+| T3 | **Man-at-Arms** | **Shielded.** Actually blocks sometimes; his shield deflects friendly arrows (emergent!) and anchors a shield roof. |
 | T4 | **Berserker** | Windmill attack hits everything in a circle — devastating AND a war crime against his own side. |
-| T5 | **Paladin** | Disciplined, heavy, damage aura; the pile's best foundation block. |
+| T5 | **Paladin** | **Shielded.** Disciplined, heavy, damage aura — and the sturdiest roof-holder in the game. |
 | Special | **Climber** | Grapnel + suction cups; scales walls solo, no catapult needed. |
 | Special | **Grappler** | Fires a grapple line others can climb — turns one unit into a ladder. |
 
@@ -332,18 +333,43 @@ courtyard, inner defenses, objective.
 - **Climbers and Grapplers** still walk from the pen and scale walls unaided. **Ranged units** fire from
   where they land. **Mythics** arrive their own way.
 
+### Defensive Stance and the shield roof
+
+When a landed unit comes to rest and survives, it does **not** lie there and it does not adopt some
+vague propping pose. It gets up and goes into **Defensive Stance — shield raised overhead.**
+
+- **Shield-bearers lock together into a shield roof** (a testudo). Shoulder to shoulder, shields up,
+  a wobbling armoured ceiling. **That roof is the climbable surface** — later knights land on it and
+  run across it, so failed waves still build the route for the next one.
+- **Unshielded units** — archers, mages, Rocket Man, anyone whose job is not standing still — hunker
+  down instead, arms over their heads, making themselves as small and as pathetic as possible. They
+  still form a surface, just a worse and much funnier one. A mage cowering under his own hat holds
+  roughly no weight at all.
+- **Shields up means damage down.** A unit in Defensive Stance takes heavily reduced damage from
+  above: arrow volleys, boiling oil, dropped rocks. This is what makes the stance a real tactical
+  state rather than set dressing.
+- **The roof can collapse.** Land something heavy on it — an Anvil Head, a Mythic, a badly-aimed
+  Minotaur — and it caves in, dumping everyone underneath into a heap and briefly opening the route
+  you were building. Weight is a resource you have to spend carefully, and getting it wrong is one
+  of the best accidents in the game.
+- **The player can command Defensive Stance** on units already in the field: hold position, shields
+  up, take far less damage, deal none. The correct answer to an incoming volley, and the wrong answer
+  if you needed those units to be attacking the banner.
+
+**Loadout consequence:** shield-bearers make better ramps *and* better cover, so who you launch first
+is a real decision. Send the Man-at-Arms and Paladins early to build a solid, damage-resistant roof;
+send the mages first and you get a lumpy, cowering, structurally embarrassing one.
+
 ### The pile, in three dimensions
 
-The pile mechanic is preserved and improved. Fallen units — yours and theirs — still settle, brace and
-**freeze into climbable terrain**, so failed waves still build the ramp for the next one.
+The pile is now a **mound with a shape**. Angle-of-repose relaxation runs in two dimensions, so a heap
+slumps outward into a proper cone rather than a triangle. You can orbit it and read it. Players
+deliberately build a mound on the *left* to reach a left tower, which turns pile-building from a
+running total into a spatial plan — and dumping too much weight on one side sloughs the whole thing
+sideways, taking your careful route with it.
 
-What changes is that the pile is now a **mound with a shape**. Angle-of-repose relaxation runs in two
-dimensions, so a heap slumps outward into a proper cone rather than a triangle. You can orbit it and
-read it. Players deliberately build a mound on the *left* to reach a left tower, which turns
-pile-building from a running total into a spatial plan — and dumping too much weight on one side
-sloughs the whole thing sideways, taking your careful ramp with it.
-
-Piles can still be shoved over by defenders and burned by fire.
+Piles can still be shoved over by defenders and burned by fire — and a shield roof under fire is a
+roof full of people rapidly reconsidering their commitment to holding formation.
 
 ### Camera
 
