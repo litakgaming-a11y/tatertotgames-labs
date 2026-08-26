@@ -1,8 +1,8 @@
 # SIEGE PILE — Game Design Document
 
 **From arena prototype to full mid-core physics siege game**
-**v1.1 — city and world map are now 3D (Whiteout Survival-style); raids remain the 2D ragdoll sim**
-Version 1.1 · TaterTot Games Labs · Unity URP — 3D city & world map, 2D physics raids
+**v1.2 — city, world map AND the catapult raid are 3D. The raid conversion is specified, not yet built.**
+Version 1.2 · TaterTot Games Labs · Unity 6 URP — 3D throughout
 
 > The arena prototype ([games/siege-pile/](../games/siege-pile/)) proved the core toy: launched
 > ragdoll knights that pile into climbable terrain, verified to physical equilibrium (residual
@@ -33,7 +33,7 @@ ladder your next wave climbs.*
    spread/friendly-fire model (§6) is tuned for spectacle first, fairness second (but fairness by
    symmetry: chaos hits both sides).
 4. **PHYSICS IS TRUTH.** No canned outcomes. Damage, positioning, area effects, oil spread, fire
-   propagation — all resolved by the 2D physics sim. If the pile says a knight is a stepping
+   propagation — all resolved by the physics sim. If the pile says a knight is a stepping
    stone, he is a stepping stone.
 5. **REAL STAKES.** Units die permanently in raids. Upgrades take real time. That weight is what
    makes the comedy land — you are laughing at the deaths of soldiers you spent three days
@@ -66,7 +66,7 @@ between a masterstroke and a blooper reel.
                         │  dispatch march → it arrives
                         ▼
         ┌──────────────────────────────────────────────────────┐
-        │                 THE RAID  (2D physics)                │
+        │                 THE RAID  (3D physics)                │
         │   catapult + army → launch over walls → ragdoll war   │
         │   cast spells · complete objectives · loot or lose    │
         └───────────────┬──────────────────────────────────────┘
@@ -115,10 +115,9 @@ The city is a **fixed plot grid** on 3D terrain (Whiteout model, not free-placem
 occupy plots; new plots unlock with Keep level; players choose *which* building goes where among
 available plots and can relocate for a fee. Decorations and paving occupy cosmetic plots.
 
-**Crucially, the city layout is not the defense layout.** Raids are fought on a 2D side-view
-cross-section (§7) generated *from* your 3D city — wall level, tower count and their left-to-right
-order are derived from your build, so what you construct genuinely shapes how you are besieged,
-without forcing 3D combat. §8 details the projection.
+**Crucially, the city layout is not the defense layout.** Raids are fought on a siege field (§7)
+generated *from* your 3D city — wall level, tower count and their order are derived from your build,
+so what you construct genuinely shapes how you are besieged. §8 details the projection.
 
 ### Buildings
 
@@ -290,58 +289,96 @@ derp_p             = derp_base(unit) × tier_mult          // trip, wrong way, h
 
 ---
 
-## 7. The Raid (moment-to-moment)
+## 7. The Raid (moment-to-moment) — 3D
+
+> **Status:** the shipped raid is 2D. The 3D conversion is specified in
+> [RAID-3D-MIGRATION.md](RAID-3D-MIGRATION.md), which also lists what it breaks. This section is the
+> target design.
+
+### Why 3D
+
+In 2D a launch can be wrong in one way: short or long — a *line* of failure. In 3D it can be wrong in
+three: short/long, left/right, and spinning on an axis you did not intend — a *volume* of failure.
+Every extra axis is a new way for a knight to end up somewhere stupid, and they compound. Precision
+remains a reward of tier, never a baseline (§6); 3D simply gives the chaos model more room.
 
 ### Setup
 
-Attacker arrives at the defender's castle cross-section. On the left: **your catapult** (upgradeable:
-range, HP, reload speed, double-cup) and your brought army arranged in a staging pen. The defender's
-castle spans rightward: moat → outer wall → courtyard → inner defenses → **objective**.
+The attacker arrives at the defender's castle, rendered in 3D. Your **catapult sits on a turntable**
+with your army in a staging pen behind it; the castle stands ahead in depth — moat, outer wall,
+courtyard, inner defenses, objective.
 
-### Launching
+### Launching — three axes of wrongness
 
-- **Drag any unit into the catapult cup**, then drag-back-and-release to launch (the prototype's
-  proven input, unchanged). Trajectory preview is deliberately vague at low catapult tiers.
-- **Launch quality is the skill:** a clean arc over the wall lands the unit on its feet with an
-  intact formation position and **zero landing damage**. A botched launch means face-first landing
-  damage, scattered positioning, and a stunned wobble — the unit fights worse from a worse spot
-  (§6 surface_mult). Great launches are the mastery loop.
-- **Tuck (tap mid-flight)** returns from the prototype: reduces drag, raises bounce — skilled
-  players skip units off the pile or off rooftops deeper into the castle.
-- **Climbers/Grapplers** walk from the pen and scale walls without the catapult. **Ranged units**
-  can be deployed to the staging ground to fire over walls from outside (at maximum spread) or
-  launched inside for accuracy. Mythics trigger their own arrival.
-- The **pile mechanic is preserved globally:** every fallen unit (yours or theirs) becomes settled
-  climbable terrain. Failed waves literally build the ramp for the next one. Piles can be shoved
-  over by defenders and burned by fire.
+- **Drag any unit into the catapult cup**, then aim and release.
+- **Azimuth** (drag horizontally) swings the turntable — and the turntable has **backlash**, so fine
+  adjustments overshoot and wobble back. Higher catapult tiers reduce it.
+- **Elevation** (drag vertically) sets the arc: flat and fast, or lofted and slow.
+- **Power** winds the arm, which creaks and shudders under tension and judders on release if overwound.
+- **Every catapult has a persistent aim bias** — a fraction of a degree of drift, seeded from that
+  catapult's own ID, so it is consistent. Players learn "mine pulls left" and compensate. Upgrades
+  reduce it. It is a character trait, not noise.
+- **Crosswind**, telegraphed by a wind sock and drifting banners, shoves bodies laterally at the top of
+  the arc. A Ragged Lad gets thrown noticeably; Anvil Head barely notices. It changes between launches.
+- **Release imparts spin on all three axes.** A clean launch lands a knight upright with a grunt; a bad
+  one arrives headfirst, sideways or corkscrewing, and the landing pose drives both damage and the
+  comedy of the recovery.
+- **Launch quality is still the skill:** a clean arc lands the unit on its feet, in position, with zero
+  landing damage. A botched one means damage, scatter, and a stunned wobble — and a worse unit fights
+  worse from a worse spot (§6 `surface_mult`).
+- **Tuck (tap mid-flight)** now does double duty: less drag and a higher bounce, *and* it stabilises
+  spin — so a skilled player converts a tumbling disaster into a clean landing. That is a real skill
+  ceiling 2D did not have.
+- **Climbers and Grapplers** still walk from the pen and scale walls unaided. **Ranged units** fire from
+  where they land. **Mythics** arrive their own way.
 
-### Spellcasting (player-cast, §10 for schools)
+### The pile, in three dimensions
 
-A spell bar (3 equipped slots + mana pool that refills slowly during the raid) lets YOU cast
-directly: heal a cluster, drop a meteor, slick a rampart with grease, enrage your minotaur.
-Player-cast spells use *your Mage Tower's* accuracy tier — early on, your own meteors are a
-danger to everyone you love.
+The pile mechanic is preserved and improved. Fallen units — yours and theirs — still settle, brace and
+**freeze into climbable terrain**, so failed waves still build the ramp for the next one.
 
-### Objectives (over-the-top by design)
+What changes is that the pile is now a **mound with a shape**. Angle-of-repose relaxation runs in two
+dimensions, so a heap slumps outward into a proper cone rather than a triangle. You can orbit it and
+read it. Players deliberately build a mound on the *left* to reach a left tower, which turns
+pile-building from a running total into a spatial plan — and dumping too much weight on one side
+sloughs the whole thing sideways, taking your careful ramp with it.
 
-Every raid has a **primary objective** (destroy the Keep banner) plus **2 bonus objectives** drawn
-from a pool — and defenders **customize their own bonus objectives** as taunts (pick which
-absurdity attackers must attempt for full loot):
+Piles can still be shoved over by defenders and burned by fire.
+
+### Camera
+
+Behind-and-above during aiming so azimuth reads naturally; a **deliberately drunken follow** in flight
+that overshoots on landing and settles; freeze-frame and a short orbit on spectacular impacts; free
+orbit during the raid because the pile is now worth looking at. The camera never takes control away
+mid-aim.
+
+### Spellcasting
+
+Unchanged in design (§10 for schools): three equipped slots and a mana pool that refills during the
+raid. Spells are physics events, and in 3D they get an axis too — a Meteor's whistling shadow now
+tracks across the ground toward where it will actually land, which is both fairer and funnier.
+Player-cast spells use your Mage Tower's accuracy tier, so early on your own meteors are a danger to
+everyone you love.
+
+### Objectives
+
+Every raid has a **primary objective** (destroy the Keep banner) plus **2 bonus objectives** drawn from
+a pool — and defenders **customize their own bonus objectives** as taunts:
 
 - Ring the giant bell three times (it's guarded and it's LOUD)
 - Steal the defender's prize pig (a ragdoll pig that does NOT cooperate)
-- Land a unit in the lord's bathtub (top of the highest tower)
+- Land a unit in the lord's bathtub (top of the highest tower — and now you can miss it in two axes)
 - Topple the ancestral statue so it crushes the gatehouse
 - Have a unit survive 20 seconds sitting on the throne
 - Deliver a pie to the enemy lord (the pie is a physics object; good luck)
 
-Bonus objectives multiply loot (1.25x / 1.5x) and award Trophies. They exist to force attackers
-into gloriously stupid tactical decisions.
+Bonus objectives multiply loot (1.25x / 1.5x) and award Trophies. They exist to force attackers into
+gloriously stupid tactical decisions.
 
 ### Victory / defeat
 
-- **Win:** primary objective destroyed before your army is spent → loot % of defender's unvaulted
-  resources + objective bonuses.
+- **Win:** primary objective destroyed before your army is spent → loot a % of the defender's unvaulted
+  resources, plus objective bonuses.
 - **Loss:** army spent first → walk of shame, partial loot for damage done (25% scale).
 - Either way: dead units stay dead, tombstone-cam plays the top 3 funniest moments, and one-tap
   **share clip** exports the auto-captured highlight (the UA engine).
