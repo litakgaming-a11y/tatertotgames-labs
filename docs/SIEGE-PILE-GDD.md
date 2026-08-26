@@ -1,7 +1,8 @@
 # SIEGE PILE — Game Design Document
 
 **From arena prototype to full mid-core physics siege game**
-Version 1.0 · TaterTot Games Labs · Unity 2D URP
+**v1.1 — city and world map are now 3D (Whiteout Survival-style); raids remain the 2D ragdoll sim**
+Version 1.1 · TaterTot Games Labs · Unity URP — 3D city & world map, 2D physics raids
 
 > The arena prototype ([games/siege-pile/](../games/siege-pile/)) proved the core toy: launched
 > ragdoll knights that pile into climbable terrain, verified to physical equilibrium (residual
@@ -50,31 +51,32 @@ between a masterstroke and a blooper reel.
 
 ```
         ┌──────────────────────────────────────────────────────┐
-        │                     YOUR CASTLE                       │
+        │                  YOUR CITY  (3D)                      │
         │   collect resources · construct/upgrade buildings     │
         │   recruit & upgrade units · research magic            │
         └───────────────┬──────────────────────────────────────┘
                         │  pick a target
                         ▼
         ┌──────────────────────────────────────────────────────┐
-        │                     WORLD MAP                         │
-        │   nearby player castles (PVP) · campaign nodes (PVE)  │
-        │   resource collection points · events                 │
+        │                  WORLD MAP  (3D)                      │
+        │   pinch out from the city — no screen transition      │
+        │   player cities (PVP) · campaign citadels (PVE)      │
+        │   resource nodes · marches travel in real time       │
         └───────────────┬──────────────────────────────────────┘
-                        │  launch raid
+                        │  dispatch march → it arrives
                         ▼
         ┌──────────────────────────────────────────────────────┐
-        │                      THE RAID                         │
+        │                 THE RAID  (2D physics)                │
         │   catapult + army → launch over walls → ragdoll war   │
         │   cast spells · complete objectives · loot or lose    │
         └───────────────┬──────────────────────────────────────┘
                         │  survivors come home, dead stay dead
                         ▼
-                 loot → castle → repeat
+                  loot → city → repeat
 ```
 
 **Session shapes:**
-- *Snack (2–4 min):* collect, queue one upgrade, one raid.
+- *Snack (2–4 min):* collect, queue one upgrade, dispatch a short march or play one raid.
 - *Meal (10–20 min):* campaign push, several raids, unit upgrades, defense re-layout.
 - *Idle return:* resources accrued (capped), troops finished training, shield expiring.
 
@@ -84,31 +86,70 @@ the economy never saturates (§11).
 
 ---
 
-## 3. The Castle
+## 3. The City (3D)
 
-A single side-view diorama (matching the raid presentation) — your castle IS your defense layout.
-What you build is literally what attackers besiege. Every upgrade is **visible on the building**.
+Your city is a **fully 3D isometric diorama** rendered in URP — the Whiteout Survival presentation.
+You look down on a living settlement from a tilted orbit camera, pinch to zoom from rooftop detail
+out to the whole city, and drag to pan. Villagers walk between buildings, smoke rises from the
+forge, carts trundle from the mine to the storehouse, and weather rolls across it.
+
+**This is the game's shop window.** It is where players spend their idle taps and where production
+value is most visible, so it gets the highest art bar in the project.
+
+### Camera & presentation
+
+- **Orbit-locked isometric camera**: fixed pitch band (~40–55°), free yaw within limits, pinch zoom
+  across three framing tiers — *Detail* (one building fills the screen, animations legible),
+  *City* (default; whole settlement in frame), *Overview* (city + surrounding terrain, the handoff
+  frame into the world map).
+- **Seamless zoom-out to the world map.** Pinching past Overview does not cut to another screen —
+  the camera pulls up and the world streams in around your city, exactly like Whiteout. This
+  continuity is what makes the world feel like one place (§9 covers the streaming budget).
+- **Time of day + weather** on a real clock: dawn/day/dusk/night lighting, rain that beads on
+  rooftops, snow that accumulates on the north region's cities. Night cities glow with window
+  lights and torches (URP additive lights).
+
+### Plot-based layout
+
+The city is a **fixed plot grid** on 3D terrain (Whiteout model, not free-placement). Buildings
+occupy plots; new plots unlock with Keep level; players choose *which* building goes where among
+available plots and can relocate for a fee. Decorations and paving occupy cosmetic plots.
+
+**Crucially, the city layout is not the defense layout.** Raids are fought on a 2D side-view
+cross-section (§7) generated *from* your 3D city — wall level, tower count and their left-to-right
+order are derived from your build, so what you construct genuinely shapes how you are besieged,
+without forcing 3D combat. §8 details the projection.
 
 ### Buildings
 
-| Building | Function | Visible progression |
-|---|---|---|
-| **Keep** | Account level gate; unlocks everything else | Wooden fort → stone keep → marble citadel |
-| **Gold Mine / Sawmill / Quarry** | Produce Gold / Timber / Stone | Bigger wheels, more carts, busier workers |
-| **Crystal Spire / Sulfur Pit / Gem Grotto** | Rare resources (from Keep 8) | Glow intensity, smoke, sparkle |
-| **Barracks** | Recruit & upgrade Melee | Training dummies get progressively destroyed |
-| **Archery Range** | Recruit & upgrade Ranged | Targets with arrows everywhere BUT the bullseye |
-| **Mage Tower** | Recruit casters; research magic schools | Orbiting runes per school unlocked |
-| **Beast Pens → Mythic Roost** | Late-game creatures | Cage → paddock → mountaintop nest with dragon |
-| **Workshop** | Specialists (Rocket Man line etc.); catapult upgrades | Increasingly unsafe-looking contraptions |
-| **Walls & Towers** | Defense HP, tower slots | Palisade → stone → crenellated with hoardings |
-| **Trap Forge** | Defensive traps (§8) | — |
-| **Vault** | Protects a % of loot from raids | — |
-| **Tavern** | Daily quests, funny rumour texts, event board | Patrons multiply |
+Every building is a 3D model with **visible upgrade states** — silhouette, materials and animated
+props change as it levels, so progress reads at a glance from the City framing.
 
-**Build rules:** two parallel build queues (third via premium). Upgrades are long at high tiers
-(hours → days) per the mid-core standard. Buildings can be **placed** along the castle cross-section
-(left-to-right slots) — placement matters because attackers enter from one side (§8).
+| Building | Function | Visible progression (3D) |
+|---|---|---|
+| **Keep** | Account level gate; unlocks everything else | Wooden fort → stone keep → marble citadel with banners |
+| **Gold Mine / Sawmill / Quarry** | Produce Gold / Timber / Stone | More wheels, carts, workers; deeper excavation in the terrain |
+| **Crystal Spire / Sulfur Pit / Gem Grotto** | Rare resources (from Keep 8) | Emissive glow, smoke plumes, floating shards |
+| **Barracks** | Recruit & upgrade Melee | Training yard fills with dummies, progressively destroyed |
+| **Archery Range** | Recruit & upgrade Ranged | Targets with arrows in everything except the bullseye |
+| **Mage Tower** | Recruit casters; research magic schools | Grows taller; orbiting rune rings per school unlocked |
+| **Beast Pens → Mythic Roost** | Late-game creatures | Cage → paddock → mountaintop nest with a visible sleeping dragon |
+| **Workshop** | Specialists (Rocket Man line); catapult upgrades | Increasingly unsafe-looking contraptions, test-fire smoke |
+| **Walls & Towers** | Defense HP, tower slots | Palisade → stone → crenellated with hoardings and pennants |
+| **Trap Forge** | Defensive traps (§8) | Oil cauldrons bubbling, bear traps stacked outside |
+| **Vault** | Protects a % of loot from raids | Buried → reinforced → vault door with a comedy number of locks |
+| **Tavern** | Daily quests, rumour texts, event board | Patrons multiply; a brawl animation at max level |
+
+**Build rules:** two parallel build queues (third via premium). High-tier upgrades run hours → days.
+Construction is **visibly staged in 3D** — scaffolding goes up, workers swarm it, the new silhouette
+is revealed with a dust puff and a fanfare.
+
+### Idle life (the thing that sells the city)
+
+The city must feel inhabited when nothing is happening: villagers pathfinding between buildings,
+a blacksmith hammering, guards patrolling walls, the pig from the raid objectives wandering loose,
+birds, laundry, chimney smoke. Tapping a villager makes them wave and say something stupid.
+This ambient layer is cheap (GPU-instanced, LOD'd, capped) and disproportionately effective.
 
 ---
 
@@ -312,6 +353,26 @@ into gloriously stupid tactical decisions.
 Defenses run **asynchronously**: attackers raid a live snapshot of your layout with AI-controlled
 defenders (Clash model — no realtime sync needed, §15).
 
+### From 3D city to 2D siege: the projection
+
+Your city is built in 3D on a plot grid, but raids are fought on a 2D side-view cross-section. The
+translation is **explicit and player-visible**, because "does my building actually matter?" is the
+question that decides whether the city layer feels real.
+
+| 3D city property | Becomes, in the 2D raid |
+|---|---|
+| Wall building level | Wall height and HP |
+| Number of Tower plots built | Number of wall-top firing positions |
+| Left-to-right plot order of towers | Their left-to-right order along the wall |
+| Keep level & position | Objective banner height and depth into the castle |
+| Trap Forge level | Number of trap slots available to place |
+| Terrain the city sits on | Approach: moat (river tile), slope (hill tile), flat (plain tile) |
+| Garrison assignment | Which units stand where on the cross-section |
+
+A **Defense Preview** screen renders the exact 2D cross-section your current city produces and lets
+you play a practice raid against yourself. This is the feedback loop that makes 3D building
+decisions legible in 2D combat terms — without it, players cannot tell why a raid went badly.
+
 **Defender toolkit:**
 - **Wall shape is yours:** wall heights and tower positions per slot — a tall thin castle vs a
   wide low one produce different siege problems.
@@ -330,21 +391,61 @@ unraidable; the Vault protects a floor of resources so losses never feel total.
 
 ---
 
-## 9. The World Map
+## 9. The World Map (3D)
 
-Presentation: zoomable region map (Whiteout Survival-style density) rendered in the game's chunky
-2D style — castles of nearby players, PVE sites, and resource nodes scattered between.
+A **continuous 3D terrain world**, streamed and zoomable — the Whiteout Survival model. There is no
+"open the map" screen transition: you pinch out from your city and the world grows around it.
 
-| Map element | What it is |
+### Presentation
+
+- **3D terrain** with real elevation, biomes per region (grassland, marsh, volcanic ash, snowfield,
+  blighted waste), rivers and roads that armies actually follow.
+- **Tile grid overlaid on the terrain.** Cities occupy a footprint of tiles; resource nodes, monster
+  dens and campaign citadels each own tiles. The grid is visible on hover/selection, invisible
+  otherwise, so the world reads as a place rather than a spreadsheet.
+- **Zoom tiers:** *Local* (your city + immediate neighbours, buildings visible), *Regional*
+  (dozens of cities, icons take over from models), *Continental* (alliance territories as coloured
+  regions, march lines as arcs).
+- Every player city on the map is a **real 3D city model** reflecting that player's actual Keep
+  level and wall tier at Local zoom — scouting is partly visual.
+
+### March system (Whiteout fidelity)
+
+Attacks are not instant. You dispatch a **march**: a visible column of troops that physically walks
+the terrain, following roads, with a real travel timer based on distance and slowest unit speed.
+
+- Marches are **visible to everyone** — you can watch an army crawl toward your city and see its
+  banner, size and estimated arrival. Counterplay: shield, reinforce, recall your own gatherers,
+  or intercept.
+- **Recall** is possible mid-march (troops walk home).
+- **Rally attacks:** alliance members contribute troops to a shared march against a big target;
+  the rally leader plays the raid.
+
+**Design decision — where the physics raid fits.** When a march arrives, the 2D raid launches:
+
+| Situation | Behaviour |
 |---|---|
-| **Player castles** | Raidable neighbours (matchmade band). Scouting shows wall silhouette + last-raid gossip ("Bob's pig remains unstolen") |
-| **Campaign citadels** | The PVE spine: 120+ authored raids across 8 regions, escalating gimmicks (undead garrisons, clockwork defenses, a rival warlord's recurring taunts), each with star ratings (win / win+1 bonus / win+both) |
-| **Resource nodes** | Timber camps, quarries, crystal geodes, sulfur vents, **Moonsilver shrines** — occupy with a small garrison to harvest over time; other players can raid your harvesters (world PvP pressure) |
-| **Monster dens** | PVE mini-raids vs creature nests; drop unit-upgrade materials |
-| **Events** | Weekend beacons: boss castles (co-op damage leaderboard), goblin caravans, "Full Moon" (Mythic costs halved) |
+| You are online | Push notification → tap → **you play the raid yourself** |
+| You are offline | An AI commander auto-resolves at **reduced efficiency** (worse launches, no player spells) — you still get loot, just less |
+| You set "Auto-raid" | Deliberately auto-resolve for grind targets, at the same AI penalty |
 
-The map is the *reason to fight*: rare resources live in contested nodes, and campaign progress
-gates new unit types (the first Rocket Man is a campaign reward — taught before bought).
+This preserves the map metagame (travel time, interception, visible threat) *and* keeps the action
+game intact, while making presence rewarded rather than mandatory. Short-range targets have short
+marches specifically so the action loop stays tight for active sessions.
+
+### What lives on the map
+
+| Element | Role |
+|---|---|
+| **Player cities** | PVP targets in your matchmaking band. Scout to reveal garrison estimate, wall tier, and last-raid gossip ("Bob's pig remains unstolen") |
+| **Campaign citadels** | The PVE spine: 120+ authored raids across 8 regions, escalating gimmicks, star-rated (win / +1 bonus / +both). Fixed positions — the campaign is a *journey across the map* |
+| **Resource nodes** | Timber camps, quarries, crystal geodes, sulfur vents, **Moonsilver shrines**. Send a gathering march; troops occupy the tile and harvest over time — and can be raided while there |
+| **Monster dens** | PVE mini-raids vs creature nests; drop unit-upgrade materials |
+| **Alliance territory** | Claimed regions with buffs; territory war events; alliance HQ structures placed on the map |
+| **Events** | Weekend beacons: boss citadels (co-op damage leaderboard), goblin caravans that march across the world and can be ambushed, "Full Moon" (Mythic costs halved) |
+
+The map is the *reason to fight*: rare resources live in contested nodes, campaign progress gates
+new unit types, and alliance territory is the late-game pressure system.
 
 ---
 
@@ -394,15 +495,22 @@ and your player-cast spell bar (chosen loadout). Each school has 6 spells across
 
 ## 12. Multiplayer Architecture (async-first)
 
-- **PVP = asynchronous snapshot raids** (Clash model). The defender's layout + garrison AI is
-  serialized; the attacker's raid is simulated client-side and **verified by replaying the input
+- **PVP = asynchronous snapshot raids** (Clash model) layered on a **march timing system**
+  (Whiteout model). The march is server-authoritative — dispatch, travel, arrival and recall are
+  all resolved server-side, so a client cannot fake arrival or teleport an army.
+- On arrival the defender's layout + garrison is **serialized into a 2D raid snapshot** (§8
+  projection). The attacker's raid is simulated client-side and **verified by replaying the input
   log server-side** with the deterministic sim (fixed-timestep physics, seeded RNG — the arena
-  prototype already runs fixed 1/120s substeps, this is the same discipline with a fixed seed).
+  prototype already runs fixed 1/120s substeps; this is the same discipline with a fixed seed).
 - Determinism contract: no `Time.deltaTime` in sim code, integer tick counts, seeded chaos rolls,
-  no cross-platform float traps (use conservative math, verified by replay tests in CI).
-- Raid replays are therefore free: every raid is a shareable, scrubbabale replay by construction —
-  this is also the anti-cheat AND the clip-export pipeline.
-- Alliances (v1.1): chat, resource gifting, co-op event bosses, "revenge board".
+  no cross-platform float traps (conservative math, verified by replay tests in CI).
+- **The 3D layers are not simulated.** City and world map are presentation + server state; only the
+  2D raid is a physics sim. This is deliberate — it keeps the determinism surface small and means
+  3D art quality can rise indefinitely without touching gameplay verification.
+- Raid replays are free by construction: every raid is shareable and scrubbable — this is the
+  anti-cheat, the clip-export pipeline, and the offline auto-resolve record all at once.
+- Alliances (v1.1): chat, resource gifting, rally marches, territory war, co-op event bosses,
+  revenge board.
 
 ---
 
@@ -436,47 +544,79 @@ and your player-cast spell bar (chosen loadout). Each school has 6 spells across
 
 ## 14. Production Pipelines (mandated stack)
 
-### Audio — **ElevenLabs**
-- **SFX pipeline:** `text_to_sound_effects` for the full slapstick library (clangs, glorps,
-  rocket-fizzles, pig outrage) → normalized to a naming convention `sfx_<category>_<variant>.wav`
-  → imported to Unity with an addressables audio bank per category. Target: 300+ SFX at 3–5
-  variants each for anti-repetition round-robin.
-- **Voice barks:** ElevenLabs voices for unit personalities — each tier gets a voice (T1 lads
-  are enthusiastic and dim; Archmages weary; the defender lord's outrage barks are procedural
-  triggers on objective loss). Localized bark scripts, batch-generated per language.
-- **Music:** ElevenLabs music composition for castle themes (cozy medieval) and raid escalation
-  layers (intensity-stacked stems mixed by combat state).
+### Engine — **Unity URP (3D city & world map + 2D physics raids)**
 
-### UI — **Claude Design pass → UI Toolkit (UXML/USS)**
-- Every screen gets a **Claude Design canvas pass first** (design skill + UI skills): castle HUD,
-  world map, raid HUD, unit cards, research trees, raid report / tombstone-cam frame.
-- Approved designs are **transcribed to Unity UI Toolkit**: UXML documents per screen, USS
-  stylesheets mirroring the design tokens (the CSS-like workflow requested — USS is Unity's CSS).
-  Design tokens (palette, radii, type ramp) live in one shared USS root so the Claude Design
-  system and the runtime UI cannot drift.
-- Raid HUD is the exception: performance-critical elements (spell bar cooldown wheels, launch
-  meter) get profiled and may drop to direct mesh UI if UI Toolkit costs frames.
+A single URP project running **two presentation modes**:
 
-### Art — **PixelLab + Higgsfield**
-- **PixelLab (in-game art):** characters via `create_character` with 4-direction views +
-  `animate_character` for the core sets (walk, wind-up, swing, trip, ragdoll-recover, celebrate);
-  siege props and buildings via object/tileset generation; castle building progression states as
-  object states. Chunky readable silhouettes at 2x pixel density to match ragdoll physics scale.
-  Ragdoll segmentation: characters generated with separable head/torso/limbs layers so PixelLab
-  sprites map onto the physics body parts.
-- **Higgsfield (marketing & concept):** key art, store screenshots, UA video concepts (the
-  Rocket Man ad, the fireball-return ad), and mood/concept exploration before PixelLab
-  production passes. Never in the runtime build.
+| Layer | Rendering | Physics |
+|---|---|---|
+| **City** | 3D URP, orbit-iso camera, real-time lights, weather | none (presentation + server state) |
+| **World map** | 3D URP, streamed terrain tiles, LOD'd city models | none (marches are server-timed) |
+| **Raid** | Orthographic side-view, 2D sprites + 3D set dressing behind | **Physics2D** — the ragdoll sim |
 
-### Engine — **Unity 2D URP**
-- URP 2D renderer with 2D lights (torchlight on night raids, fire glow as Light2D, bloom on
-  magic), shadow-caster walls.
-- Physics: Rigidbody2D ragdolls (HingeJoint2D chains) with the prototype's discipline — fixed
+- URP with both Renderer assets configured: a 3D forward renderer for City/World, and a
+  raid renderer profile tuned for the 2D scene. Camera stacking for UI overlays.
+- **Physics2D works in a 3D project** — Unity supports both physics systems simultaneously. The raid
+  scene uses Rigidbody2D ragdolls (HingeJoint2D chains) with the prototype's discipline: fixed
   substeps, sleep-and-freeze settled bodies into composite pile colliders, hard body budget
-  (~120 live ragdolls, then oldest-settled freeze to static). Burst-jobs for oil/fire cellular
-  propagation grid.
-- Scenes: `Boot → Castle → WorldMap → Raid` (additive loading, raid is its own physics scene).
-- Save/state: server-authoritative economy; client is a view. Raid sim deterministic (§12).
+  (~120 live ragdolls, then oldest-settled freeze to static). Burst jobs for oil/fire propagation.
+- **Depth in raids without 3D combat:** the raid keeps 2D physics but is *presented* with 3D
+  parallax — the besieged city's 3D geometry renders as background/foreground layers behind the
+  2D action plane, so raids look continuous with the rest of the game while remaining a 2D sim.
+- Scenes: `Boot → City → WorldMap → Raid` with additive loading; City and WorldMap share a
+  camera rig for the seamless zoom handoff. Raid is an isolated physics scene.
+- Save/state: server-authoritative economy and marches; the client is a view. Raid sim deterministic (§12).
+
+### Art — 3D city/world + 2D raid units
+
+The 3D shift splits the art pipeline in two. **Both halves must share one palette and silhouette
+language** so a knight on the 2D raid plane reads as the same world as the 3D city he came from.
+
+**3D — city buildings, world terrain, props (NEW)**
+- **Tripo AI** for base mesh generation: `text_to_3d` for building concepts and props,
+  `image_to_3d` to convert approved Higgsfield concept art into meshes, then `refine_model` /
+  `texture_model`. Output GLB → Unity.
+- **Every mesh gets a human retopo/optimisation pass** before shipping — generated meshes are
+  concept accelerators, not final assets. Budget: buildings ≤ 3k tris at City zoom with LOD1/LOD2.
+- Buildings authored as **modular upgrade states** (one mesh set per tier) so progression swaps
+  cleanly; shared trim-sheet atlas across all buildings to keep draw calls down.
+- Terrain: heightmap regions per biome, GPU-instanced foliage/rocks, roads as splines.
+
+**2D — raid units, ragdoll sprites, VFX (PixelLab, unchanged)**
+- **PixelLab** for characters via `create_character` (4-direction views) + `animate_character`
+  for walk, wind-up, swing, trip, ragdoll-recover, celebrate.
+- **Critical:** generate characters with **separable head / torso / limb layers** so sprites map
+  onto the physics ragdoll body parts. A flat sprite cannot ragdoll.
+- Siege props, pile debris, oil/fire VFX sheets, and the 2D raid foreground/background bands.
+
+**Marketing (Higgsfield, unchanged)**
+- Key art, store screenshots, UA video concepts (the Rocket Man ad, the fireball-return ad), and
+  concept exploration that feeds Tripo's `image_to_3d`. Never in the runtime build.
+
+### UI — **Claude Design pass → Unity UI Toolkit (UXML/USS)**
+- Every screen gets a **Claude Design canvas pass first**: city HUD, building info/upgrade panels,
+  world map HUD, march dispatch and scouting screens, raid HUD, unit cards, research trees,
+  raid report / tombstone-cam.
+- Approved designs are **transcribed to UI Toolkit**: UXML documents per screen, USS stylesheets
+  mirroring the design tokens (USS is Unity's CSS dialect, so the translation is near-direct).
+  Design tokens (palette, radii, type ramp) live in one shared USS root so design and runtime
+  cannot drift.
+- **3D-specific UI work:** world-space building nameplates and upgrade badges that stay legible
+  across zoom tiers, march banners on the map, and tap-target scaling — these need explicit design
+  attention because they float over a moving 3D camera rather than sitting on a flat canvas.
+- Exception: the raid HUD is performance-critical. Profile the spell bar and launch meter; if UI
+  Toolkit costs frames under ragdoll load, drop those elements to direct mesh UI.
+
+### Audio — **ElevenLabs**
+- **SFX pipeline:** `text_to_sound_effects` for the slapstick library (clangs, glorps,
+  rocket-fizzles, pig outrage) → `sfx_<category>_<variant>.wav` → Unity Addressables audio bank
+  per category. Target 300+ SFX at 3–5 variants each for round-robin anti-repetition.
+- **City ambience is now its own category:** the 3D city needs a living soundscape — hammering,
+  cart wheels, crowd murmur, weather, and a day/night ambience crossfade.
+- **Voice barks:** a voice per unit tier (T1 lads enthusiastic and dim; Archmages weary; the
+  defender lord's outrage barks on objective loss). Batch-generated per language.
+- **Music:** castle/city themes (cozy medieval), world map exploration bed, and intensity-stacked
+  raid stems mixed by combat state.
 
 ---
 
@@ -484,12 +624,17 @@ and your player-cast spell bar (chosen loadout). Each school has 6 spells across
 
 | Risk | Mitigation |
 |---|---|
+| **Hybrid 2D/3D complexity** (two presentation modes, two physics mindsets) | Hard separation: only the raid scene has a sim. City/World are presentation over server state. One URP project, two renderer profiles, no shared physics |
+| **3D asset cost blowing the budget** (the big new risk) | Tripo-generated base meshes + mandatory retopo pass; modular upgrade-state kits; shared trim-sheet atlas; strict tri budgets with LODs. Art is the long pole — schedule it as such |
+| **Mobile perf: 3D city + world streaming** | GPU instancing for villagers/foliage, aggressive LOD, occlusion, capped ambient agent count, terrain tile streaming with a memory ceiling; target 60fps on a 3-year-old mid-range device at City zoom, 30fps floor at Continental |
+| **Seamless city↔map zoom** (easy to get janky) | Shared camera rig, async tile prefetch triggered at the Overview threshold, and a designed "cloud wipe" fallback if streaming stalls — never a hard loading screen |
 | Ragdoll count at scale (armies + garrisons + rats) | Prototype's sleep→freeze→composite pipeline; rats use simplified 3-node bodies; hard cap with oldest-freeze |
-| Determinism for server replay verification | Fixed-tick sim, seeded RNG, no frame-dependent math; CI test replays 1,000 recorded raids nightly and diffs outcomes |
-| Oil/fire propagation cost | Cellular grid (prototype Sandfall-style), not per-particle; Burst job |
+| Determinism for server replay verification | Fixed-tick sim, seeded RNG, no frame-dependent math; CI replays 1,000 recorded raids nightly and diffs outcomes. **3D layers are excluded from the determinism surface by design** |
+| **City→raid projection fidelity** (players must feel their build matters) | Projection rules are explicit and shown in a "Defense Preview" that renders the actual 2D cross-section your city produces (§8) |
+| Oil/fire propagation cost | Cellular grid (Sandfall-style), not per-particle; Burst job |
 | Chaos frustration (RNG rage) | Chaos is symmetric, friendly fire is half-damage, tombstone-cam converts loss to laughs; tier ladder is a visible "buy out of chaos with effort" promise |
-| Async PVP griefing | Shields, Vault, matchmaking by army value, militia floor |
-| Physics divergence across devices | Sim uses deterministic fixed-point-adjacent math for gameplay-critical checks; visual-only physics (helmets, confetti) can diverge freely |
+| Async PVP griefing | Shields, Vault, matchmaking by army value, militia floor, visible incoming marches give reaction time |
+| Physics divergence across devices | Deterministic math for gameplay-critical checks; visual-only physics (helmets, confetti) may diverge freely |
 
 ---
 
