@@ -1,0 +1,2328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Weatherwright 🌩️</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Ctext%20y='.9em'%20font-size='90'%3E%F0%9F%8C%A9%3C/text%3E%3C/svg%3E">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; -webkit-tap-highlight-color:transparent; }
+  html, body { width:100%; height:100%; overflow:hidden; background:#0d1430; touch-action:none; overscroll-behavior:none; position:fixed; inset:0; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color:#eff4ff; }
+  canvas { position:fixed; inset:0; display:block; touch-action:none; }
+  #ui { position:fixed; inset:0; pointer-events:none; }
+  .screen { position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+  .screen.show { display:flex; }
+  button { pointer-events:auto; font-family:inherit; border:none; cursor:pointer; color:#fff; }
+
+  /* ---------- Title ---------- */
+  #title { justify-content:flex-start; padding-top:8vh; }
+  .logo { font-weight:900; font-size:clamp(38px, 12.5vw, 88px); line-height:.9; letter-spacing:1px;
+    font-style:italic; transform:skewX(-6deg);
+    background:linear-gradient(180deg,#f2fbff 0%, #a8e4ff 34%, #6aa6ff 62%, #b98cff 100%);
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 0 20px rgba(120,180,255,.55)) drop-shadow(0 4px 0 rgba(10,20,60,.7));
+    animation:logoBounce 2.6s ease-in-out infinite; }
+  .logo small { display:block; font-size:.36em; letter-spacing:7px; margin-left:6px; font-style:normal;
+    background:linear-gradient(180deg,#fff4c8,#ffd166 60%,#ff9f45);
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  @keyframes logoBounce { 0%,100%{transform:skewX(-6deg) translateY(0) scale(1);} 50%{transform:skewX(-6deg) translateY(-10px) scale(1.03);} }
+  .tagline { margin-top:8px; font-size:clamp(12px,3.5vw,16px); font-weight:700; letter-spacing:.5px; color:#bcd3ff; opacity:.9; text-shadow:0 2px 6px #000; }
+  .statRow { margin-top:12px; font-size:clamp(14px,4vw,19px); font-weight:800; text-shadow:0 2px 6px rgba(0,0,0,.7);
+    background:rgba(10,16,40,.6); padding:7px 16px; border-radius:999px; border:1px solid rgba(150,185,255,.28); backdrop-filter:blur(3px); }
+  .statRow + .statRow { margin-top:7px; }
+  .statRow .dim { opacity:.72; font-weight:600; font-size:.85em; }
+  #playBtn { margin-top:4vh; font-size:clamp(19px,5.6vw,29px); font-weight:900; letter-spacing:1px; padding:17px 40px; border-radius:20px;
+    background:linear-gradient(180deg,#8fd8ff,#3f7bff); color:#04122e;
+    box-shadow:0 6px 0 #1b3fa8, 0 0 34px rgba(90,150,255,.5); animation:pulse 1.15s ease-in-out infinite; }
+  #playBtn:active { transform:scale(.94); box-shadow:0 2px 0 #1b3fa8; }
+  @keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.055);} }
+  .menuRow { margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+  .mBtn { font-size:clamp(13px,3.9vw,18px); font-weight:800; padding:12px 18px; border-radius:15px; min-height:46px;
+    background:linear-gradient(180deg,#5b4bd8,#31249c); box-shadow:0 5px 0 #1b1170, 0 0 18px rgba(120,110,255,.3); }
+  .mBtn:active { transform:scale(.94); box-shadow:0 2px 0 #1b1170; }
+  .mBtn.green { background:linear-gradient(180deg,#4ed08a,#1f9159); box-shadow:0 5px 0 #10633a, 0 0 18px rgba(80,220,150,.3); }
+  .mBtn.gold { background:linear-gradient(180deg,#ffd66b,#e08a1c); color:#3a2200; box-shadow:0 5px 0 #96560a, 0 0 18px rgba(255,190,80,.3); }
+  #badge { pointer-events:auto; position:absolute; bottom:calc(10px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%);
+    font-size:12px; font-weight:700; letter-spacing:.6px; color:#cfe0ff; text-decoration:none; opacity:.85;
+    background:rgba(8,12,30,.65); border:1px solid rgba(150,180,255,.3); padding:6px 14px; border-radius:999px; }
+  #badge::before { content:"🥔 "; }
+
+  @media (max-height: 560px) {
+    #title { padding-top:2vh; }
+    .logo { font-size:clamp(28px, 8.5vh, 56px); }
+    #playBtn { margin-top:1.6vh; padding:11px 26px; }
+    .menuRow { margin-top:8px; }
+    .mBtn { padding:9px 14px; min-height:44px; }
+    #badge { display:none; }
+  }
+
+  /* ---------- HUD ---------- */
+  #hud { pointer-events:none; justify-content:flex-start; }
+  #hudTop { position:absolute; top:calc(8px + env(safe-area-inset-top)); left:8px; right:60px; display:flex; justify-content:flex-start; align-items:flex-start; gap:6px; flex-wrap:wrap; }
+  .chip { background:rgba(9,14,36,.74); border:1px solid rgba(150,185,255,.28); border-radius:12px; padding:6px 11px;
+    font-weight:800; font-size:clamp(12px,3.5vw,16px); text-shadow:0 1px 3px #000; white-space:nowrap; }
+  .chip.warn { border-color:rgba(255,180,90,.6); color:#ffd79a; }
+  .chip.boss { border-color:rgba(255,110,170,.7); color:#ffc3dd; animation:pulse 1s ease-in-out infinite; }
+  #banner { position:absolute; top:24%; left:50%; transform:translateX(-50%);
+    font-size:clamp(20px,7vw,38px); font-weight:900; font-style:italic; letter-spacing:1px; text-align:center;
+    color:#fff; text-shadow:0 0 22px rgba(120,190,255,.9), 0 3px 6px #000; opacity:0; transition:opacity .18s; pointer-events:none; }
+  #banner.on { opacity:1; animation:bannerPop .5s cubic-bezier(.2,1.7,.4,1); }
+  @keyframes bannerPop { 0%{transform:translateX(-50%) scale(.5);} 100%{transform:translateX(-50%) scale(1);} }
+  #banner .sub2 { display:block; font-size:.45em; font-style:normal; letter-spacing:2px; color:#bfe0ff; margin-top:4px; }
+  #toast { position:absolute; bottom:calc(34% + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%);
+    background:linear-gradient(180deg,rgba(30,46,100,.96),rgba(16,24,60,.96)); border:1px solid rgba(160,200,255,.5);
+    border-radius:14px; padding:9px 16px; font-weight:800; font-size:clamp(12px,3.6vw,16px); color:#e8f3ff;
+    box-shadow:0 8px 26px rgba(0,0,0,.55), 0 0 26px rgba(90,150,255,.28); opacity:0; transition:opacity .25s, transform .25s; max-width:86vw; }
+  #toast.on { opacity:1; transform:translateX(-50%) translateY(-8px); }
+  #toast b { color:#ffe06b; }
+
+  /* ---------- Panels ---------- */
+  .dim { }
+  #results, #almanac, #team, #shop, #gameover { background:rgba(5,9,24,.55); backdrop-filter:blur(2px); }
+  .panel { pointer-events:auto; background:linear-gradient(180deg, rgba(22,32,70,.97), rgba(12,18,44,.97));
+    border:1px solid rgba(155,190,255,.35); border-radius:22px; padding:22px 20px 18px; width:min(92vw, 420px);
+    max-height:88vh; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    box-shadow:0 14px 50px rgba(0,0,0,.6), 0 0 40px rgba(90,140,255,.18); animation:panelIn .32s cubic-bezier(.2,1.6,.4,1); }
+  @keyframes panelIn { from{transform:scale(.75) translateY(26px); opacity:0;} to{transform:scale(1) translateY(0); opacity:1;} }
+  .panel h2 { font-size:clamp(21px,6.2vw,31px); font-weight:900; font-style:italic; letter-spacing:1px;
+    background:linear-gradient(180deg,#fff,#9fd0ff); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 0 10px rgba(120,190,255,.45)); }
+  .panel .bigNum { font-size:clamp(26px,8vw,40px); font-weight:900; color:#ffe06b; text-shadow:0 0 16px rgba(255,215,80,.55); margin:6px 0 2px; }
+  .panel .sub { opacity:.82; font-size:13px; font-weight:600; margin-bottom:6px; }
+  .cta { margin-top:14px; width:100%; font-size:clamp(16px,4.8vw,21px); font-weight:900; padding:14px; border-radius:16px;
+    background:linear-gradient(180deg,#8fd8ff,#3f7bff); color:#04122e; box-shadow:0 5px 0 #1b3fa8; animation:pulse 1.3s ease-in-out infinite; }
+  .cta:active { transform:scale(.96); box-shadow:0 2px 0 #1b3fa8; }
+  .cta.flat { animation:none; background:linear-gradient(180deg,#5b6ba8,#333f6e); color:#e8f0ff; box-shadow:0 5px 0 #202a52; }
+  .rowList { margin-top:10px; display:flex; flex-direction:column; gap:8px; text-align:left; }
+  .item { pointer-events:auto; display:flex; align-items:center; gap:10px; background:rgba(10,16,42,.7);
+    border:1px solid rgba(140,175,255,.22); border-radius:14px; padding:10px 12px; min-height:52px; width:100%; text-align:left; color:#eaf1ff; }
+  .item.sel { border-color:rgba(120,255,190,.75); box-shadow:0 0 16px rgba(80,240,170,.28) inset; }
+  .item.locked { opacity:.42; }
+  .item .ic { font-size:24px; width:30px; text-align:center; flex:0 0 auto; }
+  .item .tx { flex:1 1 auto; min-width:0; }
+  .item .nm { font-weight:800; font-size:14px; }
+  .item .ds { font-size:11.5px; opacity:.75; font-weight:600; line-height:1.3; }
+  .item .pr { font-weight:900; font-size:13px; color:#ffe06b; white-space:nowrap; flex:0 0 auto; }
+  .item:active { transform:scale(.985); }
+  .almGrid { margin-top:10px; display:grid; grid-template-columns:repeat(auto-fill,minmax(96px,1fr)); gap:7px; }
+  .alm { background:rgba(10,16,42,.75); border:1px solid rgba(140,175,255,.22); border-radius:12px; padding:8px 5px; text-align:center; }
+  .alm.got { border-color:rgba(140,210,255,.55); box-shadow:0 0 14px rgba(90,170,255,.18) inset; }
+  .alm .gl { font-size:16px; letter-spacing:-1px; }
+  .alm .an { font-size:10.5px; font-weight:800; margin-top:3px; line-height:1.2; }
+  .alm .ad { font-size:9.5px; opacity:.72; font-weight:600; line-height:1.25; margin-top:2px; }
+  .alm.miss .an, .alm.miss .ad { opacity:.34; }
+  .tabRow { display:flex; gap:6px; margin-top:10px; }
+  .tabRow button { flex:1; font-size:12.5px; font-weight:800; padding:9px 4px; border-radius:11px; min-height:44px;
+    background:rgba(30,42,90,.85); border:1px solid rgba(140,175,255,.25); }
+  .tabRow button.on { background:linear-gradient(180deg,#5b8bff,#2b46bf); }
+
+  #muteBtn { position:absolute; top:calc(8px + env(safe-area-inset-top)); right:8px; z-index:6; width:46px; height:46px; border-radius:13px;
+    background:rgba(9,14,36,.75); border:1px solid rgba(150,185,255,.3); font-size:20px; display:none; pointer-events:auto; }
+  #muteBtn.show { display:block; }
+  #muteBtn:active { transform:scale(.9); }
+  #quitBtn { position:absolute; top:calc(60px + env(safe-area-inset-top)); right:8px; z-index:6; width:46px; height:46px; border-radius:13px;
+    background:rgba(9,14,36,.75); border:1px solid rgba(150,185,255,.3); font-size:18px; display:none; pointer-events:auto; }
+  #quitBtn.show { display:block; }
+</style>
+<script src="/analytics.js" defer></script>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="ui">
+  <div id="title" class="screen">
+    <div class="logo">WEATHER<small>WRIGHT</small></div>
+    <div class="tagline">You never command the Glim. You command the sky.</div>
+    <div class="statRow">🌩️ DUEL <span id="tDuel">1</span> <span class="dim" id="tBest"></span></div>
+    <div class="statRow">✨ <span id="tLum">0</span> lumens <span class="dim">· 📖 <span id="tAlm">0</span> known</span></div>
+    <button id="playBtn">⚡ TAP TO PLAY</button>
+    <div class="menuRow">
+      <button class="mBtn green" id="teamBtn">🐣 TEAM</button>
+      <button class="mBtn" id="almBtn">📖 ALMANAC</button>
+      <button class="mBtn gold" id="shopBtn">🛠️ SKY</button>
+    </div>
+    <a id="badge" href="../../">TaterTot Games Labs</a>
+  </div>
+
+  <div id="hud" class="screen">
+    <div id="hudTop">
+      <div class="chip" id="hudDuel">DUEL 1</div>
+      <div class="chip" id="hudFoe">vs —</div>
+      <div class="chip" id="hudMode" style="display:none">—</div>
+    </div>
+    <div id="banner"></div>
+    <div id="toast"></div>
+  </div>
+
+  <div id="results" class="screen">
+    <div class="panel">
+      <h2 id="resTitle">DUEL WON</h2>
+      <div class="bigNum" id="resLum">+0</div>
+      <div class="sub" id="resSub">lumens</div>
+      <div class="rowList" id="resList"></div>
+      <button class="cta" id="nextBtn">NEXT DUEL ⚡</button>
+      <button class="cta flat" id="resHomeBtn">HOME</button>
+    </div>
+  </div>
+
+  <div id="gameover" class="screen">
+    <div class="panel">
+      <h2>YOUR GLIM RESTS</h2>
+      <div class="sub" style="margin-top:8px">It curls up, sparks out, and returns to light. Nothing is lost but the duel.</div>
+      <div class="bigNum" id="goLum">+0</div>
+      <div class="sub">lumens earned</div>
+      <div class="rowList" id="goList"></div>
+      <button class="cta" id="retryBtn">TRY AGAIN 🌩️</button>
+      <button class="cta flat" id="goHomeBtn">HOME</button>
+    </div>
+  </div>
+
+  <div id="almanac" class="screen">
+    <div class="panel">
+      <h2>📖 THE ALMANAC</h2>
+      <div class="sub" id="almCount">0 / 0 interactions recorded</div>
+      <div class="tabRow">
+        <button id="almT0" class="on">SKY × SKY</button>
+        <button id="almT1">SKY × GLIM</button>
+      </div>
+      <div class="almGrid" id="almGrid"></div>
+      <button class="cta flat" id="almBackBtn">BACK</button>
+    </div>
+  </div>
+
+  <div id="team" class="screen">
+    <div class="panel">
+      <h2>🐣 YOUR TEAM</h2>
+      <div class="sub">Picking a Glim <i>is</i> picking a weather plan.</div>
+      <div class="rowList" id="teamList"></div>
+      <button class="cta flat" id="teamBackBtn">BACK</button>
+    </div>
+  </div>
+
+  <div id="shop" class="screen">
+    <div class="panel">
+      <h2>🛠️ SKY CRAFT</h2>
+      <div class="sub">✨ <span id="shopLum">0</span> lumens</div>
+      <div class="rowList" id="shopList"></div>
+      <button class="cta flat" id="shopBackBtn">BACK</button>
+    </div>
+  </div>
+</div>
+<button id="muteBtn">🔊</button>
+<button id="quitBtn">🏳️</button>
+
+<script>
+(function () {
+'use strict';
+
+/* ============================= helpers ============================= */
+const $ = id => document.getElementById(id);
+const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
+const lerp = (a, b, t) => a + (b - a) * t;
+const rand = (a, b) => a + Math.random() * (b - a);
+const randi = (a, b) => Math.floor(rand(a, b + 1));
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const TAU = Math.PI * 2;
+function fmt(n) {
+  n = Math.floor(n);
+  if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+  if (n >= 1e4) return (n / 1e3).toFixed(1) + 'K';
+  return String(n);
+}
+
+/* ============================= essences ============================= */
+const ESS = {
+  ember:   { nm: 'Ember',   ic: '🔥', c: '#ff7a3c', c2: '#ffd08a' },
+  tide:    { nm: 'Tide',    ic: '🌊', c: '#3fb6ff', c2: '#b2edff' },
+  verdant: { nm: 'Verdant', ic: '🌿', c: '#5fdc7a', c2: '#ccffb4' },
+  stone:   { nm: 'Stone',   ic: '🪨', c: '#c9a06a', c2: '#f2ddba' },
+  spark:   { nm: 'Spark',   ic: '⚡', c: '#ffe14d', c2: '#fff8c4' },
+  gloom:   { nm: 'Gloom',   ic: '🌑', c: '#9b7bff', c2: '#ddccff' },
+  gale:    { nm: 'Gale',    ic: '🌀', c: '#7fe6d6', c2: '#e2fff9' },
+};
+const ESS_IDS = ['ember', 'tide', 'verdant', 'stone', 'spark', 'gloom', 'gale'];
+// Deterministic 7-cycle: each essence presses the next two, yields to the previous two.
+const ESS_CYCLE = ['ember', 'verdant', 'stone', 'spark', 'tide', 'gloom', 'gale'];
+function matchup(a, b) {
+  const i = ESS_CYCLE.indexOf(a), j = ESS_CYCLE.indexOf(b);
+  if (i < 0 || j < 0) return 1;
+  const d = ((j - i) % 7 + 7) % 7;
+  if (d === 1 || d === 2) return 1.35;
+  if (d === 5 || d === 6) return 0.78;
+  return 1;
+}
+
+/* ============================= weather ============================= */
+const WX = {
+  rain:  { nm: 'Rain',      ic: '🌧️', cost: 20, dur: 9.0,  c: '#4aa8ff', sky: ['#22345f', '#3f6a9e'] },
+  sun:   { nm: 'Sun',       ic: '☀️', cost: 20, dur: 9.0,  c: '#ffcf4d', sky: ['#2a4a86', '#7fb6e8'] },
+  gale:  { nm: 'Gale',      ic: '🌬️', cost: 17, dur: 8.0,  c: '#9fe8dd', sky: ['#1d3a52', '#4d8f96'] },
+  quake: { nm: 'Quake',     ic: '🌋', cost: 25, dur: 7.0,  c: '#d3a06a', sky: ['#3a2a3c', '#8a5f52'] },
+  fog:   { nm: 'Fog',       ic: '🌫️', cost: 21, dur: 10.0, c: '#c3cede', sky: ['#39445c', '#8d99ac'] },
+  night: { nm: 'Nightfall', ic: '🌙', cost: 23, dur: 9.0,  c: '#8f7bff', sky: ['#0c1030', '#2b2160'] },
+  bloom: { nm: 'Bloom',     ic: '🌸', cost: 23, dur: 9.0,  c: '#ff9ad5', sky: ['#43265c', '#a05fa0'] },
+};
+const WX_IDS = ['rain', 'sun', 'gale', 'quake', 'fog', 'night', 'bloom'];
+const CHEAPEST_RUNE = 17;
+
+// How much each weather favours (positive) or troubles (negative) each essence.
+const AFF = {
+  rain:   { tide:  0.73, spark:  0.32, verdant:  0.24, gloom:  0.02, stone: -0.13, gale: -0.13, ember: -1.05 },
+  sun:    { ember:  1.02, verdant:  0.52, stone:  0.19, spark:  0.04, gale:  0.04, tide: -0.69, gloom: -1.12 },
+  gale:   { gale:  1.03, spark:  0.29, ember:  0.22, tide: -0.09, gloom: -0.11, verdant: -0.63, stone: -0.71 },
+  quake:  { stone:  0.95, ember:  0.42, verdant:  0.02, gloom: -0.01, tide: -0.19, spark: -0.38, gale: -0.81 },
+  fog:    { gloom:  0.91, tide:  0.24, stone:  0.17, verdant: -0.16, spark: -0.28, ember: -0.40, gale: -0.48 },
+  night:  { gloom:  0.86, gale:  0.20, spark:  0.15, tide: -0.03, stone: -0.10, ember: -0.36, verdant: -0.72 },
+  bloom:  { verdant:  0.73, gale:  0.16, ember:  0.14, tide:  0.03, spark: -0.14, stone: -0.34, gloom: -0.58 },
+};
+function aff(wid, eid) { const r = AFF[wid]; return (r && typeof r[eid] === 'number') ? r[eid] : 0; }
+
+/* ============================= interaction table =============================
+   Tokens are namespaced so weather "gale" and essence "gale" never collide:
+     'w:<weatherId>'  a condition currently over the arena (global or zone)
+     'e:<essenceId>'  the essence of the Glim being resolved
+   Keys are the two tokens sorted, so every pair resolves order-independently
+   to exactly one entry. All 21 weather x weather pairs are covered.
+   ============================================================================ */
+const INTERACTIONS = [
+  /* --- sky x sky : all 21 pairs --- */
+  { a: 'w:rain',  b: 'w:sun',   id: 'prismarc',   nm: 'Prism Arc',      kind: 'combo',   gl: '🌧️☀️', ds: 'A rainbow bridge. Both Glims drink light back.',
+    fx: { refund: 14, regenAll: 1.4, amp: { tide: .15, verdant: .15 }, vfx: 'rainbow' } },
+  { a: 'w:rain',  b: 'w:gale',  id: 'squall',     nm: 'Squall',         kind: 'combo',   gl: '🌧️🌬️', ds: 'Driving rain. Tide and Gale ride it; Ember gutters out.',
+    fx: { amp: { tide: .30, gale: .30, ember: -.35 }, spd: { gale: .25 }, push: 1, vfx: 'squall' } },
+  { a: 'w:rain',  b: 'w:quake', id: 'mudmire',    nm: 'Mudmire',        kind: 'combo',   gl: '🌧️🌋', ds: 'The floor turns to soup. Everything slows; Stone digs in.',
+    fx: { spdAll: -.30, amp: { stone: .30 }, vfx: 'mud' } },
+  { a: 'w:rain',  b: 'w:fog',   id: 'cloudburst', nm: 'Cloudburst',     kind: 'combo',   gl: '🌧️🌫️', ds: 'Cloud sinks to the floor. Gloom and Tide swim in it.',
+    fx: { amp: { gloom: .25, tide: .25 }, occl: .35, vfx: 'cloudburst' } },
+  { a: 'w:rain',  b: 'w:night', id: 'dreadrain',  nm: 'Dread Rain',     kind: 'combo',   gl: '🌧️🌙', ds: 'Cold black rain. Gloom surges, Ember is doused twice over.',
+    fx: { amp: { gloom: .40, ember: -.50 }, vfx: 'dreadrain' } },
+  { a: 'w:rain',  b: 'w:bloom', id: 'floodbloom', nm: 'Flood Bloom',    kind: 'combo',   gl: '🌧️🌸', ds: 'Petals drink deep. Verdant swells and mends itself.',
+    fx: { amp: { verdant: .45 }, regen: { verdant: 2.0 }, vfx: 'petals' } },
+  { a: 'w:sun',   b: 'w:fog',   id: 'burnoff',    nm: 'Burn-off',       kind: 'counter', gl: '☀️🌫️', ds: 'Sun boils the fog away on the spot. A counter, not a combo.',
+    fx: { clear: ['fog'], refund: 14, vfx: 'burnoff' } },
+  { a: 'w:sun',   b: 'w:night', id: 'eclipse',    nm: 'Eclipse',        kind: 'counter', gl: '☀️🌙', ds: 'Day and dark cancel each other. The sky empties, the meter refunds.',
+    fx: { clear: ['sun', 'night'], refund: 24, vfx: 'eclipse' } },
+  { a: 'w:sun',   b: 'w:quake', id: 'kilnvent',   nm: 'Kiln Vent',      kind: 'combo',   gl: '☀️🌋', ds: 'Cracked ground breathes heat. Ember and Stone both roar.',
+    fx: { amp: { ember: .40, stone: .25 }, vfx: 'vent' } },
+  { a: 'w:sun',   b: 'w:gale',  id: 'warmdraft',  nm: 'Warm Draft',     kind: 'combo',   gl: '☀️🌬️', ds: 'A rising thermal. Everything moves faster, Ember most of all.',
+    fx: { spdAll: .22, amp: { ember: .25 }, vfx: 'thermal' } },
+  { a: 'w:sun',   b: 'w:bloom', id: 'sunbloom',   nm: 'Sun Bloom',      kind: 'combo',   gl: '☀️🌸', ds: 'Explosive overgrowth. Verdant detonates in green.',
+    fx: { amp: { verdant: .50 }, burst: 1, vfx: 'overgrowth' } },
+  { a: 'w:gale',  b: 'w:fog',   id: 'clearskies', nm: 'Clear Skies',    kind: 'counter', gl: '🌬️🌫️', ds: 'Gale shreds fog instantly. The classic counter.',
+    fx: { clear: ['fog'], refund: 10, vfx: 'clear' } },
+  { a: 'w:gale',  b: 'w:quake', id: 'duststorm',  nm: 'Dust Storm',     kind: 'combo',   gl: '🌬️🌋', ds: 'Blinding grit. Both Glims fumble; Stone and Gale thrive.',
+    fx: { amp: { stone: .30, gale: .30 }, missAll: .18, occl: .30, vfx: 'dust' } },
+  { a: 'w:gale',  b: 'w:bloom', id: 'pollengale', nm: 'Pollen Gale',    kind: 'combo',   gl: '🌬️🌸', ds: 'Pollen everywhere. Verdant spreads and stings on the wind.',
+    fx: { amp: { verdant: .30 }, aura: .55, vfx: 'pollen' } },
+  { a: 'w:gale',  b: 'w:night', id: 'nightwind',  nm: 'Night Wind',     kind: 'combo',   gl: '🌬️🌙', ds: 'A cold running dark. Gloom and Gale hunt together.',
+    fx: { amp: { gloom: .30, gale: .30 }, spd: { gloom: .18 }, vfx: 'nightwind' } },
+  { a: 'w:fog',   b: 'w:night', id: 'deepgloom',  nm: 'Deep Gloom',     kind: 'combo',   gl: '🌫️🌙', ds: 'You can barely see. Gloom strikes from nowhere.',
+    fx: { amp: { gloom: .60 }, crit: { gloom: .30 }, occl: .70, vfx: 'deepgloom' } },
+  { a: 'w:fog',   b: 'w:quake', id: 'sinkmist',   nm: 'Sink Mist',      kind: 'combo',   gl: '🌫️🌋', ds: 'Dust and damp settle heavy. Everything wades; Stone holds.',
+    fx: { spdAll: -.22, amp: { stone: .35 }, occl: .35, vfx: 'sinkmist' } },
+  { a: 'w:fog',   b: 'w:bloom', id: 'sporehaze',  nm: 'Spore Haze',     kind: 'combo',   gl: '🌫️🌸', ds: 'Drifting spores. Verdant and Gloom share the haze.',
+    fx: { amp: { verdant: .25, gloom: .25 }, aura: .35, occl: .3, vfx: 'spore' } },
+  { a: 'w:quake', b: 'w:night', id: 'tremorshade',nm: 'Tremor Shade',   kind: 'combo',   gl: '🌋🌙', ds: 'The dark shakes. Stone and Gloom both find footing.',
+    fx: { amp: { stone: .25, gloom: .25 }, vfx: 'tremorshade' } },
+  { a: 'w:quake', b: 'w:bloom', id: 'rootquake',  nm: 'Root Quake',     kind: 'combo',   gl: '🌋🌸', ds: 'Roots erupt through the fracture. Verdant and Stone lock arms.',
+    fx: { amp: { verdant: .35, stone: .35 }, vfx: 'roots' } },
+  { a: 'w:night', b: 'w:bloom', id: 'moonblossom',nm: 'Moon Blossom',   kind: 'combo',   gl: '🌙🌸', ds: 'Night flowers open. Slow, steady mending under Gloom light.',
+    fx: { amp: { gloom: .30 }, regen: { verdant: 1.6, gloom: 1.2 }, vfx: 'moonflower' } },
+
+  /* --- sky x glim --- */
+  { a: 'w:rain',  b: 'e:spark',   id: 'conductive', nm: 'Conductive Field', kind: 'combo',   gl: '🌧️⚡', ds: 'Wet air carries the charge — lightning forks and chains.',
+    fx: { amp: { spark: .55 }, chain: 1, crit: { spark: .2 }, vfx: 'chain' } },
+  { a: 'w:sun',   b: 'e:verdant', id: 'overgrowth', nm: 'Explosive Overgrowth', kind: 'combo', gl: '☀️🌿', ds: 'Photosynthesis gone feral. Verdant grows mid-swing.',
+    fx: { amp: { verdant: .55 }, regen: { verdant: 1.4 }, burst: 1, vfx: 'overgrowth' } },
+  { a: 'w:rain',  b: 'e:ember',   id: 'doused',     nm: 'Doused',           kind: 'counter', gl: '🌧️🔥', ds: 'Rain smothers Ember. Its attacks shrink to sputters.',
+    fx: { amp: { ember: -.45 }, spd: { ember: -.2 }, vfx: 'steam' } },
+  { a: 'w:sun',   b: 'e:tide',    id: 'sunscald',   nm: 'Sun Scald',        kind: 'counter', gl: '☀️🌊', ds: 'Tide boils off faster than it can gather.',
+    fx: { amp: { tide: -.40 }, vfx: 'steam' } },
+  { a: 'w:gale',  b: 'e:stone',   id: 'windbreak',  nm: 'Wind Break',       kind: 'counter', gl: '🌬️🪨', ds: 'Stone simply does not move. Gale wastes itself.',
+    fx: { immune: 'gale', guard: { stone: .35 }, vfx: 'break' } },
+  { a: 'w:quake', b: 'e:gale',    id: 'groundless', nm: 'Groundless',       kind: 'counter', gl: '🌋🌀', ds: 'You cannot shake something that never touches the floor.',
+    fx: { immune: 'quake', spd: { gale: .18 }, vfx: 'float' } },
+  { a: 'w:quake', b: 'e:stone',   id: 'bedrock',    nm: 'Bedrock Stance',   kind: 'combo',   gl: '🌋🪨', ds: 'Stone reads the tremor and hits on the upswing.',
+    fx: { amp: { stone: .50 }, guard: { stone: .25 }, vfx: 'bedrock' } },
+  { a: 'w:night', b: 'e:gloom',   id: 'umbral',     nm: 'Umbral Veil',      kind: 'combo',   gl: '🌙🌑', ds: 'Gloom wears the night like a coat and is hard to hit.',
+    fx: { amp: { gloom: .45 }, guard: { gloom: .3 }, vfx: 'veil' } },
+  { a: 'w:fog',   b: 'e:gloom',   id: 'phantom',    nm: 'Phantom Step',     kind: 'combo',   gl: '🌫️🌑', ds: 'It is behind you. It was always behind you.',
+    fx: { amp: { gloom: .30 }, spd: { gloom: .3 }, crit: { gloom: .18 }, vfx: 'phantom' } },
+  { a: 'w:gale',  b: 'e:gale',    id: 'slipstream', nm: 'Slipstream',       kind: 'combo',   gl: '🌬️🌀', ds: 'Gale stops fighting the wind and rides it instead.',
+    fx: { amp: { gale: .35 }, spd: { gale: .45 }, vfx: 'slipstream' } },
+  { a: 'w:sun',   b: 'e:ember',   id: 'solarforge', nm: 'Solar Forge',      kind: 'combo',   gl: '☀️🔥', ds: 'Ember drinks the sun and reforges its crest mid-duel.',
+    fx: { amp: { ember: .50 }, regen: { ember: 1.2 }, vfx: 'forge' } },
+  { a: 'w:rain',  b: 'e:tide',    id: 'tidalsurge', nm: 'Tidal Surge',      kind: 'combo',   gl: '🌧️🌊', ds: 'Every drop is ammunition. Tide swells to a wave.',
+    fx: { amp: { tide: .50 }, spd: { tide: .2 }, vfx: 'surge' } },
+  { a: 'w:bloom', b: 'e:verdant', id: 'wildgrowth', nm: 'Wildgrowth',       kind: 'combo',   gl: '🌸🌿', ds: 'Bloom is home turf. Verdant mends as fast as it is worn.',
+    fx: { amp: { verdant: .35 }, regen: { verdant: 2.2 }, vfx: 'wildgrowth' } },
+  { a: 'w:bloom', b: 'e:ember',   id: 'wildfire',   nm: 'Wildfire',         kind: 'combo',   gl: '🌸🔥', ds: 'All that dry bloom is kindling. Ember goes wide.',
+    fx: { amp: { ember: .45 }, aura: .5, vfx: 'wildfire' } },
+  { a: 'w:night', b: 'e:ember',   id: 'emberglow',  nm: 'Ember Glow',       kind: 'combo',   gl: '🌙🔥', ds: 'In the dark, even a small Ember is a beacon — and a target.',
+    fx: { amp: { ember: .28 }, guard: { ember: -.2 }, crit: { ember: .2 }, vfx: 'glow' } },
+  { a: 'w:fog',   b: 'e:spark',   id: 'statichaze', nm: 'Static Haze',      kind: 'combo',   gl: '🌫️⚡', ds: 'The whole fog holds a charge. Spark arcs at random.',
+    fx: { amp: { spark: .30 }, aura: .45, vfx: 'static' } },
+  { a: 'w:quake', b: 'e:tide',    id: 'geyser',     nm: 'Geyser',           kind: 'combo',   gl: '🌋🌊', ds: 'The fracture finds water. Tide erupts from below.',
+    fx: { amp: { tide: .40 }, burst: 1, vfx: 'geyser' } },
+];
+const IX_BY_KEY = (function () {
+  const m = {};
+  for (let i = 0; i < INTERACTIONS.length; i++) {
+    const e = INTERACTIONS[i];
+    const k = [e.a, e.b].sort().join('|');
+    e.key = k;
+    m[k] = e;
+  }
+  return m;
+})();
+const IX_BY_ID = (function () {
+  const m = {};
+  for (let i = 0; i < INTERACTIONS.length; i++) m[INTERACTIONS[i].id] = INTERACTIONS[i];
+  return m;
+})();
+// Deterministic single-outcome lookup for any unordered token pair.
+function resolvePair(t1, t2) {
+  if (t1 === t2) return null;
+  return IX_BY_KEY[[t1, t2].sort().join('|')] || null;
+}
+
+/* ============================= glims ============================= */
+const GLIMS = [
+  { id: 'cindermote', nm: 'Cindermote', ess: 'ember',   unlock: 0,  pow: 1.00, spd: 1.00, gd: 1.00, hp: 1.00, ds: 'Presses hard in dry heat. Hates a soaking.' },
+  { id: 'rilltide',   nm: 'Rilltide',   ess: 'tide',    unlock: 0,  pow: 0.94, spd: 1.06, gd: 1.02, hp: 1.04, ds: 'Loves rain and cloud. Wilts in open sun.' },
+  { id: 'fernlop',    nm: 'Fernlop',    ess: 'verdant', unlock: 0,  pow: 0.92, spd: 0.98, gd: 1.06, hp: 1.10, ds: 'Mends itself under sun and bloom.' },
+  { id: 'cobbleback', nm: 'Cobbleback', ess: 'stone',   unlock: 2,  pow: 1.08, spd: 0.84, gd: 1.22, hp: 1.16, ds: 'Slow, immovable. Quake is its friend.' },
+  { id: 'fizzlet',    nm: 'Fizzlet',    ess: 'spark',   unlock: 4,  pow: 0.96, spd: 1.18, gd: 0.90, hp: 0.92, ds: 'Wet air makes it chain. Grounding hurts.' },
+  { id: 'duskpuff',   nm: 'Duskpuff',   ess: 'gloom',   unlock: 6, pow: 1.02, spd: 1.02, gd: 1.04, hp: 0.98, ds: 'Thrives in fog and nightfall. Sun undoes it.' },
+  { id: 'wisplume',   nm: 'Wisplume',   ess: 'gale',    unlock: 9, pow: 0.90, spd: 1.24, gd: 0.94, hp: 0.90, ds: 'Never touches the ground. Rides its own storm.' },
+];
+const GLIM_BY_ID = (function () { const m = {}; for (const g of GLIMS) m[g.id] = g; return m; })();
+const FOE_NAMES = ['Wright Pell', 'Wright Marrow', 'Wright Juniper', 'Wright Oxbow', 'Wright Cinder', 'Wright Vale',
+                   'Wright Halloway', 'Wright Brine', 'Wright Thistle', 'Wright Quill'];
+const BOSS_NAMES = ['Stormcaller Vex', 'Stormcaller Runn', 'Stormcaller Mirelle', 'Stormcaller Tacet', 'Stormcaller Ozone'];
+
+/* ============================= upgrades ============================= */
+const UPG = [
+  { id: 'cap',  ic: '🫙', nm: 'Sky Vessel',   ds: '+22 Sky Meter capacity',      base: 45, max: 6 },
+  { id: 'rate', ic: '💧', nm: 'Sky Spring',   ds: '+1.6 sky refill per second',  base: 55, max: 6 },
+  { id: 'dur',  ic: '⏳', nm: 'Long Weather', ds: '+12% rune duration',          base: 60, max: 5 },
+  { id: 'slot', ic: '🎴', nm: 'Rune Slot',    ds: '+1 weather can hang at once', base: 160, max: 2 },
+];
+const upCost = (u, lvl) => Math.floor(u.base * Math.pow(1.85, lvl));
+function skyCap()  { return 100 + 22 * (save.up.cap | 0); }
+function skyRate() { return 8.5 + 1.6 * (save.up.rate | 0); }
+function durMul()  { return 1 + 0.12 * (save.up.dur | 0); }
+function maxGlobal() { return 2 + (save.up.slot | 0); }
+
+/* ============================= save ============================= */
+const SAVE_KEY = 'ttg_weatherwright';
+function defaultSave() {
+  return {
+    v: 1, duel: 1, best: 0, rank: 0, lum: 0, muted: false,
+    glim: 'cindermote', almanac: [], up: { cap: 0, rate: 0, dur: 0, slot: 0 },
+    duels: 0, lastSeen: Date.now(),
+  };
+}
+function loadSave() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return defaultSave();
+    const s = JSON.parse(raw);
+    const d = defaultSave();
+    const out = (s && typeof s === 'object') ? Object.assign(d, s) : d;
+    out.up = Object.assign({ cap: 0, rate: 0, dur: 0, slot: 0 }, (s && s.up) || {});
+    for (const u of UPG) out.up[u.id] = clamp(out.up[u.id] | 0, 0, u.max);
+    out.duel = clamp(out.duel | 0 || 1, 1, 9999);
+    out.best = Math.max(0, out.best | 0);
+    out.rank = clamp(out.rank | 0, 0, 999);
+    out.duels = Math.max(0, out.duels | 0);
+    out.lum = Math.max(0, Math.floor(+out.lum || 0));
+    out.muted = !!out.muted;
+    if (!Array.isArray(out.almanac)) out.almanac = [];
+    out.almanac = out.almanac.filter(id => typeof id === 'string' && !!IX_BY_ID[id]);
+    out.almanac = out.almanac.filter((id, i) => out.almanac.indexOf(id) === i);
+    if (!GLIM_BY_ID[out.glim] || GLIM_BY_ID[out.glim].unlock > out.rank) out.glim = 'cindermote';
+    if (typeof out.lastSeen !== 'number' || !isFinite(out.lastSeen)) out.lastSeen = Date.now();
+    return out;
+  } catch (e) { return defaultSave(); }
+}
+let save = loadSave();
+function persist() {
+  save.lastSeen = Date.now();
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {}
+}
+function unlockedGlims() { return GLIMS.filter(g => g.unlock <= save.rank); }
+
+/* ============================= canvas ============================= */
+const cv = $('cv');
+const cx = cv.getContext('2d');
+let W = 320, H = 560, DPR = 1;
+let resizing = false;
+// arena geometry (all initialized — the loop draws from boot)
+let groundY = 400, arenaTop = 90, arenaMid = 160, trayY = 470, runeR = 30;
+let runeSlots = [];     // {id, x, y, r}
+let skyBar = { x: 10, y: 440, w: 300, h: 14 };
+
+function layout() {
+  const safeB = 10;
+  const twoRow = W < 7 * 74;
+  const per = twoRow ? 4 : 7;
+  const gap = twoRow ? 12 : 8;
+  const avail = W - 16;
+  let d = Math.min(76, (avail - gap * (per - 1)) / per);
+  d = Math.max(56, d);
+  runeR = d / 2;
+  const rows = twoRow ? 2 : 1;
+  const rowH = d + 10;
+  const bottom = H - safeB;
+  const topOfTray = bottom - rows * rowH + 4;
+  trayY = topOfTray - 26;
+  skyBar = { x: 14, y: trayY - 4, w: W - 28, h: Math.max(12, Math.min(20, H * 0.026)) };
+  runeSlots = [];
+  for (let i = 0; i < WX_IDS.length; i++) {
+    const row = twoRow ? (i < 4 ? 0 : 1) : 0;
+    const inRow = twoRow ? (row === 0 ? 4 : 3) : 7;
+    const idx = twoRow ? (row === 0 ? i : i - 4) : i;
+    const totalW = inRow * d + (inRow - 1) * gap;
+    const x0 = (W - totalW) / 2;
+    runeSlots.push({
+      id: WX_IDS[i],
+      x: x0 + idx * (d + gap) + d / 2,
+      y: topOfTray + row * rowH + d / 2,
+      r: runeR,
+    });
+  }
+  arenaTop = Math.max(64, H * 0.20);
+  groundY = Math.max(arenaTop + 120, skyBar.y - Math.max(46, H * 0.10));
+  arenaMid = (arenaTop + groundY) / 2;
+}
+
+function resize() {
+  if (resizing) return;
+  resizing = true;
+  try {
+    const w = Math.max(1, window.innerWidth || 320);
+    const h = Math.max(1, window.innerHeight || 560);
+    if (w <= 0 || h <= 0) return;
+    DPR = Math.min(2.5, Math.max(1, window.devicePixelRatio || 1));
+    W = w; H = h;
+    cv.width = Math.max(1, Math.round(W * DPR));
+    cv.height = Math.max(1, Math.round(H * DPR));
+    cv.style.width = W + 'px';
+    cv.style.height = H + 'px';
+    cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    layout();
+    if (duel && duel.glims) for (const g of duel.glims) { g.x = clamp(g.x, 40, W - 40); g.homeX = clamp(g.homeX, 60, W - 60); }
+    buildStars();
+  } catch (e) {
+    if (window.console) console.warn('[ww] resize', e);
+  } finally {
+    resizing = false;
+  }
+}
+
+/* ============================= audio ============================= */
+let AC = null, master = null, noiseBuf = null;
+let rainNode = null, rainGain = null, windNode = null, windGain = null, droneOsc = null, droneGain = null, droneOsc2 = null;
+let userGestured = false;
+function initAudio() {
+  if (AC) return;
+  try {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    master = AC.createGain();
+    master.gain.value = save.muted ? 0 : 0.5;
+    master.connect(AC.destination);
+    const len = Math.floor(AC.sampleRate * 1.0);
+    noiseBuf = AC.createBuffer(1, len, AC.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    startBeds();
+  } catch (e) { AC = null; master = null; noiseBuf = null; }
+}
+function resumeAudio() { try { if (AC && AC.state === 'suspended') AC.resume().catch(() => {}); } catch (e) {} }
+function setMute(m) {
+  save.muted = !!m; persist();
+  try { if (master) master.gain.value = save.muted ? 0 : 0.5; } catch (e) {}
+  const b = $('muteBtn'); if (b) b.textContent = save.muted ? '🔇' : '🔊';
+}
+function startBeds() {
+  if (!AC || !noiseBuf) return;
+  try {
+    // rain hiss bed
+    rainNode = AC.createBufferSource(); rainNode.buffer = noiseBuf; rainNode.loop = true;
+    const rf = AC.createBiquadFilter(); rf.type = 'highpass'; rf.frequency.value = 1400;
+    rainGain = AC.createGain(); rainGain.gain.value = 0;
+    rainNode.connect(rf); rf.connect(rainGain); rainGain.connect(master); rainNode.start();
+    // wind bed
+    windNode = AC.createBufferSource(); windNode.buffer = noiseBuf; windNode.loop = true;
+    const wf = AC.createBiquadFilter(); wf.type = 'bandpass'; wf.frequency.value = 520; wf.Q.value = 0.7;
+    windGain = AC.createGain(); windGain.gain.value = 0;
+    windNode.connect(wf); wf.connect(windGain); windGain.connect(master); windNode.start();
+    // essence drone
+    droneGain = AC.createGain(); droneGain.gain.value = 0.0;
+    droneOsc = AC.createOscillator(); droneOsc.type = 'sine'; droneOsc.frequency.value = 72;
+    droneOsc2 = AC.createOscillator(); droneOsc2.type = 'triangle'; droneOsc2.frequency.value = 108;
+    const dg2 = AC.createGain(); dg2.gain.value = 0.34;
+    droneOsc.connect(droneGain); droneOsc2.connect(dg2); dg2.connect(droneGain);
+    droneGain.connect(master); droneOsc.start(); droneOsc2.start();
+  } catch (e) { rainNode = null; windNode = null; droneOsc = null; }
+}
+function setBed(node, v) { try { if (node) node.gain.setTargetAtTime(clamp(v, 0, 1), AC.currentTime, 0.35); } catch (e) {} }
+function setDrone(freq, v) {
+  try {
+    if (!AC || !droneOsc) return;
+    droneOsc.frequency.setTargetAtTime(freq, AC.currentTime, 0.6);
+    droneOsc2.frequency.setTargetAtTime(freq * 1.5, AC.currentTime, 0.6);
+    droneGain.gain.setTargetAtTime(clamp(v, 0, 0.3), AC.currentTime, 0.6);
+  } catch (e) {}
+}
+function tone(freq, dur, type, vol, t0, slideTo) {
+  if (!AC || !master) return;
+  try {
+    const t = (t0 !== undefined ? t0 : AC.currentTime);
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(Math.max(20, freq), t);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(20, slideTo), t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002, vol), t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t + dur + 0.03);
+  } catch (e) {}
+}
+function noise(dur, vol, type, freq, q) {
+  if (!AC || !master || !noiseBuf) return;
+  try {
+    const t = AC.currentTime;
+    const s = AC.createBufferSource(); s.buffer = noiseBuf;
+    const f = AC.createBiquadFilter(); f.type = type || 'bandpass'; f.frequency.value = freq || 900; if (q) f.Q.value = q;
+    const g = AC.createGain();
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    s.connect(f); f.connect(g); g.connect(master);
+    s.start(t); s.stop(t + dur + 0.02);
+  } catch (e) {}
+}
+function sfxRune(w) {
+  const base = { rain: 300, sun: 520, gale: 430, quake: 120, fog: 240, night: 180, bloom: 620 }[w] || 400;
+  tone(base, 0.35, 'sine', 0.16, undefined, base * 1.6);
+  tone(base * 1.5, 0.22, 'triangle', 0.08);
+  noise(0.2, 0.10, 'bandpass', base * 2.2, 1.2);
+}
+function sfxThunder() { noise(1.1, 0.32, 'lowpass', 260, 0.8); tone(46, 1.0, 'sine', 0.20, undefined, 28); }
+function sfxQuake() { noise(0.9, 0.26, 'lowpass', 130, 1); tone(38, 0.8, 'sine', 0.22, undefined, 24); }
+function sfxHit(mult) {
+  const m = clamp(mult || 1, 0.5, 2.5);
+  tone(320 * m, 0.14, 'triangle', 0.13, undefined, 150 * m);
+  noise(0.1, 0.09, 'bandpass', 1400 * m, 1.4);
+}
+function sfxCombo() {
+  if (!AC) return;
+  const t = AC.currentTime;
+  [0, 4, 7, 12].forEach((s, i) => tone(330 * Math.pow(2, s / 12), 0.5, 'triangle', 0.13, t + i * 0.055));
+  noise(0.5, 0.13, 'highpass', 2600);
+}
+function sfxWin() {
+  if (!AC) return;
+  const t = AC.currentTime;
+  [0, 4, 7, 12, 16].forEach((s, i) => tone(392 * Math.pow(2, s / 12), 0.42, 'triangle', 0.15, t + i * 0.09));
+}
+function sfxRest() {
+  if (!AC) return;
+  const t = AC.currentTime;
+  [0, -3, -7].forEach((s, i) => tone(392 * Math.pow(2, s / 12), 0.5, 'sine', 0.12, t + i * 0.13));
+}
+function sfxBuy() { tone(660, 0.12, 'square', 0.1); tone(990, 0.16, 'square', 0.08, (AC ? AC.currentTime + 0.08 : undefined)); }
+function sfxDeny() { tone(160, 0.2, 'sawtooth', 0.09, undefined, 90); }
+function sfxDiscover() {
+  if (!AC) return;
+  const t = AC.currentTime;
+  [0, 7, 12, 19].forEach((s, i) => tone(523 * Math.pow(2, s / 12), 0.45, 'sine', 0.12, t + i * 0.07));
+}
+function vibrate(p) { try { if (userGestured && navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
+
+/* ============================= global state (all initialized) ============================= */
+let state = 'title';
+let titleT = 0;
+let stars = [];
+let frameErrs = 0;
+let bannerT = 0, toastT = 0;
+
+function emptyDuel() {
+  return {
+    active: false, n: 1, t: 0, over: false, result: '', endT: 0, tiebreak: false,
+    glims: [], p: null, o: null, pQueue: [], oQueue: [],
+    weather: [], zones: [],
+    sky: 100, skyMax: 100, skyUsed: 0, skyRefill: 8.5,
+    foeSky: 100, foeMax: 100, foeCd: 2.5, foeCdT: 1.2, foeSkill: 0.4, foeName: '',
+    denyT: 0, suddenAnnounced: false,
+    boss: false, bossCd: 6, bossSurge: 0, bossCounter: null, bossCounterT: 0,
+    drought: false, hazard: null, dual: false,
+    activeIx: [], ixSeen: {}, discovered: [],
+    shake: 0, flash: 0, flashCol: '255,255,255', timeScale: 1, slowT: 0,
+    bolts: [], parts: [], pops: [], forks: [], cracks: [],
+    dominance: 0, comboBanner: 0,
+  };
+}
+let duel = emptyDuel();
+
+// weather-driven ambient fields (always present so the title screen renders weather too)
+let drops = [], petals = [], motes = [], gusts = [];
+function seedAmbient() {
+  drops = []; petals = []; motes = []; gusts = [];
+  const n = clamp(Math.round(W * H / 9000), 40, 260);
+  for (let i = 0; i < n; i++) drops.push({ x: rand(0, W), y: rand(0, H), len: rand(9, 22), spd: rand(560, 1000), w: rand(0.8, 1.9) });
+  for (let i = 0; i < 46; i++) petals.push({ x: rand(0, W), y: rand(0, H), r: rand(3, 7), a: rand(0, TAU), sp: rand(18, 46), sw: rand(0.6, 1.8), hue: rand(300, 350) });
+  for (let i = 0; i < 60; i++) motes.push({ x: rand(0, W), y: rand(0, H), r: rand(1, 2.6), a: rand(0, TAU), sp: rand(6, 20) });
+  for (let i = 0; i < 26; i++) gusts.push({ x: rand(0, W), y: rand(0, H), len: rand(40, 150), sp: rand(280, 620), o: rand(.1, .45) });
+}
+
+/* ============================= screens ============================= */
+const SCREENS = ['title', 'hud', 'results', 'gameover', 'almanac', 'team', 'shop'];
+function showScreen(id) {
+  for (const s of SCREENS) {
+    const el = $(s);
+    if (el) el.classList.toggle('show', s === id);
+  }
+  const mb = $('muteBtn'); if (mb) mb.classList.add('show');
+  const qb = $('quitBtn'); if (qb) qb.classList.toggle('show', id === 'hud');
+}
+function banner(main, sub) {
+  const el = $('banner');
+  if (!el) return;
+  el.innerHTML = main + (sub ? '<span class="sub2">' + sub + '</span>' : '');
+  el.classList.remove('on');
+  void el.offsetWidth;
+  el.classList.add('on');
+  bannerT = 1.5;
+}
+function toast(msg) {
+  const el = $('toast');
+  if (!el) return;
+  el.innerHTML = msg;
+  el.classList.add('on');
+  toastT = 2.6;
+}
+
+/* ============================= duel construction ============================= */
+const HAZARDS = [
+  { id: 'vent',    wx: 'sun',   nm: 'Volcano Vent',  ic: '🌋', ds: 'The vent keeps the arena sun-hot. Ember never cools.' },
+  { id: 'spring',  wx: 'rain',  nm: 'Weeping Spring', ic: '💧', ds: 'A permanent drizzle seeps from the walls.' },
+  { id: 'shard',   wx: 'quake', nm: 'Shard Field',    ic: '🪨', ds: 'The floor never stops trembling.' },
+  { id: 'hollow',  wx: 'fog',   nm: 'Fog Hollow',     ic: '🌫️', ds: 'Mist pools here and will not lift.' },
+  { id: 'arbour',  wx: 'bloom', nm: 'Old Arbour',     ic: '🌸', ds: 'Everything in this arena is already in flower.' },
+];
+function duelPlan(n) {
+  const boss = (n % 5 === 0);
+  const drought = (n >= 12 && n % 5 === 2);
+  const champion = (n >= 6 && !boss);
+  const dual = (n >= 15);
+  let hazard = null;
+  if (n >= 8) hazard = HAZARDS[(n * 3 + 2) % HAZARDS.length];
+  return { boss, drought, champion, dual, hazard };
+}
+function foeEssenceFor(n, slot) {
+  // deterministic, cycles all seven so every sky x glim interaction is reachable
+  return ESS_IDS[(n * 3 + slot * 2 + 1) % 7];
+}
+function foeGlimFor(n, slot) {
+  const e = foeEssenceFor(n, slot);
+  for (const g of GLIMS) if (g.ess === e) return g;
+  return GLIMS[0];
+}
+function makeGlim(def, side, n, isFoe, slot) {
+  const rank = save.rank;
+  const pScale = 1 + 0.050 * rank;
+  const hScale = 1 + 0.042 * rank;
+  const plan = duelPlan(n);
+  let fPow = 2.45 + 0.074 * (n - 1);
+  let fHp = 214 + 8.8 * (n - 1);
+  // the first few Stormcallers are a spectacle, not a wall
+  if (plan.boss) { const bs = n <= 10 ? 0.4 : 1; fPow *= 1 + 0.06 * bs; fHp *= 1 + 0.10 * bs; }
+  else if (plan.champion) { fPow *= 1.03; fHp *= 1.05; }
+  if (plan.dual) { fPow *= 0.95; fHp *= 0.62; }
+  const maxLight = isFoe ? fHp * def.hp : 236 * def.hp * hScale;
+  const pow = isFoe ? fPow * def.pow : 2.70 * def.pow * pScale;
+  return {
+    side: side, def: def, id: def.id, ess: def.ess, nm: def.nm, slot: slot || 0,
+    maxLight: maxLight, light: maxLight,
+    pow: pow, spdBase: def.spd * 0.76, gd: def.gd,
+    charge: rand(0, 0.35), stance: 'hold', comfort: 0,
+    x: 0, y: 0, homeX: 0, lean: 0, bob: rand(0, TAU), hop: 0, face: 1,
+    flash: 0, hurt: 0, ko: false, koT: 0, entered: 0, spent: false,
+    mods: { amp: 0, spd: 0, regen: 0, guard: 0, crit: 0, miss: 0, aura: 0, chain: 0, burst: 0, dmgMod: 1, spdMod: 1, guardMod: 1 },
+    ix: [],
+  };
+}
+function placeGlims(d) {
+  for (const g of d.glims) {
+    g.homeX = g.side === 'p' ? W * 0.28 : W * 0.72;
+    g.x = g.homeX;
+    g.face = g.side === 'p' ? 1 : -1;
+    g.y = groundY;
+  }
+}
+function startDuel(n) {
+  const plan = duelPlan(n);
+  const d = emptyDuel();
+  d.active = true;
+  d.n = n;
+  d.boss = plan.boss; d.drought = plan.drought; d.dual = plan.dual; d.hazard = plan.hazard;
+  d.skyMax = skyCap();
+  d.sky = d.skyMax;
+  d.skyRefill = skyRate() * (plan.drought ? 0.55 : 1);
+  d.foeMax = 100 + Math.min(90, 4 * n);
+  d.foeSky = d.foeMax;
+  d.foeCd = plan.boss ? 2.2 : clamp(4.4 - 0.09 * n, 2.4, 4.4);
+  d.foeSkill = clamp(0.28 + 0.032 * n, 0.28, 1);
+
+  const pDef = GLIM_BY_ID[save.glim] || GLIMS[0];
+  d.pQueue = [makeGlim(pDef, 'p', n, false, 0)];
+  d.oQueue = [makeGlim(foeGlimFor(n, 0), 'o', n, true, 0)];
+  if (plan.dual) {
+    const un = unlockedGlims();
+    const alt = un.find(g => g.id !== pDef.id) || pDef;
+    d.pQueue.push(makeGlim(alt, 'p', n, false, 1));
+    d.oQueue.push(makeGlim(foeGlimFor(n, 1), 'o', n, true, 1));
+  }
+  d.p = d.pQueue[0]; d.o = d.oQueue[0];
+  d.glims = [d.p, d.o];
+  placeGlims(d);
+  if (plan.hazard) d.weather.push({ id: plan.hazard.wx, t: 999999, dur: 999999, perm: true, src: 'hazard' });
+  duel = d;
+  state = 'play';
+  showScreen('hud');
+  const foeNm = plan.boss ? BOSS_NAMES[(n / 5 - 1) % BOSS_NAMES.length] : FOE_NAMES[n % FOE_NAMES.length];
+  d.foeName = foeNm;
+  refreshHud();
+  banner('DUEL ' + n, plan.boss ? '⛈️ STORMCALLER' : (plan.champion ? '🏆 CHAMPION' : 'READ THE SKY'));
+  if (plan.hazard) setTimeout(() => { if (state === 'play') toast(plan.hazard.ic + ' <b>' + plan.hazard.nm + '</b> — ' + plan.hazard.ds); }, 900);
+  else if (plan.drought) setTimeout(() => { if (state === 'play') toast('🏜️ <b>Sky Drought</b> — the meter refills slowly here.'); }, 900);
+  window.TTG?.track('level_start', { level: n });
+}
+function refreshHud() {
+  const d = duel;
+  const hd = $('hudDuel'); if (hd) hd.textContent = 'DUEL ' + d.n;
+  const hf = $('hudFoe');
+  if (hf) {
+    const o = d.o;
+    hf.textContent = 'vs ' + (o ? (ESS[o.ess].ic + ' ' + o.nm) : '—');
+    hf.className = 'chip' + (d.boss ? ' boss' : '');
+  }
+  const hm = $('hudMode');
+  if (hm) {
+    let txt = '', on = false;
+    if (d.boss) { txt = '⛈️ ' + (d.foeName || 'STORMCALLER'); on = true; }
+    else if (d.drought) { txt = '🏜️ DROUGHT'; on = true; }
+    else if (d.hazard) { txt = d.hazard.ic + ' ' + d.hazard.nm.toUpperCase(); on = true; }
+    hm.textContent = txt;
+    hm.style.display = on ? '' : 'none';
+    hm.className = 'chip' + (d.boss ? ' boss' : ' warn');
+  }
+}
+
+/* ============================= conditions & interactions ============================= */
+function condsFor(d, g) {
+  const out = [];
+  for (let i = 0; i < d.weather.length; i++) {
+    const id = d.weather[i].id;
+    if (out.indexOf(id) < 0) out.push(id);
+  }
+  if (g) {
+    for (let i = 0; i < d.zones.length; i++) {
+      const z = d.zones[i];
+      const dx = g.x - z.x, dy = (g.y - 26) - z.y;
+      if (dx * dx + dy * dy <= z.r * z.r && out.indexOf(z.id) < 0) out.push(z.id);
+    }
+  }
+  out.sort();
+  return out;
+}
+function allConds(d) {
+  const out = [];
+  for (const w of d.weather) if (out.indexOf(w.id) < 0) out.push(w.id);
+  for (const z of d.zones) if (out.indexOf(z.id) < 0) out.push(z.id);
+  out.sort();
+  return out;
+}
+function discover(e) {
+  if (!e) return;
+  const d = duel;
+  if (!d.ixSeen[e.id]) {
+    d.ixSeen[e.id] = true;
+    if (d.discovered.indexOf(e.id) < 0) d.discovered.push(e.id);
+  }
+  if (save.almanac.indexOf(e.id) < 0) {
+    save.almanac.push(e.id);
+    persist();
+    toast('📖 NEW ENTRY · ' + e.gl + ' <b>' + e.nm + '</b>');
+    sfxDiscover();
+    vibrate([12, 40, 12]);
+    window.TTG?.track('interaction_discovered', { value: e.id });
+  }
+}
+// Resolve everything the arena is currently doing. One deterministic outcome per pair.
+function resolveArena(d) {
+  d.activeIx.length = 0;
+  const seenKey = {};
+  const gc = allConds(d);
+  for (let i = 0; i < gc.length; i++) {
+    for (let j = i + 1; j < gc.length; j++) {
+      const e = resolvePair('w:' + gc[i], 'w:' + gc[j]);
+      if (e && !seenKey[e.key]) { seenKey[e.key] = 1; d.activeIx.push(e); discover(e); }
+    }
+  }
+  for (const g of d.glims) {
+    if (g.ko) continue;
+    const cs = condsFor(d, g);
+    g.ix = [];
+    for (let i = 0; i < cs.length; i++) {
+      const e = resolvePair('w:' + cs[i], 'e:' + g.ess);
+      if (e) {
+        g.ix.push(e);
+        if (!seenKey[e.key]) { seenKey[e.key] = 1; d.activeIx.push(e); discover(e); }
+      }
+    }
+    for (let i = 0; i < cs.length; i++) {
+      for (let j = i + 1; j < cs.length; j++) {
+        const e = resolvePair('w:' + cs[i], 'w:' + cs[j]);
+        if (e) g.ix.push(e);
+      }
+    }
+  }
+  // counters fire immediately
+  for (const e of d.activeIx) {
+    const cl = e.fx && e.fx.clear;
+    if (!cl) continue;
+    let removed = 0;
+    for (let i = d.weather.length - 1; i >= 0; i--) {
+      if (cl.indexOf(d.weather[i].id) >= 0 && !d.weather[i].perm) { d.weather.splice(i, 1); removed++; }
+    }
+    for (let i = d.zones.length - 1; i >= 0; i--) {
+      if (cl.indexOf(d.zones[i].id) >= 0) { d.zones.splice(i, 1); removed++; }
+    }
+    if (removed > 0) {
+      d.sky = clamp(d.sky + (e.fx.refund || 0), 0, d.skyMax);
+      d.flash = Math.max(d.flash, 0.5); d.flashCol = '210,235,255';
+      banner(e.gl + ' ' + e.nm.toUpperCase(), 'COUNTER');
+      sfxCombo();
+      burstParts(W / 2, arenaMid, 26, '#dff0ff');
+    }
+  }
+}
+function computeMods(d, g) {
+  const m = g.mods;
+  m.amp = 0; m.spd = 0; m.regen = 0; m.guard = 0; m.crit = 0; m.miss = 0; m.aura = 0; m.chain = 0; m.burst = 0;
+  const cs = condsFor(d, g);
+  // immunities first (a counter can make a whole weather irrelevant to this Glim)
+  const immune = {};
+  for (const e of g.ix) if (e.fx && e.fx.immune) immune[e.fx.immune] = 1;
+  let a = 0;
+  for (const c of cs) { if (!immune[c]) a += aff(c, g.ess); }
+  g.comfort = a;
+  for (const e of g.ix) {
+    const f = e.fx; if (!f) continue;
+    if (f.amp && typeof f.amp[g.ess] === 'number') m.amp += f.amp[g.ess];
+    if (typeof f.ampAll === 'number') m.amp += f.ampAll;
+    if (f.spd && typeof f.spd[g.ess] === 'number') m.spd += f.spd[g.ess];
+    if (typeof f.spdAll === 'number') m.spd += f.spdAll;
+    if (f.regen && typeof f.regen[g.ess] === 'number') m.regen += f.regen[g.ess];
+    if (typeof f.regenAll === 'number') m.regen += f.regenAll;
+    if (f.guard && typeof f.guard[g.ess] === 'number') m.guard += f.guard[g.ess];
+    if (f.crit && typeof f.crit[g.ess] === 'number') m.crit += f.crit[g.ess];
+    if (typeof f.missAll === 'number') m.miss += f.missAll;
+    if (typeof f.aura === 'number') m.aura += f.aura;
+    if (f.chain) m.chain = 1;
+    if (f.burst) m.burst = 1;
+  }
+  // instinct: comfort drives stance, which the player can read off the silhouette
+  g.stance = a > 0.42 ? 'press' : (a < -0.42 ? 'retreat' : 'hold');
+  m.dmgMod = clamp(1 + 0.30 * a + m.amp, 0.35, 2.20);
+  m.spdMod = clamp(1 + 0.24 * a + m.spd, 0.45, 1.90);
+  if (g.stance === 'press') { m.dmgMod *= 1.15; m.guardMod = 0.84; }
+  else if (g.stance === 'retreat') { m.dmgMod *= 0.84; m.guardMod = 1.34; m.regen += 0.9; }
+  else m.guardMod = 1;
+  m.guardMod *= (1 + m.guard) * g.gd;
+  m.guardMod = clamp(m.guardMod, 0.5, 2.4);
+  return m;
+}
+
+/* ============================= combat ============================= */
+const SUDDEN_T = 62, HARD_T = 110, REGEN_SCALE = 0.0015;
+function suddenMul(d) { return d.t <= SUDDEN_T ? 1 : 1 + (d.t - SUDDEN_T) * 0.055; }
+function foeOf(d, g) { return g.side === 'p' ? d.o : d.p; }
+function attack(d, g) {
+  const t = foeOf(d, g);
+  if (!t || t.ko || g.ko) return;
+  const m = g.mods, tm = t.mods;
+  if (m.miss > 0 && Math.random() < clamp(m.miss, 0, 0.35)) {
+    d.pops.push({ x: g.x + g.face * 30, y: g.y - 60, vy: -30, t: 0.7, txt: 'fumble', c: '#c8d4ea', sz: 13 });
+    return;
+  }
+  const mu = matchup(g.ess, t.ess);
+  let dmg = g.pow * m.dmgMod * mu * suddenMul(d) / clamp(tm.guardMod || 1, 0.5, 2.4);
+  let crit = false;
+  if (m.crit > 0 && Math.random() < clamp(m.crit, 0, 0.5)) { dmg *= 1.6; crit = true; }
+  if (m.burst) dmg *= 1.12;
+  dmg = Math.max(0.6, dmg);
+  const chain = m.chain ? 1 + Math.floor(Math.random() * 2) : 0;
+  if (chain) dmg *= (1 + 0.16 * chain);
+  t.light = Math.max(0, t.light - dmg);
+  t.flash = 1; t.hurt = 0.35;
+  g.hop = 1;
+  const strong = mu > 1.2, weak = mu < 0.9;
+  d.bolts.push({
+    x: g.x, y: g.y - 44, tx: t.x, ty: t.y - 44, t: 0, life: 0.30,
+    ess: g.ess, shape: g.stance, chain: chain, crit: crit, big: m.dmgMod > 1.5,
+  });
+  if (chain) d.forks.push({ x: g.x, y: g.y - 44, tx: t.x, ty: t.y - 44, t: 0, life: 0.26, seed: Math.random() * 1000 });
+  d.pops.push({
+    x: t.x + rand(-14, 14), y: t.y - 70, vy: -52, t: 0.85,
+    txt: (crit ? '✦' : '') + Math.round(dmg) + (strong ? '!' : ''),
+    c: crit ? '#ffe06b' : (strong ? '#9dff9d' : (weak ? '#9fb2cc' : '#ffffff')), sz: crit ? 21 : (strong ? 18 : 15),
+  });
+  burstParts(t.x, t.y - 44, crit ? 14 : 7, ESS[g.ess].c);
+  sfxHit(mu);
+  if (chain) sfxThunder();
+  d.shake = Math.max(d.shake, crit ? 9 : (strong ? 6 : 3));
+  if (t.light <= 0) knockOut(d, t, g, m.dmgMod > 1.45 || crit || chain > 0);
+}
+function knockOut(d, t, by, decisive) {
+  if (t.ko) return;
+  t.ko = true; t.koT = 0; t.light = 0;
+  burstParts(t.x, t.y - 40, 40, ESS[t.ess].c2);
+  if (decisive) {
+    d.slowT = 1.0; d.timeScale = 0.22;
+    d.flash = 1; d.flashCol = '255,255,255';
+    banner('DECISIVE BLOW', ESS[by.ess].ic + ' ' + by.nm + ' reads the sky');
+    sfxCombo();
+    vibrate([25, 50, 25]);
+  }
+  sfxRest();
+  d.shake = Math.max(d.shake, 12);
+}
+function burstParts(x, y, n, col) {
+  const d = duel;
+  if (d.parts.length > 300) return;
+  for (let i = 0; i < n; i++) {
+    const a = rand(0, TAU), s = rand(40, 210);
+    d.parts.push({ x: x, y: y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 40, r: rand(1.6, 4.4), t: rand(0.35, 0.9), life: 0.9, c: col });
+  }
+}
+
+/* ============================= casting weather ============================= */
+function runeCost(id, isZone) { return Math.round(WX[id].cost * (isZone ? 0.68 : 1)); }
+function foeSlots(d) { return d.n >= 15 ? 3 : 2; }
+function castWeather(d, id, opts) {
+  opts = opts || {};
+  const isZone = !!opts.zone;
+  const side = opts.side || 'p';
+  const cost = runeCost(id, isZone);
+  // a fixed arena hazard already pins this weather on permanently: spending on it would do nothing
+  if (!isZone) {
+    for (const w of d.weather) {
+      if (w.id === id && w.perm) {
+        if (side === 'p') { sfxDeny(); d.denyT = 0.4; toast(WX[id].ic + ' <b>' + WX[id].nm + '</b> is already permanent here'); }
+        return false;
+      }
+    }
+  }
+  if (side === 'p') {
+    if (d.sky < cost) { sfxDeny(); d.denyT = 0.4; return false; }
+    d.sky -= cost; d.skyUsed += cost;
+  } else {
+    if (d.foeSky < cost) return false;
+    d.foeSky -= cost;
+  }
+  const dur = WX[id].dur * (side === 'p' ? durMul() : 1) * (isZone ? 1.45 : 1);
+  if (isZone) {
+    d.zones.push({ id: id, x: opts.x, y: opts.y, r: Math.max(52, Math.min(W, H) * 0.17), t: dur, dur: dur, side: side, pop: 0 });
+    while (d.zones.length > 3) d.zones.shift();
+  } else {
+    for (let i = d.weather.length - 1; i >= 0; i--) if (d.weather[i].id === id && !d.weather[i].perm) d.weather.splice(i, 1);
+    d.weather.push({ id: id, t: dur, dur: dur, perm: false, side: side, pop: 0 });
+    // rune slots are PER WRIGHT: your sky is yours, and only your own oldest weather rolls off
+    const cap = side === 'p' ? maxGlobal() : foeSlots(d);
+    let guard = 0;
+    while (guard++ < 20) {
+      let n = 0;
+      for (const w of d.weather) if (!w.perm && w.side === side) n++;
+      if (n <= cap) break;
+      let victim = -1;
+      for (let i = 0; i < d.weather.length - 1; i++) {
+        const w = d.weather[i];
+        if (!w.perm && w.side === side) { victim = i; break; }
+      }
+      if (victim < 0) break;
+      d.weather.splice(victim, 1);
+    }
+  }
+  sfxRune(id);
+  d.flash = Math.max(d.flash, 0.42);
+  d.flashCol = hexToRgbStr(WX[id].c);
+  if (id === 'quake') { d.shake = Math.max(d.shake, 14); sfxQuake(); addCracks(d); }
+  if (side === 'p') vibrate(12);
+  return true;
+}
+function addCracks(d) {
+  for (let i = 0; i < 5; i++) {
+    d.cracks.push({ x: rand(W * 0.12, W * 0.88), w: rand(20, 70), t: 3.2, life: 3.2, seed: Math.random() * 100 });
+  }
+  while (d.cracks.length > 14) d.cracks.shift();
+}
+function hexToRgbStr(h) {
+  try {
+    const v = h.replace('#', '');
+    return [parseInt(v.substr(0, 2), 16), parseInt(v.substr(2, 2), 16), parseInt(v.substr(4, 2), 16)].join(',');
+  } catch (e) { return '255,255,255'; }
+}
+
+/* ============================= opponent wright AI ============================= */
+function scoreRuneForFoe(d, id) {
+  const o = d.o, p = d.p;
+  if (!o || !p) return 0;
+  let s = aff(id, o.ess) - aff(id, p.ess) * 0.9;
+  // named interactions the foe would gain / the player would gain
+  const eo = resolvePair('w:' + id, 'e:' + o.ess);
+  if (eo && eo.fx) s += (eo.fx.amp && eo.fx.amp[o.ess] ? eo.fx.amp[o.ess] * 1.4 : 0) + (eo.kind === 'counter' && eo.fx.immune ? 0.4 : 0);
+  const ep = resolvePair('w:' + id, 'e:' + p.ess);
+  if (ep && ep.fx && ep.fx.amp && ep.fx.amp[p.ess] > 0) s -= ep.fx.amp[p.ess] * 1.5;
+  // counters that would strip the player's sky
+  const cs = allConds(d);
+  for (const c of cs) {
+    const e = resolvePair('w:' + id, 'w:' + c);
+    if (!e || !e.fx) continue;
+    if (e.fx.clear && e.fx.clear.length) {
+      let helps = 0;
+      for (const cl of e.fx.clear) helps += aff(cl, p.ess) - aff(cl, o.ess);
+      s += helps * 0.8;
+    }
+    if (e.fx.amp) s += (e.fx.amp[o.ess] || 0) * 1.1 - (e.fx.amp[p.ess] || 0) * 1.1;
+  }
+  return s;
+}
+function foeThink(d, dt) {
+  d.foeSky = Math.min(d.foeMax, d.foeSky + (d.skyRefill * 0.92) * dt);
+  d.foeCdT = (d.foeCdT || 0) - dt;
+  if (d.bossCounterT > 0) {
+    d.bossCounterT -= dt;
+    if (d.bossCounterT <= 0 && d.bossCounter) {
+      castWeather(d, d.bossCounter, { side: 'o' });
+      d.bossCounter = null;
+    }
+  }
+  if (d.foeCdT > 0) return;
+  d.foeCdT = d.foeCd * rand(0.85, 1.2);
+  let best = null, bestS = -1e9;
+  for (const id of WX_IDS) {
+    if (d.foeSky < runeCost(id, false)) continue;
+    let s = scoreRuneForFoe(d, id);
+    s += rand(-1, 1) * (1 - d.foeSkill) * 1.6;
+    if (s > bestS) { bestS = s; best = id; }
+  }
+  if (best && bestS > -0.25) castWeather(d, best, { side: 'o' });
+}
+function bossThink(d, dt) {
+  if (!d.boss) return;
+  d.bossCd -= dt;
+  if (d.bossCd <= 0) {
+    d.bossCd = 9;
+    d.bossSurge = 2.0;
+    banner('⛈️ STORM SURGE', 'the sky is being pulled away');
+    sfxThunder();
+  }
+  if (d.bossSurge > 0) {
+    d.bossSurge -= dt;
+    d.sky = Math.max(0, d.sky - 3.2 * dt);
+  }
+}
+function bossReact(d, id) {
+  if (!d.boss) return;
+  // the Stormcaller answers your global weather with whatever counters it
+  let best = null, bestS = 0;
+  for (const cand of WX_IDS) {
+    const e = resolvePair('w:' + cand, 'w:' + id);
+    if (e && e.fx && e.fx.clear && e.fx.clear.indexOf(id) >= 0) { best = cand; bestS = 3; break; }
+  }
+  if (!best) {
+    for (const cand of WX_IDS) {
+      const s = scoreRuneForFoe(d, cand);
+      if (s > bestS) { bestS = s; best = cand; }
+    }
+  }
+  if (best) { d.bossCounter = best; d.bossCounterT = 1.7; }
+}
+
+/* ============================= update ============================= */
+function update(dtRaw) {
+  titleT += dtRaw;
+  if (bannerT > 0) { bannerT -= dtRaw; if (bannerT <= 0) { const el = $('banner'); if (el) el.classList.remove('on'); } }
+  if (toastT > 0) { toastT -= dtRaw; if (toastT <= 0) { const el = $('toast'); if (el) el.classList.remove('on'); } }
+  updateAmbient(dtRaw);
+  const d = duel;
+  if (d.shake > 0) d.shake = Math.max(0, d.shake - dtRaw * 26);
+  if (d.flash > 0) d.flash = Math.max(0, d.flash - dtRaw * 2.4);
+  if (d.denyT > 0) d.denyT -= dtRaw;
+  if (d.slowT > 0) {
+    d.slowT -= dtRaw;
+    if (d.slowT <= 0) { d.timeScale = 1; d.slowT = 0; }
+  } else d.timeScale = 1;
+  updateVfx(d, dtRaw);
+  if (state !== 'play' || !d.active) { updateAudioBeds(d, 0); return; }
+
+  const dt = dtRaw * d.timeScale;
+  d.t += dt;
+
+  // sky economy — always refills, so weather can never be permanently unaffordable
+  d.sky = Math.min(d.skyMax, d.sky + d.skyRefill * dt);
+
+  // weather timers
+  for (let i = d.weather.length - 1; i >= 0; i--) {
+    const w = d.weather[i];
+    w.pop = Math.min(1, (w.pop || 0) + dt * 4);
+    if (!w.perm) { w.t -= dt; if (w.t <= 0) d.weather.splice(i, 1); }
+  }
+  for (let i = d.zones.length - 1; i >= 0; i--) {
+    const z = d.zones[i];
+    z.pop = Math.min(1, (z.pop || 0) + dt * 4);
+    z.t -= dt;
+    if (z.t <= 0) d.zones.splice(i, 1);
+  }
+
+  resolveArena(d);
+  bossThink(d, dt);
+  foeThink(d, dt);
+
+  // dominance tug-of-war
+  if (d.p && d.o) {
+    const cs = allConds(d);
+    let dom = 0;
+    for (const c of cs) dom += aff(c, d.p.ess) - aff(c, d.o.ess);
+    d.dominance = lerp(d.dominance, clamp(dom / 2.2, -1, 1), 1 - Math.pow(0.02, dt));
+  }
+
+  const sudden = d.t > SUDDEN_T;
+  for (const g of d.glims) {
+    if (g.ko) { g.koT += dtRaw; continue; }
+    const m = computeMods(d, g);
+    // instinct movement: press advances, retreat backs off
+    const target = g.homeX + (g.stance === 'press' ? g.face * W * 0.10 : (g.stance === 'retreat' ? -g.face * W * 0.06 : 0));
+    g.x = lerp(g.x, clamp(target, 46, W - 46), 1 - Math.pow(0.05, dt));
+    g.lean = lerp(g.lean, g.stance === 'press' ? 0.24 : (g.stance === 'retreat' ? -0.2 : 0), 1 - Math.pow(0.06, dt));
+    g.bob += dt * (2.2 + m.spdMod);
+    if (g.hop > 0) g.hop = Math.max(0, g.hop - dt * 4);
+    if (g.flash > 0) g.flash = Math.max(0, g.flash - dt * 3.4);
+    if (g.hurt > 0) g.hurt = Math.max(0, g.hurt - dt);
+    // mending is proportional to the Glim's own light pool, so sustain never outgrows damage
+    if (!sudden && m.regen > 0) g.light = Math.min(g.maxLight, g.light + clamp(m.regen, 0, 2.5) * g.maxLight * REGEN_SCALE * dt);
+    // ambient aura chip (pollen, wildfire, static)
+    if (m.aura > 0) {
+      const t2 = foeOf(d, g);
+      if (t2 && !t2.ko) {
+        t2.light = Math.max(0, t2.light - m.aura * dt * (1 + 0.02 * d.n));
+        if (Math.random() < dt * 6) burstParts(t2.x + rand(-16, 16), t2.y - rand(20, 70), 1, ESS[g.ess].c2);
+        if (t2.light <= 0) knockOut(d, t2, g, false);
+      }
+    }
+    g.charge += dt * g.spdBase * m.spdMod;
+    if (g.charge >= 1) { g.charge -= 1; attack(d, g); }
+  }
+
+  // KO handling / queues
+  for (const side of ['p', 'o']) {
+    const cur = d[side];
+    if (cur && cur.ko && cur.koT > 1.05) {
+      const q = side === 'p' ? d.pQueue : d.oQueue;
+      const next = q.find(g => g !== cur && !g.ko && !g.spent);
+      cur.spent = true;
+      if (next) {
+        d[side] = next;
+        d.glims = [d.p, d.o];
+        placeGlims(d);
+        next.entered = 0.001;
+        banner(ESS[next.ess].ic + ' ' + next.nm.toUpperCase(), side === 'p' ? 'YOUR SECOND GLIM' : 'THEY SEND ANOTHER');
+        sfxRune(WX_IDS[0]);
+      } else {
+        finishDuel(side === 'p' ? 'lose' : 'win');
+        return;
+      }
+    }
+  }
+
+  // stall guards: sudden light, then a hard tiebreak that can always end the duel
+  if (d.t > SUDDEN_T && !d.suddenAnnounced) {
+    d.suddenAnnounced = true;
+    banner('SUDDEN LIGHT', 'the sky burns hot — no more mending');
+  }
+  if (d.t >= HARD_T) {
+    d.tiebreak = true;
+    const pf = teamFraction(d, 'p'), of = teamFraction(d, 'o');
+    finishDuel(pf >= of ? 'win' : 'lose');
+    return;
+  }
+  updateAudioBeds(d, 1);
+}
+function teamFraction(d, side) {
+  const q = side === 'p' ? d.pQueue : d.oQueue;
+  let cur = 0, max = 0;
+  for (const g of q) { cur += Math.max(0, g.light); max += g.maxLight; }
+  return max > 0 ? cur / max : 0;
+}
+function updateAmbient(dt) {
+  for (const p of drops) {
+    p.y += p.spd * dt; p.x += 40 * dt;
+    if (p.y > H + 20) { p.y = -20; p.x = rand(-40, W); }
+    if (p.x > W + 40) p.x = -40;
+  }
+  for (const p of petals) {
+    p.a += dt * p.sw; p.x += Math.cos(p.a) * 22 * dt + 16 * dt; p.y += p.sp * dt;
+    if (p.y > H + 10) { p.y = -10; p.x = rand(0, W); }
+    if (p.x > W + 10) p.x = -10;
+  }
+  for (const m of motes) {
+    m.a += dt * 0.7; m.x += Math.cos(m.a) * m.sp * dt; m.y += Math.sin(m.a * 0.7) * m.sp * dt * 0.6;
+    if (m.x < -10) m.x = W + 10; if (m.x > W + 10) m.x = -10;
+    if (m.y < -10) m.y = H + 10; if (m.y > H + 10) m.y = -10;
+  }
+  for (const g of gusts) {
+    g.x += g.sp * dt;
+    if (g.x > W + g.len) { g.x = -g.len - rand(0, 200); g.y = rand(0, H); }
+  }
+}
+function updateVfx(d, dt) {
+  for (let i = d.bolts.length - 1; i >= 0; i--) { const b = d.bolts[i]; b.t += dt; if (b.t >= b.life) d.bolts.splice(i, 1); }
+  for (let i = d.forks.length - 1; i >= 0; i--) { const b = d.forks[i]; b.t += dt; if (b.t >= b.life) d.forks.splice(i, 1); }
+  for (let i = d.parts.length - 1; i >= 0; i--) {
+    const p = d.parts[i];
+    p.t -= dt; if (p.t <= 0) { d.parts.splice(i, 1); continue; }
+    p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 420 * dt; p.vx *= (1 - 1.6 * dt);
+  }
+  for (let i = d.pops.length - 1; i >= 0; i--) {
+    const p = d.pops[i];
+    p.t -= dt; if (p.t <= 0) { d.pops.splice(i, 1); continue; }
+    p.y += p.vy * dt; p.vy += 90 * dt;
+  }
+  for (let i = d.cracks.length - 1; i >= 0; i--) { const c = d.cracks[i]; c.t -= dt; if (c.t <= 0) d.cracks.splice(i, 1); }
+}
+function updateAudioBeds(d, on) {
+  if (!AC) return;
+  let rainA = 0, windA = 0;
+  const cs = on ? allConds(d) : [];
+  for (const c of cs) {
+    if (c === 'rain') rainA = 0.14;
+    if (c === 'gale') windA = 0.13;
+    if (c === 'fog') windA = Math.max(windA, 0.05);
+    if (c === 'quake') windA = Math.max(windA, 0.06);
+  }
+  setBed(rainGain, rainA);
+  setBed(windGain, windA);
+  // bass drone follows the dominant essence in the arena
+  let domE = d.p ? d.p.ess : 'tide', domV = -99;
+  for (const e of ESS_IDS) {
+    let v = 0;
+    for (const c of cs) v += aff(c, e);
+    if (v > domV) { domV = v; domE = e; }
+  }
+  const freqs = { ember: 82, tide: 62, verdant: 74, stone: 49, spark: 96, gloom: 55, gale: 88 };
+  setDrone(freqs[domE] || 70, on && cs.length ? 0.09 + 0.02 * Math.min(3, cs.length) : 0.03);
+}
+
+/* ============================= duel end ============================= */
+function finishDuel(result) {
+  const d = duel;
+  if (d.over) return;
+  d.over = true; d.active = false; d.result = result;
+  state = result === 'win' ? 'results' : 'gameover';
+  const disc = d.discovered.length;
+  let lum = 0;
+  if (result === 'win') {
+    lum = Math.round(18 + 7 * d.n + disc * 16 + Math.max(0, 60 - d.skyUsed / 4));
+    save.rank = Math.min(999, save.rank + 1);
+    save.best = Math.max(save.best, d.n);
+    save.duel = Math.max(save.duel, d.n + 1);
+    save.duels++;
+    sfxWin();
+    vibrate([20, 40, 20]);
+    window.TTG?.track('level_complete', { level: d.n, value: Math.round(d.skyUsed) });
+    window.TTG?.track('duel_won', { value: Math.round(d.skyUsed) });
+  } else {
+    lum = Math.round(6 + 2 * d.n + disc * 12);
+    window.TTG?.track('game_over', { level: d.n });
+  }
+  save.lum += lum;
+  persist();
+  showResults(result, lum, disc);
+}
+function showResults(result, lum, disc) {
+  const d = duel;
+  const isWin = result === 'win';
+  const listId = isWin ? 'resList' : 'goList';
+  if (isWin) {
+    const rt = $('resTitle'); if (rt) rt.textContent = d.tiebreak ? 'SKY CALLED IT' : 'DUEL WON';
+    const rl = $('resLum'); if (rl) rl.textContent = '+' + fmt(lum);
+    const rs = $('resSub'); if (rs) rs.textContent = 'lumens · ' + Math.round(d.skyUsed) + ' sky spent · ' + d.t.toFixed(0) + 's';
+  } else {
+    const gl = $('goLum'); if (gl) gl.textContent = '+' + fmt(lum);
+  }
+  const list = $(listId);
+  if (list) {
+    list.innerHTML = '';
+    if (disc > 0) {
+      for (const id of d.discovered) {
+        const e = IX_BY_ID[id];
+        if (!e) continue;
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = '<div class="ic">' + e.gl + '</div><div class="tx"><div class="nm">' + e.nm +
+          '</div><div class="ds">' + e.ds + '</div></div><div class="pr">📖</div>';
+        list.appendChild(div);
+      }
+    } else {
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.innerHTML = '<div class="ic">📖</div><div class="tx"><div class="nm">No new Almanac entries</div>' +
+        '<div class="ds">Stack two different weathers, or match one to your Glim\'s essence.</div></div>';
+      list.appendChild(div);
+    }
+  }
+  const nb = $('nextBtn');
+  if (nb) nb.textContent = 'DUEL ' + (d.n + 1) + ' ⚡';
+  showScreen(isWin ? 'results' : 'gameover');
+}
+function goHome() {
+  state = 'title';
+  duel = emptyDuel();
+  showScreen('title');
+  refreshTitle();
+  persist();
+}
+function refreshTitle() {
+  const g = GLIM_BY_ID[save.glim] || GLIMS[0];
+  const el = $('tDuel'); if (el) el.textContent = save.duel;
+  const eb = $('tBest'); if (eb) eb.textContent = save.best > 0 ? ('· best ' + save.best + ' · ' + ESS[g.ess].ic + ' ' + g.nm) : ('· ' + ESS[g.ess].ic + ' ' + g.nm);
+  const el2 = $('tLum'); if (el2) el2.textContent = fmt(save.lum);
+  const el3 = $('tAlm'); if (el3) el3.textContent = save.almanac.length + '/' + INTERACTIONS.length;
+}
+
+/* ============================= render helpers ============================= */
+function buildStars() {
+  stars = [];
+  const n = clamp(Math.round(W * H / 14000), 30, 150);
+  for (let i = 0; i < n; i++) stars.push({ x: rand(0, W), y: rand(0, H * 0.7), r: rand(0.6, 1.9), p: rand(0, TAU) });
+}
+function mixHex(a, b, t) {
+  const pa = [parseInt(a.substr(1, 2), 16), parseInt(a.substr(3, 2), 16), parseInt(a.substr(5, 2), 16)];
+  const pb = [parseInt(b.substr(1, 2), 16), parseInt(b.substr(3, 2), 16), parseInt(b.substr(5, 2), 16)];
+  const o = [0, 1, 2].map(i => Math.round(lerp(pa[i], pb[i], clamp(t, 0, 1))));
+  return 'rgb(' + o[0] + ',' + o[1] + ',' + o[2] + ')';
+}
+function mixHexToHex(a, b, t) {
+  const pa = [parseInt(a.substr(1, 2), 16), parseInt(a.substr(3, 2), 16), parseInt(a.substr(5, 2), 16)];
+  const pb = [parseInt(b.substr(1, 2), 16), parseInt(b.substr(3, 2), 16), parseInt(b.substr(5, 2), 16)];
+  const o = [0, 1, 2].map(i => clamp(Math.round(lerp(pa[i], pb[i], clamp(t, 0, 1))), 0, 255));
+  return '#' + o.map(v => v.toString(16).padStart(2, '0')).join('');
+}
+// which weathers are on screen right now (title screen runs a slow demo cycle)
+function viewConds() {
+  if (state === 'play' && duel.active) return allConds(duel);
+  const i = Math.floor(titleT / 6) % 7;
+  const j = (i + 3) % 7;
+  return [WX_IDS[i], WX_IDS[j]].sort();
+}
+function condStrength(id) {
+  if (state === 'play' && duel.active) {
+    let s = 0;
+    for (const w of duel.weather) if (w.id === id) s = Math.max(s, w.perm ? 1 : clamp(Math.min(w.t * 1.6, (w.dur - w.t) * 3.2, 1), 0, 1));
+    for (const z of duel.zones) if (z.id === id) s = Math.max(s, 0.55 * clamp(Math.min(z.t * 1.6, 1), 0, 1));
+    return s;
+  }
+  const f = (titleT % 6) / 6;
+  return clamp(Math.min(f * 4, (1 - f) * 4, 1), 0, 1) * 0.8;
+}
+
+/* ============================= draw: sky ============================= */
+function drawSky(cs) {
+  let top = '#111c40', bot = '#2a3c74';
+  for (const c of cs) {
+    const s = clamp(condStrength(c), 0, 1) * 0.85;
+    top = mixHexToHex(top, WX[c].sky[0], s * 0.8);
+    bot = mixHexToHex(bot, WX[c].sky[1], s * 0.8);
+  }
+  const g = cx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, top); g.addColorStop(1, bot);
+  cx.fillStyle = g;
+  cx.fillRect(0, 0, W, H);
+
+  const night = cs.indexOf('night') >= 0 ? condStrength('night') : 0;
+  if (night > 0.02) {
+    for (const s of stars) {
+      const tw = 0.5 + 0.5 * Math.sin(titleT * 2 + s.p);
+      cx.globalAlpha = night * tw * 0.9;
+      cx.fillStyle = '#eaf2ff';
+      cx.beginPath(); cx.arc(s.x, s.y, s.r, 0, TAU); cx.fill();
+    }
+    cx.globalAlpha = 1;
+    // a soft moon
+    cx.globalAlpha = night * 0.85;
+    cx.fillStyle = '#dcd2ff';
+    cx.beginPath(); cx.arc(W * 0.78, H * 0.14, Math.min(W, H) * 0.055, 0, TAU); cx.fill();
+    cx.globalAlpha = night * 0.30;
+    cx.beginPath(); cx.arc(W * 0.78, H * 0.14, Math.min(W, H) * 0.095, 0, TAU); cx.fill();
+    cx.globalAlpha = 1;
+  }
+  const sun = cs.indexOf('sun') >= 0 ? condStrength('sun') : 0;
+  if (sun > 0.02) {
+    const sx = W * 0.24, sy = H * 0.12, r = Math.min(W, H) * 0.07;
+    const rg = cx.createRadialGradient(sx, sy, 0, sx, sy, r * 3.4);
+    rg.addColorStop(0, 'rgba(255,240,180,' + (0.95 * sun).toFixed(3) + ')');
+    rg.addColorStop(0.35, 'rgba(255,205,90,' + (0.45 * sun).toFixed(3) + ')');
+    rg.addColorStop(1, 'rgba(255,190,70,0)');
+    cx.fillStyle = rg;
+    cx.beginPath(); cx.arc(sx, sy, r * 3.4, 0, TAU); cx.fill();
+    // sun shafts
+    cx.save();
+    cx.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 7; i++) {
+      const a = -0.55 + i * 0.115 + Math.sin(titleT * 0.35 + i) * 0.012;
+      cx.globalAlpha = sun * (0.10 + 0.05 * Math.sin(titleT * 1.1 + i));
+      cx.fillStyle = '#ffe9a8';
+      cx.beginPath();
+      cx.moveTo(sx, sy);
+      cx.lineTo(sx + Math.cos(a) * H * 1.5 - 26, sy + Math.sin(a) * H * 1.5 + H);
+      cx.lineTo(sx + Math.cos(a) * H * 1.5 + 26, sy + Math.sin(a) * H * 1.5 + H);
+      cx.closePath(); cx.fill();
+    }
+    cx.restore();
+  }
+  const bloom = cs.indexOf('bloom') >= 0 ? condStrength('bloom') : 0;
+  if (bloom > 0.02) {
+    cx.globalAlpha = bloom * 0.20;
+    const bg = cx.createRadialGradient(W / 2, H * 0.75, 10, W / 2, H * 0.75, W * 0.9);
+    bg.addColorStop(0, '#ffb6e6'); bg.addColorStop(1, 'rgba(255,140,220,0)');
+    cx.fillStyle = bg; cx.fillRect(0, 0, W, H);
+    cx.globalAlpha = 1;
+  }
+  // prism arc when Rain + Sun co-exist
+  if (cs.indexOf('rain') >= 0 && cs.indexOf('sun') >= 0) {
+    const a = Math.min(condStrength('rain'), condStrength('sun'));
+    const cols = ['#ff8a8a', '#ffd06b', '#a9ff9b', '#7fd4ff', '#c39bff'];
+    cx.save();
+    cx.globalCompositeOperation = 'lighter';
+    cx.lineWidth = Math.max(5, H * 0.012);
+    for (let i = 0; i < cols.length; i++) {
+      cx.globalAlpha = a * 0.30;
+      cx.strokeStyle = cols[i];
+      cx.beginPath();
+      cx.arc(W * 0.5, groundY + H * 0.30, H * 0.34 - i * cx.lineWidth, Math.PI * 1.06, Math.PI * 1.94);
+      cx.stroke();
+    }
+    cx.restore();
+  }
+}
+
+/* ============================= draw: arena ============================= */
+function drawArena(cs) {
+  const quake = cs.indexOf('quake') >= 0 ? condStrength('quake') : 0;
+  // backdrop hills
+  cx.fillStyle = 'rgba(10,16,40,.45)';
+  cx.beginPath();
+  cx.moveTo(0, groundY);
+  for (let x = 0; x <= W; x += 24) {
+    cx.lineTo(x, groundY - 40 - Math.sin(x * 0.008 + 1.3) * 26 - Math.sin(x * 0.021) * 12);
+  }
+  cx.lineTo(W, groundY); cx.closePath(); cx.fill();
+
+  // zones sit on the floor as pools of localised weather
+  for (const z of duel.zones) {
+    const c = WX[z.id].c;
+    const a = clamp(Math.min(z.t * 1.4, 1), 0, 1) * (z.pop || 1);
+    cx.save();
+    cx.globalCompositeOperation = 'lighter';
+    const rg = cx.createRadialGradient(z.x, z.y, 4, z.x, z.y, z.r);
+    rg.addColorStop(0, 'rgba(' + hexToRgbStr(c) + ',' + (0.42 * a).toFixed(3) + ')');
+    rg.addColorStop(1, 'rgba(' + hexToRgbStr(c) + ',0)');
+    cx.fillStyle = rg;
+    cx.beginPath(); cx.arc(z.x, z.y, z.r, 0, TAU); cx.fill();
+    cx.restore();
+    cx.strokeStyle = 'rgba(' + hexToRgbStr(c) + ',' + (0.55 * a).toFixed(3) + ')';
+    cx.lineWidth = 2;
+    cx.beginPath();
+    cx.ellipse(z.x, z.y + z.r * 0.42, z.r * 0.92, z.r * 0.3, 0, 0, TAU);
+    cx.stroke();
+    cx.globalAlpha = a * 0.9;
+    cx.font = '600 ' + Math.round(z.r * 0.42) + 'px system-ui, sans-serif';
+    cx.textAlign = 'center'; cx.textBaseline = 'middle';
+    cx.fillText(WX[z.id].ic, z.x, z.y - z.r * 0.34);
+    cx.globalAlpha = 1;
+  }
+
+  // ground slab
+  let gTop = '#2b3a5e', gBot = '#131b34';
+  for (const c of cs) {
+    const s = condStrength(c) * 0.6;
+    if (c === 'quake') { gTop = mixHexToHex(gTop, '#6b4630', s); }
+    if (c === 'bloom') { gTop = mixHexToHex(gTop, '#5c8f4a', s); }
+    if (c === 'rain') { gTop = mixHexToHex(gTop, '#2c4f6e', s); }
+    if (c === 'sun') { gTop = mixHexToHex(gTop, '#6a7a4c', s); }
+    if (c === 'night') { gTop = mixHexToHex(gTop, '#1a1740', s); }
+  }
+  const gg = cx.createLinearGradient(0, groundY - 10, 0, H);
+  gg.addColorStop(0, gTop); gg.addColorStop(1, gBot);
+  cx.fillStyle = gg;
+  cx.beginPath();
+  cx.moveTo(0, groundY + 6);
+  cx.quadraticCurveTo(W / 2, groundY - 12, W, groundY + 6);
+  cx.lineTo(W, H); cx.lineTo(0, H); cx.closePath(); cx.fill();
+  cx.strokeStyle = 'rgba(190,220,255,.22)'; cx.lineWidth = 2;
+  cx.beginPath(); cx.moveTo(0, groundY + 6); cx.quadraticCurveTo(W / 2, groundY - 12, W, groundY + 6); cx.stroke();
+
+  // fractures
+  for (const c of duel.cracks) {
+    const a = clamp(c.t / c.life, 0, 1);
+    cx.strokeStyle = 'rgba(255,150,70,' + (0.75 * a).toFixed(3) + ')';
+    cx.lineWidth = 2.4;
+    cx.beginPath();
+    let x = c.x, y = groundY + 8;
+    cx.moveTo(x, y);
+    for (let i = 0; i < 5; i++) {
+      x += Math.sin(c.seed + i * 2.1) * c.w * 0.32;
+      y += 9;
+      cx.lineTo(x, y);
+    }
+    cx.stroke();
+  }
+  if (quake > 0.05) {
+    cx.globalAlpha = quake * 0.5;
+    cx.fillStyle = 'rgba(190,140,90,.5)';
+    for (let i = 0; i < 22; i++) {
+      const px = (i * 97 + (titleT * 60) % W) % W;
+      const py = groundY + 10 + ((i * 53 + titleT * 90) % 60);
+      cx.fillRect(px, py, 3, 3);
+    }
+    cx.globalAlpha = 1;
+  }
+}
+
+/* ============================= draw: glims ============================= */
+function drawGlim(g) {
+  if (!g) return;
+  const e = ESS[g.ess];
+  const bob = Math.sin(g.bob) * 4;
+  const hop = -g.hop * 16;
+  const y = g.y + bob + hop;
+  const r = Math.max(24, Math.min(W, H) * 0.072);
+  cx.save();
+  cx.translate(g.x, y);
+  if (g.ko) {
+    const k = clamp(g.koT / 1.05, 0, 1);
+    cx.globalAlpha = 1 - k * 0.9;
+    cx.scale(1 - k * 0.35, 1 - k * 0.35);
+    cx.translate(0, k * 18);
+  }
+  // shadow
+  cx.globalAlpha *= 1;
+  cx.fillStyle = 'rgba(0,0,0,.3)';
+  cx.beginPath(); cx.ellipse(0, 6, r * 0.75, r * 0.20, 0, 0, TAU); cx.fill();
+  cx.rotate(g.lean * g.face * 0.5);
+  // aura ring reflecting comfort
+  const comf = clamp(g.comfort, -1.6, 1.6);
+  if (Math.abs(comf) > 0.15) {
+    cx.save();
+    cx.globalCompositeOperation = 'lighter';
+    const ac = comf > 0 ? e.c : '#6a7fa8';
+    const rg = cx.createRadialGradient(0, -r * 0.7, r * 0.2, 0, -r * 0.7, r * 1.7);
+    rg.addColorStop(0, 'rgba(' + hexToRgbStr(ac) + ',' + (0.30 * Math.min(1, Math.abs(comf))).toFixed(3) + ')');
+    rg.addColorStop(1, 'rgba(' + hexToRgbStr(ac) + ',0)');
+    cx.fillStyle = rg;
+    cx.beginPath(); cx.arc(0, -r * 0.7, r * 1.7, 0, TAU); cx.fill();
+    cx.restore();
+  }
+  // body
+  const squash = 1 + Math.sin(g.bob * 2) * 0.03 + g.hop * 0.12;
+  const bodyC = g.flash > 0 ? mixHex(e.c, '#ffffff', g.flash * 0.8) : e.c;
+  cx.save();
+  cx.scale(1 / squash, squash);
+  cx.fillStyle = bodyC;
+  cx.beginPath();
+  cx.moveTo(-r * 0.78, -r * 0.28);
+  cx.quadraticCurveTo(-r * 0.92, -r * 1.5, 0, -r * 1.52);
+  cx.quadraticCurveTo(r * 0.92, -r * 1.5, r * 0.78, -r * 0.28);
+  cx.quadraticCurveTo(r * 0.72, r * 0.12, 0, r * 0.10);
+  cx.quadraticCurveTo(-r * 0.72, r * 0.12, -r * 0.78, -r * 0.28);
+  cx.closePath(); cx.fill();
+  // belly
+  cx.fillStyle = 'rgba(255,255,255,.28)';
+  cx.beginPath(); cx.ellipse(0, -r * 0.42, r * 0.46, r * 0.40, 0, 0, TAU); cx.fill();
+  // crest (essence)
+  cx.fillStyle = e.c2;
+  if (g.ess === 'ember' || g.ess === 'spark') {
+    for (let i = -1; i <= 1; i++) {
+      cx.beginPath();
+      cx.moveTo(i * r * 0.28, -r * 1.36);
+      cx.lineTo(i * r * 0.28 - r * 0.14, -r * 1.86 - Math.abs(i) * -r * 0.12);
+      cx.lineTo(i * r * 0.28 + r * 0.14, -r * 1.36);
+      cx.closePath(); cx.fill();
+    }
+  } else if (g.ess === 'tide' || g.ess === 'gale') {
+    cx.beginPath();
+    cx.ellipse(0, -r * 1.5, r * 0.5, r * 0.2, Math.sin(titleT * 2) * 0.2, 0, TAU);
+    cx.fill();
+  } else if (g.ess === 'verdant' || g.ess === 'bloom') {
+    for (let i = -1; i <= 1; i += 2) {
+      cx.beginPath();
+      cx.ellipse(i * r * 0.24, -r * 1.52, r * 0.26, r * 0.13, i * 0.7, 0, TAU);
+      cx.fill();
+    }
+  } else {
+    cx.beginPath();
+    cx.arc(0, -r * 1.48, r * 0.24, 0, TAU); cx.fill();
+  }
+  // eyes — stance readable at a glance
+  const ey = -r * 0.82, ex = r * 0.26;
+  cx.fillStyle = '#12182c';
+  const sq = g.stance === 'press' ? 0.62 : (g.stance === 'retreat' ? 1.25 : 1);
+  for (let i = -1; i <= 1; i += 2) {
+    cx.beginPath();
+    cx.ellipse(i * ex + g.face * r * 0.06, ey, r * 0.10, r * 0.13 * sq, 0, 0, TAU);
+    cx.fill();
+  }
+  cx.fillStyle = 'rgba(255,255,255,.9)';
+  for (let i = -1; i <= 1; i += 2) {
+    cx.beginPath(); cx.arc(i * ex + g.face * r * 0.06 + r * 0.04, ey - r * 0.05, r * 0.033, 0, TAU); cx.fill();
+  }
+  // mouth shows instinct
+  cx.strokeStyle = 'rgba(20,26,48,.8)'; cx.lineWidth = Math.max(1.6, r * 0.055); cx.lineCap = 'round';
+  cx.beginPath();
+  if (g.stance === 'press') { cx.moveTo(-r * 0.16, -r * 0.44); cx.lineTo(r * 0.16, -r * 0.50); }
+  else if (g.stance === 'retreat') { cx.arc(0, -r * 0.38, r * 0.15, Math.PI * 1.15, Math.PI * 1.85); }
+  else { cx.arc(0, -r * 0.50, r * 0.15, 0.2, Math.PI - 0.2); }
+  cx.stroke();
+  cx.restore();
+  cx.restore();
+
+  // charge + light bar
+  const bw = Math.max(64, r * 2.1), bh = 8;
+  const bx = g.x - bw / 2, by = y - r * 2.3;
+  cx.fillStyle = 'rgba(6,10,26,.72)';
+  roundRect(bx - 2, by - 2, bw + 4, bh + 4, 5); cx.fill();
+  const frac = clamp(g.light / g.maxLight, 0, 1);
+  const lg = cx.createLinearGradient(bx, 0, bx + bw, 0);
+  lg.addColorStop(0, e.c); lg.addColorStop(1, e.c2);
+  cx.fillStyle = lg;
+  roundRect(bx, by, bw * frac, bh, 4); cx.fill();
+  cx.fillStyle = 'rgba(255,255,255,.55)';
+  roundRect(bx, by + bh + 3, bw * clamp(g.charge, 0, 1), 2.5, 1.2); cx.fill();
+  // stance chip
+  const label = g.ko ? 'resting' : (g.stance === 'press' ? '▲ pressing' : (g.stance === 'retreat' ? '▼ retreating' : '● holding'));
+  cx.font = '800 11px system-ui, sans-serif';
+  cx.textAlign = 'center'; cx.textBaseline = 'middle';
+  cx.fillStyle = g.stance === 'press' ? '#9dffb4' : (g.stance === 'retreat' ? '#ffc79a' : '#cfe0ff');
+  cx.fillText(label, g.x, by - 12);
+  cx.fillStyle = 'rgba(230,240,255,.85)';
+  cx.font = '800 10px system-ui, sans-serif';
+  cx.fillText(ESS[g.ess].ic + ' ' + g.nm, g.x, by - 25);
+}
+function roundRect(x, y, w, h, r) {
+  w = Math.max(0, w); h = Math.max(0, h);
+  r = Math.min(r, w / 2, h / 2);
+  cx.beginPath();
+  cx.moveTo(x + r, y);
+  cx.arcTo(x + w, y, x + w, y + h, r);
+  cx.arcTo(x + w, y + h, x, y + h, r);
+  cx.arcTo(x, y + h, x, y, r);
+  cx.arcTo(x, y, x + w, y, r);
+  cx.closePath();
+}
+
+/* ============================= draw: attacks & particles ============================= */
+function drawBolts() {
+  for (const b of duel.bolts) {
+    const k = clamp(b.t / b.life, 0, 1);
+    const e = ESS[b.ess];
+    const x = lerp(b.x, b.tx, k), y = lerp(b.y, b.ty, k) - Math.sin(k * Math.PI) * 40;
+    cx.save();
+    cx.globalCompositeOperation = 'lighter';
+    cx.globalAlpha = 1 - k * 0.35;
+    if (b.shape === 'press') {
+      cx.strokeStyle = e.c; cx.lineWidth = b.big ? 9 : 6; cx.lineCap = 'round';
+      cx.beginPath(); cx.moveTo(lerp(b.x, b.tx, Math.max(0, k - 0.25)), lerp(b.y, b.ty, Math.max(0, k - 0.25))); cx.lineTo(x, y); cx.stroke();
+    } else if (b.shape === 'retreat') {
+      for (let i = 0; i < 3; i++) {
+        const off = (i - 1) * 14;
+        cx.fillStyle = e.c2;
+        cx.beginPath(); cx.arc(x + off * (1 - k), y + off * 0.4, 4, 0, TAU); cx.fill();
+      }
+    } else {
+      const rg = cx.createRadialGradient(x, y, 1, x, y, b.big ? 20 : 14);
+      rg.addColorStop(0, '#ffffff'); rg.addColorStop(0.4, e.c2); rg.addColorStop(1, 'rgba(0,0,0,0)');
+      cx.fillStyle = rg;
+      cx.beginPath(); cx.arc(x, y, b.big ? 20 : 14, 0, TAU); cx.fill();
+    }
+    cx.restore();
+  }
+  // forked lightning along a conductive field
+  for (const f of duel.forks) {
+    const a = 1 - clamp(f.t / f.life, 0, 1);
+    cx.save();
+    cx.globalCompositeOperation = 'lighter';
+    cx.globalAlpha = a;
+    cx.strokeStyle = '#fff9c4'; cx.lineWidth = 3; cx.lineJoin = 'round';
+    for (let br = 0; br < 3; br++) {
+      cx.beginPath();
+      const steps = 7;
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const px = lerp(f.x, f.tx, t) + Math.sin(f.seed + i * 3.7 + br * 2) * 16 * Math.sin(t * Math.PI);
+        const py = lerp(f.y, f.ty, t) + Math.cos(f.seed + i * 2.9 + br * 3) * 20 * Math.sin(t * Math.PI);
+        if (i === 0) cx.moveTo(px, py); else cx.lineTo(px, py);
+      }
+      cx.globalAlpha = a * (br === 0 ? 1 : 0.45);
+      cx.stroke();
+    }
+    cx.restore();
+  }
+  for (const p of duel.parts) {
+    cx.globalAlpha = clamp(p.t / p.life, 0, 1);
+    cx.fillStyle = p.c;
+    cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, TAU); cx.fill();
+  }
+  cx.globalAlpha = 1;
+  cx.textAlign = 'center'; cx.textBaseline = 'middle';
+  for (const p of duel.pops) {
+    const a = clamp(p.t / 0.85, 0, 1);
+    cx.globalAlpha = a;
+    cx.font = '900 ' + p.sz + 'px system-ui, sans-serif';
+    cx.fillStyle = 'rgba(0,0,0,.55)';
+    cx.fillText(p.txt, p.x + 1.5, p.y + 1.5);
+    cx.fillStyle = p.c;
+    cx.fillText(p.txt, p.x, p.y);
+  }
+  cx.globalAlpha = 1;
+}
+
+/* ============================= draw: weather overlays ============================= */
+function drawWeatherOver(cs) {
+  const rain = cs.indexOf('rain') >= 0 ? condStrength('rain') : 0;
+  const gale = cs.indexOf('gale') >= 0 ? condStrength('gale') : 0;
+  const fog = cs.indexOf('fog') >= 0 ? condStrength('fog') : 0;
+  const night = cs.indexOf('night') >= 0 ? condStrength('night') : 0;
+  const bloom = cs.indexOf('bloom') >= 0 ? condStrength('bloom') : 0;
+  const slant = gale > 0.1 ? 0.55 : 0.12;
+
+  if (rain > 0.02) {
+    cx.save();
+    cx.strokeStyle = 'rgba(190,225,255,' + (0.42 * rain).toFixed(3) + ')';
+    cx.lineCap = 'round';
+    for (const p of drops) {
+      cx.lineWidth = p.w;
+      cx.beginPath();
+      cx.moveTo(p.x, p.y);
+      cx.lineTo(p.x - p.len * slant, p.y + p.len);
+      cx.stroke();
+    }
+    cx.restore();
+    // beads that run on the "lens"
+    cx.save();
+    cx.globalAlpha = rain * 0.5;
+    for (let i = 0; i < 14; i++) {
+      const bx = ((i * 137.5) % W);
+      const t = (titleT * (0.20 + (i % 5) * 0.05) + i * 0.31) % 1;
+      const by = t * H;
+      const rr = 2.4 + (i % 4);
+      const rg = cx.createRadialGradient(bx - rr * 0.3, by - rr * 0.3, 0.4, bx, by, rr);
+      rg.addColorStop(0, 'rgba(255,255,255,.55)');
+      rg.addColorStop(1, 'rgba(180,215,255,.06)');
+      cx.fillStyle = rg;
+      cx.beginPath(); cx.ellipse(bx, by, rr * 0.8, rr * 1.25, 0, 0, TAU); cx.fill();
+      cx.strokeStyle = 'rgba(200,230,255,.13)'; cx.lineWidth = rr * 0.6;
+      cx.beginPath(); cx.moveTo(bx, by - rr); cx.lineTo(bx, Math.max(0, by - rr - 34 * t)); cx.stroke();
+    }
+    cx.restore();
+    // splashes on the floor
+    cx.globalAlpha = rain * 0.4;
+    cx.strokeStyle = '#cfe9ff'; cx.lineWidth = 1.4;
+    for (let i = 0; i < 12; i++) {
+      const sx = ((i * 211 + Math.floor(titleT * 240)) % W);
+      const rr = 3 + ((i * 7 + Math.floor(titleT * 8)) % 7);
+      cx.beginPath(); cx.arc(sx, groundY + 14, rr, Math.PI, TAU); cx.stroke();
+    }
+    cx.globalAlpha = 1;
+  }
+  if (gale > 0.02) {
+    cx.save();
+    cx.strokeStyle = 'rgba(225,255,250,' + (0.28 * gale).toFixed(3) + ')';
+    cx.lineWidth = 2; cx.lineCap = 'round';
+    for (const g of gusts) {
+      cx.globalAlpha = g.o * gale;
+      cx.beginPath();
+      cx.moveTo(g.x, g.y);
+      cx.quadraticCurveTo(g.x + g.len * 0.5, g.y - 12, g.x + g.len, g.y);
+      cx.stroke();
+    }
+    cx.restore();
+  }
+  if (bloom > 0.02) {
+    for (const p of petals) {
+      cx.globalAlpha = bloom * 0.85;
+      cx.fillStyle = 'hsl(' + p.hue + ',85%,78%)';
+      cx.save();
+      cx.translate(p.x, p.y); cx.rotate(p.a);
+      cx.beginPath(); cx.ellipse(0, 0, p.r, p.r * 0.5, 0, 0, TAU); cx.fill();
+      cx.restore();
+    }
+    cx.globalAlpha = 1;
+  }
+  if (night > 0.02) {
+    const vg = cx.createRadialGradient(W / 2, arenaMid, Math.min(W, H) * 0.20, W / 2, arenaMid, Math.max(W, H) * 0.78);
+    vg.addColorStop(0, 'rgba(6,6,26,0)');
+    vg.addColorStop(1, 'rgba(4,4,20,' + (0.72 * night).toFixed(3) + ')');
+    cx.fillStyle = vg; cx.fillRect(0, 0, W, H);
+  }
+  if (fog > 0.02) {
+    // fog genuinely occludes: banded soft layers drifting across the arena
+    let dens = 0.52;
+    if (cs.indexOf('night') >= 0) dens = 0.72;
+    if (cs.indexOf('quake') >= 0) dens = 0.62;
+    cx.save();
+    cx.globalAlpha = fog * dens;
+    for (let i = 0; i < 6; i++) {
+      const y = arenaTop + (i / 6) * (groundY - arenaTop + 60);
+      const off = (titleT * (12 + i * 7) + i * 90) % (W + 320) - 160;
+      const g2 = cx.createLinearGradient(0, y - 40, 0, y + 60);
+      g2.addColorStop(0, 'rgba(214,226,242,0)');
+      g2.addColorStop(0.5, 'rgba(214,226,242,.55)');
+      g2.addColorStop(1, 'rgba(214,226,242,0)');
+      cx.fillStyle = g2;
+      cx.beginPath();
+      cx.ellipse(off, y, W * 0.62, 46 + i * 5, 0, 0, TAU);
+      cx.fill();
+      cx.beginPath();
+      cx.ellipse(off - W * 0.7, y + 14, W * 0.55, 40 + i * 4, 0, 0, TAU);
+      cx.fill();
+    }
+    cx.restore();
+  }
+  for (const m of motes) {
+    cx.globalAlpha = 0.22;
+    cx.fillStyle = '#dbe9ff';
+    cx.beginPath(); cx.arc(m.x, m.y, m.r, 0, TAU); cx.fill();
+  }
+  cx.globalAlpha = 1;
+}
+
+/* ============================= draw: HUD ============================= */
+let dragging = null;    // {id, x, y, sx, sy, moved}
+function drawTray() {
+  const d = duel;
+  const playing = state === 'play' && d.active;
+  // dominance tug-of-war
+  if (playing && d.p && d.o) {
+    const y = Math.max(38, arenaTop - 46);
+    const bw = W - 40, bx = 20, bh = 12;
+    cx.fillStyle = 'rgba(6,10,26,.62)';
+    roundRect(bx - 2, y - 2, bw + 4, bh + 4, 8); cx.fill();
+    const gL = cx.createLinearGradient(bx, 0, bx + bw, 0);
+    gL.addColorStop(0, ESS[d.p.ess].c); gL.addColorStop(0.5, '#243055'); gL.addColorStop(1, ESS[d.o.ess].c);
+    cx.fillStyle = gL;
+    roundRect(bx, y, bw, bh, 6); cx.fill();
+    const mx = bx + bw * (0.5 - d.dominance * 0.5);
+    cx.fillStyle = '#ffffff';
+    roundRect(mx - 3, y - 5, 6, bh + 10, 3); cx.fill();
+    cx.font = '800 10px system-ui, sans-serif';
+    cx.textAlign = 'left'; cx.textBaseline = 'bottom';
+    cx.fillStyle = 'rgba(220,235,255,.85)';
+    cx.fillText('YOUR SKY', bx, y - 6);
+    cx.textAlign = 'right';
+    cx.fillText('THEIR SKY', bx + bw, y - 6);
+    // active condition strip
+    const cs = allConds(d);
+    let cxp = bx;
+    const chY = y + bh + 8;
+    cx.textAlign = 'left'; cx.textBaseline = 'top';
+    for (const c of cs) {
+      cx.font = '600 15px system-ui, sans-serif';
+      const label = WX[c].ic;
+      cx.fillStyle = 'rgba(8,14,34,.7)';
+      roundRect(cxp, chY, 30, 22, 7); cx.fill();
+      cx.strokeStyle = 'rgba(' + hexToRgbStr(WX[c].c) + ',.8)'; cx.lineWidth = 1.5;
+      roundRect(cxp, chY, 30, 22, 7); cx.stroke();
+      cx.fillText(label, cxp + 6, chY + 3);
+      cxp += 34;
+      if (cxp > W - 60) break;
+    }
+    if (d.activeIx.length) {
+      cx.textAlign = 'center'; cx.textBaseline = 'top';
+      cx.font = '900 12px system-ui, sans-serif';
+      let ty = chY + 26;
+      for (let i = 0; i < Math.min(3, d.activeIx.length); i++) {
+        const e = d.activeIx[i];
+        cx.fillStyle = e.kind === 'counter' ? '#ffd08a' : '#9dffd0';
+        cx.fillText(e.gl + ' ' + e.nm.toUpperCase(), W / 2, ty);
+        ty += 15;
+      }
+    }
+  }
+  if (!playing) return;
+
+  // sky meter
+  const sb = skyBar;
+  cx.fillStyle = 'rgba(6,10,26,.72)';
+  roundRect(sb.x - 3, sb.y - 3, sb.w + 6, sb.h + 6, 9); cx.fill();
+  const frac = clamp(d.sky / d.skyMax, 0, 1);
+  const sg = cx.createLinearGradient(sb.x, 0, sb.x + sb.w, 0);
+  sg.addColorStop(0, '#7fe6ff'); sg.addColorStop(0.6, '#7aa0ff'); sg.addColorStop(1, '#c39bff');
+  cx.fillStyle = sg;
+  roundRect(sb.x, sb.y, sb.w * frac, sb.h, 6); cx.fill();
+  if (d.denyT > 0) {
+    cx.strokeStyle = 'rgba(255,120,120,' + clamp(d.denyT * 2, 0, 1).toFixed(2) + ')';
+    cx.lineWidth = 2.5;
+    roundRect(sb.x - 3, sb.y - 3, sb.w + 6, sb.h + 6, 9); cx.stroke();
+  }
+  cx.font = '800 ' + Math.round(sb.h * 0.78) + 'px system-ui, sans-serif';
+  cx.textAlign = 'center'; cx.textBaseline = 'middle';
+  cx.fillStyle = '#08122c';
+  cx.fillText('SKY ' + Math.floor(d.sky) + ' / ' + d.skyMax + (d.drought ? '  🏜️' : ''), sb.x + sb.w / 2, sb.y + sb.h / 2 + 0.5);
+
+  // runes
+  for (const s of runeSlots) {
+    const w = WX[s.id];
+    const cost = runeCost(s.id, false);
+    const afford = d.sky >= cost;
+    const activeW = d.weather.find(x => x.id === s.id);
+    const r = s.r;
+    cx.save();
+    if (dragging && dragging.id === s.id) cx.globalAlpha = 0.4;
+    cx.fillStyle = afford ? 'rgba(18,28,62,.92)' : 'rgba(14,20,40,.75)';
+    roundRect(s.x - r, s.y - r, r * 2, r * 2, r * 0.34); cx.fill();
+    cx.lineWidth = activeW ? 3 : 2;
+    cx.strokeStyle = activeW ? w.c : (afford ? 'rgba(150,190,255,.45)' : 'rgba(120,140,180,.25)');
+    roundRect(s.x - r, s.y - r, r * 2, r * 2, r * 0.34); cx.stroke();
+    if (activeW && !activeW.perm) {
+      cx.strokeStyle = w.c; cx.lineWidth = 3;
+      cx.beginPath();
+      cx.arc(s.x, s.y, r * 0.92, -Math.PI / 2, -Math.PI / 2 + TAU * clamp(activeW.t / activeW.dur, 0, 1));
+      cx.stroke();
+    }
+    cx.globalAlpha *= afford ? 1 : 0.5;
+    cx.font = '600 ' + Math.round(r * 0.95) + 'px system-ui, sans-serif';
+    cx.textAlign = 'center'; cx.textBaseline = 'middle';
+    cx.fillText(w.ic, s.x, s.y - r * 0.12);
+    cx.font = '800 ' + Math.max(9, Math.round(r * 0.30)) + 'px system-ui, sans-serif';
+    cx.fillStyle = afford ? '#bcd8ff' : '#7f90b4';
+    cx.fillText(cost, s.x, s.y + r * 0.62);
+    cx.restore();
+  }
+  // drag ghost
+  if (dragging && dragging.moved) {
+    const w = WX[dragging.id];
+    const inArena = dragging.y < skyBar.y - 14;
+    const rr = Math.max(52, Math.min(W, H) * 0.17);
+    cx.save();
+    cx.globalAlpha = inArena ? 0.55 : 0.25;
+    cx.globalCompositeOperation = 'lighter';
+    const rg = cx.createRadialGradient(dragging.x, dragging.y, 4, dragging.x, dragging.y, rr);
+    rg.addColorStop(0, 'rgba(' + hexToRgbStr(w.c) + ',.55)');
+    rg.addColorStop(1, 'rgba(' + hexToRgbStr(w.c) + ',0)');
+    cx.fillStyle = rg;
+    cx.beginPath(); cx.arc(dragging.x, dragging.y, rr, 0, TAU); cx.fill();
+    cx.restore();
+    cx.globalAlpha = 0.95;
+    cx.font = '600 ' + Math.round(runeR * 0.95) + 'px system-ui, sans-serif';
+    cx.textAlign = 'center'; cx.textBaseline = 'middle';
+    cx.fillText(w.ic, dragging.x, dragging.y);
+    cx.font = '800 11px system-ui, sans-serif';
+    cx.fillStyle = '#cfe4ff';
+    cx.fillText(inArena ? 'drop = local zone (' + runeCost(dragging.id, true) + ')' : 'release on rune = whole arena',
+      dragging.x, dragging.y + runeR + 12);
+    cx.globalAlpha = 1;
+  }
+}
+
+/* ============================= draw ============================= */
+function draw() {
+  const cs = viewConds();
+  cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  cx.clearRect(0, 0, W, H);
+  cx.save();
+  if (duel.shake > 0.3) {
+    cx.translate(rand(-duel.shake, duel.shake), rand(-duel.shake, duel.shake) * 0.6);
+  }
+  drawSky(cs);
+  drawArena(cs);
+  if (state === 'play' && duel.active) {
+    for (const g of duel.glims) drawGlim(g);
+    drawBolts();
+  } else {
+    drawTitleScene();
+  }
+  drawWeatherOver(cs);
+  cx.restore();
+  drawTray();
+  if (duel.flash > 0.01) {
+    cx.fillStyle = 'rgba(' + duel.flashCol + ',' + (duel.flash * 0.42).toFixed(3) + ')';
+    cx.fillRect(0, 0, W, H);
+  }
+  if (duel.timeScale < 0.9) {
+    cx.fillStyle = 'rgba(255,255,255,.06)';
+    cx.fillRect(0, 0, W, H);
+  }
+}
+let demoGlims = [];
+function drawTitleScene() {
+  if (demoGlims.length !== 2) {
+    demoGlims = [
+      { side: 'p', ess: 'tide', nm: 'Rilltide', x: W * 0.3, y: groundY, homeX: W * 0.3, face: 1, bob: 0, hop: 0, lean: 0, flash: 0, ko: false, koT: 0, comfort: 0.5, stance: 'hold', light: 1, maxLight: 1, charge: 0 },
+      { side: 'o', ess: 'ember', nm: 'Cindermote', x: W * 0.7, y: groundY, homeX: W * 0.7, face: -1, bob: 1.6, hop: 0, lean: 0, flash: 0, ko: false, koT: 0, comfort: -0.4, stance: 'hold', light: 1, maxLight: 1, charge: 0 },
+    ];
+  }
+  const cs = viewConds();
+  for (const g of demoGlims) {
+    g.x = g.homeX = g.side === 'p' ? W * 0.30 : W * 0.70;
+    g.y = groundY;
+    g.bob += 0.03;
+    let a = 0;
+    for (const c of cs) a += aff(c, g.ess);
+    g.comfort = a;
+    g.stance = a > 0.42 ? 'press' : (a < -0.42 ? 'retreat' : 'hold');
+    g.lean = lerp(g.lean, g.stance === 'press' ? 0.22 : (g.stance === 'retreat' ? -0.18 : 0), 0.08);
+  }
+  for (const g of demoGlims) {
+    const savedY = g.y;
+    drawGlimSimple(g);
+    g.y = savedY;
+  }
+}
+function drawGlimSimple(g) {
+  const e = ESS[g.ess];
+  const r = Math.max(20, Math.min(W, H) * 0.062);
+  const bob = Math.sin(g.bob) * 4;
+  cx.save();
+  cx.translate(g.x, g.y + bob);
+  cx.fillStyle = 'rgba(0,0,0,.3)';
+  cx.beginPath(); cx.ellipse(0, 6, r * 0.7, r * 0.18, 0, 0, TAU); cx.fill();
+  cx.rotate(g.lean * g.face * 0.5);
+  cx.fillStyle = e.c;
+  cx.beginPath();
+  cx.moveTo(-r * 0.78, -r * 0.28);
+  cx.quadraticCurveTo(-r * 0.92, -r * 1.5, 0, -r * 1.52);
+  cx.quadraticCurveTo(r * 0.92, -r * 1.5, r * 0.78, -r * 0.28);
+  cx.quadraticCurveTo(r * 0.72, r * 0.12, 0, r * 0.10);
+  cx.quadraticCurveTo(-r * 0.72, r * 0.12, -r * 0.78, -r * 0.28);
+  cx.closePath(); cx.fill();
+  cx.fillStyle = 'rgba(255,255,255,.28)';
+  cx.beginPath(); cx.ellipse(0, -r * 0.42, r * 0.46, r * 0.40, 0, 0, TAU); cx.fill();
+  cx.fillStyle = '#12182c';
+  const sq = g.stance === 'press' ? 0.62 : (g.stance === 'retreat' ? 1.25 : 1);
+  for (let i = -1; i <= 1; i += 2) {
+    cx.beginPath(); cx.ellipse(i * r * 0.26 + g.face * r * 0.06, -r * 0.82, r * 0.10, r * 0.13 * sq, 0, 0, TAU); cx.fill();
+  }
+  cx.restore();
+}
+
+/* ============================= input ============================= */
+function evPos(e) {
+  const r = cv.getBoundingClientRect ? cv.getBoundingClientRect() : { left: 0, top: 0 };
+  return { x: (e.clientX || 0) - (r.left || 0), y: (e.clientY || 0) - (r.top || 0) };
+}
+function runeAt(x, y) {
+  for (const s of runeSlots) {
+    const pad = 6;
+    if (x >= s.x - s.r - pad && x <= s.x + s.r + pad && y >= s.y - s.r - pad && y <= s.y + s.r + pad) return s;
+  }
+  return null;
+}
+function onDown(e) {
+  userGestured = true;
+  initAudio(); resumeAudio();
+  if (state !== 'play' || !duel.active) return;
+  const p = evPos(e);
+  const s = runeAt(p.x, p.y);
+  if (s) {
+    dragging = { id: s.id, x: p.x, y: p.y, sx: p.x, sy: p.y, moved: false };
+    try { if (cv.setPointerCapture && e.pointerId !== undefined) cv.setPointerCapture(e.pointerId); } catch (err) {}
+  }
+}
+function onMove(e) {
+  if (!dragging) return;
+  const p = evPos(e);
+  dragging.x = p.x; dragging.y = p.y;
+  const dx = p.x - dragging.sx, dy = p.y - dragging.sy;
+  if (dx * dx + dy * dy > 18 * 18) dragging.moved = true;
+}
+function onUp(e) {
+  if (!dragging) return;
+  const drag = dragging;
+  dragging = null;
+  if (state !== 'play' || !duel.active) return;
+  const p = evPos(e);
+  const inArena = p.y < skyBar.y - 14 && p.y > 10;
+  if (drag.moved && inArena) {
+    if (castWeather(duel, drag.id, { zone: true, x: p.x, y: clamp(p.y, arenaTop, groundY + 10), side: 'p' })) {
+      toast(WX[drag.id].ic + ' <b>' + WX[drag.id].nm + '</b> zone placed');
+    }
+  } else {
+    const s = runeAt(p.x, p.y);
+    if (!drag.moved || (s && s.id === drag.id)) {
+      if (castWeather(duel, drag.id, { side: 'p' })) bossReact(duel, drag.id);
+    }
+  }
+}
+function onCancel() { dragging = null; }
+
+/* ============================= meta screens ============================= */
+let almTab = 0;
+function renderAlmanac() {
+  const grid = $('almGrid');
+  const cnt = $('almCount');
+  if (cnt) cnt.textContent = save.almanac.length + ' / ' + INTERACTIONS.length + ' interactions recorded';
+  $('almT0').classList.toggle('on', almTab === 0);
+  $('almT1').classList.toggle('on', almTab === 1);
+  if (!grid) return;
+  grid.innerHTML = '';
+  for (const e of INTERACTIONS) {
+    const isWW = e.a.charAt(0) === 'w' && e.b.charAt(0) === 'w';
+    if ((almTab === 0) !== isWW) continue;
+    const got = save.almanac.indexOf(e.id) >= 0;
+    const div = document.createElement('div');
+    div.className = 'alm ' + (got ? 'got' : 'miss');
+    div.innerHTML = '<div class="gl">' + (got ? e.gl : '❔') + '</div>' +
+      '<div class="an">' + (got ? e.nm : '???') + '</div>' +
+      '<div class="ad">' + (got ? e.ds : (e.kind === 'counter' ? 'a counter, undiscovered' : 'a combo, undiscovered')) + '</div>';
+    grid.appendChild(div);
+  }
+}
+function renderTeam() {
+  const list = $('teamList');
+  if (!list) return;
+  list.innerHTML = '';
+  for (const g of GLIMS) {
+    const unlocked = g.unlock <= save.rank;
+    const sel = save.glim === g.id;
+    const btn = document.createElement('button');
+    btn.className = 'item' + (sel ? ' sel' : '') + (unlocked ? '' : ' locked');
+    btn.innerHTML = '<div class="ic">' + ESS[g.ess].ic + '</div><div class="tx"><div class="nm">' + g.nm +
+      ' <span style="opacity:.7;font-weight:700">· ' + ESS[g.ess].nm + '</span></div><div class="ds">' + g.ds + '</div></div>' +
+      '<div class="pr">' + (unlocked ? (sel ? '✔' : 'PICK') : '🔒 ' + g.unlock + ' wins') + '</div>';
+    btn.addEventListener('click', () => {
+      initAudio(); resumeAudio();
+      if (!unlocked) { sfxDeny(); return; }
+      save.glim = g.id; persist(); sfxBuy(); renderTeam(); refreshTitle();
+    });
+    list.appendChild(btn);
+  }
+}
+function renderShop() {
+  const list = $('shopList');
+  const sl = $('shopLum'); if (sl) sl.textContent = fmt(save.lum);
+  if (!list) return;
+  list.innerHTML = '';
+  for (const u of UPG) {
+    const lvl = save.up[u.id] | 0;
+    const maxed = lvl >= u.max;
+    const cost = upCost(u, lvl);
+    const btn = document.createElement('button');
+    btn.className = 'item' + (maxed ? ' locked' : '');
+    btn.innerHTML = '<div class="ic">' + u.ic + '</div><div class="tx"><div class="nm">' + u.nm +
+      ' <span style="opacity:.7;font-weight:700">Lv ' + lvl + '/' + u.max + '</span></div><div class="ds">' + u.ds + '</div></div>' +
+      '<div class="pr">' + (maxed ? 'MAX' : '✨ ' + fmt(cost)) + '</div>';
+    btn.addEventListener('click', () => {
+      initAudio(); resumeAudio();
+      if (maxed || save.lum < cost) { sfxDeny(); return; }
+      save.lum -= cost;
+      save.up[u.id] = lvl + 1;
+      persist(); sfxBuy(); vibrate(12);
+      window.TTG?.track('upgrade_bought', { value: u.id });
+      renderShop(); refreshTitle();
+    });
+    list.appendChild(btn);
+  }
+  const info = document.createElement('div');
+  info.className = 'item';
+  info.innerHTML = '<div class="ic">📊</div><div class="tx"><div class="nm">Current sky</div><div class="ds">' +
+    'Capacity ' + skyCap() + ' · refill ' + skyRate().toFixed(1) + '/s · rune duration ×' + durMul().toFixed(2) +
+    ' · ' + maxGlobal() + ' weathers can hang at once</div></div>';
+  list.appendChild(info);
+}
+
+/* ============================= wiring ============================= */
+cv.addEventListener('pointerdown', onDown);
+cv.addEventListener('pointermove', onMove);
+cv.addEventListener('pointerup', onUp);
+cv.addEventListener('pointercancel', onCancel);
+cv.addEventListener('pointerleave', onCancel);
+window.addEventListener('pointerdown', () => { userGestured = true; initAudio(); resumeAudio(); }, { capture: true });
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('touchmove', e => { if (e.cancelable) e.preventDefault(); }, { passive: false });
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', () => setTimeout(resize, 60));
+document.addEventListener('visibilitychange', () => {
+  onCancel();
+  if (document.hidden) { persist(); }
+  else { lastT = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now(); resumeAudio(); }
+});
+window.addEventListener('pagehide', persist);
+window.addEventListener('blur', onCancel);
+
+$('playBtn').addEventListener('click', () => { initAudio(); resumeAudio(); sfxBuy(); startDuel(save.duel); });
+$('teamBtn').addEventListener('click', () => { initAudio(); state = 'team'; showScreen('team'); renderTeam(); });
+$('almBtn').addEventListener('click', () => { initAudio(); state = 'almanac'; showScreen('almanac'); renderAlmanac(); });
+$('shopBtn').addEventListener('click', () => { initAudio(); state = 'shop'; showScreen('shop'); renderShop(); });
+$('almT0').addEventListener('click', () => { almTab = 0; renderAlmanac(); });
+$('almT1').addEventListener('click', () => { almTab = 1; renderAlmanac(); });
+$('almBackBtn').addEventListener('click', () => { sfxBuy(); goHome(); });
+$('teamBackBtn').addEventListener('click', () => { sfxBuy(); goHome(); });
+$('shopBackBtn').addEventListener('click', () => { sfxBuy(); goHome(); });
+$('nextBtn').addEventListener('click', () => { initAudio(); resumeAudio(); startDuel(save.duel); });
+$('retryBtn').addEventListener('click', () => { initAudio(); resumeAudio(); startDuel(duel.n || save.duel); });
+$('resHomeBtn').addEventListener('click', () => { sfxBuy(); goHome(); });
+$('goHomeBtn').addEventListener('click', () => { sfxBuy(); goHome(); });
+$('quitBtn').addEventListener('click', () => { sfxDeny(); goHome(); });
+$('muteBtn').addEventListener('click', () => { initAudio(); setMute(!save.muted); });
+$('muteBtn').textContent = save.muted ? '🔇' : '🔊';
+$('muteBtn').classList.add('show');
+
+/* ============================= main loop ============================= */
+let lastT = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+function loop(t) {
+  // Re-arm in `finally`: one bad frame must never permanently blank the game.
+  try {
+    const now = (typeof t === 'number') ? t : ((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now());
+    let dt = (now - lastT) / 1000;
+    lastT = now;
+    if (!isFinite(dt) || dt < 0) dt = 0;
+    dt = Math.min(0.05, dt);
+    update(dt);
+    draw();
+  } catch (e) {
+    if (++frameErrs <= 3 && window.console) console.error('[ww] frame error:', e);
+  } finally {
+    requestAnimationFrame(loop);
+  }
+}
+
+/* ============================= boot ============================= */
+resize();
+seedAmbient();
+buildStars();
+showScreen('title');
+refreshTitle();
+setMute(save.muted);
+requestAnimationFrame(loop);
+
+/* test hook — harmless in production, lets the verification harness drive the sim */
+window.__WW = {
+  get state() { return state; }, set state(v) { state = v; },
+  get duel() { return duel; },
+  get save() { return save; },
+  INTERACTIONS, IX_BY_KEY, IX_BY_ID, resolvePair, WX, WX_IDS, ESS_IDS, GLIMS, AFF, aff, matchup, UPG, upCost,
+  startDuel, castWeather, runeCost, update, draw, resize, finishDuel, goHome, duelPlan, allConds, condsFor,
+  computeMods, teamFraction, skyCap, skyRate, maxGlobal, persist,
+  SUDDEN_T, HARD_T, CHEAPEST_RUNE,
+  onDown, onMove, onUp, runeSlots: () => runeSlots, get dragging() { return dragging; },
+};
+})();
+</script>
+</body>
+</html>
+

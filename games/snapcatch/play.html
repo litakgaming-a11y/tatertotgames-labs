@@ -1,0 +1,2425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Snapcatch — TaterTot Games Labs</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E📸%3C/text%3E%3C/svg%3E">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;overflow:hidden;background:#0b1220;
+    touch-action:none;-webkit-user-select:none;user-select:none;
+    -webkit-tap-highlight-color:transparent;overscroll-behavior:none;position:fixed;
+    font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;color:#eaf4ff}
+  canvas#c{display:block;position:absolute;inset:0;touch-action:none}
+
+  .hide{display:none!important}
+
+  /* ---------- top HUD ---------- */
+  #hud{position:fixed;left:0;right:0;top:0;z-index:4;pointer-events:none;
+    padding:calc(8px + env(safe-area-inset-top)) calc(10px + env(safe-area-inset-left)) 0 calc(10px + env(safe-area-inset-right));
+    display:flex;flex-direction:column;gap:6px}
+  .row{display:flex;align-items:center;gap:8px}
+  .chip{background:rgba(8,18,34,.62);border:1px solid rgba(150,205,255,.30);border-radius:14px;
+    padding:5px 10px;font:800 12px/1.1 inherit;letter-spacing:.4px;color:#dff0ff;
+    backdrop-filter:blur(4px);white-space:nowrap}
+  .chip b{color:#ffd166}
+  #contract{flex:1;overflow:hidden;text-overflow:ellipsis;font-weight:700;color:#cfe6ff}
+  #contract.done{color:#8fe6a6;border-color:rgba(120,240,160,.5)}
+  #timeBar{height:5px;border-radius:4px;background:rgba(255,255,255,.14);overflow:hidden;margin-top:2px}
+  #timeFill{height:100%;width:100%;background:linear-gradient(90deg,#6ee7ff,#ffd166);transition:none}
+  #filmDots{display:flex;gap:3px;flex-wrap:wrap;max-width:46vw}
+  .fd{width:7px;height:11px;border-radius:2px;background:#ffd166;box-shadow:0 0 4px rgba(255,209,102,.6)}
+  .fd.used{background:rgba(255,255,255,.16);box-shadow:none}
+
+  /* ---------- bottom controls ---------- */
+  #ctl{position:fixed;left:0;right:0;bottom:0;z-index:5;
+    padding:10px calc(12px + env(safe-area-inset-left)) calc(12px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-right));
+    display:flex;align-items:center;justify-content:center;gap:10px;pointer-events:none}
+  #ctl>*{pointer-events:auto}
+  .btn{min-width:56px;height:56px;border-radius:18px;border:1px solid rgba(160,215,255,.32);
+    background:rgba(12,26,48,.72);color:#dff0ff;font:800 11px/1.15 inherit;letter-spacing:.4px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    backdrop-filter:blur(6px);cursor:pointer;padding:0 8px}
+  .btn .ic{font-size:20px;line-height:1}
+  .btn:active{transform:scale(.93);background:rgba(30,60,100,.85)}
+  .btn.on{background:rgba(255,209,102,.24);border-color:rgba(255,209,102,.75);color:#ffe9b0}
+  .btn.dim{opacity:.42}
+  .btn small{font:700 9px/1 inherit;opacity:.75}
+  #shutter{width:78px;height:78px;min-width:78px;border-radius:50%;border:4px solid rgba(255,255,255,.9);
+    background:radial-gradient(circle at 38% 32%,#ff9f68,#e3452f 70%);box-shadow:0 6px 22px rgba(0,0,0,.45);
+    display:flex;align-items:center;justify-content:center;font-size:30px;cursor:pointer}
+  #shutter:active{transform:scale(.9)}
+  #shutter.empty{background:radial-gradient(circle at 38% 32%,#7a8ba0,#3b4b60 70%)}
+
+  /* ---------- developed photo card ---------- */
+  #card{position:fixed;z-index:8;right:8px;top:50%;width:min(58vw,240px);
+    transform:translate(120%,-50%) rotate(4deg);transition:transform .55s cubic-bezier(.16,1.1,.3,1);
+    background:#f7f2e6;border-radius:8px;padding:8px 8px 34px;box-shadow:0 14px 40px rgba(0,0,0,.55);
+    pointer-events:none}
+  #card.in{transform:translate(0,-50%) rotate(-2deg)}
+  #card canvas{width:100%;display:block;border-radius:4px;background:#1b2740}
+  #cardCap{position:absolute;left:10px;right:56px;bottom:9px;color:#3b3225;font:800 11px/1.15 inherit;
+    text-align:left;overflow:hidden}
+  #cardCap span{display:block;font:700 9px/1.2 inherit;opacity:.65;margin-top:2px}
+  #cardStamp{position:absolute;right:8px;bottom:6px;width:44px;height:30px;border-radius:6px;
+    display:flex;align-items:center;justify-content:center;font:900 20px/1 inherit;color:#fff;
+    background:#3b7fae;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+
+  /* ---------- full screens ---------- */
+  #screen{position:fixed;inset:0;z-index:10;overflow-y:auto;overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+    background:linear-gradient(180deg,rgba(9,18,34,.80) 0%,rgba(7,13,24,.90) 55%,rgba(5,10,20,.95) 100%);
+    backdrop-filter:blur(3px);
+    padding:calc(16px + env(safe-area-inset-top)) 14px calc(84px + env(safe-area-inset-bottom));
+    display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+  #screen.hide{display:none!important}
+  h1{font:900 clamp(30px,10vw,52px)/1 inherit;letter-spacing:1px;
+    background:linear-gradient(180deg,#fff2c8,#ffb84d 55%,#ff7a3d);-webkit-background-clip:text;
+    background-clip:text;color:transparent;filter:drop-shadow(0 3px 0 rgba(0,0,0,.35))}
+  .tag{font:700 13px/1.35 inherit;color:#9fc6ea;max-width:34ch}
+  h2{font:900 20px/1.2 inherit;color:#ffd166;margin-top:4px}
+  .sub{font:700 12px/1.4 inherit;color:#9fc6ea;max-width:36ch}
+  .big{min-width:210px;padding:15px 22px;border-radius:22px;border:none;cursor:pointer;
+    font:900 19px/1 inherit;letter-spacing:1px;color:#12233c;
+    background:linear-gradient(180deg,#ffe9a8,#ffc247);box-shadow:0 6px 0 #b5761e,0 12px 26px rgba(0,0,0,.45);
+    animation:pulse 1.9s ease-in-out infinite}
+  .big:active{transform:translateY(4px);box-shadow:0 2px 0 #b5761e}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+  .lnk{background:rgba(255,255,255,.07);border:1px solid rgba(160,215,255,.28);color:#cfe6ff;
+    border-radius:16px;padding:10px 18px;font:800 13px/1 inherit;cursor:pointer}
+  .lnk:active{background:rgba(255,255,255,.16)}
+  .rowbtns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .panel{width:100%;max-width:560px;background:rgba(10,22,42,.6);border:1px solid rgba(140,200,255,.2);
+    border-radius:16px;padding:12px;text-align:left}
+  .stats{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+
+  /* album */
+  .spGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;width:100%;max-width:600px}
+  .spCard{background:rgba(10,24,44,.65);border:1px solid rgba(140,200,255,.22);border-radius:14px;
+    padding:8px;cursor:pointer;text-align:center}
+  .spCard.full{border-color:rgba(255,209,102,.8);box-shadow:0 0 14px rgba(255,209,102,.25)}
+  .spCard h3{font:900 13px/1.2 inherit;color:#eaf4ff;margin:4px 0 2px}
+  .spCard p{font:700 10px/1.2 inherit;color:#8fb6d8}
+  .thumbs{display:flex;gap:4px;justify-content:center;margin-top:6px}
+  .thumbs canvas{width:34px;height:26px;border-radius:4px;background:#16233b;border:1px solid rgba(255,255,255,.12)}
+  .thumbs .empty{width:34px;height:26px;border-radius:4px;background:rgba(255,255,255,.05);
+    border:1px dashed rgba(255,255,255,.18)}
+  .photoRow{display:flex;gap:10px;align-items:center;background:rgba(255,255,255,.045);
+    border-radius:12px;padding:8px;margin-bottom:8px}
+  .photoRow canvas{width:104px;height:78px;border-radius:6px;background:#16233b;flex:none}
+  .photoRow .meta{flex:1;min-width:0}
+  .photoRow .meta b{display:block;font:900 13px/1.2 inherit;color:#ffe6a8}
+  .photoRow .meta i{display:block;font:700 10px/1.3 inherit;color:#9fc6ea;font-style:normal;margin-top:2px}
+  .gradeTag{font:900 15px/1 inherit;padding:5px 8px;border-radius:8px;color:#fff;flex:none}
+
+  /* upgrades */
+  .upRow{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid rgba(255,255,255,.08)}
+  .upRow:last-child{border-bottom:none}
+  .upRow .ui{font-size:24px;flex:none;width:30px;text-align:center}
+  .upRow .ut{flex:1;min-width:0}
+  .upRow .ut b{display:block;font:900 13px/1.2 inherit;color:#eaf4ff}
+  .upRow .ut i{display:block;font:700 10px/1.3 inherit;color:#8fb6d8;font-style:normal}
+  .pips{display:flex;gap:3px;margin-top:4px}
+  .pip{width:14px;height:5px;border-radius:3px;background:rgba(255,255,255,.16)}
+  .pip.on{background:#ffd166}
+  .buy{flex:none;border:none;border-radius:12px;padding:9px 11px;font:900 12px/1 inherit;
+    color:#12233c;background:linear-gradient(180deg,#ffe9a8,#ffc247);cursor:pointer}
+  .buy:disabled{background:rgba(255,255,255,.12);color:#7f97b3;cursor:default}
+
+  /* results */
+  .shotList{width:100%;max-width:560px;text-align:left}
+  #badge{position:fixed;bottom:calc(10px + env(safe-area-inset-bottom));left:50%;
+    transform:translateX(-50%);font:700 12px inherit;color:#bfe3ff;text-decoration:none;
+    background:rgba(10,30,60,.6);border:1px solid rgba(160,220,255,.35);border-radius:20px;
+    padding:6px 14px;letter-spacing:.5px;backdrop-filter:blur(4px);z-index:11;white-space:nowrap}
+  #badge:active{background:rgba(40,80,130,.75)}
+  #toast{position:fixed;left:50%;top:32%;transform:translate(-50%,-50%) scale(.7);z-index:9;
+    font:900 26px/1.1 inherit;color:#fff;text-shadow:0 3px 12px rgba(0,0,0,.7);opacity:0;
+    pointer-events:none;text-align:center;white-space:nowrap}
+  #toast.show{animation:toastPop 1.15s ease-out forwards}
+  @keyframes toastPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}
+    18%{opacity:1;transform:translate(-50%,-50%) scale(1.12)}
+    32%{transform:translate(-50%,-50%) scale(1)}
+    75%{opacity:1}100%{opacity:0;transform:translate(-50%,-90%) scale(1)}}
+  @media (min-width:760px){ #card{width:270px} }
+</style>
+<script src="/analytics.js" defer></script>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="hud" class="hide">
+  <div class="row">
+    <div class="chip" id="cLevel">EXP 1</div>
+    <div class="chip" id="cBiome">Glade</div>
+    <div class="chip" id="cLum"><b>0</b> ✦</div>
+    <div style="flex:1"></div>
+    <div class="chip" id="cMute" style="pointer-events:auto;cursor:pointer">🔊</div>
+  </div>
+  <div class="row">
+    <div class="chip" id="contract">—</div>
+  </div>
+  <div class="row" style="gap:6px">
+    <div id="filmDots"></div>
+  </div>
+  <div id="timeBar"><div id="timeFill"></div></div>
+</div>
+
+<div id="ctl" class="hide">
+  <button class="btn" id="bLure"><span class="ic">🍯</span>LURE<small id="lureN">3</small></button>
+  <button class="btn" id="bFlash"><span class="ic">⚡</span>FLASH</button>
+  <button id="shutter" aria-label="Shutter">📷</button>
+  <button class="btn" id="bWide"><span class="ic">🔍</span>WIDE</button>
+  <button class="btn" id="bSubj"><span class="ic">🎯</span>SUBJ</button>
+</div>
+
+<div id="card"><canvas id="pc" width="260" height="196"></canvas>
+  <div id="cardCap">—<span>—</span></div><div id="cardStamp">A</div></div>
+
+<div id="toast"></div>
+<div id="screen"></div>
+<a id="badge" href="../../">🥔 TaterTot Games Labs</a>
+
+<script>
+'use strict';
+/* ================================================================
+   SNAPCATCH — catch the instant, not the creature
+   TaterTot Games Labs · Wave 7 · The Glimmerwild
+   ================================================================ */
+
+const TAU = Math.PI * 2;
+const SAVE_KEY = 'ttg_snapcatch';
+const FONT = '"Trebuchet MS","Segoe UI",system-ui,sans-serif';
+
+/* world is a wide habitat band; sky above, terrain below */
+const WORLD_W = 1400, WORLD_H = 620;
+const GROUND_Y = 468;            /* world y of the ground / water line */
+const REF_R = 36;                /* reference glim radius for zoom calibration */
+const SWING_TIME = 0.30;         /* seconds to swing the camera onto a subject */
+const EXP_TIME = 52;             /* expedition length, seconds */
+const BULLET_TIME = 0.42;        /* real seconds of slow-mo after the shutter */
+const CATCH_AT = 55;             /* grade needed to befriend */
+const PERFECT_AT = 92;           /* S grade */
+const GRACE_HALF = 0.50;         /* seconds beyond the perfect band before timing = 0 */
+/* The habitable box for a Glim's BASE position. Chosen so that base + the
+   biggest pose offset (arc 210 up, arc 160 down, dash 150 sideways) can never
+   put a PEAK outside the world rect — which is exactly what min zoom shows.
+   That is the reachability guarantee: no peak can happen where you can't look. */
+const BX_MIN = 170, BX_MAX = WORLD_W - 170;   /* 170 .. 1230 */
+const BY_MIN = 225, BY_MAX = 452;
+const MAX_ARC_UP = 210, MAX_ARC_DOWN = 160, MAX_DASH = 150;
+
+/* ---------------- tiny helpers ---------------- */
+const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
+const clamp01 = v => v < 0 ? 0 : (v > 1 ? 1 : v);
+const lerp = (a, b, t) => a + (b - a) * t;
+const rnd = (a, b) => a + Math.random() * (b - a);
+const irnd = (a, b) => a + ((Math.random() * (b - a + 1)) | 0);
+const pick = arr => arr[(Math.random() * arr.length) | 0];
+const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+const easeInOut = t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+function vib(ms) { if (navigator.vibrate) { try { navigator.vibrate(ms); } catch (e) {} } }
+function track(n, p) { try { window.TTG && window.TTG.track && window.TTG.track(n, p || {}); } catch (e) {} }
+/* deterministic hash-noise: same seed+i always gives the same value */
+function hnoise(seed, i) {
+  let h = (seed * 374761393 + i * 668265263) >>> 0;
+  h = (h ^ (h >>> 13)) >>> 0; h = (h * 1274126177) >>> 0;
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+
+/* ---------------- essences ---------------- */
+const ESS = {
+  ember:   { name: 'Ember',   c1: '#ff8a3d', c2: '#ffd8a0', glow: '#ff5a1f', emo: '🔥' },
+  tide:    { name: 'Tide',    c1: '#41c7f5', c2: '#bff2ff', glow: '#1f8fe0', emo: '💧' },
+  verdant: { name: 'Verdant', c1: '#6fdc76', c2: '#dcffae', glow: '#33a94f', emo: '🌿' },
+  stone:   { name: 'Stone',   c1: '#b89b79', c2: '#eddcc2', glow: '#8a6b4a', emo: '🪨' },
+  spark:   { name: 'Spark',   c1: '#ffe14d', c2: '#fffbc4', glow: '#ffc400', emo: '⚡' },
+  gloom:   { name: 'Gloom',   c1: '#9d80d8', c2: '#e0d0ff', glow: '#6a3fa5', emo: '🌙' },
+  gale:    { name: 'Gale',    c1: '#cfe9ff', c2: '#ffffff', glow: '#79b6ea', emo: '🌀' }
+};
+
+/* ---------------- species + behaviours ----------------
+   Every behaviour: tele = telegraph seconds, lead = seconds from action
+   start to the PEAK instant, dur = whole action, ph = perfect half-window. */
+const SPECIES = [
+  { id: 'emberkit', name: 'Emberkit', ess: 'ember', body: 'kit', r: 36, skittish: 0, noct: 0,
+    biomes: ['glade', 'ridge'], blurb: 'A pocketful of warm coals with paws.',
+    bh: [
+      { id: 'bask',   name: 'Basking',    rar: 1, tele: 1.05, lead: 0.30, dur: 2.30, ph: 0.16, arc: 0,   flare: 0.6, spin: 0,   dash: 0,   ring: 0, fx: 'ember' },
+      { id: 'flare',  name: 'Flare-Up',   rar: 2, tele: 1.20, lead: 0.26, dur: 2.20, ph: 0.14, arc: 14,  flare: 1.7, spin: 0,   dash: 0,   ring: 1, fx: 'ember' },
+      { id: 'leap',   name: 'Ember Leap', rar: 3, tele: 1.40, lead: 0.34, dur: 2.50, ph: 0.12, arc: 150, flare: 1.1, spin: 0.5, dash: 90,  ring: 0, fx: 'ember' }
+    ] },
+  { id: 'tidewisp', name: 'Tidewisp', ess: 'tide', body: 'wisp', r: 34, skittish: 1, noct: 0,
+    biomes: ['tidepool'], blurb: 'Half water, half giggle. Startles easily.',
+    bh: [
+      { id: 'drift',  name: 'Drifting',   rar: 1, tele: 1.00, lead: 0.30, dur: 2.20, ph: 0.16, arc: 14,  flare: 0.5, spin: 0,   dash: 0,   ring: 0, fx: 'water' },
+      { id: 'splash', name: 'Splashdown', rar: 2, tele: 1.15, lead: 0.24, dur: 2.10, ph: 0.14, arc: 46,  flare: 1.1, spin: 0,   dash: 0,   ring: 1, fx: 'water' },
+      { id: 'breach', name: 'The Breach', rar: 3, tele: 1.45, lead: 0.36, dur: 2.60, ph: 0.11, arc: 210, flare: 1.3, spin: 0.3, dash: 60,  ring: 1, fx: 'water' }
+    ] },
+  { id: 'sproutle', name: 'Sproutle', ess: 'verdant', body: 'sprout', r: 32, skittish: 0, noct: 0,
+    biomes: ['glade', 'tidepool'], blurb: 'Grows a new hat every morning.',
+    bh: [
+      { id: 'graze',  name: 'Grazing',    rar: 1, tele: 1.05, lead: 0.28, dur: 2.20, ph: 0.16, arc: 0,   flare: 0.4, spin: 0,   dash: 0,   ring: 0, fx: 'leaf' },
+      { id: 'bloom',  name: 'Full Bloom', rar: 2, tele: 1.25, lead: 0.28, dur: 2.40, ph: 0.14, arc: 8,   flare: 1.9, spin: 0,   dash: 0,   ring: 1, fx: 'leaf' },
+      { id: 'spin',   name: 'Seed Spin',  rar: 3, tele: 1.40, lead: 0.32, dur: 2.40, ph: 0.12, arc: 130, flare: 0.9, spin: 2.4, dash: 40,  ring: 0, fx: 'leaf' }
+    ] },
+  { id: 'cobblet', name: 'Cobblet', ess: 'stone', body: 'rock', r: 40, skittish: 0, noct: 0,
+    biomes: ['ridge'], blurb: 'Naps for centuries. Wakes up cheerful.',
+    bh: [
+      { id: 'trundle', name: 'Trundling',   rar: 1, tele: 1.10, lead: 0.26, dur: 2.20, ph: 0.17, arc: 6,   flare: 0.3, spin: 0.2, dash: 60, ring: 0, fx: 'dust' },
+      { id: 'stomp',   name: 'Ground Stomp',rar: 2, tele: 1.20, lead: 0.20, dur: 2.00, ph: 0.14, arc: 55,  flare: 1.0, spin: 0,   dash: 0,  ring: 1, fx: 'dust' },
+      { id: 'roll',    name: 'Boulder Roll',rar: 3, tele: 1.45, lead: 0.34, dur: 2.60, ph: 0.12, arc: 70,  flare: 0.6, spin: 3.2, dash: 150,ring: 0, fx: 'dust' }
+    ] },
+  { id: 'voltmote', name: 'Voltmote', ess: 'spark', body: 'orb', r: 30, skittish: 0, noct: 0,
+    biomes: ['ridge'], blurb: 'A held breath of static, wearing a grin.',
+    bh: [
+      { id: 'crackle',   name: 'Crackling',  rar: 1, tele: 1.00, lead: 0.22, dur: 2.00, ph: 0.16, arc: 10, flare: 0.9, spin: 0,   dash: 0,   ring: 0, fx: 'spark' },
+      { id: 'discharge', name: 'Discharge',  rar: 2, tele: 1.25, lead: 0.18, dur: 2.10, ph: 0.13, arc: 0,  flare: 2.2, spin: 0,   dash: 0,   ring: 2, fx: 'spark' },
+      { id: 'arcdash',   name: 'Arc Dash',   rar: 3, tele: 1.35, lead: 0.26, dur: 2.30, ph: 0.11, arc: 90, flare: 1.4, spin: 0.4, dash: 150, ring: 1, fx: 'spark' }
+    ] },
+  { id: 'gloomwing', name: 'Gloomwing', ess: 'gloom', body: 'moth', r: 34, skittish: 0, noct: 1,
+    biomes: ['glade'], blurb: 'Only unfolds when the sky goes soft and dark.',
+    bh: [
+      { id: 'glowdrift', name: 'Glowdrift',  rar: 1, tele: 1.05, lead: 0.30, dur: 2.30, ph: 0.16, arc: 24, flare: 0.7, spin: 0,   dash: 30, ring: 0, fx: 'moon' },
+      { id: 'shadefold', name: 'Shade Fold', rar: 2, tele: 1.20, lead: 0.26, dur: 2.20, ph: 0.14, arc: 10, flare: 1.3, spin: 0,   dash: 0,  ring: 1, fx: 'moon' },
+      { id: 'moonburst', name: 'Moonburst',  rar: 3, tele: 1.45, lead: 0.30, dur: 2.50, ph: 0.12, arc: 96, flare: 2.4, spin: 0.6, dash: 0,  ring: 2, fx: 'moon' }
+    ] },
+  { id: 'galefeather', name: 'Galefeather', ess: 'gale', body: 'bird', r: 33, skittish: 1, noct: 0,
+    biomes: ['tidepool', 'ridge'], blurb: 'Never quite lands. Hates a sudden lens.',
+    bh: [
+      { id: 'hover',   name: 'Hovering',  rar: 1, tele: 1.00, lead: 0.28, dur: 2.10, ph: 0.16, arc: 28,   flare: 0.5, spin: 0,   dash: 20,  ring: 0, fx: 'wind' },
+      { id: 'glide',   name: 'Long Glide',rar: 2, tele: 1.20, lead: 0.30, dur: 2.40, ph: 0.14, arc: 64,   flare: 0.8, spin: 0,   dash: 150, ring: 0, fx: 'wind' },
+      { id: 'skydive', name: 'Skydive',   rar: 3, tele: 1.40, lead: 0.28, dur: 2.50, ph: 0.11, arc: -160, flare: 1.2, spin: 0.9, dash: 120, ring: 1, fx: 'wind' }
+    ] },
+  { id: 'prismhart', name: 'Prismhart', ess: 'gale', body: 'prism', r: 44, skittish: 0, noct: 0, legend: 1,
+    biomes: ['glade', 'tidepool', 'ridge'], blurb: 'Seen once an expedition, if at all.',
+    bh: [
+      { id: 'prismburst', name: 'Prismburst', rar: 4, tele: 1.60, lead: 0.32, dur: 2.60, ph: 0.13, arc: 120, flare: 2.8, spin: 0.7, dash: 0, ring: 2, fx: 'prism' }
+    ] }
+];
+const SP_BY_ID = {};
+SPECIES.forEach((s, i) => { s.idx = i; SP_BY_ID[s.id] = s; s.bh.forEach((b, j) => { b.idx = j; b.sp = i; }); });
+const LEGEND_IDX = SPECIES.findIndex(s => s.legend);
+
+/* precompute the arc exponent so the visual apex lands exactly on `lead` */
+for (const s of SPECIES) for (const b of s.bh) {
+  const act = Math.max(0.05, b.dur - b.tele);
+  const apexA = clamp(b.lead / act, 0.05, 0.95);
+  b.k = Math.log(0.5) / Math.log(apexA);     /* sin(PI * a^k) peaks at a = apexA */
+  b.peakT = b.tele + b.lead;                 /* absolute seconds from action start */
+  b.act = act;
+}
+
+/* ---------------- biomes ---------------- */
+const BIOMES = [
+  { id: 'glade', name: 'Sunbell Glade', emo: '🌳',
+    sky: ['#7fd0ff', '#cdf2ff', '#f3ffd9'], nightSky: ['#131a3a', '#25204f', '#3a2c58'],
+    ground: '#4f9a4f', ground2: '#2f6b39', water: 0, mirror: 0.0 },
+  { id: 'tidepool', name: 'Glasswater Shelf', emo: '🌊',
+    sky: ['#4fbdf0', '#a8ecff', '#e6fbff'], nightSky: ['#0d1836', '#152a4f', '#20415f'],
+    ground: '#2e7fa8', ground2: '#17456a', water: 1, mirror: 1.0 },
+  { id: 'ridge', name: 'Thunderhead Ridge', emo: '⛰️',
+    sky: ['#5b6f96', '#93a8c4', '#d3dced'], nightSky: ['#0e1226', '#1b2140', '#2b3355'],
+    ground: '#6b6c78', ground2: '#3d4257', water: 0, mirror: 0.0 }
+];
+const WEATHERS = ['clear', 'clear', 'rain', 'fog', 'storm', 'wind'];
+
+/* ---------------- upgrades ---------------- */
+const UPGRADES = [
+  { id: 'zoom',    ic: '🔭', name: 'Zoom Range',    desc: 'Reach further, fill the frame.',      max: 5, cost: l => 60 + l * 70 },
+  { id: 'shutter', ic: '⏱️', name: 'Shutter Window', desc: 'Wider perfect-timing band.',          max: 5, cost: l => 80 + l * 85 },
+  { id: 'lure',    ic: '🍯', name: 'Lure Potency',   desc: 'Bigger pull, more lures per trip.',   max: 5, cost: l => 55 + l * 60 },
+  { id: 'film',    ic: '🎞️', name: 'Film',           desc: 'More shots on every expedition.',     max: 5, cost: l => 70 + l * 75 }
+];
+const filmFor = l => 8 + l * 2;              /* 8 .. 18 */
+const luresFor = l => 2 + Math.ceil(l / 2);  /* 2 .. 5  */
+const lureRadFor = l => 150 + l * 55;
+const shutterMulFor = l => 1 + l * 0.16;     /* perfect band x1 .. x1.8 */
+const zoomMulFor = l => 1.05 + l * 0.19;     /* max zoom, relative to perfect-fill zoom */
+
+/* ---------------- persistence (try/catch + schema repair) ---------------- */
+function blankStore() {
+  return { v: 1, muted: false, lumens: 0, best: 0, level: 1, shots: 0, caught: 0, perfect: 0,
+    sawPerfect: false, up: { zoom: 0, shutter: 0, lure: 0, film: 0 }, album: {}, recent: [] };
+}
+function sanePhoto(p) {
+  if (!p || typeof p !== 'object') return null;
+  const sp = p.sp | 0, bh = p.bh | 0;
+  if (!SPECIES[sp] || !SPECIES[sp].bh[bh]) return null;
+  const num = (v, d) => (typeof v === 'number' && isFinite(v)) ? v : d;
+  const oth = Array.isArray(p.oth) ? p.oth.slice(0, 3).map(o => Array.isArray(o) && o.length >= 3
+    ? [clamp(o[0] | 0, 0, SPECIES.length - 1), num(o[1], 0), num(o[2], 0)] : [0, 0, 0]) : [];
+  return {
+    sp, bh, t: num(p.t, 0), bx: num(p.bx, WORLD_W / 2), by: num(p.by, GROUND_Y - 60),
+    cx: num(p.cx, WORLD_W / 2), cy: num(p.cy, WORLD_H / 2), cz: Math.max(1, num(p.cz, 1)),
+    fov: Math.max(1, num(p.fov, WORLD_W)), idle: !!p.idle,
+    title: typeof p.title === 'string' ? p.title.slice(0, 60) : (SPECIES[sp].name + ' — ' + SPECIES[sp].bh[bh].name),
+    ar: Math.max(0.2, num(p.ar, 0.6)), biome: clamp(p.biome | 0, 0, BIOMES.length - 1),
+    weather: (typeof p.weather === 'string' && WEATHERS.indexOf(p.weather) >= 0) ? p.weather : 'clear',
+    night: !!p.night, flash: !!p.flash, seed: num(p.seed, 1) | 0, face: num(p.face, 1) >= 0 ? 1 : -1,
+    lightning: clamp01(num(p.lightning, 0)),
+    oth, g: clamp(num(p.g, 0), 0, 100), lt: typeof p.lt === 'string' ? p.lt.slice(0, 2) : 'C',
+    fr: clamp01(num(p.fr, 0)), ti: clamp01(num(p.ti, 0)), ra: clamp01(num(p.ra, 0)),
+    cb: Array.isArray(p.cb) ? p.cb.filter(x => typeof x === 'string').slice(0, 5) : [],
+    cap: typeof p.cap === 'string' ? p.cap.slice(0, 90) : ''
+  };
+}
+function loadStore() {
+  const d = blankStore();
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return d;
+    const o = JSON.parse(raw);
+    if (!o || typeof o !== 'object') return d;
+    d.muted = !!o.muted;
+    d.lumens = Math.max(0, o.lumens | 0);
+    d.best = Math.max(0, o.best | 0);
+    d.level = Math.max(1, o.level | 0);
+    d.shots = Math.max(0, o.shots | 0);
+    d.caught = Math.max(0, o.caught | 0);
+    d.perfect = Math.max(0, o.perfect | 0);
+    d.sawPerfect = !!o.sawPerfect;
+    if (o.up && typeof o.up === 'object') {
+      for (const u of UPGRADES) d.up[u.id] = clamp(o.up[u.id] | 0, 0, u.max);
+    }
+    if (o.album && typeof o.album === 'object') {
+      for (const k of Object.keys(o.album)) {
+        const parts = k.split(':');
+        if (parts.length !== 2) continue;
+        const sp = SP_BY_ID[parts[0]];
+        if (!sp || !sp.bh.some(b => b.id === parts[1])) continue;
+        const ph = sanePhoto(o.album[k]);
+        if (ph) d.album[k] = ph;
+      }
+    }
+    if (Array.isArray(o.recent)) {
+      d.recent = o.recent.map(sanePhoto).filter(Boolean).slice(0, 12);
+    }
+  } catch (e) { return blankStore(); }
+  return d;
+}
+let store = loadStore();
+function saveStore() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(store)); } catch (e) {} }
+
+/* ---------------- canvas + DPR-aware sizing ---------------- */
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+const view = { W: 320, H: 480, dpr: 1, s1: 1, ar: 0.66 };
+let resizing = false;
+function resize() {
+  if (resizing) return;
+  resizing = true;
+  try {
+    const w = Math.max(1, window.innerWidth | 0);
+    const h = Math.max(1, window.innerHeight | 0);
+    if (w < 2 || h < 2) return;                       /* guard 0-size */
+    view.dpr = clamp(window.devicePixelRatio || 1, 1, 3);
+    view.W = w; view.H = h; view.ar = w / h;
+    cv.width = Math.max(1, Math.round(w * view.dpr));
+    cv.height = Math.max(1, Math.round(h * view.dpr));
+    cv.style.width = w + 'px';                        /* EXPLICIT css pixel sizing */
+    cv.style.height = h + 'px';
+    ctx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
+    view.s1 = Math.min(w / WORLD_W, h / (WORLD_H * 1.05));
+    clampCam();
+  } catch (e) { /* never let a resize kill the loop */ }
+  finally { resizing = false; }
+}
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', () => setTimeout(resize, 60));
+
+/* zoom needed for a reference glim to perfectly fill the frame */
+function zFill() { return (0.16 * Math.min(view.W, view.H)) / Math.max(1e-6, REF_R * view.s1); }
+function zMax() { return Math.max(1.2, zFill() * zoomMulFor(store.up.zoom)); }
+
+/* ---------------- audio (WebAudio synth, hostile-safe) ---------------- */
+let AC = null, master = null, noiseBuf = null;
+let muted = store.muted;
+function ensureAudio() {
+  if (!AC) {
+    try {
+      const Ctor = window.AudioContext || window.webkitAudioContext;
+      if (!Ctor) return;
+      AC = new Ctor();
+      master = AC.createGain();
+      master.gain.value = muted ? 0 : 0.5;
+      master.connect(AC.destination);
+      noiseBuf = AC.createBuffer(1, Math.max(1, (AC.sampleRate * 0.6) | 0), AC.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    } catch (e) { AC = null; master = null; noiseBuf = null; }
+  }
+  try { if (AC && AC.state === 'suspended') AC.resume(); } catch (e) {}
+}
+function setMuted(m) {
+  muted = m; store.muted = m; saveStore();
+  try { if (master) master.gain.value = m ? 0 : 0.5; } catch (e) {}
+  const el = document.getElementById('cMute'); if (el) el.textContent = m ? '🔇' : '🔊';
+}
+function tone(f0, f1, dur, type, vol, when) {
+  if (!AC || !master || muted) return;
+  try {
+    const t = AC.currentTime + (when || 0);
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(Math.max(1, f0), t);
+    if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(Math.max(1, f1), t + dur);
+    g.gain.setValueAtTime(Math.max(0.0001, vol), t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t + dur + 0.02);
+  } catch (e) {}
+}
+function noiseHit(dur, vol, freq, q, when, type) {
+  if (!AC || !master || !noiseBuf || muted) return;
+  try {
+    const t = AC.currentTime + (when || 0);
+    const src = AC.createBufferSource(); src.buffer = noiseBuf;
+    const f = AC.createBiquadFilter(); f.type = type || 'bandpass';
+    f.frequency.value = freq; f.Q.value = q || 1;
+    const g = AC.createGain();
+    g.gain.setValueAtTime(Math.max(0.0001, vol), t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start(t); src.stop(t + dur + 0.02);
+  } catch (e) {}
+}
+const sfx = {
+  tap()      { tone(560, 780, 0.05, 'sine', 0.10); },
+  clack()    { noiseHit(0.035, 0.34, 2600, 1.2); noiseHit(0.05, 0.20, 700, 0.8, 0.03);
+               tone(240, 120, 0.05, 'square', 0.09); },
+  advance()  { for (let i = 0; i < 5; i++) noiseHit(0.02, 0.10, 1500 + i * 180, 4, 0.10 + i * 0.035); },
+  focus()    { tone(1200, 1500, 0.04, 'sine', 0.05); },
+  telegraph(){ tone(420, 620, 0.10, 'triangle', 0.07); },
+  peak()     { tone(880, 1320, 0.10, 'sine', 0.10); },
+  flash()    { noiseHit(0.09, 0.24, 5200, 0.8); tone(1800, 600, 0.10, 'sine', 0.10); },
+  lure()     { tone(520, 880, 0.14, 'sine', 0.14); tone(780, 1320, 0.18, 'triangle', 0.08, 0.06); },
+  zoom()     { tone(300, 340, 0.05, 'sine', 0.04); },
+  spook()    { tone(520, 180, 0.20, 'triangle', 0.14); noiseHit(0.18, 0.08, 900, 1); },
+  befriend() { [660, 880, 1100].forEach((f, i) => tone(f, f, 0.16, 'sine', 0.17, i * 0.07));
+               tone(1760, 1760, 0.30, 'triangle', 0.08, 0.2); },
+  perfect()  { [784, 988, 1175, 1568].forEach((f, i) => tone(f, f, 0.22, 'triangle', 0.18, i * 0.09));
+               tone(2350, 2350, 0.45, 'sine', 0.09, 0.4); noiseHit(0.5, 0.06, 6000, 0.7, 0.02); },
+  thunder()  { noiseHit(0.9, 0.20, 160, 0.6, 0, 'lowpass'); tone(70, 40, 0.8, 'sine', 0.10, 0.05); },
+  end()      { [523, 659, 784, 1047].forEach((f, i) => tone(f, f, 0.20, 'triangle', 0.16, i * 0.11)); },
+  buy()      { tone(700, 1050, 0.10, 'square', 0.10); tone(1400, 1750, 0.16, 'sine', 0.09, 0.07); },
+  page()     { noiseHit(0.10, 0.09, 2200, 1.2); }
+};
+
+/* ================================================================
+   PURE GEOMETRY + GRADING  (no randomness, no globals read)
+   ================================================================ */
+
+/* pose of a behaviour at `t` seconds after the action started */
+function poseAt(bh, t) {
+  const p = { dx: 0, dy: 0, sx: 1, sy: 1, rot: 0, amp: 0, wind: 0, done: 0 };
+  if (!bh) return p;
+  if (t < 0) return p;
+  if (t < bh.tele) {
+    const w = bh.tele > 0 ? clamp01(t / bh.tele) : 1;
+    const e = w * w;
+    p.wind = e;
+    p.sy = 1 - 0.20 * e; p.sx = 1 + 0.16 * e;
+    p.dy = 7 * e;
+    p.rot = Math.sin(w * 26) * 0.055 * e;
+    return p;
+  }
+  const a = clamp01((t - bh.tele) / bh.act);
+  p.done = a;
+  p.amp = Math.sin(Math.PI * Math.pow(a, bh.k));
+  p.dy = -bh.arc * p.amp;
+  p.dx = bh.dash * a;
+  p.rot = bh.spin * TAU * a;
+  p.sy = 1 + 0.26 * p.amp * (bh.arc !== 0 ? 1 : 0.4);
+  p.sx = 1 - 0.12 * p.amp * (bh.arc !== 0 ? 1 : -0.9);
+  p.wind = 1 - a;
+  return p;
+}
+/* subject world position + effective radius at a frozen instant */
+function subjectAt(spIdx, bhIdx, t, bx, by, face) {
+  const sp = SPECIES[spIdx];
+  const bh = sp.bh[bhIdx];
+  const p = poseAt(bh, t);
+  const f = face < 0 ? -1 : 1;
+  return {
+    x: bx + f * p.dx, y: by + p.dy,
+    r: sp.r * (1 + 0.22 * p.amp * clamp(bh.flare, 0, 2) / 2),
+    pose: p, sp, bh
+  };
+}
+function projX(cx, cz, s1, W, wx) { return W / 2 + (wx - cx) * s1 * cz; }
+function projY(cy, cz, s1, H, wy) { return H / 2 + (wy - cy) * s1 * cz; }
+
+const RARITY_VAL = [0, 0.35, 0.62, 0.88, 1.0];
+function letterFor(g) {
+  return g >= PERFECT_AT ? 'S' : g >= 80 ? 'A' : g >= 66 ? 'B' : g >= 50 ? 'C' : g >= 30 ? 'D' : 'E';
+}
+const LETTER_COL = { S: '#e0a020', A: '#3f9f5f', B: '#3b7fae', C: '#6a7b91', D: '#8a6b6b', E: '#7a6b6b' };
+
+/* light source (sun / moon) in world coords, for silhouettes */
+function lightPos(biomeIdx, night) {
+  return { x: WORLD_W * (night ? 0.30 : 0.72), y: 110 + biomeIdx * 14 };
+}
+
+/* ---- THE GRADER: a pure function of one frozen frame ---- */
+function gradeShot(inp) {
+  const spIdx = clamp(inp.sp | 0, 0, SPECIES.length - 1);
+  const sp = SPECIES[spIdx];
+  const bhIdx = clamp(inp.bh | 0, 0, sp.bh.length - 1);
+  const bh = sp.bh[bhIdx];
+  const W = Math.max(1, inp.W), H = Math.max(1, inp.H);
+  const s1 = Math.max(1e-6, inp.s1), cz = Math.max(1, inp.cz);
+  const s = s1 * cz;
+  const su = subjectAt(spIdx, bhIdx, inp.t, inp.bx, inp.by, inp.face);
+  const px = projX(inp.cx, cz, s1, W, su.x);
+  const py = projY(inp.cy, cz, s1, H, su.y);
+  const rPx = su.r * s;
+
+  /* --- FRAMING --- */
+  const inFrame = px > -rPx * 0.6 && px < W + rPx * 0.6 && py > -rPx * 0.6 && py < H + rPx * 0.6;
+  let framing = 0, fill = 0, center = 0;
+  if (inFrame) {
+    const ndx = (px - W / 2) / (W / 2), ndy = (py - H / 2) / (H / 2);
+    const d = Math.min(1.4, Math.sqrt(ndx * ndx + ndy * ndy));
+    center = clamp01(1 - Math.pow(d / 1.05, 1.35));
+    const idealR = 0.16 * Math.min(W, H);
+    const raw = rPx / Math.max(1e-6, idealR);
+    fill = raw <= 1 ? raw : Math.max(0, 1 - (raw - 1) * 0.55);
+    framing = clamp01(0.55 * center + 0.45 * fill);
+    let expo = 1;
+    if (inp.night && !inp.flash) expo = 0.55;
+    if (inp.weather === 'fog') expo *= 0.90;
+    if (inp.weather === 'rain') expo *= 0.97;
+    framing *= expo;
+  }
+
+  /* --- TIMING --- */
+  const mul = Math.max(0.5, inp.shutterMul || 1);
+  const half = bh.ph * mul;
+  const dt = Math.abs(inp.t - bh.peakT);
+  const timing = dt <= half ? 1 : clamp01(1 - (dt - half) / GRACE_HALF);
+
+  /* --- RARITY --- */
+  const rarity = RARITY_VAL[clamp(bh.rar, 1, 4)];
+
+  /* --- COMPOSITION --- */
+  const bonuses = [];
+  let comp = 0;
+  if (inFrame) {
+    const others = Array.isArray(inp.others) ? inp.others : [];
+    for (let i = 0; i < others.length; i++) {
+      const o = others[i];
+      const ox = projX(inp.cx, cz, s1, W, o.x), oy = projY(inp.cy, cz, s1, H, o.y);
+      const orr = (SPECIES[clamp(o.sp | 0, 0, SPECIES.length - 1)].r) * s;
+      if (ox > orr * 0.4 && ox < W - orr * 0.4 && oy > orr * 0.4 && oy < H - orr * 0.4) {
+        bonuses.push('Two in frame'); comp += 0.14; break;
+      }
+    }
+    const bio = BIOMES[clamp(inp.biome | 0, 0, BIOMES.length - 1)];
+    if (bio.mirror > 0 && su.y < GROUND_Y - 18) {
+      const my = projY(inp.cy, cz, s1, H, GROUND_Y + (GROUND_Y - su.y) * 0.92);
+      if (my > 0 && my < H) { bonuses.push('Reflection'); comp += 0.12; }
+    }
+    const lp = lightPos(inp.biome | 0, !!inp.night);
+    const lx = projX(inp.cx, cz, s1, W, lp.x), ly = projY(inp.cy, cz, s1, H, lp.y);
+    const nearLight = Math.abs(lx - px) < rPx * 2.4 && Math.abs(ly - py) < rPx * 3.2;
+    if (nearLight || (inp.lightning || 0) > 0.35) {
+      bonuses.push(nearLight ? 'Silhouette' : 'Lightning back-light'); comp += 0.16;
+    }
+    if (fill >= 0.90) { bonuses.push('Close-up'); comp += 0.10; }
+    if (inp.night && inp.flash && sp.noct) { bonuses.push('Nocturne'); comp += 0.12; }
+  }
+  comp = clamp01(comp);
+
+  const total = Math.min(100, Math.round(framing * 33 + timing * 42 + rarity * 20 + comp * 25));
+  return { framing, timing, rarity, comp, bonuses, fill, center, inFrame, total, letter: letterFor(total) };
+}
+
+/* ================================================================
+   CAMERA
+   ================================================================ */
+const cam = { x: WORLD_W / 2, y: WORLD_H * 0.5, z: 1, swing: null, lastZ: 1, zRate: 0, drift: 0 };
+function clampCam() {
+  const s = Math.max(1e-6, view.s1 * cam.z);
+  const hvw = (view.W / 2) / s, hvh = (view.H / 2) / s;
+  cam.x = hvw >= WORLD_W / 2 ? WORLD_W / 2 : clamp(cam.x, hvw, WORLD_W - hvw);
+  cam.y = hvh >= WORLD_H / 2 ? WORLD_H / 2 : clamp(cam.y, hvh, WORLD_H - hvh);
+}
+function setZoom(z, byUser) {
+  const zm = zMax();
+  const nz = clamp(z, 1, zm);
+  if (byUser && Math.abs(nz - cam.z) > 0.001) sfx.zoom();
+  cam.z = nz;
+  clampCam();
+}
+function swingTo(wx, wy) {
+  cam.swing = { x0: cam.x, y0: cam.y, x1: wx, y1: wy, t: 0 };
+}
+function updateCam(dt) {
+  if (cam.swing) {
+    cam.swing.t += dt;
+    const u = clamp01(cam.swing.t / SWING_TIME);
+    const e = easeInOut(u);
+    cam.x = lerp(cam.swing.x0, cam.swing.x1, e);
+    cam.y = lerp(cam.swing.y0, cam.swing.y1, e);
+    if (u >= 1) cam.swing = null;
+  }
+  /* zoom rate, for skittish species */
+  const r = dt > 0 ? Math.abs(Math.log(Math.max(0.01, cam.z / Math.max(0.01, cam.lastZ))) / dt) : 0;
+  cam.zRate = lerp(cam.zRate, r, 0.5);
+  cam.lastZ = cam.z;
+  clampCam();
+}
+/* predicted world position of a behaviour's peak instant */
+function peakPos(g) {
+  const sp = SPECIES[g.sp], bh = sp.bh[g.bhIdx];
+  const p = poseAt(bh, bh.peakT);
+  return { x: g.bx + g.face * p.dx, y: g.by + p.dy };
+}
+
+/* ================================================================
+   EXPEDITION / WORLD SIMULATION
+   ================================================================ */
+function shuffled(n, rndf) {
+  const a = []; for (let i = 0; i < n; i++) a.push(i);
+  for (let i = n - 1; i > 0; i--) { const j = ((rndf ? rndf() : Math.random()) * (i + 1)) | 0; const t = a[i]; a[i] = a[j]; a[j] = t; }
+  return a;
+}
+function makeGlim(spIdx, x, y, seed) {
+  const sp = SPECIES[spIdx];
+  return {
+    sp: spIdx, bx: x, by: y, homeX: x, homeY: y, face: Math.random() < 0.5 ? -1 : 1,
+    phase: 'idle', t: 0, next: rnd(1.4, 3.2), bhIdx: 0,
+    deck: shuffled(sp.bh.length), di: 0, seed: seed | 0, wob: rnd(0, TAU),
+    alive: true, react: '', reactT: 0, lure: null, tame: 0, shotT: 0, gone: 0,
+    fleeVX: 0, fleeVY: 0, blink: rnd(0, 4), leaving: 0
+  };
+}
+function biomeRoster(bid) {
+  return SPECIES.filter(s => !s.legend && s.biomes.indexOf(bid) >= 0);
+}
+function makeContract(exp) {
+  const roster = biomeRoster(BIOMES[exp.biome].id);
+  const sp = pick(roster);
+  const kind = irnd(0, 2);
+  if (kind === 0) {
+    const b = sp.bh[sp.bh.length - 1];
+    return { text: sp.name + ' — ' + b.name, sp: sp.idx, bh: b.idx, min: 40, comp: null, reward: 90 };
+  }
+  if (kind === 1) {
+    const need = exp.biome === 1 ? 'Reflection' : (exp.weather === 'storm' ? 'Lightning back-light' : 'Silhouette');
+    return { text: 'Any ' + ESS[sp.ess].name + ' Glim, ' + need.toLowerCase(), sp: sp.idx, bh: -1, min: 30, comp: need, reward: 110 };
+  }
+  const b = sp.bh[irnd(1, sp.bh.length - 1)];
+  return { text: sp.name + ' ' + b.name + ' at grade B+', sp: sp.idx, bh: b.idx, min: 66, comp: null, reward: 140 };
+}
+function makeExpedition(level, isTitle) {
+  const biome = (level - 1) % BIOMES.length;
+  const night = (level % 3) === 0;
+  const weather = level <= 2 ? 'clear' : WEATHERS[(level * 7 + biome * 3) % WEATHERS.length];
+  const e = {
+    level, biome, night, weather, isTitle: !!isTitle,
+    t: 0, timeLeft: EXP_TIME, film: filmFor(store.up.film), filmMax: filmFor(store.up.film),
+    lures: luresFor(store.up.lure), luresMax: luresFor(store.up.lure),
+    glims: [], placed: [], lightning: 0, lightT: rnd(3, 7), rain: [], gust: 0,
+    legendAt: rnd(9, Math.max(12, EXP_TIME - 16)), legendDone: 0, legendG: null,
+    shots: [], lumens: 0, caught: 0, contract: null, contractDone: false, over: false
+  };
+  const roster = biomeRoster(BIOMES[biome].id);
+  const count = clamp(roster.length + 2, 4, 7);
+  const order = [];
+  for (let i = 0; i < count; i++) order.push(roster[i % roster.length]);
+  for (let i = 0; i < order.length; i++) {
+    const sp = order[i];
+    const gx = 140 + (i + 0.5) * ((WORLD_W - 280) / order.length) + rnd(-40, 40);
+    const flyer = sp.body === 'bird' || sp.body === 'moth' || sp.body === 'wisp';
+    const gy = flyer ? rnd(BY_MIN + 5, 340) : rnd(345, BY_MAX - 10);
+    e.glims.push(makeGlim(sp.idx, clamp(gx, BX_MIN, BX_MAX), clamp(gy, BY_MIN, BY_MAX), (level * 131 + i * 17 + 7) | 0));
+  }
+  e.contract = makeContract(e);
+  for (let i = 0; i < 90; i++) e.rain.push({ x: Math.random() * WORLD_W, y: Math.random() * WORLD_H, sp: rnd(0.7, 1.3) });
+  return e;
+}
+let exp = makeExpedition(Math.max(1, store.level), true);
+
+const IDLE_MIN = 2.0, IDLE_MAX = 3.9;
+function idleGap(e, sp) {
+  let m = 1;
+  if (e.weather === 'rain' && (sp.ess === 'tide' || sp.ess === 'verdant')) m = 0.72;
+  if (e.weather === 'storm' && sp.ess === 'spark') m = 0.65;
+  if (e.weather === 'wind' && sp.ess === 'gale') m = 0.68;
+  if (e.weather === 'fog') m *= 1.15;
+  if (e.night && sp.noct) m *= 0.7;
+  if (e.night && !sp.noct) m *= 1.2;
+  return rnd(IDLE_MIN, IDLE_MAX) * m;
+}
+function startAction(g, forceIdx) {
+  const sp = SPECIES[g.sp];
+  let idx;
+  if (typeof forceIdx === 'number') idx = clamp(forceIdx, 0, sp.bh.length - 1);
+  else {
+    if (g.di >= g.deck.length) { g.deck = shuffled(sp.bh.length); g.di = 0; }
+    idx = g.deck[g.di++];
+  }
+  g.bhIdx = idx; g.phase = 'act'; g.t = 0;
+  g.seed = (g.seed * 1103515245 + 12345) >>> 0;
+}
+function spookGlim(g, dirX) {
+  if (g.phase === 'flee' || g.gone) return;
+  g.phase = 'flee'; g.t = 0;
+  g.fleeVX = (dirX || (Math.random() < 0.5 ? -1 : 1)) * rnd(140, 230);
+  g.fleeVY = rnd(-70, -20);
+  g.react = 'flee'; g.reactT = 1.2;
+}
+function updateGlims(e, dt) {
+  for (let i = 0; i < e.glims.length; i++) {
+    const g = e.glims[i];
+    const sp = SPECIES[g.sp];
+    if (g.reactT > 0) g.reactT -= dt;
+    if (g.shotT > 0) g.shotT -= dt;
+    g.blink -= dt; if (g.blink < -0.14) g.blink = rnd(2.2, 5.5);
+
+    if (g.phase === 'flee') {
+      g.t += dt;
+      g.bx += g.fleeVX * dt; g.by += g.fleeVY * dt;
+      g.fleeVY += 40 * dt;
+      if (g.t > 1.5) {
+        /* comes back somewhere else — never permanently lost */
+        g.bx = clamp(g.homeX + rnd(-220, 220), BX_MIN, BX_MAX);
+        g.by = clamp(g.homeY + rnd(-50, 50), BY_MIN, BY_MAX);
+        g.homeX = g.bx; g.homeY = g.by;
+        g.phase = 'idle'; g.t = 0; g.next = idleGap(e, sp) * 0.7; g.react = '';
+      }
+      continue;
+    }
+    if (g.leaving > 0) {
+      g.leaving -= dt; g.by -= 80 * dt; g.bx += g.face * 20 * dt;
+      if (g.leaving <= 0) g.gone = 1;
+      continue;
+    }
+    if (g.phase === 'idle') {
+      /* gentle life */
+      g.wob += dt * 0.9;
+      const wanderR = sp.body === 'rock' ? 10 : 26;
+      g.bx = lerp(g.bx, g.homeX + Math.sin(g.wob * 0.55) * wanderR, clamp01(dt * 1.4));
+      g.by = lerp(g.by, g.homeY + Math.sin(g.wob * 0.85 + 1.3) * (sp.body === 'rock' ? 3 : 9), clamp01(dt * 1.4));
+      if (e.weather === 'wind') g.bx += Math.sin(e.t * 1.7 + g.wob) * 14 * dt;
+      /* head toward a lure */
+      if (g.lure) {
+        const L = g.lure;
+        if (L.dead) { g.lure = null; }
+        else {
+          const dx = L.x - g.bx, dy = (L.y - 26) - g.by, d = Math.hypot(dx, dy);
+          if (d < 26) {
+            L.dead = true; g.lure = null;
+            const rareIdx = sp.bh.length - 1;
+            g.face = dx >= 0 ? 1 : -1;
+            startAction(g, rareIdx);
+            g.react = 'lured'; g.reactT = 1.1;
+            continue;
+          }
+          const sp2 = 92 + store.up.lure * 12;
+          g.bx += (dx / d) * sp2 * dt; g.by += (dy / d) * sp2 * dt;
+          g.homeX = g.bx; g.homeY = g.by;
+          g.face = dx >= 0 ? 1 : -1;
+        }
+      }
+      /* keep every base position inside the habitable box — this is what
+         guarantees no peak can land outside the world rect */
+      g.bx = clamp(g.bx, BX_MIN, BX_MAX); g.by = clamp(g.by, BY_MIN, BY_MAX);
+      g.homeX = clamp(g.homeX, BX_MIN + 28, BX_MAX - 28);
+      g.homeY = clamp(g.homeY, BY_MIN + 10, BY_MAX - 10);
+      g.next -= dt;
+      if (g.next <= 0) { g.face = Math.random() < 0.5 ? -1 : 1; startAction(g); }
+      continue;
+    }
+    /* acting */
+    g.t += dt;
+    const bh = sp.bh[g.bhIdx];
+    if (g.t >= bh.dur) {
+      const p = poseAt(bh, bh.dur);
+      g.bx = clamp(g.bx, BX_MIN, BX_MAX); g.by = clamp(g.by, BY_MIN, BY_MAX);
+      g.phase = 'idle'; g.t = 0; g.next = idleGap(e, sp);
+      if (sp.legend) { g.leaving = 1.6; e.legendDone = 1; }
+    }
+  }
+  /* legendary arrival */
+  if (!e.legendDone && !e.legendG && e.t >= e.legendAt && LEGEND_IDX >= 0) {
+    const g = makeGlim(LEGEND_IDX, rnd(BX_MIN + 70, BX_MAX - 70), rnd(BY_MIN + 10, 320), (e.level * 977 + 41) | 0);
+    g.next = 2.4; g.deck = [0]; g.di = 0;
+    e.glims.push(g); e.legendG = g;
+    e.legendFlash = 1;
+    sfx.telegraph(); sfx.peak();
+    toast('✨ A PRISMHART! ✨', '#ffe6a8');
+  }
+  /* lures expire */
+  for (let i = e.placed.length - 1; i >= 0; i--) {
+    const L = e.placed[i];
+    L.t += dt;
+    if (L.dead || L.t > 9) e.placed.splice(i, 1);
+  }
+}
+function updateWeather(e, dt) {
+  if (e.weather === 'storm') {
+    e.lightT -= dt;
+    if (e.lightT <= 0) { e.lightT = rnd(3.2, 6.5); e.lightning = 1; sfx.thunder(); }
+  }
+  if (e.lightning > 0) e.lightning = Math.max(0, e.lightning - dt * 1.9);
+  if (e.weather === 'rain' || e.weather === 'storm') {
+    for (const r of e.rain) {
+      r.y += (520 + r.sp * 200) * dt; r.x -= 90 * dt;
+      if (r.y > WORLD_H + 40) { r.y = -20; r.x = Math.random() * WORLD_W; }
+      if (r.x < -20) r.x += WORLD_W + 40;
+    }
+  }
+  if (e.weather === 'wind') e.gust = 0.5 + 0.5 * Math.sin(e.t * 1.3);
+}
+/* the glim the viewfinder is "on": in frame, nearest to centre, action preferred */
+function currentSubject(e) {
+  let best = null, bestScore = -1;
+  const s = view.s1 * cam.z;
+  for (const g of e.glims) {
+    if (g.gone) continue;
+    const su = subjectAt(g.sp, g.bhIdx, g.phase === 'act' ? g.t : -1, g.bx, g.by, g.face);
+    const px = projX(cam.x, cam.z, view.s1, view.W, su.x);
+    const py = projY(cam.y, cam.z, view.s1, view.H, su.y);
+    const rPx = su.r * s;
+    if (px < -rPx || px > view.W + rPx || py < -rPx || py > view.H + rPx) continue;
+    const d = Math.hypot((px - view.W / 2) / view.W, (py - view.H / 2) / view.H);
+    let sc = 1 - d;
+    if (g.phase === 'act') sc += 0.85;
+    if (SPECIES[g.sp].legend) sc += 0.5;
+    if (sc > bestScore) { bestScore = sc; best = g; }
+  }
+  return best;
+}
+/* nearest telegraphing glim (for the SUBJ button / alert arrows) */
+function alertGlim(e) {
+  let best = null, bestT = 1e9;
+  for (const g of e.glims) {
+    if (g.gone || g.phase !== 'act') continue;
+    const bh = SPECIES[g.sp].bh[g.bhIdx];
+    const remain = bh.peakT - g.t;
+    if (remain < -0.2) continue;
+    const pr = SPECIES[g.sp].legend ? remain - 5 : remain;
+    if (pr < bestT) { bestT = pr; best = g; }
+  }
+  return best;
+}
+
+/* ================================================================
+   RENDERING — one world renderer, shared by the live view AND the
+   album (so a saved photo re-renders identically from parameters).
+   ================================================================ */
+function rr(g2, x, y, w, h, r) {
+  const k = Math.min(r, w / 2, h / 2);
+  g2.beginPath();
+  g2.moveTo(x + k, y);
+  g2.lineTo(x + w - k, y); g2.quadraticCurveTo(x + w, y, x + w, y + k);
+  g2.lineTo(x + w, y + h - k); g2.quadraticCurveTo(x + w, y + h, x + w - k, y + h);
+  g2.lineTo(x + k, y + h); g2.quadraticCurveTo(x, y + h, x, y + h - k);
+  g2.lineTo(x, y + k); g2.quadraticCurveTo(x, y, x + k, y);
+  g2.closePath();
+}
+function ell(g2, x, y, rx, ry) { g2.beginPath(); g2.ellipse(x, y, Math.max(0.4, rx), Math.max(0.4, ry), 0, 0, TAU); }
+
+/* ---- one Glim ---- */
+function drawGlim(g2, px, py, rp, spIdx, pose, o) {
+  const sp = SPECIES[spIdx];
+  const E = ESS[sp.ess];
+  const face = (o && o.face) || 1;
+  const seed = (o && o.seed) || 1;
+  const amp = pose.amp || 0;
+  const wind = pose.wind || 0;
+  const dark = o && o.night && !o.flash ? 0.55 : 1;
+  if (rp < 0.6) return;
+
+  g2.save();
+  g2.translate(px, py);
+  g2.rotate(pose.rot || 0);
+  g2.scale(face * (pose.sx || 1), (pose.sy || 1));
+
+  /* aura / glow */
+  const glowA = clamp01(0.16 + wind * 0.35 + amp * 0.8);
+  if (glowA > 0.02 && rp > 3) {
+    const rg = g2.createRadialGradient(0, 0, rp * 0.4, 0, 0, rp * (2.0 + amp * 1.6));
+    rg.addColorStop(0, hexA(E.glow, 0.42 * glowA));
+    rg.addColorStop(1, hexA(E.glow, 0));
+    g2.fillStyle = rg;
+    g2.beginPath(); g2.arc(0, 0, rp * (2.0 + amp * 1.6), 0, TAU); g2.fill();
+  }
+
+  const bodyG = g2.createLinearGradient(-rp, -rp, rp * 0.6, rp);
+  bodyG.addColorStop(0, shade(E.c2, dark));
+  bodyG.addColorStop(1, shade(E.c1, dark));
+
+  /* --- silhouettes / limbs per body plan --- */
+  if (sp.body === 'moth' || sp.body === 'bird') {
+    const flap = sp.body === 'moth'
+      ? 0.55 + 0.45 * Math.sin((o.time || 0) * 7 + seed)
+      : 0.35 + 0.65 * Math.abs(Math.sin((o.time || 0) * 9 + seed));
+    const spread = sp.body === 'bird' ? 1.9 + amp * 0.7 : 1.55 + amp * 0.5;
+    g2.fillStyle = hexA(E.c2, 0.85 * dark);
+    for (const sgn of [-1, 1]) {
+      g2.save(); g2.scale(sgn, 1);
+      g2.beginPath();
+      g2.moveTo(rp * 0.1, -rp * 0.2);
+      g2.quadraticCurveTo(rp * spread * 0.7, -rp * (0.7 + flap * 0.8), rp * spread, -rp * 0.1 * flap);
+      g2.quadraticCurveTo(rp * spread * 0.6, rp * 0.55, rp * 0.15, rp * 0.35);
+      g2.closePath(); g2.fill();
+      g2.strokeStyle = hexA(E.glow, 0.5 * dark); g2.lineWidth = Math.max(0.6, rp * 0.05); g2.stroke();
+      g2.restore();
+    }
+  }
+  if (sp.body === 'kit' || sp.body === 'sprout') {
+    g2.fillStyle = shade(E.c1, dark * 0.86);
+    for (let i = 0; i < 4; i++) {
+      const lx = (-0.52 + (i % 2) * 1.04) * rp;
+      const ly = rp * (0.55 + (i > 1 ? 0.06 : 0));
+      const kick = Math.sin((o.time || 0) * 6 + i * 1.7 + seed) * rp * 0.08 * (1 - amp);
+      ell(g2, lx + kick, ly + rp * 0.28 - amp * rp * 0.18, rp * 0.2, rp * 0.24); g2.fill();
+    }
+  }
+  if (sp.body === 'wisp') {
+    g2.fillStyle = hexA(E.c2, 0.7 * dark);
+    for (const sgn of [-1, 1]) {
+      g2.beginPath();
+      g2.moveTo(sgn * rp * 0.55, rp * 0.1);
+      g2.quadraticCurveTo(sgn * rp * 1.5, rp * 0.35, sgn * rp * 1.15, rp * 0.85);
+      g2.quadraticCurveTo(sgn * rp * 0.7, rp * 0.55, sgn * rp * 0.5, rp * 0.5);
+      g2.closePath(); g2.fill();
+    }
+  }
+
+  /* --- body --- */
+  g2.fillStyle = bodyG;
+  if (sp.body === 'rock') {
+    g2.beginPath();
+    for (let i = 0; i < 7; i++) {
+      const a = -Math.PI / 2 + i / 7 * TAU;
+      const rr2 = rp * (0.92 + hnoise(seed, i) * 0.22);
+      const x = Math.cos(a) * rr2, y = Math.sin(a) * rr2 * 0.92;
+      i ? g2.lineTo(x, y) : g2.moveTo(x, y);
+    }
+    g2.closePath(); g2.fill();
+    g2.fillStyle = hexA('#6fdc76', 0.55 * dark);
+    ell(g2, -rp * 0.15, -rp * 0.72, rp * 0.42, rp * 0.16); g2.fill();
+  } else if (sp.body === 'prism') {
+    g2.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const a = -Math.PI / 2 + i / 6 * TAU;
+      const x = Math.cos(a) * rp * 0.98, y = Math.sin(a) * rp * 1.14;
+      i ? g2.lineTo(x, y) : g2.moveTo(x, y);
+    }
+    g2.closePath();
+    const pg = g2.createLinearGradient(-rp, -rp, rp, rp);
+    pg.addColorStop(0, '#ffd6f0'); pg.addColorStop(0.35, '#bfe6ff');
+    pg.addColorStop(0.65, '#d8ffd0'); pg.addColorStop(1, '#ffe9a8');
+    g2.fillStyle = pg; g2.fill();
+    g2.strokeStyle = hexA('#ffffff', 0.7); g2.lineWidth = Math.max(0.7, rp * 0.07); g2.stroke();
+  } else {
+    ell(g2, 0, 0, rp * (sp.body === 'orb' ? 0.92 : 1.0), rp * (sp.body === 'wisp' ? 1.05 : 0.9));
+    g2.fill();
+  }
+  /* belly highlight */
+  g2.fillStyle = hexA('#ffffff', 0.22);
+  ell(g2, -rp * 0.22, -rp * 0.3, rp * 0.42, rp * 0.3); g2.fill();
+
+  /* --- head bits --- */
+  if (sp.body === 'kit') {
+    g2.fillStyle = shade(E.c1, dark * 0.95);
+    for (const sgn of [-1, 1]) {
+      g2.beginPath();
+      g2.moveTo(sgn * rp * 0.34, -rp * 0.72);
+      g2.lineTo(sgn * rp * 0.62, -rp * 1.32);
+      g2.lineTo(sgn * rp * 0.78, -rp * 0.6);
+      g2.closePath(); g2.fill();
+    }
+    g2.strokeStyle = shade(E.c1, dark * 0.9); g2.lineWidth = Math.max(0.8, rp * 0.14);
+    g2.lineCap = 'round';
+    g2.beginPath(); g2.moveTo(rp * 0.85, rp * 0.18);
+    g2.quadraticCurveTo(rp * 1.5, rp * 0.05 - amp * rp * 0.4, rp * 1.3, -rp * 0.55 - amp * rp * 0.3);
+    g2.stroke();
+  }
+  if (sp.body === 'sprout') {
+    g2.strokeStyle = shade('#3f9f4f', dark); g2.lineWidth = Math.max(0.8, rp * 0.12);
+    g2.beginPath(); g2.moveTo(0, -rp * 0.8); g2.lineTo(0, -rp * (1.3 + amp * 0.35)); g2.stroke();
+    g2.fillStyle = shade('#8fe87f', dark);
+    for (const sgn of [-1, 1]) {
+      ell(g2, sgn * rp * 0.3, -rp * (1.25 + amp * 0.3), rp * 0.32, rp * 0.17); g2.fill();
+    }
+    if (amp > 0.15) {
+      g2.fillStyle = hexA('#ffd7f0', 0.9 * amp);
+      for (let i = 0; i < 6; i++) {
+        const a = i / 6 * TAU;
+        ell(g2, Math.cos(a) * rp * 0.7 * amp, -rp * 1.25 + Math.sin(a) * rp * 0.55 * amp, rp * 0.2 * amp, rp * 0.2 * amp);
+        g2.fill();
+      }
+    }
+  }
+  if (sp.body === 'orb') {
+    g2.strokeStyle = hexA(E.glow, 0.6 + 0.4 * amp); g2.lineWidth = Math.max(0.7, rp * 0.08);
+    for (let i = 0; i < 2; i++) {
+      g2.beginPath();
+      g2.ellipse(0, 0, rp * (1.25 + i * 0.28), rp * (0.4 + i * 0.12),
+        (o.time || 0) * (1.2 + i * 0.7) + i, 0, TAU);
+      g2.stroke();
+    }
+  }
+  if (sp.body === 'bird') {
+    g2.fillStyle = '#ffb84d';
+    g2.beginPath(); g2.moveTo(rp * 0.85, -rp * 0.05); g2.lineTo(rp * 1.35, rp * 0.08);
+    g2.lineTo(rp * 0.85, rp * 0.22); g2.closePath(); g2.fill();
+  }
+  if (sp.body === 'moth') {
+    g2.strokeStyle = shade(E.c2, dark); g2.lineWidth = Math.max(0.6, rp * 0.07); g2.lineCap = 'round';
+    for (const sgn of [-1, 1]) {
+      g2.beginPath(); g2.moveTo(sgn * rp * 0.2, -rp * 0.7);
+      g2.quadraticCurveTo(sgn * rp * 0.6, -rp * 1.4, sgn * rp * 0.9, -rp * 1.25); g2.stroke();
+      ell(g2, sgn * rp * 0.92, -rp * 1.26, rp * 0.11, rp * 0.11); g2.fillStyle = shade(E.c2, dark); g2.fill();
+    }
+  }
+
+  /* --- face --- */
+  const blink = o && o.blink !== undefined && o.blink < 0 ? 0.12 : 1;
+  const ex = rp * 0.34, ey = -rp * 0.14, er = rp * 0.19;
+  g2.fillStyle = '#ffffff';
+  ell(g2, -ex, ey, er, er * blink); g2.fill();
+  ell(g2, ex, ey, er, er * blink); g2.fill();
+  g2.fillStyle = '#20263a';
+  const look = clamp(amp * 0.5 + wind * 0.15, -0.5, 0.5);
+  ell(g2, -ex + er * 0.25, ey + er * (0.1 - look) * blink, er * 0.5, er * 0.55 * blink); g2.fill();
+  ell(g2, ex + er * 0.25, ey + er * (0.1 - look) * blink, er * 0.5, er * 0.55 * blink); g2.fill();
+  g2.fillStyle = hexA('#ff8fa3', 0.5);
+  ell(g2, -ex - er * 0.7, ey + er * 1.1, er * 0.5, er * 0.3); g2.fill();
+  ell(g2, ex + er * 0.7, ey + er * 1.1, er * 0.5, er * 0.3); g2.fill();
+  g2.strokeStyle = '#20263a'; g2.lineWidth = Math.max(0.6, rp * 0.055); g2.lineCap = 'round';
+  g2.beginPath();
+  const ms = rp * (0.14 + amp * 0.2);
+  g2.arc(0, rp * 0.2, ms, 0.15 * Math.PI, 0.85 * Math.PI);
+  g2.stroke();
+
+  g2.restore();
+
+  /* --- action FX (outside the body transform) --- */
+  if (amp > 0.02) drawFX(g2, px, py, rp, sp.bh[(o && o.bhIdx) || 0], amp, E, seed, o);
+  /* telegraph tell: a closing ring + a spark of intent */
+  if (wind > 0.02 && (!pose.amp || pose.amp < 0.01) && o && o.phase === 'act') {
+    const w = pose.wind;
+    g2.strokeStyle = hexA(E.glow, 0.35 + 0.55 * w);
+    g2.lineWidth = Math.max(1, rp * 0.1);
+    g2.beginPath(); g2.arc(px, py, rp * (2.6 - 1.35 * w), 0, TAU); g2.stroke();
+    g2.strokeStyle = hexA('#ffffff', 0.25 + 0.4 * w);
+    g2.lineWidth = Math.max(0.8, rp * 0.05);
+    g2.beginPath(); g2.arc(px, py, rp * (2.6 - 1.35 * w) + rp * 0.16, 0, TAU); g2.stroke();
+    for (let i = 0; i < 5; i++) {
+      const a = i / 5 * TAU + w * 3;
+      const rr2 = rp * (2.6 - 1.35 * w);
+      g2.fillStyle = hexA(E.c2, 0.5 + 0.5 * w);
+      ell(g2, px + Math.cos(a) * rr2, py + Math.sin(a) * rr2, rp * 0.09, rp * 0.09); g2.fill();
+    }
+  }
+}
+function drawFX(g2, px, py, rp, bh, amp, E, seed, o) {
+  const n = Math.round(6 + (bh.flare || 1) * 6);
+  const fx = bh.fx;
+  g2.save();
+  if (bh.ring) {
+    for (let k = 0; k < bh.ring; k++) {
+      const rr2 = rp * (1.2 + amp * (2.4 + k * 1.5));
+      g2.strokeStyle = hexA(k ? '#ffffff' : E.glow, (1 - amp) * 0.65);
+      g2.lineWidth = Math.max(1, rp * 0.14 * (1 - amp * 0.5));
+      g2.beginPath(); g2.arc(px, py, rr2, 0, TAU); g2.stroke();
+    }
+  }
+  for (let i = 0; i < n; i++) {
+    const a = hnoise(seed, i) * TAU;
+    const sp2 = 0.6 + hnoise(seed, i + 40) * 1.5;
+    const d = rp * (0.6 + amp * sp2 * 2.3);
+    const x = px + Math.cos(a) * d;
+    const y = py + Math.sin(a) * d * 0.85 - (fx === 'ember' || fx === 'spark' ? amp * rp * 0.9 : 0);
+    const s2 = rp * (0.10 + hnoise(seed, i + 80) * 0.16) * (1 - amp * 0.4);
+    if (fx === 'spark') {
+      g2.strokeStyle = hexA(i % 2 ? '#ffffff' : E.c1, 0.9 * (1 - amp * 0.35));
+      g2.lineWidth = Math.max(0.8, rp * 0.06);
+      g2.beginPath(); g2.moveTo(px, py);
+      g2.lineTo(px + Math.cos(a) * d * 0.6 + Math.cos(a + 1) * rp * 0.3, py + Math.sin(a) * d * 0.6);
+      g2.lineTo(x, y); g2.stroke();
+    } else if (fx === 'leaf') {
+      g2.fillStyle = hexA(i % 3 ? E.c1 : '#ffd7f0', 0.85);
+      g2.save(); g2.translate(x, y); g2.rotate(a * 2);
+      ell(g2, 0, 0, s2 * 1.6, s2 * 0.7); g2.fill(); g2.restore();
+    } else if (fx === 'water') {
+      g2.fillStyle = hexA(i % 4 ? E.c2 : '#ffffff', 0.8);
+      ell(g2, x, y, s2, s2 * 1.3); g2.fill();
+    } else if (fx === 'dust') {
+      g2.fillStyle = hexA('#e6d3ba', 0.55 * (1 - amp * 0.4));
+      ell(g2, x, py + rp * 0.6 + Math.sin(a) * rp * 0.2, s2 * 2.0, s2 * 0.9); g2.fill();
+    } else if (fx === 'prism') {
+      g2.strokeStyle = hexA(['#ff9fd0', '#9fd8ff', '#c8ffb0', '#ffe9a8'][i % 4], 0.85 * (1 - amp * 0.3));
+      g2.lineWidth = Math.max(0.9, rp * 0.09);
+      g2.beginPath(); g2.moveTo(px + Math.cos(a) * rp * 0.7, py + Math.sin(a) * rp * 0.7);
+      g2.lineTo(x, y); g2.stroke();
+    } else {
+      g2.fillStyle = hexA(i % 3 ? E.c1 : '#ffffff', 0.85 * (1 - amp * 0.3));
+      ell(g2, x, y, s2, s2); g2.fill();
+    }
+  }
+  g2.restore();
+}
+/* colour helpers */
+function hexA(hex, a) {
+  const h = hex.replace('#', '');
+  const v = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+  const n = parseInt(v, 16) || 0;
+  return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + clamp01(a) + ')';
+}
+function shade(hex, m) {
+  const h = hex.replace('#', '');
+  const v = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+  const n = parseInt(v, 16) || 0;
+  const f = x => clamp(Math.round(x * m), 0, 255);
+  return 'rgb(' + f((n >> 16) & 255) + ',' + f((n >> 8) & 255) + ',' + f(n & 255) + ')';
+}
+
+/* ---- the whole world, from an explicit config object ---- */
+function renderWorld(g2, C) {
+  const W = C.W, H = C.H, s = C.s1 * C.cz;
+  const B = BIOMES[clamp(C.biome | 0, 0, BIOMES.length - 1)];
+  const PX = wx => W / 2 + (wx - C.cx) * s;
+  const PY = wy => H / 2 + (wy - C.cy) * s;
+  const time = C.time || 0;
+  const night = !!C.night;
+  const sky = night ? B.nightSky : B.sky;
+
+  /* sky */
+  const gsky = g2.createLinearGradient(0, 0, 0, H);
+  gsky.addColorStop(0, sky[0]); gsky.addColorStop(0.55, sky[1]); gsky.addColorStop(1, sky[2]);
+  g2.fillStyle = gsky; g2.fillRect(0, 0, W, H);
+  if (C.weather === 'storm') { g2.fillStyle = 'rgba(20,26,48,0.42)'; g2.fillRect(0, 0, W, H); }
+
+  /* sun / moon */
+  const lp = lightPos(C.biome | 0, night);
+  const lx = PX(lp.x), ly = PY(lp.y), lr = Math.max(6, 46 * s);
+  const lg = g2.createRadialGradient(lx, ly, lr * 0.2, lx, ly, lr * 4.5);
+  lg.addColorStop(0, night ? 'rgba(226,232,255,0.95)' : 'rgba(255,246,200,0.98)');
+  lg.addColorStop(0.22, night ? 'rgba(190,200,255,0.35)' : 'rgba(255,224,140,0.4)');
+  lg.addColorStop(1, 'rgba(255,255,255,0)');
+  g2.fillStyle = lg; g2.beginPath(); g2.arc(lx, ly, lr * 4.5, 0, TAU); g2.fill();
+  g2.fillStyle = night ? '#eef1ff' : '#fff6c8';
+  g2.beginPath(); g2.arc(lx, ly, lr, 0, TAU); g2.fill();
+  if (night) { g2.fillStyle = sky[0]; g2.beginPath(); g2.arc(lx + lr * 0.42, ly - lr * 0.2, lr * 0.86, 0, TAU); g2.fill(); }
+
+  /* stars at night */
+  if (night) {
+    for (let i = 0; i < 46; i++) {
+      const sx2 = (hnoise(7, i) * WORLD_W * 1.4 - WORLD_W * 0.2);
+      const sy2 = hnoise(9, i) * 300 - 40;
+      const tw = 0.4 + 0.6 * Math.abs(Math.sin(time * 1.3 + i));
+      g2.fillStyle = 'rgba(255,255,255,' + (0.35 + tw * 0.5).toFixed(3) + ')';
+      g2.fillRect(PX(sx2), PY(sy2), Math.max(1, 3 * s), Math.max(1, 3 * s));
+    }
+  }
+  /* far hills (parallax) */
+  const par = 0.42;
+  const hx = W / 2 + (0 - C.cx) * s * par;
+  for (let layer = 0; layer < 2; layer++) {
+    g2.fillStyle = hexA(layer ? B.ground2 : B.ground, night ? 0.35 : 0.42 + layer * 0.16);
+    g2.beginPath();
+    const baseY = PY(GROUND_Y - 40 + layer * 26);
+    g2.moveTo(-20, H + 20);
+    for (let i = 0; i <= 16; i++) {
+      const wx = i / 16 * WORLD_W * 1.5 - WORLD_W * 0.25;
+      const x = hx + wx * s * par;
+      const y = baseY - (28 + hnoise(layer * 31 + 3, i) * 70) * s * (1 + layer * 0.4);
+      g2.lineTo(x, y);
+    }
+    g2.lineTo(W + 20, H + 20); g2.closePath(); g2.fill();
+  }
+
+  /* ground / water */
+  const gy = PY(GROUND_Y);
+  if (B.water) {
+    const wg = g2.createLinearGradient(0, gy, 0, H);
+    wg.addColorStop(0, night ? '#123a55' : '#57c6ea');
+    wg.addColorStop(1, night ? '#07182a' : '#12496e');
+    g2.fillStyle = wg; g2.fillRect(0, gy, W, Math.max(0, H - gy));
+  } else {
+    const gg = g2.createLinearGradient(0, gy, 0, H);
+    gg.addColorStop(0, shade(B.ground, night ? 0.5 : 1));
+    gg.addColorStop(1, shade(B.ground2, night ? 0.45 : 1));
+    g2.fillStyle = gg; g2.fillRect(0, gy, W, Math.max(0, H - gy));
+  }
+  /* ground decor */
+  const items = Array.isArray(C.items) ? C.items : [];
+  if (!B.water) {
+    for (let i = 0; i < 44; i++) {
+      const wx = hnoise(21, i) * WORLD_W;
+      const x = PX(wx), y = gy + hnoise(23, i) * 30 * s;
+      if (x < -30 || x > W + 30) continue;
+      const hgt = (10 + hnoise(25, i) * 18) * s;
+      g2.strokeStyle = hexA(night ? '#2c5a36' : (B.id === 'ridge' ? '#8d8f9c' : '#7fe08a'), 0.75);
+      g2.lineWidth = Math.max(0.7, 3 * s);
+      g2.beginPath(); g2.moveTo(x, y);
+      g2.quadraticCurveTo(x + Math.sin(time * 1.6 + i) * hgt * 0.35, y - hgt * 0.6, x + Math.sin(time * 1.6 + i) * hgt * 0.6, y - hgt);
+      g2.stroke();
+    }
+  } else {
+    for (let i = 0; i < 10; i++) {
+      const y = gy + (12 + i * 16) * s;
+      if (y > H) break;
+      g2.strokeStyle = 'rgba(255,255,255,' + (0.16 - i * 0.012).toFixed(3) + ')';
+      g2.lineWidth = Math.max(0.8, 2.4 * s);
+      g2.beginPath();
+      for (let k = 0; k <= 12; k++) {
+        const x = k / 12 * W;
+        const yy = y + Math.sin(time * 1.4 + k * 0.8 + i) * 3 * s;
+        k ? g2.lineTo(x, yy) : g2.moveTo(x, yy);
+      }
+      g2.stroke();
+    }
+  }
+
+  /* reflections (tide pool) */
+  if (B.mirror > 0) {
+    g2.save();
+    g2.beginPath(); g2.rect(0, gy, W, Math.max(0, H - gy)); g2.clip();
+    g2.globalAlpha = 0.30;
+    for (const it of items) {
+      if (it.gone) continue;
+      const su = subjectAt(it.sp, it.bhIdx, it.t, it.bx, it.by, it.face);
+      if (su.y >= GROUND_Y - 6) continue;
+      const mx = PX(su.x), my = PY(GROUND_Y + (GROUND_Y - su.y) * 0.92);
+      const rp = su.r * s;
+      if (mx < -rp * 3 || mx > W + rp * 3 || my > H + rp * 3) continue;
+      g2.save(); g2.translate(mx, my); g2.scale(1, -1); g2.translate(-mx, -my);
+      const pose2 = { dx: su.pose.dx, dy: su.pose.dy, sx: su.pose.sx, sy: su.pose.sy, rot: 0, amp: su.pose.amp * 0.5, wind: 0 };
+      drawGlim(g2, mx, my, rp, it.sp, pose2, { face: it.face, seed: it.seed, time, bhIdx: it.bhIdx, phase: 'idle', night, flash: C.flash });
+      g2.restore();
+    }
+    g2.restore();
+  }
+
+  /* lures */
+  const lures = Array.isArray(C.lures) ? C.lures : [];
+  for (const L of lures) {
+    if (L.dead) continue;
+    const x = PX(L.x), y = PY(L.y), rp = Math.max(4, 16 * s);
+    const pu = 1 + Math.sin(time * 5 + L.x) * 0.16;
+    g2.fillStyle = 'rgba(255,209,102,0.22)';
+    g2.beginPath(); g2.arc(x, y, lureRadFor(store.up.lure) * s * (0.6 + 0.06 * Math.sin(time * 2)), 0, TAU); g2.fill();
+    g2.strokeStyle = 'rgba(255,209,102,0.55)'; g2.lineWidth = Math.max(1, 2 * s);
+    g2.beginPath(); g2.arc(x, y, lureRadFor(store.up.lure) * s * 0.6, 0, TAU); g2.stroke();
+    g2.fillStyle = '#ffd166';
+    ell(g2, x, y, rp * pu, rp * pu * 0.8); g2.fill();
+    g2.fillStyle = '#8a5a12';
+    ell(g2, x, y, rp * 0.4, rp * 0.32); g2.fill();
+  }
+
+  /* glims, painters-sorted by depth (y) */
+  const sorted = items.slice().sort((a, b) => a.by - b.by);
+  for (const it of sorted) {
+    if (it.gone) continue;
+    const su = subjectAt(it.sp, it.bhIdx, it.t, it.bx, it.by, it.face);
+    const px = PX(su.x), py = PY(su.y), rp = su.r * s;
+    if (px < -rp * 4 || px > W + rp * 4 || py < -rp * 4 || py > H + rp * 4) continue;
+    /* soft shadow */
+    if (!B.water) {
+      g2.fillStyle = 'rgba(0,0,0,0.16)';
+      const lift = clamp01((GROUND_Y - su.y) / 220);
+      ell(g2, PX(su.x), PY(GROUND_Y - 2), rp * (0.9 - lift * 0.35), rp * 0.26 * (1 - lift * 0.4));
+      g2.fill();
+    }
+    drawGlim(g2, px, py, rp, it.sp, su.pose, {
+      face: it.face, seed: it.seed, time, bhIdx: it.bhIdx, phase: it.phase,
+      night, flash: C.flash, blink: it.blink
+    });
+  }
+
+  /* rain / fog / wind / lightning */
+  if (C.weather === 'rain' || C.weather === 'storm') {
+    const rain = Array.isArray(C.rain) ? C.rain : [];
+    g2.strokeStyle = 'rgba(190,225,255,0.42)'; g2.lineWidth = Math.max(0.7, 1.6 * s);
+    g2.beginPath();
+    for (const r of rain) {
+      const x = PX(r.x), y = PY(r.y);
+      if (x < -10 || x > W + 10 || y < -10 || y > H + 10) continue;
+      g2.moveTo(x, y); g2.lineTo(x - 5 * s * r.sp, y + 17 * s * r.sp);
+    }
+    g2.stroke();
+  }
+  if (C.weather === 'fog') {
+    for (let i = 0; i < 4; i++) {
+      const y = PY(220 + i * 80);
+      const fg = g2.createLinearGradient(0, y - 60 * s, 0, y + 60 * s);
+      fg.addColorStop(0, 'rgba(220,235,250,0)');
+      fg.addColorStop(0.5, 'rgba(220,235,250,' + (0.24 - i * 0.03).toFixed(3) + ')');
+      fg.addColorStop(1, 'rgba(220,235,250,0)');
+      g2.fillStyle = fg; g2.fillRect(0, y - 60 * s, W, 120 * s);
+    }
+    g2.fillStyle = 'rgba(215,232,248,0.16)'; g2.fillRect(0, 0, W, H);
+  }
+  if (C.weather === 'wind') {
+    g2.strokeStyle = 'rgba(255,255,255,0.16)'; g2.lineWidth = Math.max(0.7, 2 * s);
+    for (let i = 0; i < 9; i++) {
+      const y = PY(120 + i * 48);
+      const ph = (time * 220 + i * 90) % (W + 300) - 150;
+      g2.beginPath(); g2.moveTo(ph, y); g2.quadraticCurveTo(ph + 60, y - 8, ph + 130, y); g2.stroke();
+    }
+  }
+  const li = clamp01(C.lightning || 0);
+  if (li > 0.02) {
+    g2.fillStyle = 'rgba(240,248,255,' + (li * 0.55).toFixed(3) + ')';
+    g2.fillRect(0, 0, W, H);
+    g2.strokeStyle = 'rgba(255,255,255,' + (li * 0.9).toFixed(3) + ')';
+    g2.lineWidth = Math.max(1.4, 3 * s);
+    const bx = PX(WORLD_W * 0.35 + (C.biome | 0) * 90);
+    g2.beginPath(); g2.moveTo(bx, 0);
+    let yy = 0;
+    for (let i = 0; i < 6; i++) { yy += PY(GROUND_Y) / 6; g2.lineTo(bx + (hnoise(3, i) - 0.5) * 60 * s, yy); }
+    g2.stroke();
+  }
+  if (C.flash) {
+    const fgr = g2.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.7);
+    fgr.addColorStop(0, 'rgba(255,255,240,0.30)'); fgr.addColorStop(1, 'rgba(255,255,240,0)');
+    g2.fillStyle = fgr; g2.fillRect(0, 0, W, H);
+  }
+}
+
+/* ================================================================
+   JUICE — particles, toast, shake, bullet time
+   ================================================================ */
+const parts = [];
+function addParts(n, fn) { for (let i = 0; i < n && parts.length < 320; i++) parts.push(fn(i)); }
+function confetti(n) {
+  addParts(n, () => ({
+    x: rnd(0, view.W), y: rnd(-70, -6), vx: rnd(-50, 50), vy: rnd(70, 220), g: 60,
+    life: rnd(1.6, 3.0), t: 0, size: rnd(3, 8), rot: rnd(0, TAU), vr: rnd(-9, 9),
+    col: pick(['#ff8fa3', '#7dffb0', '#ffd166', '#8fc8ff', '#e6b3ff', '#fff2c8'])
+  }));
+}
+function sparkAt(x, y, col, n) {
+  addParts(n || 16, () => {
+    const a = rnd(0, TAU), sp2 = rnd(60, 300);
+    return { x, y, vx: Math.cos(a) * sp2, vy: Math.sin(a) * sp2 - 40, g: 190,
+      life: rnd(0.4, 0.95), t: 0, size: rnd(2, 5), rot: 0, vr: 0, col };
+  });
+}
+function updateDrawParts(dt) {
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const p = parts[i];
+    p.t += dt;
+    if (p.t >= p.life) { parts.splice(i, 1); continue; }
+    p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt;
+    const a = 1 - p.t / p.life;
+    ctx.globalAlpha = a;
+    ctx.fillStyle = p.col;
+    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 1.5);
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
+}
+let shakeT = 0, shakeMag = 0;
+function shake(t, m) { shakeT = Math.max(shakeT, t); shakeMag = Math.max(shakeMag, m); }
+const toastEl = document.getElementById('toast');
+let toastTO = 0;
+function toast(txt, col) {
+  if (!toastEl) return;
+  toastEl.textContent = txt;
+  toastEl.style.color = col || '#fff';
+  toastEl.classList.remove('show');
+  void toastEl.offsetWidth;
+  toastEl.classList.add('show');
+  clearTimeout(toastTO);
+  toastTO = setTimeout(() => toastEl.classList.remove('show'), 1300);
+}
+
+/* ================================================================
+   VIEWFINDER OVERLAY
+   ================================================================ */
+const focusRing = { x: 0, y: 0, r: 40, a: 0 };
+const hits = { alerts: [] };
+let liveGrade = null;
+function drawViewfinder(dt) {
+  const W = view.W, H = view.H;
+  const topPad = 86, botPad = 118;
+
+  /* vignette */
+  const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.32, W / 2, H / 2, Math.max(W, H) * 0.72);
+  vg.addColorStop(0, 'rgba(0,0,0,0)');
+  vg.addColorStop(1, 'rgba(3,8,18,0.46)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+
+  /* thirds grid */
+  ctx.strokeStyle = 'rgba(255,255,255,0.10)'; ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let i = 1; i < 3; i++) {
+    ctx.moveTo(Math.round(W * i / 3) + 0.5, topPad); ctx.lineTo(Math.round(W * i / 3) + 0.5, H - botPad);
+    ctx.moveTo(24, Math.round(topPad + (H - topPad - botPad) * i / 3) + 0.5);
+    ctx.lineTo(W - 24, Math.round(topPad + (H - topPad - botPad) * i / 3) + 0.5);
+  }
+  ctx.stroke();
+
+  /* corner brackets */
+  const m = 18, L = Math.min(34, W * 0.09);
+  ctx.strokeStyle = 'rgba(230,245,255,0.65)'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+  const cs = [[m, topPad, 1, 1], [W - m, topPad, -1, 1], [m, H - botPad, 1, -1], [W - m, H - botPad, -1, -1]];
+  for (const c of cs) {
+    ctx.beginPath();
+    ctx.moveTo(c[0] + c[2] * L, c[1]); ctx.lineTo(c[0], c[1]); ctx.lineTo(c[0], c[1] + c[3] * L);
+    ctx.stroke();
+  }
+  /* centre cross */
+  ctx.strokeStyle = 'rgba(255,255,255,0.22)'; ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(W / 2 - 9, H / 2); ctx.lineTo(W / 2 + 9, H / 2);
+  ctx.moveTo(W / 2, H / 2 - 9); ctx.lineTo(W / 2, H / 2 + 9);
+  ctx.stroke();
+
+  /* focus ring locks onto the subject */
+  const g = currentSubject(exp);
+  const s = view.s1 * cam.z;
+  if (g) {
+    const su = subjectAt(g.sp, g.bhIdx, g.phase === 'act' ? g.t : -999, g.bx, g.by, g.face);
+    const tx = projX(cam.x, cam.z, view.s1, W, su.x);
+    const ty = projY(cam.y, cam.z, view.s1, H, su.y);
+    focusRing.x = lerp(focusRing.x, tx, clamp01(dt * 16));
+    focusRing.y = lerp(focusRing.y, ty, clamp01(dt * 16));
+    focusRing.r = lerp(focusRing.r, Math.max(16, su.r * s * 1.5), clamp01(dt * 12));
+    focusRing.a = lerp(focusRing.a, 1, clamp01(dt * 10));
+  } else focusRing.a = lerp(focusRing.a, 0, clamp01(dt * 8));
+
+  liveGrade = null;
+  if (g && focusRing.a > 0.05) {
+    liveGrade = gradeShot(gradeInput(g));
+    const hot = liveGrade.timing >= 0.999;
+    const col = hot ? '#ffd166' : (liveGrade.total >= CATCH_AT ? '#8fe6a6' : '#cfe6ff');
+    ctx.save();
+    ctx.globalAlpha = focusRing.a;
+    ctx.strokeStyle = col; ctx.lineWidth = hot ? 3 : 2;
+    const r = focusRing.r * (hot ? 1 + 0.05 * Math.sin(elapsed * 22) : 1);
+    const k = r * 0.55;
+    for (let i = 0; i < 4; i++) {
+      const sx = i % 2 ? 1 : -1, sy = i < 2 ? -1 : 1;
+      ctx.beginPath();
+      ctx.moveTo(focusRing.x + sx * r, focusRing.y + sy * r - sy * k);
+      ctx.lineTo(focusRing.x + sx * r, focusRing.y + sy * r);
+      ctx.lineTo(focusRing.x + sx * r - sx * k, focusRing.y + sy * r);
+      ctx.stroke();
+    }
+    if (hot) {
+      ctx.strokeStyle = 'rgba(255,209,102,0.35)'; ctx.lineWidth = 6;
+      ctx.strokeRect(6, topPad - 6, W - 12, H - topPad - botPad + 12);
+    }
+    ctx.restore();
+  }
+
+  /* live grade readout */
+  const gx = 14, gy = H - botPad - 74;
+  ctx.save();
+  ctx.fillStyle = 'rgba(6,14,28,0.55)';
+  rr(ctx, gx, gy, 128, 66, 12); ctx.fill();
+  ctx.strokeStyle = 'rgba(150,205,255,0.25)'; ctx.lineWidth = 1; ctx.stroke();
+  const axes = [['FRAME', liveGrade ? liveGrade.framing : 0, '#8fc8ff'],
+                ['TIME', liveGrade ? liveGrade.timing : 0, '#ffd166'],
+                ['RARE', liveGrade ? liveGrade.rarity : 0, '#e6b3ff']];
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  for (let i = 0; i < 3; i++) {
+    const y = gy + 14 + i * 15;
+    ctx.font = '800 9px ' + FONT; ctx.fillStyle = '#9fc6ea';
+    ctx.fillText(axes[i][0], gx + 8, y);
+    ctx.fillStyle = 'rgba(255,255,255,0.13)';
+    rr(ctx, gx + 44, y - 4, 56, 7, 4); ctx.fill();
+    ctx.fillStyle = axes[i][2];
+    rr(ctx, gx + 44, y - 4, Math.max(1, 56 * clamp01(axes[i][1])), 7, 4); ctx.fill();
+  }
+  ctx.font = '900 22px ' + FONT;
+  ctx.fillStyle = liveGrade ? LETTER_COL[liveGrade.letter] : '#4c5b70';
+  ctx.textAlign = 'right';
+  ctx.fillText(liveGrade ? liveGrade.letter : '–', gx + 118, gy + 46);
+  ctx.font = '800 11px ' + FONT; ctx.fillStyle = '#cfe6ff';
+  ctx.fillText(liveGrade ? liveGrade.total + '' : '', gx + 96, gy + 48);
+  ctx.restore();
+
+  /* zoom bar */
+  const zm = zMax(), zt = clamp01((cam.z - 1) / Math.max(0.01, zm - 1));
+  const zx = W - 16, zy0 = topPad + 20, zy1 = H - botPad - 90;
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(zx, zy0); ctx.lineTo(zx, zy1); ctx.stroke();
+  ctx.strokeStyle = '#ffd166';
+  ctx.beginPath(); ctx.moveTo(zx, zy1); ctx.lineTo(zx, lerp(zy1, zy0, zt)); ctx.stroke();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(zx, lerp(zy1, zy0, zt), 5, 0, TAU); ctx.fill();
+  ctx.font = '800 9px ' + FONT; ctx.fillStyle = '#9fc6ea'; ctx.textAlign = 'right';
+  ctx.fillText(cam.z.toFixed(1) + 'x', zx - 9, zy0 - 8);
+
+  /* alert chips for telegraphing glims */
+  hits.alerts.length = 0;
+  for (const gg of exp.glims) {
+    if (gg.gone || gg.phase !== 'act') continue;
+    const bh = SPECIES[gg.sp].bh[gg.bhIdx];
+    const remain = bh.peakT - gg.t;
+    if (remain < -0.15 || remain > bh.peakT) continue;
+    const pp = peakPos(gg);
+    const px = projX(cam.x, cam.z, view.s1, W, pp.x);
+    const py = projY(cam.y, cam.z, view.s1, H, pp.y);
+    const inside = px > 40 && px < W - 40 && py > topPad + 20 && py < H - botPad - 20;
+    const cx2 = clamp(px, 42, W - 42), cy2 = clamp(py, topPad + 26, H - botPad - 26);
+    const E = ESS[SPECIES[gg.sp].ess];
+    const prog = clamp01(1 - remain / Math.max(0.01, bh.peakT));
+    ctx.save();
+    ctx.globalAlpha = inside ? 0.5 : 1;
+    ctx.fillStyle = 'rgba(8,18,34,0.72)';
+    ctx.beginPath(); ctx.arc(cx2, cy2, 19, 0, TAU); ctx.fill();
+    ctx.strokeStyle = hexA(E.glow, 0.85); ctx.lineWidth = 3.4;
+    ctx.beginPath(); ctx.arc(cx2, cy2, 19, -Math.PI / 2, -Math.PI / 2 + TAU * prog); ctx.stroke();
+    ctx.font = '900 15px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#fff';
+    ctx.fillText(SPECIES[gg.sp].legend ? '✨' : (remain > 0 ? '!' : '★'), cx2, cy2 + 1);
+    ctx.restore();
+    if (!inside) hits.alerts.push({ x: cx2 - 24, y: cy2 - 24, w: 48, h: 48, g: gg });
+  }
+
+  /* lure aiming preview */
+  if (lureArmed || lureDrag) {
+    const p = lureDrag ? lureDrag : null;
+    ctx.save();
+    ctx.setLineDash([6, 6]);
+    ctx.strokeStyle = 'rgba(255,209,102,0.8)'; ctx.lineWidth = 2;
+    const ax = p ? p.x : W / 2, ay = p ? p.y : H / 2;
+    ctx.beginPath(); ctx.arc(ax, ay, lureRadFor(store.up.lure) * s * 0.6, 0, TAU); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font = '900 13px ' + FONT; ctx.textAlign = 'center'; ctx.fillStyle = '#ffd166';
+    ctx.fillText('🍯 drop lure', ax, ay - lureRadFor(store.up.lure) * s * 0.6 - 10);
+    ctx.restore();
+  }
+
+  /* flash pop */
+  if (flashFX > 0) {
+    ctx.fillStyle = 'rgba(255,255,240,' + (flashFX * 0.85).toFixed(3) + ')';
+    ctx.fillRect(0, 0, W, H);
+  }
+  /* bullet-time letterbox */
+  if (bulletT > 0) {
+    const a = clamp01(bulletT / BULLET_TIME);
+    ctx.fillStyle = 'rgba(0,0,0,' + (0.55 * a).toFixed(3) + ')';
+    const bh2 = 26 * a;
+    ctx.fillRect(0, 0, W, bh2); ctx.fillRect(0, H - bh2, W, bh2);
+    ctx.strokeStyle = 'rgba(255,255,255,' + (0.5 * a).toFixed(3) + ')';
+    ctx.lineWidth = 2; ctx.strokeRect(4, 4, W - 8, H - 8);
+  }
+}
+
+/* ================================================================
+   INPUT
+   ================================================================ */
+const ptrs = new Map();
+let pinchD0 = 0, pinchZ0 = 1;
+let holdT = 0, holding = false, panning = false;
+let lureArmed = false, lureDrag = null;
+let flashOn = false, flashFX = 0;
+let bulletT = 0, timeScale = 1;
+
+function localPt(e) {
+  const r = cv.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+function screenToWorld(x, y) {
+  const s = Math.max(1e-6, view.s1 * cam.z);
+  return { x: cam.x + (x - view.W / 2) / s, y: cam.y + (y - view.H / 2) / s };
+}
+function inR(p, r) { return p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h; }
+
+cv.addEventListener('pointerdown', e => {
+  e.preventDefault(); ensureAudio();
+  const p = localPt(e);
+  ptrs.set(e.pointerId, { x: p.x, y: p.y, x0: p.x, y0: p.y, t0: performance.now(), moved: 0 });
+  try { cv.setPointerCapture(e.pointerId); } catch (er) {}
+  if (ptrs.size === 2) {
+    const a = Array.from(ptrs.values());
+    pinchD0 = Math.max(1, Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y));
+    pinchZ0 = cam.z; holding = false; panning = false;
+  } else if (ptrs.size === 1) { holdT = 0; holding = false; panning = false; }
+}, { passive: false });
+
+cv.addEventListener('pointermove', e => {
+  const q = ptrs.get(e.pointerId);
+  if (!q) return;
+  e.preventDefault();
+  const p = localPt(e);
+  const dx = p.x - q.x, dy = p.y - q.y;
+  q.moved += Math.abs(dx) + Math.abs(dy);
+  q.x = p.x; q.y = p.y;
+  if (ptrs.size >= 2) {
+    const a = Array.from(ptrs.values());
+    const d = Math.max(1, Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y));
+    setZoom(pinchZ0 * (d / pinchD0), false);
+    return;
+  }
+  if (q.moved > 9) {
+    panning = true; holding = false; cam.swing = null;
+    const s = Math.max(1e-6, view.s1 * cam.z);
+    cam.x -= dx / s; cam.y -= dy / s;
+    clampCam();
+  }
+}, { passive: false });
+
+function endPointer(e) {
+  const q = ptrs.get(e.pointerId);
+  ptrs.delete(e.pointerId);
+  try { cv.releasePointerCapture(e.pointerId); } catch (er) {}
+  if (ptrs.size < 2) { holding = false; }
+  if (ptrs.size === 1) {
+    const a = Array.from(ptrs.values())[0];
+    a.moved = 999;  /* don't treat the leftover finger as a tap */
+  }
+  if (!q) return;
+  const dtms = performance.now() - q.t0;
+  if (dtms < 300 && q.moved < 12 && !panning) tapAt(q.x, q.y);
+  if (ptrs.size === 0) panning = false;
+}
+cv.addEventListener('pointerup', endPointer);
+cv.addEventListener('pointercancel', endPointer);
+cv.addEventListener('pointerleave', e => { if (ptrs.has(e.pointerId)) endPointer(e); });
+cv.addEventListener('wheel', e => {
+  e.preventDefault();
+  setZoom(cam.z * Math.exp(-e.deltaY * 0.0016), true);
+}, { passive: false });
+['touchstart', 'touchmove', 'gesturestart', 'gesturechange', 'contextmenu'].forEach(ev =>
+  document.addEventListener(ev, e => { if (e.target === cv) e.preventDefault(); }, { passive: false }));
+document.addEventListener('visibilitychange', () => {
+  ptrs.clear(); holding = false; panning = false; lureDrag = null;
+  last = performance.now();
+});
+window.addEventListener('blur', () => { ptrs.clear(); holding = false; panning = false; lureDrag = null; });
+
+function tapAt(x, y) {
+  if (exp.isTitle) return;
+  for (const a of hits.alerts) {
+    if (inR({ x, y }, a)) { const pp = peakPos(a.g); swingTo(pp.x, pp.y); sfx.focus(); vib(8); return; }
+  }
+  if (lureArmed) { placeLure(x, y); return; }
+  /* tap a visible Glim to swing onto it */
+  const s = view.s1 * cam.z;
+  let best = null, bd = 1e9;
+  for (const g of exp.glims) {
+    if (g.gone) continue;
+    const su = subjectAt(g.sp, g.bhIdx, g.phase === 'act' ? g.t : -999, g.bx, g.by, g.face);
+    const px = projX(cam.x, cam.z, view.s1, view.W, su.x);
+    const py = projY(cam.y, cam.z, view.s1, view.H, su.y);
+    const d = Math.hypot(px - x, py - y);
+    if (d < Math.max(46, su.r * s * 1.6) && d < bd) { bd = d; best = g; }
+  }
+  if (best) {
+    const pp = best.phase === 'act' ? peakPos(best) : { x: best.bx, y: best.by };
+    swingTo(pp.x, pp.y); sfx.focus(); vib(6);
+  }
+}
+function placeLure(sx, sy) {
+  if (exp.lures <= 0) { toast('NO LURES LEFT', '#ffb3b3'); sfx.spook(); return; }
+  const w = screenToWorld(sx, sy);
+  const lx = clamp(w.x, BX_MIN, BX_MAX), ly = clamp(w.y, BY_MIN + 26, BY_MAX + 26);
+  const L = { x: lx, y: ly, t: 0, dead: false };
+  exp.placed.push(L); exp.lures--;
+  lureArmed = false; lureDrag = null;
+  sfx.lure(); vib(12);
+  sparkAt(sx, sy, '#ffd166', 14);
+  /* the nearest idle Glim within range comes over */
+  const R = lureRadFor(store.up.lure);
+  let best = null, bd = 1e9;
+  for (const g of exp.glims) {
+    if (g.gone || g.phase !== 'idle' || g.lure) continue;
+    const d = Math.hypot(g.bx - lx, g.by - ly);
+    if (d < R && d < bd) { bd = d; best = g; }
+  }
+  if (best) { best.lure = L; best.next = 99; }
+  else toast('nothing nearby…', '#cfe6ff');
+  updateHUD();
+}
+
+/* ================================================================
+   THE SHUTTER
+   ================================================================ */
+function gradeInput(g) {
+  const others = [];
+  for (const o of exp.glims) {
+    if (o === g || o.gone) continue;
+    const su = subjectAt(o.sp, o.bhIdx, o.phase === 'act' ? o.t : -999, o.bx, o.by, o.face);
+    others.push({ sp: o.sp, x: su.x, y: su.y });
+    if (others.length >= 4) break;
+  }
+  return {
+    sp: g.sp, bh: g.bhIdx, t: g.phase === 'act' ? g.t : -999,
+    bx: g.bx, by: g.by, face: g.face,
+    cx: cam.x, cy: cam.y, cz: cam.z, W: view.W, H: view.H, s1: view.s1,
+    night: exp.night, flash: flashOn, weather: exp.weather, lightning: exp.lightning,
+    biome: exp.biome, others, shutterMul: shutterMulFor(store.up.shutter)
+  };
+}
+const CAPTIONS_HI = ['Held its breath and held mine.', 'Everything lined up at once.', 'One frame. That one.',
+  'The whole glade went quiet.', 'Caught it clean.'];
+const CAPTIONS_MID = ['Close. Nearly.', 'A hair early.', 'Worth keeping.', 'Not bad for handheld.'];
+const CAPTIONS_LOW = ['Well, it was there.', 'Blurry, but honest.', 'Mostly elbow.', 'Practice frame.'];
+
+function fireShutter() {
+  if (exp.isTitle) return;
+  if (bulletT > 0) return;
+  ensureAudio();
+  const g = currentSubject(exp);
+  if (!g) { toast('NOTHING IN FRAME', '#cfe6ff'); sfx.spook(); return; }
+  if (exp.film <= 0) { toast('OUT OF FILM', '#ffb3b3'); sfx.spook(); return; }
+
+  const inp = gradeInput(g);
+  const res = gradeShot(inp);
+  const sp = SPECIES[g.sp], bh = sp.bh[g.bhIdx];
+  const idle = g.phase !== 'act';
+
+  exp.film--; store.shots++;
+  sfx.clack(); vib(14); shake(0.18, 5);
+  bulletT = BULLET_TIME; timeScale = 0.13;
+  if (flashOn) { flashFX = 0.55; sfx.flash(); startleByFlash(g); }
+
+  const photo = {
+    sp: g.sp, bh: g.bhIdx, t: inp.t, bx: g.bx, by: g.by, face: g.face,
+    cx: cam.x, cy: cam.y, cz: cam.z, ar: view.W / Math.max(1, view.H),
+    fov: view.W / Math.max(1e-6, view.s1 * cam.z),
+    biome: exp.biome, weather: exp.weather, night: exp.night, flash: flashOn,
+    seed: g.seed | 0, lightning: exp.lightning, idle: idle,
+    oth: inp.others.slice(0, 3).map(o => [o.sp, Math.round(o.x), Math.round(o.y)]),
+    g: res.total, lt: res.letter, fr: res.framing, ti: res.timing, ra: res.rarity, cb: res.bonuses,
+    cap: idle ? 'Resting — ' + sp.name
+      : (res.total >= 80 ? pick(CAPTIONS_HI) : res.total >= 50 ? pick(CAPTIONS_MID) : pick(CAPTIONS_LOW))
+  };
+  photo.title = idle ? sp.name + ' at rest' : sp.name + ' — ' + bh.name;
+
+  const caught = res.total >= CATCH_AT && !idle;
+  let lum = Math.round(res.total * 1.15 + bh.rar * 9 + (caught ? 25 : 0));
+
+  /* contract */
+  const c = exp.contract;
+  if (c && !exp.contractDone &&
+      (c.sp < 0 || c.sp === g.sp) && (c.bh < 0 || c.bh === g.bhIdx) &&
+      res.total >= c.min && (!c.comp || res.bonuses.indexOf(c.comp) >= 0) && !idle) {
+    exp.contractDone = true; lum += c.reward;
+    toast('📜 CONTRACT FILLED +' + c.reward, '#8fe6a6');
+    confetti(40);
+  }
+  exp.lumens += lum;
+  exp.shots.push(photo);
+
+  /* album */
+  if (!idle) {
+    const key = sp.id + ':' + bh.id;
+    const cur = store.album[key];
+    const wasComplete = speciesComplete(sp);
+    if (!cur || res.total > cur.g) store.album[key] = photo;
+    if (!wasComplete && speciesComplete(sp)) {
+      track('species_completed', { value: sp.id });
+      toast('📖 ' + sp.name.toUpperCase() + ' PAGE COMPLETE!', '#ffd166');
+      confetti(60);
+    }
+  }
+  store.recent.unshift(photo);
+  if (store.recent.length > 12) store.recent.length = 12;
+
+  if (caught) {
+    exp.caught++; store.caught++;
+    g.react = res.total >= 80 ? 'pose' : 'approach'; g.reactT = 1.6; g.tame = 1;
+    sparkAt(view.W / 2, view.H / 2, ESS[sp.ess].c1, 22);
+  } else if (!idle) {
+    g.react = 'shy'; g.reactT = 1.2;
+  }
+  if (res.total >= PERFECT_AT) {
+    store.perfect++;
+    if (!store.sawPerfect) { store.sawPerfect = true; confetti(110); toast('✨ FIRST PERFECT SHOT ✨', '#ffe6a8'); }
+    else confetti(50);
+  }
+  track('photo_taken', { value: res.total });
+  store.lumens += lum;
+  saveStore();
+  updateHUD();
+
+  /* develop the photo after the bullet-time beat */
+  pendingCard = photo;
+  pendingCardT = BULLET_TIME * 0.75;
+  if (res.total >= PERFECT_AT) sfx.perfect();
+  else if (caught) sfx.befriend();
+  else sfx.advance();
+}
+function startleByFlash(except) {
+  const s = view.s1 * cam.z;
+  for (const g of exp.glims) {
+    if (g === except || g.gone || g.phase === 'flee') continue;
+    const px = projX(cam.x, cam.z, view.s1, view.W, g.bx);
+    const py = projY(cam.y, cam.z, view.s1, view.H, g.by);
+    const near = px > -160 && px < view.W + 160 && py > -160 && py < view.H + 160;
+    if (near && !SPECIES[g.sp].noct) spookGlim(g, px < view.W / 2 ? -1 : 1);
+  }
+}
+function speciesComplete(sp) {
+  for (const b of sp.bh) if (!store.album[sp.id + ':' + b.id]) return false;
+  return true;
+}
+function albumCount() { let n = 0; for (const k in store.album) n++; return n; }
+function albumTotal() { let n = 0; for (const s of SPECIES) n += s.bh.length; return n; }
+
+/* ================================================================
+   PHOTO RE-RENDER — a saved photo is only parameters; this rebuilds
+   the exact frame from them, at any canvas size.
+   ================================================================ */
+function photoItems(ph) {
+  const items = [{
+    sp: ph.sp, bhIdx: ph.bh, t: ph.t, bx: ph.bx, by: ph.by, face: ph.face,
+    seed: ph.seed, phase: ph.t >= 0 ? 'act' : 'idle', blink: 1, gone: 0
+  }];
+  const oth = Array.isArray(ph.oth) ? ph.oth : [];
+  for (let i = 0; i < oth.length; i++) {
+    items.push({ sp: oth[i][0], bhIdx: 0, t: -999, bx: oth[i][1], by: oth[i][2],
+      face: 1, seed: (ph.seed + 31 * (i + 1)) | 0, phase: 'idle', blink: 1, gone: 0 });
+  }
+  return items;
+}
+function photoRain(ph) {
+  const r = [];
+  for (let i = 0; i < 70; i++) {
+    r.push({ x: hnoise(ph.seed | 0, i) * WORLD_W, y: hnoise((ph.seed | 0) + 5, i) * WORLD_H,
+      sp: 0.7 + hnoise((ph.seed | 0) + 11, i) * 0.6 });
+  }
+  return r;
+}
+function renderPhotoTo(g2, Wc, ph) {
+  const ar = Math.max(0.25, ph.ar || 0.66);
+  const Hc = Math.max(1, Math.round(Wc / ar));
+  const fov = Math.max(1, ph.fov || (WORLD_W / Math.max(1, ph.cz)));
+  const s = Wc / fov;
+  g2.save();
+  g2.beginPath(); g2.rect(0, 0, Wc, Hc); g2.clip();
+  renderWorld(g2, {
+    W: Wc, H: Hc, cx: ph.cx, cy: ph.cy, cz: 1, s1: s,
+    biome: ph.biome, night: ph.night, weather: ph.weather,
+    lightning: ph.lightning, flash: ph.flash,
+    items: photoItems(ph), lures: [], rain: photoRain(ph),
+    time: ((ph.seed | 0) % 997) / 61
+  });
+  /* print finish */
+  const vg = g2.createRadialGradient(Wc / 2, Hc / 2, Math.min(Wc, Hc) * 0.3, Wc / 2, Hc / 2, Math.max(Wc, Hc) * 0.75);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(20,14,6,0.30)');
+  g2.fillStyle = vg; g2.fillRect(0, 0, Wc, Hc);
+  g2.fillStyle = 'rgba(255,240,210,0.06)'; g2.fillRect(0, 0, Wc, Hc);
+  g2.restore();
+  return Hc;
+}
+function paintPhotoCanvas(el, ph, cssW) {
+  if (!el || !ph) return;
+  try {
+    const dpr = clamp(window.devicePixelRatio || 1, 1, 2);
+    const ar = Math.max(0.25, ph.ar || 0.66);
+    const w = cssW || el.clientWidth || 120;
+    const h = Math.round(w / ar);
+    el.width = Math.max(1, Math.round(w * dpr));
+    el.height = Math.max(1, Math.round(h * dpr));
+    el.style.height = h + 'px';
+    const g2 = el.getContext('2d');
+    if (!g2) return;
+    g2.setTransform(dpr, 0, 0, dpr, 0, 0);
+    renderPhotoTo(g2, w, ph);
+  } catch (e) {}
+}
+
+/* the developed photo sliding into frame */
+const cardEl = document.getElementById('card');
+const pcEl = document.getElementById('pc');
+const capEl = document.getElementById('cardCap');
+const stampEl = document.getElementById('cardStamp');
+let pendingCard = null, pendingCardT = 0, cardHideT = 0;
+function showCard(ph) {
+  try {
+    paintPhotoCanvas(pcEl, ph, cardEl ? Math.max(120, cardEl.clientWidth - 16) : 220);
+    if (capEl) capEl.innerHTML = esc(ph.title) + '<span>' + esc(ph.cap) + (ph.cb && ph.cb.length ? ' · ' + esc(ph.cb.join(' · ')) : '') + '</span>';
+    if (stampEl) { stampEl.textContent = ph.lt; stampEl.style.background = LETTER_COL[ph.lt] || '#3b7fae'; }
+    if (cardEl) cardEl.classList.add('in');
+    cardHideT = 2.9;
+    sfx.advance();
+  } catch (e) {}
+}
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+/* ================================================================
+   HUD
+   ================================================================ */
+const hudEl = document.getElementById('hud');
+const ctlEl = document.getElementById('ctl');
+const screenEl = document.getElementById('screen');
+const badgeEl = document.getElementById('badge');
+function updateHUD() {
+  try {
+    const q = id => document.getElementById(id);
+    q('cLevel').textContent = 'EXP ' + exp.level;
+    q('cBiome').textContent = BIOMES[exp.biome].emo + ' ' + BIOMES[exp.biome].name +
+      (exp.night ? ' 🌙' : '') + (exp.weather !== 'clear' ? ' · ' + exp.weather : '');
+    q('cLum').innerHTML = '<b>' + exp.lumens + '</b> ✦';
+    const c = exp.contract;
+    const cc = q('contract');
+    cc.textContent = (exp.contractDone ? '✅ ' : '📜 ') + (c ? c.text : '—') + (c && !exp.contractDone ? ' (+' + c.reward + ')' : '');
+    cc.className = 'chip' + (exp.contractDone ? ' done' : '');
+    let dots = '';
+    for (let i = 0; i < exp.filmMax; i++) dots += '<div class="fd' + (i < exp.filmMax - exp.film ? ' used' : '') + '"></div>';
+    q('filmDots').innerHTML = dots;
+    q('lureN').textContent = exp.lures;
+    q('bLure').className = 'btn' + (lureArmed ? ' on' : '') + (exp.lures <= 0 ? ' dim' : '');
+    q('bFlash').className = 'btn' + (flashOn ? ' on' : '');
+    q('shutter').className = exp.film <= 0 ? 'empty' : '';
+    q('cMute').textContent = muted ? '🔇' : '🔊';
+  } catch (e) {}
+}
+
+/* ================================================================
+   SCREENS
+   ================================================================ */
+let scene = 'title';
+function setChrome(playing) {
+  hudEl.classList.toggle('hide', !playing);
+  ctlEl.classList.toggle('hide', !playing);
+  badgeEl.style.display = playing ? 'none' : 'block';
+}
+function openScreen(html) {
+  screenEl.innerHTML = html;
+  screenEl.classList.remove('hide');
+  screenEl.scrollTop = 0;
+  setChrome(false);
+}
+function closeScreen() { screenEl.classList.add('hide'); }
+
+function statChips() {
+  return '<div class="stats">' +
+    '<div class="chip"><b>' + store.lumens + '</b> ✦ lumens</div>' +
+    '<div class="chip">📖 <b>' + albumCount() + '</b>/' + albumTotal() + ' shots</div>' +
+    '<div class="chip">🏅 best <b>' + store.best + '</b></div>' +
+    '<div class="chip">✨ perfect <b>' + store.perfect + '</b></div></div>';
+}
+function titleScreen() {
+  scene = 'title';
+  exp = makeExpedition(Math.max(1, store.level), true);
+  cam.z = Math.max(1.0, zFill() * 0.5); clampCam();
+  openScreen(
+    '<h1>SNAPCATCH</h1>' +
+    '<div class="tag">You don\'t throw anything. You just have to be looking at the right moment.</div>' +
+    '<button class="big" data-act="play">▶ EXPEDITION ' + Math.max(1, store.level) + '</button>' +
+    '<div class="rowbtns"><button class="lnk" data-act="album">📖 The Album</button>' +
+    '<button class="lnk" data-act="up">⭐ Upgrades</button>' +
+    '<button class="lnk" data-act="mute">' + (muted ? '🔇 Sound off' : '🔊 Sound on') + '</button></div>' +
+    statChips() +
+    '<div class="panel"><b style="color:#ffd166">How to catch</b>' +
+    '<div class="sub" style="max-width:none;margin-top:6px">' +
+    '• <b>Drag</b> to pan · <b>pinch</b> or <b>tap-hold</b> to zoom · tap a Glim (or its <b>!</b> marker) to swing onto it.<br>' +
+    '• Glims <b>telegraph</b>: a closing ring means the peak is coming. The frame glows gold on the perfect instant.<br>' +
+    '• <b>Tap the shutter</b> at the peak. You are graded on Framing, Timing, Rarity and Composition.<br>' +
+    '• A great photo befriends the Glim. A poor one just spooks it — <b>you can never fail</b>, only shoot worse.<br>' +
+    '• Drop a <b>lure</b> to provoke a Glim\'s rarest behaviour and set your shot up.</div></div>'
+  );
+}
+function albumScreen() {
+  scene = 'album';
+  let g = '<h2>📖 THE ALBUM</h2><div class="sub">The photographs you actually took. Fill a page by catching every behaviour.</div>';
+  g += '<div class="spGrid">';
+  for (const sp of SPECIES) {
+    const done = sp.bh.filter(b => store.album[sp.id + ':' + b.id]).length;
+    const full = done === sp.bh.length;
+    g += '<div class="spCard' + (full ? ' full' : '') + '" data-act="sp" data-sp="' + sp.id + '">' +
+      '<div style="font-size:22px">' + ESS[sp.ess].emo + (sp.legend ? '✨' : '') + '</div>' +
+      '<h3>' + esc(sp.name) + '</h3><p>' + esc(ESS[sp.ess].name) + ' · ' + done + '/' + sp.bh.length + '</p>' +
+      '<div class="thumbs">';
+    for (const b of sp.bh) {
+      const ph = store.album[sp.id + ':' + b.id];
+      g += ph ? '<canvas data-ph="' + sp.id + ':' + b.id + '"></canvas>' : '<div class="empty"></div>';
+    }
+    g += '</div></div>';
+  }
+  g += '</div>';
+  g += '<div class="rowbtns"><button class="lnk" data-act="home">◀ Back</button></div>';
+  openScreen(g);
+  paintAlbumThumbs();
+}
+function paintAlbumThumbs() {
+  const cs = screenEl.querySelectorAll('canvas[data-ph]');
+  for (let i = 0; i < cs.length; i++) {
+    const ph = store.album[cs[i].getAttribute('data-ph')];
+    if (!ph) continue;
+    cs[i].style.height = '26px';
+    try {
+      const dpr = clamp(window.devicePixelRatio || 1, 1, 2);
+      cs[i].width = Math.round(34 * dpr); cs[i].height = Math.round(26 * dpr);
+      const g2 = cs[i].getContext('2d');
+      if (!g2) continue;
+      g2.setTransform(dpr, 0, 0, dpr, 0, 0);
+      g2.save(); g2.beginPath(); g2.rect(0, 0, 34, 26); g2.clip();
+      const p2 = Object.assign({}, ph, { ar: 34 / 26 });
+      renderPhotoTo(g2, 34, p2);
+      g2.restore();
+    } catch (e) {}
+  }
+}
+function speciesScreen(spId) {
+  const sp = SP_BY_ID[spId];
+  if (!sp) { albumScreen(); return; }
+  scene = 'species';
+  let g = '<h2>' + ESS[sp.ess].emo + ' ' + esc(sp.name.toUpperCase()) + '</h2>' +
+    '<div class="sub">' + esc(sp.blurb) + '</div>' +
+    '<div class="chip">' + esc(ESS[sp.ess].name) + ' essence' + (sp.noct ? ' · nocturnal' : '') +
+    (sp.skittish ? ' · skittish' : '') + (sp.legend ? ' · legendary' : '') + '</div>' +
+    '<div class="panel">';
+  for (const b of sp.bh) {
+    const key = sp.id + ':' + b.id;
+    const ph = store.album[key];
+    g += '<div class="photoRow">';
+    if (ph) {
+      g += '<canvas data-big="' + key + '"></canvas><div class="meta"><b>' + esc(b.name) + '</b>' +
+        '<i>' + esc(ph.cap) + '</i><i>F ' + Math.round(ph.fr * 100) + ' · T ' + Math.round(ph.ti * 100) +
+        ' · R ' + Math.round(ph.ra * 100) + (ph.cb && ph.cb.length ? ' · ' + esc(ph.cb.join(', ')) : '') + '</i></div>' +
+        '<div class="gradeTag" style="background:' + (LETTER_COL[ph.lt] || '#3b7fae') + '">' + ph.lt + '</div>';
+    } else {
+      g += '<div style="width:104px;height:78px;border-radius:6px;background:rgba(255,255,255,.05);' +
+        'border:1px dashed rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;' +
+        'font-size:22px;flex:none">?</div>' +
+        '<div class="meta"><b>' + esc(b.name) + '</b><i>' + ['common', 'uncommon', 'rare', 'legendary'][clamp(b.rar, 1, 4) - 1] +
+        ' behaviour — not yet photographed</i></div>';
+    }
+    g += '</div>';
+  }
+  g += '</div><div class="rowbtns"><button class="lnk" data-act="album">◀ Album</button>' +
+    '<button class="lnk" data-act="home">🏠 Home</button></div>';
+  openScreen(g);
+  const cs = screenEl.querySelectorAll('canvas[data-big]');
+  for (let i = 0; i < cs.length; i++) {
+    const ph = store.album[cs[i].getAttribute('data-big')];
+    if (!ph) continue;
+    try {
+      const dpr = clamp(window.devicePixelRatio || 1, 1, 2);
+      cs[i].width = Math.round(104 * dpr); cs[i].height = Math.round(78 * dpr);
+      cs[i].style.height = '78px';
+      const g2 = cs[i].getContext('2d');
+      if (!g2) continue;
+      g2.setTransform(dpr, 0, 0, dpr, 0, 0);
+      g2.save(); g2.beginPath(); g2.rect(0, 0, 104, 78); g2.clip();
+      renderPhotoTo(g2, 104, Object.assign({}, ph, { ar: 104 / 78 }));
+      g2.restore();
+    } catch (e) {}
+  }
+}
+function upgradeScreen() {
+  scene = 'up';
+  let g = '<h2>⭐ KIT UPGRADES</h2><div class="chip"><b>' + store.lumens + '</b> ✦ lumens</div><div class="panel">';
+  for (const u of UPGRADES) {
+    const l = store.up[u.id] | 0;
+    const maxed = l >= u.max;
+    const cost = u.cost(l);
+    let pips = '';
+    for (let i = 0; i < u.max; i++) pips += '<div class="pip' + (i < l ? ' on' : '') + '"></div>';
+    let cur = '';
+    if (u.id === 'film') cur = filmFor(l) + ' shots';
+    if (u.id === 'lure') cur = luresFor(l) + ' lures · ' + lureRadFor(l) + ' reach';
+    if (u.id === 'shutter') cur = '±' + (0.13 * shutterMulFor(l)).toFixed(2) + 's window';
+    if (u.id === 'zoom') cur = zoomMulFor(l).toFixed(2) + '× fill';
+    g += '<div class="upRow"><div class="ui">' + u.ic + '</div><div class="ut"><b>' + u.name + '</b>' +
+      '<i>' + u.desc + ' — now: ' + cur + '</i><div class="pips">' + pips + '</div></div>' +
+      '<button class="buy" data-act="buy" data-up="' + u.id + '"' +
+      (maxed || store.lumens < cost ? ' disabled' : '') + '>' +
+      (maxed ? 'MAX' : cost + ' ✦') + '</button></div>';
+  }
+  g += '</div><div class="rowbtns"><button class="lnk" data-act="home">◀ Back</button></div>';
+  openScreen(g);
+}
+function resultsScreen() {
+  scene = 'results';
+  const shots = exp.shots.slice().sort((a, b) => b.g - a.g).slice(0, 4);
+  let g = '<h2>🎞️ ROLL DEVELOPED</h2>' +
+    '<div class="sub">Expedition ' + exp.level + ' · ' + BIOMES[exp.biome].name + '</div>' +
+    '<div class="stats"><div class="chip"><b>' + exp.lumens + '</b> ✦ earned</div>' +
+    '<div class="chip">📷 <b>' + exp.shots.length + '</b> shots</div>' +
+    '<div class="chip">🤝 <b>' + exp.caught + '</b> befriended</div>' +
+    (exp.contractDone ? '<div class="chip" style="color:#8fe6a6">📜 contract filled</div>' : '') + '</div>';
+  if (shots.length) {
+    g += '<div class="panel shotList">';
+    for (let i = 0; i < shots.length; i++) {
+      const ph = shots[i];
+      g += '<div class="photoRow"><canvas data-res="' + i + '"></canvas>' +
+        '<div class="meta"><b>' + esc(ph.title) + '</b><i>' + esc(ph.cap) + '</i>' +
+        '<i>' + ph.g + ' pts' + (ph.cb && ph.cb.length ? ' · ' + esc(ph.cb.join(', ')) : '') + '</i></div>' +
+        '<div class="gradeTag" style="background:' + (LETTER_COL[ph.lt] || '#3b7fae') + '">' + ph.lt + '</div></div>';
+    }
+    g += '</div>';
+  } else {
+    g += '<div class="panel"><div class="sub">No shots this trip. The Glimmerwild will still be there.</div></div>';
+  }
+  g += '<button class="big" data-act="play">▶ NEXT EXPEDITION</button>' +
+    '<div class="rowbtns"><button class="lnk" data-act="up">⭐ Upgrades</button>' +
+    '<button class="lnk" data-act="album">📖 Album</button>' +
+    '<button class="lnk" data-act="home">🏠 Home</button></div>';
+  openScreen(g);
+  const cs = screenEl.querySelectorAll('canvas[data-res]');
+  for (let i = 0; i < cs.length; i++) {
+    const ph = shots[i | 0];
+    if (!ph) continue;
+    try {
+      const dpr = clamp(window.devicePixelRatio || 1, 1, 2);
+      cs[i].width = Math.round(104 * dpr); cs[i].height = Math.round(78 * dpr);
+      cs[i].style.height = '78px';
+      const g2 = cs[i].getContext('2d');
+      if (!g2) continue;
+      g2.setTransform(dpr, 0, 0, dpr, 0, 0);
+      g2.save(); g2.beginPath(); g2.rect(0, 0, 104, 78); g2.clip();
+      renderPhotoTo(g2, 104, Object.assign({}, ph, { ar: 104 / 78 }));
+      g2.restore();
+    } catch (e) {}
+  }
+}
+screenEl.addEventListener('click', e => {
+  const t = e.target.closest ? e.target.closest('[data-act]') : null;
+  if (!t) return;
+  ensureAudio();
+  const act = t.getAttribute('data-act');
+  sfx.tap();
+  if (act === 'play') startExpedition(Math.max(1, store.level));
+  else if (act === 'album') { sfx.page(); albumScreen(); }
+  else if (act === 'sp') { sfx.page(); speciesScreen(t.getAttribute('data-sp')); }
+  else if (act === 'up') { sfx.page(); upgradeScreen(); }
+  else if (act === 'home') titleScreen();
+  else if (act === 'mute') { setMuted(!muted); titleScreen(); }
+  else if (act === 'buy') {
+    const u = UPGRADES.filter(x => x.id === t.getAttribute('data-up'))[0];
+    if (!u) return;
+    const l = store.up[u.id] | 0;
+    const cost = u.cost(l);
+    if (l < u.max && store.lumens >= cost) {
+      store.lumens -= cost; store.up[u.id] = l + 1; saveStore();
+      sfx.buy(); confetti(24);
+      track('upgrade_bought', { value: u.id + ':' + (l + 1) });
+      upgradeScreen();
+    }
+  }
+});
+
+/* ================================================================
+   EXPEDITION FLOW
+   ================================================================ */
+function startExpedition(level) {
+  exp = makeExpedition(level, false);
+  scene = 'play';
+  cam.z = 1; cam.x = WORLD_W / 2; cam.y = WORLD_H / 2; cam.swing = null; clampCam();
+  focusRing.a = 0;
+  flashOn = false; lureArmed = false; lureDrag = null; flashFX = 0;
+  bulletT = 0; timeScale = 1; pendingCard = null; pendingCardT = 0;
+  if (cardEl) cardEl.classList.remove('in');
+  closeScreen(); setChrome(true); updateHUD();
+  track('level_start', { level });
+  toast(BIOMES[exp.biome].emo + ' ' + BIOMES[exp.biome].name.toUpperCase(), '#cfe6ff');
+}
+function endExpedition() {
+  if (exp.over) return;
+  exp.over = true;
+  scene = 'results';
+  store.best = Math.max(store.best | 0, exp.lumens);
+  store.level = exp.level + 1;
+  saveStore();
+  track('level_complete', { level: exp.level, value: exp.lumens });
+  if (exp.caught === 0) track('game_over', { level: exp.level });
+  sfx.end();
+  if (cardEl) cardEl.classList.remove('in');
+  resultsScreen();
+}
+
+/* control buttons */
+function bind(id, fn) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); ensureAudio(); fn(e); });
+}
+bind('shutter', () => fireShutter());
+bind('bFlash', () => { flashOn = !flashOn; sfx.tap(); updateHUD(); toast(flashOn ? '⚡ FLASH ARMED' : 'flash off', '#ffd166'); });
+bind('bWide', () => { setZoom(1, true); cam.swing = null; sfx.tap(); });
+bind('bSubj', () => {
+  const g = alertGlim(exp) || currentSubject(exp) ||
+    exp.glims.filter(x => !x.gone)[0];
+  if (!g) return;
+  const pp = g.phase === 'act' ? peakPos(g) : { x: g.bx, y: g.by };
+  swingTo(pp.x, pp.y);
+  if (cam.z < zFill() * 0.55) setZoom(zFill() * 0.8, false);
+  sfx.focus(); vib(8);
+});
+(function bindLure() {
+  const el = document.getElementById('bLure');
+  if (!el) return;
+  el.addEventListener('pointerdown', e => {
+    e.preventDefault(); e.stopPropagation(); ensureAudio();
+    if (exp.lures <= 0) { sfx.spook(); toast('NO LURES LEFT', '#ffb3b3'); return; }
+    lureDrag = { x: e.clientX, y: e.clientY, start: true };
+    const mv = ev => { if (lureDrag) { lureDrag.x = ev.clientX; lureDrag.y = ev.clientY; lureDrag.start = false; } };
+    const up = ev => {
+      window.removeEventListener('pointermove', mv);
+      window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
+      const r = el.getBoundingClientRect();
+      const onBtn = ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom;
+      const wasDrag = lureDrag && !lureDrag.start;
+      lureDrag = null;
+      if (onBtn && !wasDrag) { lureArmed = !lureArmed; sfx.tap(); updateHUD();
+        toast(lureArmed ? '🍯 tap the scene to drop' : 'lure stowed', '#ffd166'); return; }
+      if (!onBtn) placeLure(ev.clientX, ev.clientY);
+    };
+    window.addEventListener('pointermove', mv);
+    window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
+  });
+})();
+(function bindMute() {
+  const el = document.getElementById('cMute');
+  if (!el) return;
+  el.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); ensureAudio(); setMuted(!muted); sfx.tap(); });
+})();
+
+/* ================================================================
+   MAIN LOOP — re-arms in `finally`, 3-error console cap
+   ================================================================ */
+let last = performance.now();
+let elapsed = 0;
+let frameErrs = 0;
+function frame(now) {
+  try { frameBody(now); }
+  catch (e) { if (++frameErrs <= 3 && window.console) console.error('[snapcatch] frame error:', e); }
+  finally { requestAnimationFrame(frame); }
+}
+function liveItems() {
+  const out = [];
+  for (const g of exp.glims) {
+    out.push({ sp: g.sp, bhIdx: g.bhIdx, t: g.phase === 'act' ? g.t : -999,
+      bx: g.bx, by: g.by, face: g.face, seed: g.seed, phase: g.phase, blink: g.blink, gone: g.gone });
+  }
+  return out;
+}
+function frameBody(now) {
+  const rdt = Math.min(Math.max(0, (now - last) / 1000), 0.033);
+  last = now;
+  elapsed += rdt;
+
+  /* Self-healing sizing: a page that boots in a hidden/zero-size viewport gets
+     no usable dimensions and may never receive a resize event. Reconcile here. */
+  const iw = window.innerWidth | 0, ih = window.innerHeight | 0;
+  if (iw > 1 && ih > 1 && (view.W !== iw || view.H !== ih)) resize();
+
+  /* bullet time */
+  if (bulletT > 0) {
+    bulletT = Math.max(0, bulletT - rdt);
+    timeScale = lerp(0.12, 1, 1 - clamp01(bulletT / BULLET_TIME));
+  } else timeScale = 1;
+  const dt = rdt * timeScale;
+
+  /* hold-to-zoom */
+  if (ptrs.size === 1 && !panning && scene === 'play') {
+    holdT += rdt;
+    if (holdT > 0.26) { holding = true; }
+  } else if (ptrs.size === 0) { holdT = 0; holding = false; }
+  if (holding) setZoom(cam.z * Math.exp(0.95 * rdt), false);
+
+  /* title camera drifts cinematically */
+  if (exp.isTitle) {
+    cam.x = WORLD_W / 2 + Math.sin(elapsed * 0.085) * WORLD_W * 0.24;
+    cam.y = WORLD_H * 0.52 + Math.sin(elapsed * 0.13) * 40;
+    cam.z = Math.max(1.0, zFill() * (0.46 + 0.05 * Math.sin(elapsed * 0.07)));
+  }
+  updateCam(rdt);
+
+  /* world sim */
+  exp.t += dt;
+  updateWeather(exp, dt);
+  updateGlims(exp, dt);
+
+  /* skittish species bolt if you rack the zoom */
+  if (scene === 'play' && cam.zRate > 1.5) {
+    for (const g of exp.glims) {
+      if (g.gone || !SPECIES[g.sp].skittish || g.phase === 'flee') continue;
+      const px = projX(cam.x, cam.z, view.s1, view.W, g.bx);
+      const py = projY(cam.y, cam.z, view.s1, view.H, g.by);
+      if (px > 0 && px < view.W && py > 0 && py < view.H) {
+        spookGlim(g, px < view.W / 2 ? -1 : 1);
+        toast('too fast — it bolted', '#ffb3b3');
+      }
+    }
+  }
+
+  /* expedition clock */
+  if (scene === 'play' && !exp.over) {
+    if (bulletT <= 0) exp.timeLeft -= rdt;
+    const tf = document.getElementById('timeFill');
+    if (tf) tf.style.width = (clamp01(exp.timeLeft / EXP_TIME) * 100).toFixed(1) + '%';
+    if (exp.timeLeft <= 0 || (exp.film <= 0 && pendingCard === null && cardHideT <= 0)) endExpedition();
+  }
+
+  /* draw */
+  ctx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
+  ctx.clearRect(0, 0, view.W, view.H);
+  let sx = 0, sy = 0;
+  if (shakeT > 0) {
+    shakeT -= rdt;
+    const m = shakeMag * clamp01(shakeT / 0.2);
+    sx = rnd(-m, m); sy = rnd(-m, m);
+    if (shakeT <= 0) shakeMag = 0;
+  }
+  ctx.save();
+  ctx.translate(sx, sy);
+  renderWorld(ctx, {
+    W: view.W, H: view.H, cx: cam.x, cy: cam.y, cz: cam.z, s1: view.s1,
+    biome: exp.biome, night: exp.night, weather: exp.weather,
+    lightning: exp.lightning, flash: flashFX > 0.2,
+    items: liveItems(), lures: exp.placed, rain: exp.rain, time: elapsed
+  });
+  ctx.restore();
+  updateDrawParts(rdt);
+  if (scene === 'play') drawViewfinder(rdt);
+
+  if (flashFX > 0) flashFX = Math.max(0, flashFX - rdt * 2.2);
+
+  /* developed photo */
+  if (pendingCard) {
+    pendingCardT -= rdt;
+    if (pendingCardT <= 0) { showCard(pendingCard); pendingCard = null; }
+  }
+  if (cardHideT > 0) {
+    cardHideT -= rdt;
+    if (cardHideT <= 0 && cardEl) cardEl.classList.remove('in');
+  }
+}
+
+/* ================================================================
+   TEST HOOKS (harness only — harmless in production)
+   ================================================================ */
+window.__SNAP = {
+  SPECIES, BIOMES, UPGRADES, gradeShot, poseAt, subjectAt, renderPhotoTo, sanePhoto,
+  makeExpedition, startExpedition, endExpedition, fireShutter, placeLure, swingTo, setZoom,
+  gradeInput, currentSubject, alertGlim, peakPos, speciesComplete, titleScreen, albumScreen,
+  loadStore, saveStore, updateHUD, resize, clampCam,
+  consts: { WORLD_W, WORLD_H, GROUND_Y, SWING_TIME, EXP_TIME, GRACE_HALF, CATCH_AT, PERFECT_AT,
+    REF_R, BX_MIN, BX_MAX, BY_MIN, BY_MAX, MAX_ARC_UP, MAX_ARC_DOWN, MAX_DASH },
+  get exp() { return exp; }, set exp(v) { exp = v; },
+  get cam() { return cam; },
+  get view() { return view; },
+  get store() { return store; },
+  get scene() { return scene; }, set scene(v) { scene = v; },
+  step(n, dtms) {
+    const d = dtms || 16.7;
+    for (let i = 0; i < (n || 1); i++) frame(last + d);
+  },
+  frame
+};
+
+/* ================================================================
+   BOOT
+   ================================================================ */
+resize();
+titleScreen();
+updateHUD();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

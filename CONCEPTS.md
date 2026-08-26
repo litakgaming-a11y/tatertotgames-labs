@@ -1,13 +1,13 @@
-# TaterTot Games Labs — 24 Hybrid-Casual MVP Concepts
+# TaterTot Games Labs — 27 Hybrid-Casual MVP Concepts
 
-Twenty-four original hybrid-casual concepts, deliberately **not** clones of the current top-grossing
-pack (no screws, no color-block boards, no hole-swallowing, no hexa-sorting), spanning twenty-four
+Twenty-seven original hybrid-casual concepts, deliberately **not** clones of the current top-grossing
+pack (no screws, no color-block boards, no hole-swallowing, no hexa-sorting), spanning twenty-seven
 distinct mechanic classes. Each follows the proven
 hybrid-casual formula: **one instantly-readable hyper-casual mechanic as the hook** (the "game
 feature as ad" — the first 3 seconds of gameplay *is* the creative), plus a **meta layer** that
 carries retention and monetization.
 
-All twenty-four are live and playable in this repo (`games/<slug>/`), each as a single self-contained
+All twenty-seven are live and playable in this repo (`games/<slug>/`), each as a single self-contained
 HTML5 file: mobile-first, one-hand controls, WebAudio-synthesized SFX, haptics, and localStorage
 progression. Hosted on Cloudflare so every build is instantly testable online.
 
@@ -402,6 +402,55 @@ Sessions/DAU **4.6** · ARPDAU **$0.14–0.21** · LTV(90d) **$0.92** · Year-1 
 
 ---
 
+## 25. 🥚 Morphforge *(wave 7 — the Glimmerwild: evolution reinvented)*
+
+| | |
+|---|---|
+| **Genre** | Creature-collection where you sculpt the creature yourself |
+| **Hyper-casual hook** | *Feed it. Shape it. No two are ever the same.* Drip essence onto an egg and the thing that hatches is procedurally built from exactly what you poured in. |
+| **Concept** | Seven essence spouts around a floating egg. Pouring adds stress — too fast and hairline cracks spread, then the shell shatters into an early, lesser hatch; ride the stress bar to its edge without breaking it and you get a Radiant. Tap to knead stress away from a crack and buy room for one more pour. The blend maps to silhouette, limbs, crest, texture, eyes and aura, deterministically and legibly, so pouring Ember visibly produces Ember. |
+| **Meta layer** | The Menagerie — every Glim you hatched wandering the title screen, drawn from its actual generated parameters. A Codex of discovered *traits* rather than species, four upgrade tracks, and breeding that blends two creatures' parameter vectors. |
+| **Research grounding** | Collection/nurture metas are the highest-retention layer in the report, and this pushes further: a collection of things the player personally made is materially stickier than a collection of things they were handed. |
+| **Why it can win** | Every competitor gives you a fixed evolution line. Here the creature is genuinely authored by the player, which makes it screenshot-worthy and unrepeatable — and the trait space generates its own content forever. |
+
+**Projected stats** — CPI **$0.30–0.50** · D1 **55%** · D7 **23%** · D30 **10%** · Session **13 min** ·
+Sessions/DAU **5.4** · ARPDAU **$0.16–0.24** · LTV(90d) **$1.15** (highest in the portfolio) ·
+Year-1 at scale: **9–15M downloads, $9–15M net**
+
+---
+
+## 26. 🌩️ Weatherwright *(wave 7 — the Glimmerwild: battling reinvented)*
+
+| | |
+|---|---|
+| **Genre** | Creature duels fought by controlling the environment |
+| **Hyper-casual hook** | *You don't tell it how to fight — you change the world it fights in.* |
+| **Concept** | Two Glims auto-battle on instinct; your only input is weather. Tap runes for Rain, Sun, Gale, Quake, Fog, Nightfall or Bloom, paid for from a shared Sky Meter. Conditions stack and interact — Rain plus Spark makes a conductive field that chains lightning, Gale clears Fog instantly as a counter — and learning that table is the mastery curve. Your Glim's stance and attacks visibly change with conditions, and the rival Wright calls weather back at you. |
+| **Meta layer** | The Almanac: every interaction you discover becomes an illustrated entry, so the collection is *knowledge*. Team picks are really weather-strategy picks, plus Sky Meter upgrades and a second rune slot. |
+| **Research grounding** | Turns a genre whose battles are menu lookups into a real-time spectacle, which is what makes it legible in a 3-second creative — the arena, not the stat line, is the thing you watch. |
+| **Why it can win** | Nobody else takes the commands away. Removing direct control makes reading your own creature a skill, and the weather VFX carry the juice budget on their own. |
+
+**Projected stats** — CPI **$0.40–0.65** · D1 **50%** · D7 **20%** · D30 **8.5%** · Session **12 min** ·
+Sessions/DAU **4.7** · ARPDAU **$0.15–0.22** · LTV(90d) **$1.00** · Year-1 at scale: **6–11M downloads, $7–12M net**
+
+---
+
+## 27. 📸 Snapcatch *(wave 7 — the Glimmerwild: catching reinvented)*
+
+| | |
+|---|---|
+| **Genre** | Creature-collection by photography |
+| **Hyper-casual hook** | *You don't throw anything. You just have to be looking at the right moment.* |
+| **Concept** | Pan and zoom a viewfinder across a living scene while Glims behave autonomously. Each telegraphs a spectacular action with a peak frame a few tenths of a second wide — a breach, a discharge, a leap. Tap the shutter at the peak and the shot is graded live on framing, timing, rarity and composition; that grade *is* the catch strength. Lures let a patient player provoke a behaviour and set the shot up rather than wait for it. |
+| **Meta layer** | The Album — the actual photographs you took, re-rendered from stored capture parameters with their grades and captions. Completing a species page means photographing every one of its behaviours. |
+| **Research grounding** | Converts the genre's slot-machine catch into a skill act with no fail state — you are never punished, only given a worse photograph, which removes churn pressure while keeping mastery. |
+| **Why it can win** | The Album is the strongest collection artifact in the portfolio: not a list of what you own, but a gallery of things you personally captured well — inherently shareable and impossible to duplicate. |
+
+**Projected stats** — CPI **$0.30–0.50** · D1 **52%** · D7 **21%** · D30 **9%** · Session **12 min** ·
+Sessions/DAU **4.9** · ARPDAU **$0.13–0.20** · LTV(90d) **$0.98** · Year-1 at scale: **8–14M downloads, $7–12M net**
+
+---
+
 ## Portfolio strategy
 
 | Game | Primary KPI bet | Monetization center of gravity |
@@ -430,8 +479,11 @@ Sessions/DAU **4.6** · ARPDAU **$0.14–0.21** · LTV(90d) **$0.92** · Year-1 
 | Broadside Baron | Session length (roguelite runs) | Rewarded (revive run) + crew/ship IAP |
 | Siege Pile | Failure-arc creative IPM | Rewarded (+knights) + warband IAP |
 | Chopper Drop | Nurture retention (named roster) | Rewarded (+fuel) + base IAP |
+| Morphforge | Highest D30/LTV (player-authored collection) | Rewarded (2nd knead) + essence IAP |
+| Weatherwright | Creative-legibility (arena spectacle) | Rewarded (Sky refill) + rune IAP |
+| Snapcatch | Shareability (the Album) | Rewarded (extra film) + lens IAP |
 
-**Test plan:** all twenty-four are shipped to Cloudflare and instrumented. Run $200–500 creative probes
+**Test plan:** all twenty-seven are shipped to Cloudflare and instrumented. Run $200–500 creative probes
 per concept on TikTok/Meta targeting CPI + 3-day retention; kill or double-down at 2 weeks; winners
 get live-ops (daily events, seasonal skins, leaderboards) and a native wrapper for store launch.
 
@@ -439,7 +491,7 @@ With seventeen concepts the portfolio is now wide enough to test by *mechanic cl
 title — probe one representative per class first (Sky Bloom for spectacle, Bloom Drop for
 aim-and-bounce, Parcel Panic for routing, Fold Friends for zen-collection), then fund siblings of
 whichever class clears the greenlight gate. The research gate is unchanged and applies to all
-twenty-four: **D1 ≥ 30%, D7 ≥ 15%, CPI ≤ $1.50** before any further meta investment. Wave 4 adds a
+twenty-seven: **D1 ≥ 30%, D7 ≥ 15%, CPI ≤ $1.50** before any further meta investment. Wave 4 adds a
 physics-class probe (Sandfall for granular ASMR, Tippy Ship for buoyancy comedy, Cut Loose for
 rope timing) — see [CONCEPTS-WAVE4.md](CONCEPTS-WAVE4.md) for the full physics-first thesis.
 

@@ -2,7 +2,7 @@
 
 ### ▶ Play now: **https://tatertotgames-labs.pages.dev**
 
-Twenty-four original **hybrid-casual** game prototypes — playable instantly in the browser, hosted on
+Twenty-seven original **hybrid-casual** game prototypes — playable instantly in the browser, hosted on
 Cloudflare. Each game is one self-contained HTML file: zero dependencies, mobile-first one-hand
 controls, WebAudio-synthesized sound, haptics, particles everywhere, and persistent meta
 progression in localStorage.
@@ -59,9 +59,18 @@ an explanation of how it works — the links below go there.
 | ⚔️ **Siege Pile** | Knights pile up into their own ladder | Warband roster + conquest map | [play](https://tatertotgames-labs.pages.dev/games/siege-pile/) |
 | 🚁 **Chopper Drop** | The swinging load is the enemy | Forward Base + rescued roster | [play](https://tatertotgames-labs.pages.dev/games/chopper-drop/) |
 
+### Wave 7 — the Glimmerwild (original creature-collection universe)
+
+| Game | Hook | Meta | Play |
+|---|---|---|---|
+| 🥚 **Morphforge** | Feed the egg — you sculpt what hatches | The Menagerie + trait Codex | [play](https://tatertotgames-labs.pages.dev/games/morphforge/) |
+| 🌩️ **Weatherwright** | Command the arena, not the creature | The Almanac of interactions | [play](https://tatertotgames-labs.pages.dev/games/weatherwright/) |
+| 📸 **Snapcatch** | Catch by framing the perfect instant | The Album of your own photos | [play](https://tatertotgames-labs.pages.dev/games/snapcatch/) |
+
 ## Docs
 
-- [CONCEPTS.md](CONCEPTS.md) — all 24 shipped concepts with hooks, meta design, and projected KPIs
+- [CONCEPTS.md](CONCEPTS.md) — all 27 shipped concepts with hooks, meta design, and projected KPIs
+- [CONCEPTS-WAVE7.md](CONCEPTS-WAVE7.md) — the Glimmerwild: 3 creature-collection briefs (original universe, not Pokémon IP)
 - [CONCEPTS-WAVE6.md](CONCEPTS-WAVE6.md) — 3 genre-mashup briefs (pirate rhythm-artillery, medieval ragdoll siege, military tethered flight)
 - [CONCEPTS-WAVE5.md](CONCEPTS-WAVE5.md) — Return Fire brief (reflection dynamics + momentum transfer)
 - [CONCEPTS-WAVE4.md](CONCEPTS-WAVE4.md) — 3 physics-first build briefs (granular sim, buoyancy, verlet ropes)
