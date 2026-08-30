@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Overwind — TaterTot Games Labs</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%99%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --ink:#141021;
+    --gold:#f2c14e;
+    --accent:#e0533d;
+    --steel:#a8bdd4;
+    --moss:#6fbf7c;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{
+    margin:0;padding:0;width:100%;height:100%;overflow:hidden;
+    background:#141021;touch-action:none;
+    -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,Roboto,"Helvetica Neue",Arial,sans-serif;
+    overscroll-behavior:none;
+  }
+  canvas{position:fixed;inset:0;display:block;touch-action:none}
+  .screen{
+    position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    pointer-events:none;opacity:0;transition:opacity .28s ease;z-index:10;text-align:center;
+    padding:calc(10px + env(safe-area-inset-top)) 12px calc(10px + env(safe-area-inset-bottom));
+  }
+  .screen.show{pointer-events:auto;opacity:1}
+
+  /* ---------- TITLE ---------- */
+  #titleScreen{justify-content:flex-start;padding-top:calc(6vh + env(safe-area-inset-top));overflow-y:auto;
+    background:radial-gradient(120% 80% at 50% 0%, rgba(20,16,33,.35), rgba(20,16,33,.86))}
+  #logo{
+    font-size:min(16vw,90px);font-weight:900;letter-spacing:-.03em;line-height:.9;color:#fff;margin:0;
+    text-shadow:0 4px 0 rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.55);
+    animation:logoRock 3.1s ease-in-out infinite;transform-origin:50% 70%;
+  }
+  #logo .l2{display:block;color:var(--gold)}
+  @keyframes logoRock{
+    0%,100%{transform:rotate(-2.5deg) scale(1)}
+    30%{transform:rotate(2deg) scale(1.05)}
+    62%{transform:rotate(-1.2deg) scale(.98)}
+  }
+  #tagline{margin-top:10px;color:#e8dcffcc;font-weight:800;font-size:min(3.9vw,15px);letter-spacing:.05em}
+  #tapToPlay{margin-top:18px;font-size:min(6vw,26px);font-weight:900;color:#fff;letter-spacing:.14em;
+    animation:blink 1.15s ease-in-out infinite;text-shadow:0 3px 0 rgba(0,0,0,.35)}
+  @keyframes blink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.955)}}
+  #bestLine{margin-top:12px;color:#ffffffcc;font-weight:800;font-size:15px;letter-spacing:.04em}
+
+  .howBox{margin-top:20px;max-width:min(94vw,430px);text-align:left;
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:14px 16px}
+  .howBox h4{margin:0 0 8px;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:#ffd97d}
+  .howBox p{margin:6px 0;color:#e8dcffcc;font-size:.87rem;line-height:1.5}
+  .howBox b{color:#fff}
+
+  /* ---------- HUD ---------- */
+  #hud{position:fixed;inset:0;pointer-events:none;z-index:5;
+    padding:calc(8px + env(safe-area-inset-top)) 10px calc(8px + env(safe-area-inset-bottom))}
+  .pill{position:absolute;background:rgba(12,9,22,.62);border:1px solid rgba(255,255,255,.14);
+    border-radius:999px;padding:7px 14px;color:#fff;font-weight:900;font-size:13.5px;letter-spacing:.03em;
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);white-space:nowrap}
+  /* two columns, three rows — a centred pill collided with the left one as
+     soon as the quota reached double digits on a narrow phone */
+  #levelPill{left:10px;top:calc(8px + env(safe-area-inset-top));color:var(--gold)}
+  #ammoPill{right:10px;top:calc(8px + env(safe-area-inset-top))}
+  #quotaPill{left:10px;top:calc(46px + env(safe-area-inset-top))}
+  #windPill{right:10px;top:calc(46px + env(safe-area-inset-top));font-size:12.5px;color:var(--steel)}
+  #groundPill{left:10px;top:calc(84px + env(safe-area-inset-top));font-size:12.5px;color:var(--moss)}
+
+  #toast{position:absolute;left:50%;top:34%;transform:translate(-50%,-50%) scale(.86);
+    font-weight:900;font-size:min(8.5vw,40px);color:#fff;letter-spacing:.02em;opacity:0;
+    text-shadow:0 4px 0 rgba(0,0,0,.4),0 0 26px rgba(0,0,0,.5);transition:none;text-align:center;line-height:1.05}
+  #toast.pop{animation:toastPop 1.15s cubic-bezier(.2,.9,.25,1) forwards}
+  @keyframes toastPop{
+    0%{opacity:0;transform:translate(-50%,-50%) scale(.7)}
+    16%{opacity:1;transform:translate(-50%,-50%) scale(1.12)}
+    30%{transform:translate(-50%,-50%) scale(1)}
+    78%{opacity:1}
+    100%{opacity:0;transform:translate(-50%,-58%) scale(1)}
+  }
+
+  /* tension bar */
+  #tensionWrap{position:absolute;left:50%;transform:translateX(-50%);
+    bottom:calc(96px + env(safe-area-inset-bottom));width:min(66vw,300px);height:16px;
+    background:rgba(12,9,22,.6);border:1px solid rgba(255,255,255,.16);border-radius:999px;
+    overflow:hidden;opacity:0;transition:opacity .16s ease}
+  #tensionWrap.show{opacity:1}
+  #tensionFill{height:100%;width:0%;border-radius:999px;
+    background:linear-gradient(90deg,#6fbf7c,#f2c14e 62%,#e0533d 88%);transition:none}
+  #dangerZone{position:absolute;right:0;top:0;height:100%;width:12%;
+    background:repeating-linear-gradient(45deg,rgba(224,83,61,.55) 0 6px,rgba(224,83,61,.2) 6px 12px)}
+  #tensionLabel{position:absolute;left:50%;transform:translateX(-50%);
+    bottom:calc(116px + env(safe-area-inset-bottom));font-weight:900;font-size:12px;letter-spacing:.14em;
+    color:#fff;text-transform:uppercase;opacity:0;transition:opacity .16s ease;text-shadow:0 2px 0 rgba(0,0,0,.5)}
+  #tensionLabel.show{opacity:.92}
+
+  /* payload + emplacement buttons */
+  .btnRow{position:absolute;left:0;right:0;bottom:calc(12px + env(safe-area-inset-bottom));
+    display:flex;gap:8px;justify-content:center;pointer-events:auto;flex-wrap:wrap;padding:0 10px}
+  .btn{min-height:44px;min-width:44px;padding:10px 16px;border-radius:14px;
+    background:rgba(12,9,22,.66);border:1px solid rgba(255,255,255,.16);color:#fff;
+    font-weight:900;font-size:13px;letter-spacing:.05em;cursor:pointer;
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  .btn.on{background:rgba(242,193,78,.9);color:#2a2010;border-color:#f2c14e}
+  .btn:active{transform:translateY(1px)}
+
+  #muteBtn{position:absolute;right:10px;bottom:calc(12px + env(safe-area-inset-bottom));
+    pointer-events:auto;min-width:44px;min-height:44px;padding:10px 12px;border-radius:14px;
+    background:rgba(12,9,22,.66);border:1px solid rgba(255,255,255,.16);color:#fff;font-size:17px;cursor:pointer}
+
+  /* ---------- END SCREENS ---------- */
+  .endCard{background:rgba(16,12,30,.94);border:1px solid rgba(255,255,255,.14);border-radius:22px;
+    padding:24px 26px;max-width:min(92vw,420px);box-shadow:0 24px 60px rgba(0,0,0,.6)}
+  .endCard h2{margin:0;font-size:min(9vw,38px);font-weight:900;letter-spacing:-.02em;color:#fff}
+  .endCard .sub{margin-top:8px;color:#c9bff0;font-weight:700;font-size:.94rem;line-height:1.5}
+  .statRow{display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+  .stat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;
+    padding:9px 14px;min-width:84px}
+  .stat b{display:block;font-size:1.35rem;color:var(--gold);font-weight:900;line-height:1.1}
+  .stat span{font-size:.62rem;letter-spacing:.11em;text-transform:uppercase;color:#9a91c4;font-weight:800}
+  .bigBtn{margin-top:18px;display:inline-block;min-height:52px;padding:15px 40px;border-radius:16px;
+    font-weight:900;font-size:1.06rem;color:#241a06;border:0;cursor:pointer;
+    background:linear-gradient(92deg,#ffb703,#ffd76a);box-shadow:0 5px 0 rgba(0,0,0,.35)}
+  .bigBtn:active{transform:translateY(2px);box-shadow:0 3px 0 rgba(0,0,0,.35)}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div id="hud">
+  <div class="pill" id="levelPill">SIEGE 1</div>
+  <div class="pill" id="quotaPill">OVER THE WALL 0/3</div>
+  <div class="pill" id="ammoPill">LADS 8</div>
+  <div class="pill" id="groundPill">TURF</div>
+  <div class="pill" id="windPill">WIND →</div>
+  <div id="toast"></div>
+  <div id="tensionLabel">TENSION</div>
+  <div id="tensionWrap"><div id="tensionFill"></div><div id="dangerZone"></div></div>
+  <div class="btnRow" id="btnRow">
+    <button class="btn on" id="loadOne" type="button">1 LAD</button>
+    <button class="btn" id="loadThree" type="button">3 LADS</button>
+  </div>
+  <button id="muteBtn" type="button">🔊</button>
+</div>
+
+<div class="screen show" id="titleScreen">
+  <h1 id="logo">OVER<span class="l2">WIND</span></h1>
+  <div id="tagline">THE MACHINE IS THE MISTAKE</div>
+  <div id="tapToPlay">TAP TO SIEGE</div>
+  <div id="bestLine">Best: siege 1</div>
+  <div class="howBox">
+    <h4>How it works</h4>
+    <p><b>Hold anywhere</b> to wind the windlass. <b>Drag while holding</b> to swing the turntable and set the arc.</p>
+    <p><b>Let go</b> to fire. More tension throws further — and widens the ellipse of where it might actually land.</p>
+    <p>Wind into the <b>red</b> and the rope snaps. The arm flails, the crew scatter, and your lad is dumped at your own feet.</p>
+    <p>Lads who fall short <b>pile up</b>. The pile is solid ground — and it is how the next one gets over.</p>
+  </div>
+</div>
+
+<div class="screen" id="endScreen">
+  <div class="endCard">
+    <h2 id="endTitle">WALL TAKEN</h2>
+    <div class="sub" id="endSub">Three lads over. Nobody asked how.</div>
+    <div class="statRow">
+      <div class="stat"><b id="statOver">0</b><span>Over</span></div>
+      <div class="stat"><b id="statPile">0</b><span>Pile m</span></div>
+      <div class="stat"><b id="statSnap">0</b><span>Snaps</span></div>
+    </div>
+    <button class="bigBtn" id="endBtn" type="button">NEXT SIEGE</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ===========================================================================
+   OVERWIND — TaterTot Games Labs
+   The catapult is not an aiming widget. It is a machine: a simulated rig that
+   winds, strains, recoils, sinks into soft ground and snaps its own rope. All
+   spread is emergent from the machine's real state, never a random number
+   added to a clean parabola.
+
+   Built to the CATAPULT-3D concept's M1 cut: the machine, the cone of doubt,
+   single vs multi-body payloads, and three emplacements.
+
+   Everything is instanced unit cubes in one draw call — terrain columns,
+   castle, machine, ragdolls. No libraries, no external requests.
+   =========================================================================== */
+
+// ------------------------------------------------------------------ helpers
+var clamp = function (v, a, b) { return v < a ? a : (v > b ? b : v); };
+var lerp = function (a, b, t) { return a + (b - a) * t; };
+var finite = function (v) { return typeof v === 'number' && isFinite(v); };
+
+// deterministic-ish PRNG so a siege replays the same wind/bias from its seed
+function RNG(seed) { this.s = (seed >>> 0) || 1; }
+RNG.prototype.next = function () {
+  this.s = (this.s + 0x6D2B79F5) >>> 0;
+  var t = this.s;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
+RNG.prototype.range = function (a, b) { return a + (b - a) * this.next(); };
+RNG.prototype.spread = function (h) { return (this.next() - 0.5) * 2 * h; };
+
+// ------------------------------------------------------------------ mat4
+function m4identity(o) {
+  o[0]=1;o[1]=0;o[2]=0;o[3]=0; o[4]=0;o[5]=1;o[6]=0;o[7]=0;
+  o[8]=0;o[9]=0;o[10]=1;o[11]=0; o[12]=0;o[13]=0;o[14]=0;o[15]=1; return o;
+}
+function m4mul(o, a, b) {
+  var a00=a[0],a01=a[1],a02=a[2],a03=a[3],a10=a[4],a11=a[5],a12=a[6],a13=a[7],
+      a20=a[8],a21=a[9],a22=a[10],a23=a[11],a30=a[12],a31=a[13],a32=a[14],a33=a[15];
+  for (var i = 0; i < 4; i++) {
+    var b0=b[i*4],b1=b[i*4+1],b2=b[i*4+2],b3=b[i*4+3];
+    o[i*4]  =b0*a00+b1*a10+b2*a20+b3*a30;
+    o[i*4+1]=b0*a01+b1*a11+b2*a21+b3*a31;
+    o[i*4+2]=b0*a02+b1*a12+b2*a22+b3*a32;
+    o[i*4+3]=b0*a03+b1*a13+b2*a23+b3*a33;
+  }
+  return o;
+}
+function m4perspective(o, fovy, aspect, near, far) {
+  var f = 1 / Math.tan(fovy / 2), nf = 1 / (near - far);
+  o[0]=f/aspect;o[1]=0;o[2]=0;o[3]=0; o[4]=0;o[5]=f;o[6]=0;o[7]=0;
+  o[8]=0;o[9]=0;o[10]=(far+near)*nf;o[11]=-1;
+  o[12]=0;o[13]=0;o[14]=2*far*near*nf;o[15]=0; return o;
+}
+function m4lookAt(o, ex, ey, ez, cx, cy, cz) {
+  var zx=ex-cx, zy=ey-cy, zz=ez-cz;
+  var zl=Math.hypot(zx,zy,zz)||1; zx/=zl; zy/=zl; zz/=zl;
+  // x = up X z, with up = (0,1,0) — degenerates when looking straight down
+  var xx = zz, xy = 0, xz = -zx;
+  var xl=Math.hypot(xx,xy,xz); if (xl < 1e-6) { xx=1; xy=0; xz=0; xl=1; }
+  xx/=xl; xy/=xl; xz/=xl;
+  var yx=zy*xz-zz*xy, yy=zz*xx-zx*xz, yz=zx*xy-zy*xx;
+  o[0]=xx;o[1]=yx;o[2]=zx;o[3]=0;
+  o[4]=xy;o[5]=yy;o[6]=zy;o[7]=0;
+  o[8]=xz;o[9]=yz;o[10]=zz;o[11]=0;
+  o[12]=-(xx*ex+xy*ey+xz*ez);
+  o[13]=-(yx*ex+yy*ey+yz*ez);
+  o[14]=-(zx*ex+zy*ey+zz*ez);
+  o[15]=1; return o;
+}
+
+// ------------------------------------------------------------------ canvas + GL
+var cv = document.getElementById('cv');
+var gl = null, isGL2 = false, instExt = null;
+var W = 1, H = 1, DPR = 1, resizing = false;
+
+function initGL() {
+  var opts = { antialias: true, alpha: false, depth: true, powerPreference: 'high-performance' };
+  try { gl = cv.getContext('webgl2', opts); } catch (e) { gl = null; }
+  if (gl) { isGL2 = true; }
+  else {
+    try { gl = cv.getContext('webgl', opts) || cv.getContext('experimental-webgl', opts); } catch (e2) { gl = null; }
+    if (gl) {
+      instExt = gl.getExtension('ANGLE_instanced_arrays');
+      if (!instExt) { gl = null; }
+    }
+  }
+  return !!gl;
+}
+
+function divisor(loc, d) { if (isGL2) gl.vertexAttribDivisor(loc, d); else instExt.vertexAttribDivisorANGLE(loc, d); }
+function drawInstanced(mode, count, prim) {
+  if (isGL2) gl.drawElementsInstanced(mode, count, gl.UNSIGNED_SHORT, 0, prim);
+  else instExt.drawElementsInstancedANGLE(mode, count, gl.UNSIGNED_SHORT, 0, prim);
+}
+
+var VS = [
+  'attribute vec3 aPos; attribute vec3 aNrm;',
+  'attribute vec4 aM0; attribute vec4 aM1; attribute vec4 aM2; attribute vec4 aM3;',
+  'attribute vec3 aCol;',
+  'uniform mat4 uVP;',
+  'varying vec3 vNrm; varying vec3 vCol; varying float vDepth; varying float vY;',
+  'void main(){',
+  '  mat4 M = mat4(aM0,aM1,aM2,aM3);',
+  '  vec4 wp = M * vec4(aPos,1.0);',
+  '  vNrm = normalize(mat3(M) * aNrm);',
+  '  vCol = aCol; vY = wp.y;',
+  '  vec4 cp = uVP * wp;',
+  '  vDepth = cp.w;',
+  '  gl_Position = cp;',
+  '}'
+].join('\n');
+
+var FS = [
+  'precision mediump float;',
+  'varying vec3 vNrm; varying vec3 vCol; varying float vDepth; varying float vY;',
+  'uniform vec3 uSun; uniform vec3 uFog;',
+  'void main(){',
+  '  vec3 n = normalize(vNrm);',
+  '  float d = max(dot(n, uSun), 0.0);',
+  '  float sky = 0.5 + 0.5 * n.y;',                    // hemisphere ambient
+  '  vec3 amb = mix(vec3(0.22,0.20,0.28), vec3(0.46,0.50,0.60), sky);',
+  '  vec3 c = vCol * (amb + d * vec3(1.05,0.99,0.86));',
+  '  float f = 1.0 - exp(-vDepth * 0.0075);',           // exponential distance fog
+  '  c = mix(c, uFog, clamp(f,0.0,0.82));',
+  '  gl_FragColor = vec4(c, 1.0);',
+  '}'
+].join('\n');
+
+function mkShader(type, src) {
+  var s = gl.createShader(type);
+  gl.shaderSource(s, src); gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+    console.error('[overwind] shader:', gl.getShaderInfoLog(s));
+    return null;
+  }
+  return s;
+}
+
+var prog = null, uVP = null, uSun = null, uFog = null;
+var locPos, locNrm, locM0, locM1, locM2, locM3, locCol;
+var vboGeo = null, iboGeo = null, vboInst = null, idxCount = 0;
+
+var MAX_INST = 4096;
+var INST_FLOATS = 19;                                 // mat4 (16) + rgb (3)
+var instData = new Float32Array(MAX_INST * INST_FLOATS);
+var instCount = 0;
+
+function initScene() {
+  var vs = mkShader(gl.VERTEX_SHADER, VS), fs = mkShader(gl.FRAGMENT_SHADER, FS);
+  if (!vs || !fs) return false;
+  prog = gl.createProgram();
+  gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+    console.error('[overwind] link:', gl.getProgramInfoLog(prog)); return false;
+  }
+  gl.useProgram(prog);
+  uVP = gl.getUniformLocation(prog, 'uVP');
+  uSun = gl.getUniformLocation(prog, 'uSun');
+  uFog = gl.getUniformLocation(prog, 'uFog');
+  locPos = gl.getAttribLocation(prog, 'aPos');
+  locNrm = gl.getAttribLocation(prog, 'aNrm');
+  locM0 = gl.getAttribLocation(prog, 'aM0');
+  locM1 = gl.getAttribLocation(prog, 'aM1');
+  locM2 = gl.getAttribLocation(prog, 'aM2');
+  locM3 = gl.getAttribLocation(prog, 'aM3');
+  locCol = gl.getAttribLocation(prog, 'aCol');
+
+  // unit cube centred on the origin, one normal per face
+  var p = [], n = [], idx = [];
+  var faces = [
+    [[ .5,-.5,-.5],[ .5, .5,-.5],[ .5, .5, .5],[ .5,-.5, .5],[ 1, 0, 0]],
+    [[-.5,-.5, .5],[-.5, .5, .5],[-.5, .5,-.5],[-.5,-.5,-.5],[-1, 0, 0]],
+    [[-.5, .5,-.5],[-.5, .5, .5],[ .5, .5, .5],[ .5, .5,-.5],[ 0, 1, 0]],
+    [[-.5,-.5, .5],[-.5,-.5,-.5],[ .5,-.5,-.5],[ .5,-.5, .5],[ 0,-1, 0]],
+    [[-.5,-.5, .5],[ .5,-.5, .5],[ .5, .5, .5],[-.5, .5, .5],[ 0, 0, 1]],
+    [[ .5,-.5,-.5],[-.5,-.5,-.5],[-.5, .5,-.5],[ .5, .5,-.5],[ 0, 0,-1]]
+  ];
+  for (var f = 0; f < 6; f++) {
+    var base = f * 4, nr = faces[f][4];
+    for (var v = 0; v < 4; v++) {
+      p.push(faces[f][v][0], faces[f][v][1], faces[f][v][2]);
+      n.push(nr[0], nr[1], nr[2]);
+    }
+    idx.push(base, base + 1, base + 2, base, base + 2, base + 3);
+  }
+  var inter = new Float32Array(p.length * 2);
+  for (var i = 0; i < p.length / 3; i++) {
+    inter[i*6]=p[i*3]; inter[i*6+1]=p[i*3+1]; inter[i*6+2]=p[i*3+2];
+    inter[i*6+3]=n[i*3]; inter[i*6+4]=n[i*3+1]; inter[i*6+5]=n[i*3+2];
+  }
+  vboGeo = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vboGeo);
+  gl.bufferData(gl.ARRAY_BUFFER, inter, gl.STATIC_DRAW);
+  iboGeo = gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iboGeo);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(idx), gl.STATIC_DRAW);
+  idxCount = idx.length;
+
+  vboInst = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vboInst);
+  gl.bufferData(gl.ARRAY_BUFFER, instData.byteLength, gl.DYNAMIC_DRAW);
+
+  gl.enable(gl.DEPTH_TEST);
+  gl.enable(gl.CULL_FACE);
+  gl.cullFace(gl.BACK);
+  return true;
+}
+
+function bindAttribs() {
+  gl.bindBuffer(gl.ARRAY_BUFFER, vboGeo);
+  gl.enableVertexAttribArray(locPos);
+  gl.vertexAttribPointer(locPos, 3, gl.FLOAT, false, 24, 0);
+  gl.enableVertexAttribArray(locNrm);
+  gl.vertexAttribPointer(locNrm, 3, gl.FLOAT, false, 24, 12);
+  divisor(locPos, 0); divisor(locNrm, 0);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, vboInst);
+  var stride = INST_FLOATS * 4;
+  var locs = [locM0, locM1, locM2, locM3];
+  for (var i = 0; i < 4; i++) {
+    gl.enableVertexAttribArray(locs[i]);
+    gl.vertexAttribPointer(locs[i], 4, gl.FLOAT, false, stride, i * 16);
+    divisor(locs[i], 1);
+  }
+  gl.enableVertexAttribArray(locCol);
+  gl.vertexAttribPointer(locCol, 3, gl.FLOAT, false, stride, 64);
+  divisor(locCol, 1);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iboGeo);
+}
+
+// push one axis-aligned box
+function box(cx, cy, cz, sx, sy, sz, r, g, b) {
+  if (instCount >= MAX_INST) return;
+  if (!finite(cx) || !finite(cy) || !finite(cz)) return;
+  var o = instCount * INST_FLOATS;
+  instData[o]=sx; instData[o+1]=0; instData[o+2]=0; instData[o+3]=0;
+  instData[o+4]=0; instData[o+5]=sy; instData[o+6]=0; instData[o+7]=0;
+  instData[o+8]=0; instData[o+9]=0; instData[o+10]=sz; instData[o+11]=0;
+  instData[o+12]=cx; instData[o+13]=cy; instData[o+14]=cz; instData[o+15]=1;
+  instData[o+16]=r; instData[o+17]=g; instData[o+18]=b;
+  instCount++;
+}
+
+// push a box rotated about Y then Z (enough for the machine's arm and limbs)
+function boxRot(cx, cy, cz, sx, sy, sz, yaw, pitch, r, g, b) {
+  if (instCount >= MAX_INST) return;
+  if (!finite(cx) || !finite(cy) || !finite(cz)) return;
+  var cy1 = Math.cos(yaw), sy1 = Math.sin(yaw);
+  var cp = Math.cos(pitch), sp = Math.sin(pitch);
+  // R = Ry(yaw) * Rz(pitch)
+  var m00 = cy1*cp,  m01 = -cy1*sp, m02 = sy1;
+  var m10 = sp,      m11 = cp,      m12 = 0;
+  var m20 = -sy1*cp, m21 = sy1*sp,  m22 = cy1;
+  var o = instCount * INST_FLOATS;
+  instData[o]=m00*sx; instData[o+1]=m10*sx; instData[o+2]=m20*sx; instData[o+3]=0;
+  instData[o+4]=m01*sy; instData[o+5]=m11*sy; instData[o+6]=m21*sy; instData[o+7]=0;
+  instData[o+8]=m02*sz; instData[o+9]=m12*sz; instData[o+10]=m22*sz; instData[o+11]=0;
+  instData[o+12]=cx; instData[o+13]=cy; instData[o+14]=cz; instData[o+15]=1;
+  instData[o+16]=r; instData[o+17]=g; instData[o+18]=b;
+  instCount++;
+}
+
+function resize() {
+  if (resizing) return;
+  resizing = true;
+  try {
+    var iw = (typeof window !== 'undefined' && window.innerWidth) || 0;
+    var ih = (typeof window !== 'undefined' && window.innerHeight) || 0;
+    if (iw < 2 || ih < 2) return;                     // 0-size layout pass — keep last good size
+    DPR = Math.min(2, (typeof window !== 'undefined' && window.devicePixelRatio) || 1);
+    W = iw; H = ih;
+    cv.width = Math.round(W * DPR);
+    cv.height = Math.round(H * DPR);
+    // CRITICAL: a canvas is a replaced element. Without explicit CSS sizing it
+    // lays out at its attribute size (W*DPR) — double-size on every phone.
+    cv.style.width = W + 'px';
+    cv.style.height = H + 'px';
+    if (gl) gl.viewport(0, 0, cv.width, cv.height);
+  } finally { resizing = false; }
+}
+
+// ------------------------------------------------------------------ audio
+var AC = null, master = null, muted = false;
+function ac() {
+  if (muted) return null;
+  try {
+    if (!AC) {
+      var Ctor = window.AudioContext || window.webkitAudioContext;
+      if (!Ctor) return null;
+      AC = new Ctor();
+      master = AC.createGain(); master.gain.value = 0.5; master.connect(AC.destination);
+    }
+    if (AC.state === 'suspended' && AC.resume) AC.resume();
+    return AC;
+  } catch (e) { return null; }
+}
+function tone(freq, dur, type, vol, slideTo) {
+  var a = ac(); if (!a) return;
+  try {
+    var o = a.createOscillator(), g = a.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(freq, a.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(20, slideTo), a.currentTime + dur);
+    g.gain.setValueAtTime(0.0001, a.currentTime);
+    g.gain.exponentialRampToValueAtTime(vol || 0.2, a.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + dur);
+    o.connect(g); g.connect(master); o.start(); o.stop(a.currentTime + dur + 0.02);
+  } catch (e) {}
+}
+function noise(dur, vol, lp, sweep) {
+  var a = ac(); if (!a) return;
+  try {
+    var n = Math.floor(a.sampleRate * dur);
+    var buf = a.createBuffer(1, n, a.sampleRate), d = buf.getChannelData(0);
+    for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    var src = a.createBufferSource(); src.buffer = buf;
+    var f = a.createBiquadFilter(); f.type = 'lowpass';
+    f.frequency.setValueAtTime(lp || 1400, a.currentTime);
+    if (sweep) f.frequency.exponentialRampToValueAtTime(Math.max(80, sweep), a.currentTime + dur);
+    var g = a.createGain(); g.gain.value = vol || 0.22;
+    g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + dur);
+    src.connect(f); f.connect(g); g.connect(master); src.start();
+  } catch (e) {}
+}
+var sfx = {
+  ratchet: function (t) { tone(180 + t * 260, 0.035, 'square', 0.05); },
+  creak:   function (t) { tone(90 + t * 90, 0.22, 'sawtooth', 0.035, 60 + t * 60); },
+  fire:    function () { noise(0.28, 0.3, 2600, 300); tone(150, 0.16, 'sawtooth', 0.16, 60); },
+  thud:    function (v) { noise(0.16, clamp(0.06 + v * 0.2, 0.05, 0.3), 700, 120); },
+  clang:   function () { tone(760, 0.16, 'square', 0.07, 420); tone(1180, 0.1, 'square', 0.04, 700); },
+  snap:    function () { noise(0.09, 0.4, 5200, 900); tone(240, 0.42, 'sawtooth', 0.2, 42); },
+  over:    function () { tone(560, 0.1, 'square', 0.1); setTimeout(function(){tone(760,0.1,'square',0.1);},80);
+                         setTimeout(function(){tone(1020,0.18,'square',0.11);},160); },
+  win:     function () { [523,659,784,1046].forEach(function(f,i){ setTimeout(function(){tone(f,0.22,'triangle',0.13);}, i*95); }); },
+  lose:    function () { [400,320,250,190].forEach(function(f,i){ setTimeout(function(){tone(f,0.24,'sawtooth',0.1);}, i*115); }); }
+};
+
+// ------------------------------------------------------------------ heightfield
+// The pile IS the terrain. Frozen lads rasterise into a 2D grid of heights and
+// every live particle collides against that surface, so a settled heap can
+// never be clipped through. Angle-of-repose relaxation slumps spikes into
+// climbable ramps — which is what makes a failed shot productive.
+var GX0 = -14, GZ0 = -26, GBIN = 1.5, GNX = 52, GNZ = 36;
+// ~28 degrees, and deliberately SHALLOW. A steeper heap is taller, which looks
+// like progress, but a 47-degree face at the foot of the wall is not a ramp —
+// it is a second wall, and lads smack into it and stop. The pile only earns its
+// name as a ladder if a body can run up it, so the slope is tuned for
+// rideability and the height is whatever that leaves.
+var REPOSE = 0.8, REPOSE_EPS = 0.004, RELAX_PASSES = 3, MAX_PILE = 26;
+var pile = new Float32Array(GNX * GNZ);
+// Cells the castle stands on. Material may not accumulate there and may not
+// flow there, so a heap BANKS UP against the wall instead of quietly draining
+// through it. Without this the pile flattens itself into the masonry and the
+// premise stops working.
+var solid = new Uint8Array(GNX * GNZ);
+var dirty = false, dx0 = 0, dx1 = 0, dz0 = 0, dz1 = 0;
+
+var NOX = [1,-1,0,0,1,1,-1,-1], NOZ = [0,0,1,-1,1,-1,1,-1], NSTEP = [];
+(function () { for (var i = 0; i < 8; i++) NSTEP.push(REPOSE * Math.hypot(NOX[i], NOZ[i])); })();
+
+function gCell(ix, iz) { return iz * GNX + ix; }
+function gIX(x) { var i = Math.floor((x - GX0) / GBIN); return i < 0 ? 0 : (i >= GNX ? GNX - 1 : i); }
+function gIZ(z) { var i = Math.floor((z - GZ0) / GBIN); return i < 0 ? 0 : (i >= GNZ ? GNZ - 1 : i); }
+function gCX(ix) { return GX0 + (ix + 0.5) * GBIN; }
+function gCZ(iz) { return GZ0 + (iz + 0.5) * GBIN; }
+
+function pileReset() { pile.fill(0); solid.fill(1); dirty = false; }
+
+function markDirty(a, b, c, d) {
+  if (!dirty) { dx0 = a; dx1 = b; dz0 = c; dz1 = d; dirty = true; return; }
+  if (a < dx0) dx0 = a; if (b > dx1) dx1 = b;
+  if (c < dz0) dz0 = c; if (d > dz1) dz1 = d;
+}
+
+// bilinear surface height at (x,z)
+function heightAt(x, z) {
+  var fx = (x - GX0) / GBIN - 0.5, fz = (z - GZ0) / GBIN - 0.5;
+  var ix = Math.floor(fx), iz = Math.floor(fz);
+  var tx = fx - ix, tz = fz - iz;
+  if (ix < 0) { ix = 0; tx = 0; } if (ix >= GNX - 1) { ix = GNX - 2; tx = 1; }
+  if (iz < 0) { iz = 0; tz = 0; } if (iz >= GNZ - 1) { iz = GNZ - 2; tz = 1; }
+  var i00 = gCell(ix, iz), i10 = i00 + 1, i01 = i00 + GNX, i11 = i01 + 1;
+  var a = pile[i00] + (pile[i10] - pile[i00]) * tx;
+  var b = pile[i01] + (pile[i11] - pile[i01]) * tx;
+  return a + (b - a) * tz;
+}
+
+function surfNormal(x, z, out) {
+  var e = GBIN;
+  var hx = heightAt(x + e, z) - heightAt(x - e, z);
+  var hz = heightAt(x, z + e) - heightAt(x, z - e);
+  var nx = -hx / (2 * e), nz = -hz / (2 * e);
+  var inv = 1 / Math.sqrt(nx * nx + nz * nz + 1);
+  out[0] = nx * inv; out[1] = inv; out[2] = nz * inv;
+}
+
+function maxPile() { var m = 0; for (var i = 0; i < pile.length; i++) if (pile[i] > m) m = pile[i]; return m; }
+
+// stamp a sphere's upper surface into the grid
+function stampSphere(cx, cy, cz, r) {
+  var ix0 = gIX(cx - r), ix1 = gIX(cx + r), iz0 = gIZ(cz - r), iz1 = gIZ(cz + r);
+  var rr = r * r;
+  for (var iz = iz0; iz <= iz1; iz++) {
+    var dz = gCZ(iz) - cz, rowQ = rr - dz * dz;
+    if (rowQ <= 0) continue;
+    for (var ix = ix0; ix <= ix1; ix++) {
+      var dxx = gCX(ix) - cx, q = rowQ - dxx * dxx;
+      if (q <= 0) continue;
+      var i = gCell(ix, iz);
+      if (solid[i] === 0) continue;
+      var top = cy + Math.sqrt(q);
+      if (top > pile[i]) pile[i] = Math.min(MAX_PILE, top);
+    }
+  }
+  markDirty(ix0, ix1, iz0, iz1);
+}
+
+// Angle-of-repose relaxation, four in-place sweeps per pass. Sweeping (rather
+// than double-buffering) lets material cascade the full width of the pile in a
+// single sweep; the four directions cancel each other's bias. The epsilon
+// deadband is what makes it terminate at all — without it the overhang shrinks
+// toward the repose step forever and the grid never stops being dirty.
+var exc = new Float32Array(8);
+function relaxPile(passes) {
+  if (!dirty) return 0;
+  var p = passes || RELAX_PASSES, margin = p + 1;
+  var x0 = clamp(dx0 - margin, 0, GNX - 1), x1 = clamp(dx1 + margin, 0, GNX - 1);
+  var z0 = clamp(dz0 - margin, 0, GNZ - 1), z1 = clamp(dz1 + margin, 0, GNZ - 1);
+  var moved = 0, lastMoved = 0;
+  var mx0 = 1e9, mx1 = -1e9, mz0 = 1e9, mz1 = -1e9;
+
+  for (var k = 0; k < p; k++) {
+    lastMoved = 0; mx0 = 1e9; mx1 = -1e9; mz0 = 1e9; mz1 = -1e9;
+    for (var dir = 0; dir < 4; dir++) {
+      var xUp = (dir & 1) === 0, zUp = (dir & 2) === 0;
+      var zF = zUp ? z0 : z1, zT = zUp ? z1 : z0, zS = zUp ? 1 : -1;
+      var xF = xUp ? x0 : x1, xT = xUp ? x1 : x0, xS = xUp ? 1 : -1;
+      for (var iz = zF; zUp ? iz <= zT : iz >= zT; iz += zS) {
+        for (var ix = xF; xUp ? ix <= xT : ix >= xT; ix += xS) {
+          var i = iz * GNX + ix;
+          if (solid[i] === 0) continue;
+          var h = pile[i];
+          if (!(h > 0)) continue;
+          var m = 0, tot = 0;
+          for (var n = 0; n < 8; n++) {
+            exc[n] = 0;
+            var jx = ix + NOX[n]; if (jx < 0 || jx >= GNX) continue;
+            var jz = iz + NOZ[n]; if (jz < 0 || jz >= GNZ) continue;
+            if (solid[jz * GNX + jx] === 0) continue;      // never drain into the wall
+            var d = h - pile[jz * GNX + jx];
+            if (d > NSTEP[n] + REPOSE_EPS) { var e = d - NSTEP[n]; exc[n] = e; tot += e; m++; }
+          }
+          if (m === 0) continue;
+          var total = tot / (m + 1);
+          if (total > h) total = h;
+          var scale = total / tot, given = 0;
+          for (var n2 = 0; n2 < 8; n2++) {
+            if (exc[n2] <= 0) continue;
+            var jx2 = ix + NOX[n2], jz2 = iz + NOZ[n2], j = jz2 * GNX + jx2;
+            var t = exc[n2] * scale;
+            pile[j] += t; given += t;
+            if (jx2 < mx0) mx0 = jx2; if (jx2 > mx1) mx1 = jx2;
+            if (jz2 < mz0) mz0 = jz2; if (jz2 > mz1) mz1 = jz2;
+          }
+          var left = h - given;
+          pile[i] = left > 0 ? left : 0;
+          moved += given; lastMoved += given;
+          if (ix < mx0) mx0 = ix; if (ix > mx1) mx1 = ix;
+          if (iz < mz0) mz0 = iz; if (iz > mz1) mz1 = iz;
+        }
+      }
+    }
+  }
+  for (var zz = z0; zz <= z1; zz++)
+    for (var xx = x0; xx <= x1; xx++) {
+      var ii = zz * GNX + xx;
+      if (solid[ii] === 0) { pile[ii] = 0; continue; }
+      if (!(pile[ii] >= 0)) pile[ii] = 0;
+      if (pile[ii] > MAX_PILE) pile[ii] = MAX_PILE;
+    }
+
+  dirty = false;
+  // whatever is still in motion has to stay dirty or it never settles
+  if (lastMoved > 0 && mx1 >= mx0) markDirty(clamp(mx0-1,0,GNX-1), clamp(mx1+1,0,GNX-1),
+                                             clamp(mz0-1,0,GNZ-1), clamp(mz1+1,0,GNZ-1));
+  return moved;
+}
+
+// ------------------------------------------------------------------ castle
+var castle = { wallX: 31, wallH: 7, wallT: 2.4, halfZ: 13, blocks: [], banner: null, breachLine: 0 };
+
+function buildCastle(level) {
+    // Sized against what a heap of lads MEASURABLY becomes. Seven short shots
+  // build a ~2.4m mound at the foot of the wall, so 3.4m is out of reach for an
+  // under-powered shot on bare ground and in reach once you have built
+  // something to ride up. Every extra metre here makes the pile more
+  // decorative, which is the one thing this game cannot afford.
+  castle.wallH = 3.4 + Math.min(2.0, (level - 1) * 0.34);
+  castle.halfZ = 13;
+  castle.breachLine = castle.wallX + castle.wallT * 0.5;
+  castle.blocks = [];
+  var wx = castle.wallX, wh = castle.wallH, wt = castle.wallT, hz = castle.halfZ;
+  // main wall as one collision slab
+  castle.blocks.push({ x: wx, y: wh / 2, z: 0, sx: wt, sy: wh, sz: hz * 2, r: .58, g: .58, b: .62 });
+  // crenellations (decor + a little collision character)
+  for (var z = -hz + 1; z <= hz - 1; z += 2.6)
+    castle.blocks.push({ x: wx, y: wh + 0.55, z: z, sx: wt * 0.86, sy: 1.1, sz: 1.3, r: .5, g: .5, b: .55 });
+  // towers
+  [-hz, hz].forEach(function (tz) {
+    castle.blocks.push({ x: wx, y: (wh + 2.4) / 2, z: tz, sx: wt + 1.6, sy: wh + 2.4, sz: 3.6, r: .52, g: .52, b: .57 });
+  });
+  // keep behind the wall
+  castle.blocks.push({ x: wx + 9, y: (wh + 1.5) / 2, z: 0, sx: 7, sy: wh + 1.5, sz: 9, r: .44, g: .43, b: .5 });
+  castle.banner = { x: wx + 9, y: wh + 4.4, z: 0, alive: true, wob: 0 };
+
+  // stamp the castle footprint into the solid mask
+  solid.fill(1);
+  for (var bi = 0; bi < castle.blocks.length; bi++) {
+    var B = castle.blocks[bi];
+    if (B.y - B.sy * 0.5 > 0.6) continue;                  // crenellations float; ignore them
+    var ax0 = gIX(B.x - B.sx * 0.5), ax1 = gIX(B.x + B.sx * 0.5);
+    var az0 = gIZ(B.z - B.sz * 0.5), az1 = gIZ(B.z + B.sz * 0.5);
+    for (var cz = az0; cz <= az1; cz++)
+      for (var cx2 = ax0; cx2 <= ax1; cx2++) solid[gCell(cx2, cz)] = 0;
+  }
+}
+
+// ------------------------------------------------------------------ ragdoll
+// 7 nodes: 0 helm, 1 chest, 2 hips, 3 handL, 4 handR, 5 footL, 6 footR
+var NODE_R = [0.30, 0.36, 0.34, 0.20, 0.20, 0.22, 0.22];
+var POSE = [[0,1.72,0],[0,1.30,0],[0,0.80,0],[-0.46,1.18,0],[0.46,1.18,0],[-0.22,0.14,0],[0.22,0.14,0]];
+var LA = [0,1,2,2,1,1,0,3,4,5,3,1,1];
+var LB = [1,2,5,6,3,4,2,2,2,6,4,5,6];
+var LK = [1,1,.95,.95,.9,.9,.5,.35,.35,.28,.2,.45,.45];
+var LREST = [];
+(function () {
+  for (var i = 0; i < LA.length; i++) {
+    var a = POSE[LA[i]], b = POSE[LB[i]];
+    LREST.push(Math.hypot(a[0]-b[0], a[1]-b[1], a[2]-b[2]));
+  }
+})();
+
+var GRAV = 24, SUB = 1 / 120, AIR = 0.9992, ITERS = 4, MAXSTEP = 1.4;
+
+function Lad(x, y, z, vx, vy, vz, kind) {
+  this.p = []; this.kind = kind || 0;
+  this.still = 0; this.alive = true; this.counted = false; this.spin = 0;
+  var scale = kind === 1 ? 0.86 : 1;
+  for (var i = 0; i < 7; i++) {
+    var o = POSE[i];
+    var px = x + o[0] * scale, py = y + o[1] * scale, pz = z + o[2] * scale;
+    this.p.push({ x: px, y: py, z: pz, px: px - vx * SUB, py: py - vy * SUB, pz: pz - vz * SUB, r: NODE_R[i] * scale });
+  }
+  this.scale = scale;
+}
+Lad.prototype.centre = function () {
+  var cx = 0, cy = 0, cz = 0;
+  for (var i = 0; i < 7; i++) { cx += this.p[i].x; cy += this.p[i].y; cz += this.p[i].z; }
+  return { x: cx / 7, y: cy / 7, z: cz / 7 };
+};
+Lad.prototype.motion = function () {
+  var m = 0;
+  for (var i = 0; i < 7; i++) {
+    var q = this.p[i];
+    m += Math.hypot(q.x - q.px, q.y - q.py, q.z - q.pz);
+  }
+  return m / 7;
+};
+Lad.prototype.sane = function () {
+  for (var i = 0; i < 7; i++) {
+    var q = this.p[i];
+    if (!finite(q.x) || !finite(q.y) || !finite(q.z)) return false;
+  }
+  return true;
+};
+
+var lads = [], frozenCount = 0;
+var nrm = [0, 0, 0];
+
+function stepLads(dt) {
+  var steps = Math.min(4, Math.max(1, Math.round(dt / SUB)));
+  for (var s = 0; s < steps; s++) substep();
+}
+
+function substep() {
+  var i, j, k, q;
+  for (i = lads.length - 1; i >= 0; i--) {
+    var L = lads[i];
+    if (!L.sane()) { lads.splice(i, 1); continue; }
+    // verlet integrate
+    for (j = 0; j < 7; j++) {
+      q = L.p[j];
+      var vx = (q.x - q.px) * AIR, vy = (q.y - q.py) * AIR, vz = (q.z - q.pz) * AIR;
+      // wind is an ACCELERATION in world units/s^2. This is added to a
+      // displacement-per-substep, so the conversion is a*SUB^2 — an earlier
+      // stray *60 made the crosswind five times heavier than gravity and blew
+      // every lad into the far corner of the map, where the whole pile lived.
+      vx += wind.x * SUB * SUB; vz += wind.z * SUB * SUB;
+      var sp = Math.hypot(vx, vy, vz);
+      if (sp > MAXSTEP) { var f = MAXSTEP / sp; vx *= f; vy *= f; vz *= f; }
+      q.px = q.x; q.py = q.y; q.pz = q.z;
+      q.x += vx; q.y += vy - GRAV * SUB * SUB; q.z += vz;
+    }
+    // constraints
+    for (k = 0; k < ITERS; k++) {
+      for (j = 0; j < LA.length; j++) {
+        var a = L.p[LA[j]], b = L.p[LB[j]];
+        var dx = b.x - a.x, dy = b.y - a.y, dz = b.z - a.z;
+        var d = Math.hypot(dx, dy, dz); if (d < 1e-6) continue;
+        var rest = LREST[j] * L.scale;
+        var diff = (d - rest) / d * 0.5 * LK[j];
+        dx *= diff; dy *= diff; dz *= diff;
+        a.x += dx; a.y += dy; a.z += dz;
+        b.x -= dx; b.y -= dy; b.z -= dz;
+      }
+      collideLad(L);
+    }
+    // settle detection
+    var mo = L.motion();
+    if (mo < 0.006 && L.centre().y < castle.wallH + 3) L.still++; else L.still = 0;
+    if (L.still > 26) freezeLad(L, i);
+  }
+}
+
+function collideLad(L) {
+  for (var j = 0; j < 7; j++) {
+    var q = L.p[j];
+    // world bounds — a lad that leaves the field is simply gone
+    if (q.x < GX0 + 0.5) q.x = GX0 + 0.5;
+    if (q.x > GX0 + GNX * GBIN - 0.5) q.x = GX0 + GNX * GBIN - 0.5;
+    if (q.z < GZ0 + 0.5) q.z = GZ0 + 0.5;
+    if (q.z > GZ0 + GNZ * GBIN - 0.5) q.z = GZ0 + GNZ * GBIN - 0.5;
+
+    // terrain (ground + pile)
+    var h = heightAt(q.x, q.z);
+    if (q.y - q.r < h) {
+      surfNormal(q.x, q.z, nrm);
+      var pen = h - (q.y - q.r);
+      q.y += pen;
+      // friction against the surface, and a little bounce
+      var vx = q.x - q.px, vy = q.y - q.py, vz = q.z - q.pz;
+      var vn = vx * nrm[0] + vy * nrm[1] + vz * nrm[2];
+      if (vn < 0) {
+        // A heap of lads is springy meat, not a sandbag. Bare ground absorbs;
+        // the PILE gives back, and keeps horizontal speed, so a sloped heap
+        // deflects the next lad up and onward instead of swallowing him. This
+        // is the whole premise — without it the pile is scenery.
+        // Restitution must stay LOW or the pile never grows: a bouncy heap
+        // throws every later lad off instead of letting him settle on top, and
+        // since the heightfield takes a max, a lad who lands beside the mound
+        // adds nothing. The ramp effect comes from the SLOPE redirecting
+        // velocity along the surface normal, not from bounce.
+        var onPile = h > 0.35;
+        var rest = onPile ? 0.20 : 0.15;
+        var fric = onPile ? 0.86 : 0.72;
+        vx -= (1 + rest) * vn * nrm[0];
+        vy -= (1 + rest) * vn * nrm[1];
+        vz -= (1 + rest) * vn * nrm[2];
+        vx *= fric; vz *= fric;
+        if (Math.abs(vn) > 0.16 && impactBudget > 0) { impactBudget--; sfx.thud(Math.abs(vn)); }
+      }
+      q.px = q.x - vx; q.py = q.y - vy; q.pz = q.z - vz;
+    }
+
+    // castle blocks — push out along the smallest penetration axis
+    for (var b = 0; b < castle.blocks.length; b++) {
+      var B = castle.blocks[b];
+      var hx = B.sx * 0.5 + q.r, hy = B.sy * 0.5 + q.r, hz = B.sz * 0.5 + q.r;
+      var ddx = q.x - B.x, ddy = q.y - B.y, ddz = q.z - B.z;
+      if (Math.abs(ddx) >= hx || Math.abs(ddy) >= hy || Math.abs(ddz) >= hz) continue;
+      var ox = hx - Math.abs(ddx), oy = hy - Math.abs(ddy), oz = hz - Math.abs(ddz);
+      var vx2 = q.x - q.px, vy2 = q.y - q.py, vz2 = q.z - q.pz;
+      if (ox <= oy && ox <= oz) { q.x += ddx < 0 ? -ox : ox; q.px = q.x + vx2 * 0.42; }
+      else if (oy <= oz) { q.y += ddy < 0 ? -oy : oy; q.py = q.y + vy2 * 0.3;
+                           q.px = q.x - vx2 * 0.62; q.pz = q.z - vz2 * 0.62; }
+      else { q.z += ddz < 0 ? -oz : oz; q.pz = q.z + vz2 * 0.42; }
+      if (clangBudget > 0 && Math.hypot(vx2, vy2, vz2) > 0.18) { clangBudget--; sfx.clang(); }
+    }
+  }
+}
+
+function freezeLad(L, idx) {
+  var c = L.centre();
+  // rasterise the whole body into the terrain — this is what makes the heap solid
+  for (var j = 0; j < 7; j++) stampSphere(L.p[j].x, L.p[j].y, L.p[j].z, L.p[j].r * 4.2);
+  // Bulk is deliberately exaggerated. Seven bodies lying flat are physically a
+  // ~1.4m heap, which is scenery next to a 4.6m wall — and a pile that cannot
+  // change an outcome is not a premise, it is decoration. Stamping each lad
+  // fatter than he really is buys a heap that reaches roughly half wall height
+  // by the time you have spent your short shots on it.
+  relaxPile(RELAX_PASSES);
+  frozenCount++;
+  lads.splice(idx, 1);
+  if (c.x > castle.breachLine && !L.counted) { /* counted on crossing, not on freeze */ }
+}
+
+// ------------------------------------------------------------------ machine
+// The rig is simulated, not parameterised: winding builds real tension, the
+// frame strains and skids, the recoil hops it backward, and soft ground lets
+// it settle a little deeper with every shot.
+var GROUNDS = [
+  { name: 'TURF',  sink: 0.010, spread: 1.00, recoil: 1.00, col: [.32,.46,.26] },
+  { name: 'MUD',   sink: 0.055, spread: 1.28, recoil: 0.72, col: [.34,.28,.20] },
+  { name: 'ROCK',  sink: 0.000, spread: 0.80, recoil: 1.35, col: [.40,.40,.43] }
+];
+
+var rig = {
+  x: -6, z: 0, yaw: 0, elev: 0.62, tension: 0, winding: false,
+  sink: 0, bias: 0, armAngle: -0.62, armVel: 0, firing: false, cool: 0,
+  broken: 0, hop: 0, hopV: 0, ground: 0, snaps: 0
+};
+
+function rigReset(level, seed) {
+  var r = new RNG(seed);
+  rig.yaw = 0; rig.elev = 0.62; rig.tension = 0; rig.winding = false;
+  rig.sink = 0; rig.armAngle = -0.62; rig.armVel = 0; rig.firing = false;
+  rig.cool = 0; rig.broken = 0; rig.hop = 0; rig.hopV = 0; rig.snaps = 0;
+  // the machine's personality: a small persistent aim bias, consistent per siege
+  rig.bias = r.spread(0.030);
+}
+
+// muzzle speed from real machine state
+function muzzleSpeed() {
+  return 17.5 + rig.tension * 17.5;
+}
+// the honest spread radius the ellipse draws — every term is machine state
+function spreadRadius() {
+  var g = GROUNDS[rig.ground];
+  // Quadratic in tension so a gentle shot is nearly precise and a wound-up one
+  // is a gamble. Kept tight enough that repeated shots at the same aim actually
+  // HEAP: an earlier 5.4 coefficient scattered seven lads over ~60 square
+  // metres, which spread the pile too thin to ever change an outcome.
+  var base = 0.5 + rig.tension * rig.tension * 2.6;
+  base *= g.spread;
+  base *= 1 + rig.sink * 1.7;
+  base *= (payload === 3 ? 1.85 : 1);
+  base += Math.abs(wind.x) * 0.55 + Math.abs(wind.z) * 0.55;
+  return clamp(base, 0.5, 14);
+}
+
+function launchVector() {
+  var yaw = rig.yaw + rig.bias;
+  var el = clamp(rig.elev - rig.sink * 0.34, 0.14, 1.32);
+  var sp = muzzleSpeed();
+  return { vx: Math.cos(yaw) * Math.cos(el) * sp, vy: Math.sin(el) * sp, vz: Math.sin(yaw) * Math.cos(el) * sp, yaw: yaw, el: el, sp: sp };
+}
+
+// Ballistic prediction that mirrors substep() EXACTLY — same fixed 1/120 step,
+// same air damping, same wind term, same launch offset. An earlier version
+// integrated a drag-free point at 1/60 and predicted 40.6 where the lad
+// actually reached 25.4: the ellipse was lying by fifteen metres. The concept
+// says the preview may be vague but may never be a lie, so this walks the same
+// arithmetic the lad will walk.
+function predictLanding() {
+  var v = launchVector();
+  var x = rig.x + 1.2, y = 2.6 - rig.sink + 0.6, z = rig.z;
+  var dx = v.vx * SUB, dy = v.vy * SUB, dz = v.vz * SUB;   // displacement per substep
+  var WC = SUB * SUB;                                      // must match substep() exactly
+  for (var i = 0; i < 900; i++) {
+    dx = dx * AIR + wind.x * WC;
+    dy = dy * AIR - GRAV * SUB * SUB;
+    dz = dz * AIR + wind.z * WC;
+    x += dx; y += dy; z += dz;
+    if (y <= heightAt(x, z) + 0.9) break;                  // ~body centre on the surface
+    if (x > GX0 + GNX * GBIN || x < GX0) break;
+  }
+  return { x: x, y: heightAt(x, z), z: z };
+}
+
+var payload = 1;
+var wind = { x: 0, z: 0 };
+
+function fireRig() {
+  if (rig.cool > 0 || rig.broken > 0) return;
+  if (ammo <= 0) return;
+  var v = launchVector();
+  var n = Math.min(payload, ammo);
+  var sr = spreadRadius();
+  for (var i = 0; i < n; i++) {
+    // spread is applied as a real velocity perturbation, not a position fudge
+    var ang = shotRng.next() * Math.PI * 2;
+    var mag = Math.sqrt(shotRng.next()) * sr * 0.085;
+    var jx = Math.cos(ang) * mag, jz = Math.sin(ang) * mag;
+    var jy = shotRng.spread(sr * 0.05);
+    var ox = shotRng.spread(0.4), oz = shotRng.spread(0.4);
+    var L = new Lad(rig.x + ox + 1.2, 2.6 - rig.sink + 0.6, rig.z + oz,
+                    v.vx + jx * v.sp * 0.1, v.vy + jy * v.sp * 0.06, v.vz + jz * v.sp * 0.1,
+                    n > 1 ? 1 : 0);
+    lads.push(L);
+  }
+  ammo -= n;
+  shotsFired++;
+  rig.armVel = 15; rig.firing = true; rig.cool = 0.55;
+  rig.hopV = 3.4 * GROUNDS[rig.ground].recoil;
+  rig.sink += GROUNDS[rig.ground].sink * (0.5 + rig.tension);
+  rig.tension = 0; rig.winding = false;
+  sfx.fire();
+  shake = 0.55 + rig.tension * 0.4;
+  syncHud();
+}
+
+function snapRope() {
+  rig.broken = 2.4; rig.snaps++; rig.tension = 0; rig.winding = false;
+  rig.armVel = 26; rig.hopV = 5.2;
+  // the payload is dumped at the machine's own feet, and stands up looking at you
+  var n = Math.min(payload, ammo);
+  for (var i = 0; i < n; i++) {
+    lads.push(new Lad(rig.x + 3.2 + shotRng.spread(1.2), 2.2, rig.z + shotRng.spread(1.4),
+                      shotRng.spread(2.4), 3.4, shotRng.spread(2.4), n > 1 ? 1 : 0));
+  }
+  ammo -= n;
+  sfx.snap();
+  shake = 1.5;
+  toast('ROPE SNAPPED', '#ff8a6a');
+  syncHud();
+}
+
+function updateRig(dt) {
+  if (rig.cool > 0) rig.cool -= dt;
+  if (rig.broken > 0) {
+    rig.broken -= dt;
+    if (rig.broken <= 0) { rig.broken = 0; rig.armAngle = -0.62; rig.armVel = 0; }
+  }
+  // arm physics: whips forward on release, then the crew crank it back
+  if (rig.firing || rig.broken > 0) {
+    rig.armVel -= rig.armAngle * 6 * dt;
+    rig.armAngle += rig.armVel * dt;
+    rig.armVel *= 0.94;
+    if (rig.armAngle > 1.5) { rig.armAngle = 1.5; rig.armVel *= -0.35; }
+    if (Math.abs(rig.armVel) < 0.4 && rig.broken <= 0) {
+      rig.armAngle = lerp(rig.armAngle, -0.62, 1 - Math.pow(0.001, dt));
+      if (Math.abs(rig.armAngle + 0.9) < 0.05) { rig.firing = false; rig.armAngle = -0.62; rig.armVel = 0; }
+    }
+  } else {
+    rig.armAngle = lerp(rig.armAngle, -0.62 - rig.tension * 0.30, 1 - Math.pow(0.0006, dt));
+  }
+  // frame hop from recoil
+  rig.hopV -= 26 * dt;
+  rig.hop += rig.hopV * dt;
+  if (rig.hop < 0) { rig.hop = 0; rig.hopV = 0; }
+
+  if (rig.winding && rig.broken <= 0 && rig.cool <= 0 && ammo > 0) {
+    var before = rig.tension;
+    rig.tension = clamp(rig.tension + dt * 0.46, 0, 1.12);
+    // ratchet clicks accelerate as the crew get into it
+    var clickRate = 5 + rig.tension * 16;
+    ratchetPhase += dt * clickRate;
+    if (ratchetPhase > 1) { ratchetPhase -= 1; sfx.ratchet(rig.tension); }
+    if (rig.tension > 0.72 && before <= 0.72) sfx.creak(rig.tension);
+    if (rig.tension > 0.86 && Math.random() < dt * 3.2) sfx.creak(rig.tension);
+    if (rig.tension >= 1.0) {
+      // past the safe ceiling the rope is on borrowed time
+      if (Math.random() < (rig.tension - 1.0) * dt * 26 + dt * 1.4) snapRope();
+    }
+  }
+}
+var ratchetPhase = 0;
+
+// ------------------------------------------------------------------ game state
+var STATE_TITLE = 0, STATE_PLAY = 1, STATE_END = 2;
+var state = STATE_TITLE;
+var level = 1, quota = 3, over = 0, ammo = 8, shotsFired = 0;
+var shake = 0, impactBudget = 6, clangBudget = 4;
+var shotRng = new RNG(1);
+var save = { best: 1, muted: false };
+
+try {
+  var raw = localStorage.getItem('overwind.v1');
+  if (raw) { var o = JSON.parse(raw); if (o && typeof o === 'object') { save.best = o.best || 1; save.muted = !!o.muted; } }
+} catch (e) {}
+function persist() { try { localStorage.setItem('overwind.v1', JSON.stringify(save)); } catch (e) {} }
+
+var els = {};
+['titleScreen','endScreen','hud','toast','tensionWrap','tensionFill','tensionLabel',
+ 'quotaPill','ammoPill','levelPill','windPill','groundPill','bestLine',
+ 'endTitle','endSub','statOver','statPile','statSnap','endBtn','muteBtn',
+ 'loadOne','loadThree','btnRow'].forEach(function (id) { els[id] = document.getElementById(id); });
+
+function toast(text, col) {
+  if (!els.toast) return;
+  els.toast.textContent = text;
+  els.toast.style.color = col || '#fff';
+  els.toast.classList.remove('pop');
+  void els.toast.offsetWidth;
+  els.toast.classList.add('pop');
+}
+
+function syncHud() {
+  if (els.quotaPill) els.quotaPill.textContent = 'OVER THE WALL ' + over + '/' + quota;
+  if (els.ammoPill) els.ammoPill.textContent = 'LADS ' + ammo;
+  if (els.levelPill) els.levelPill.textContent = 'SIEGE ' + level;
+  if (els.groundPill) els.groundPill.textContent = GROUNDS[rig.ground].name + (rig.sink > 0.25 ? ' · SUNK' : '');
+  if (els.windPill) {
+    var w = Math.hypot(wind.x, wind.z);
+    els.windPill.textContent = 'WIND ' + (w < 0.6 ? 'CALM' : (wind.z > 0 ? '→→' : '←←') + ' ' + w.toFixed(1));
+  }
+  if (els.bestLine) els.bestLine.textContent = 'Best: siege ' + save.best;
+}
+
+function startLevel(n) {
+  level = n;
+  // Opening quota is 4, not 3: with 3 a single grapeshot could finish siege 1
+  // outright, ending the level before the player had learned what the tension
+  // bar or the pile were for.
+  quota = 4 + Math.min(5, Math.floor((n - 1) / 2));
+  ammo = quota + 5 + Math.min(4, Math.floor(n / 2));
+  over = 0; shotsFired = 0;
+  lads.length = 0; frozenCount = 0;
+  pileReset();
+  buildCastle(level);
+  rig.ground = (n - 1) % 3;
+  rigReset(level, 1337 + n * 7919);
+  shotRng = new RNG(4242 + n * 104729);
+  var wr = new RNG(99 + n * 31337);
+  wind.x = wr.spread(1.4); wind.z = wr.spread(3.4 + Math.min(4.5, n * 0.42));
+  state = STATE_PLAY;
+  els.titleScreen.classList.remove('show');
+  els.endScreen.classList.remove('show');
+  syncHud();
+  toast('SIEGE ' + n, '#f2c14e');
+}
+
+function endLevel(won) {
+  state = STATE_END;
+  if (won) {
+    if (level + 1 > save.best) { save.best = level + 1; persist(); }
+    sfx.win();
+    els.endTitle.textContent = 'WALL TAKEN';
+    els.endSub.textContent = over + ' over the wall. Nobody asked how.';
+    els.endBtn.textContent = 'NEXT SIEGE';
+  } else {
+    sfx.lose();
+    els.endTitle.textContent = 'OUT OF LADS';
+    els.endSub.textContent = 'The pile is taller than it was. That is not nothing.';
+    els.endBtn.textContent = 'TRY AGAIN';
+  }
+  els.statOver.textContent = String(over);
+  els.statPile.textContent = maxPile().toFixed(1);
+  els.statSnap.textContent = String(rig.snaps);
+  els.endScreen.classList.add('show');
+}
+
+function goTitle() {
+  state = STATE_TITLE;
+  els.endScreen.classList.remove('show');
+  els.titleScreen.classList.add('show');
+  lads.length = 0; pileReset(); buildCastle(1); rigReset(1, 1337);
+  wind.x = 0; wind.z = 0.7;
+  syncHud();
+}
+
+// ------------------------------------------------------------------ input
+var drag = { active: false, id: null, sx: 0, sy: 0, baseYaw: 0, baseElev: 0, moved: 0 };
+
+function pointerPos(e) {
+  if (e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY, id: e.touches[0].identifier };
+  if (e.changedTouches && e.changedTouches.length) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY, id: e.changedTouches[0].identifier };
+  return { x: e.clientX, y: e.clientY, id: 'mouse' };
+}
+
+function onDown(e) {
+  ac();
+  if (state === STATE_TITLE) { startLevel(1); return; }
+  if (state !== STATE_PLAY) return;
+  if (e.target && e.target.closest && e.target.closest('.btn, #muteBtn')) return;
+  var p = pointerPos(e);
+  drag.active = true; drag.id = p.id; drag.sx = p.x; drag.sy = p.y; drag.moved = 0;
+  drag.baseYaw = rig.yaw; drag.baseElev = rig.elev;
+  rig.winding = true;
+  if (els.tensionWrap) els.tensionWrap.classList.add('show');
+  if (els.tensionLabel) els.tensionLabel.classList.add('show');
+}
+function onMove(e) {
+  if (!drag.active || state !== STATE_PLAY) return;
+  var p = pointerPos(e);
+  var dx = p.x - drag.sx, dy = p.y - drag.sy;
+  drag.moved = Math.max(drag.moved, Math.hypot(dx, dy));
+  // horizontal drag swings the turntable, vertical sets the arc
+  rig.yaw = clamp(drag.baseYaw - dx * 0.0022, -0.72, 0.72);
+  rig.elev = clamp(drag.baseElev + dy * 0.0022, 0.16, 1.28);
+}
+function onUp(e) {
+  if (!drag.active) return;
+  drag.active = false;
+  if (els.tensionWrap) els.tensionWrap.classList.remove('show');
+  if (els.tensionLabel) els.tensionLabel.classList.remove('show');
+  if (state !== STATE_PLAY) { rig.winding = false; return; }
+  if (rig.tension > 0.05) fireRig();
+  rig.winding = false;
+  rig.tension = 0;
+}
+
+cv.addEventListener('mousedown', onDown);
+window.addEventListener('mousemove', onMove);
+window.addEventListener('mouseup', onUp);
+cv.addEventListener('touchstart', function (e) { e.preventDefault(); onDown(e); }, { passive: false });
+window.addEventListener('touchmove', function (e) { e.preventDefault(); onMove(e); }, { passive: false });
+window.addEventListener('touchend', function (e) { e.preventDefault(); onUp(e); }, { passive: false });
+window.addEventListener('touchcancel', function (e) { onUp(e); });
+
+els.titleScreen.addEventListener('click', function () { if (state === STATE_TITLE) { ac(); startLevel(1); } });
+els.endBtn.addEventListener('click', function () {
+  ac();
+  if (els.endTitle.textContent === 'WALL TAKEN') startLevel(level + 1);
+  else startLevel(level);
+});
+els.loadOne.addEventListener('click', function () {
+  payload = 1; els.loadOne.classList.add('on'); els.loadThree.classList.remove('on');
+});
+els.loadThree.addEventListener('click', function () {
+  payload = 3; els.loadThree.classList.add('on'); els.loadOne.classList.remove('on');
+});
+function setMuted(m) {
+  muted = m; save.muted = m; persist();
+  if (els.muteBtn) els.muteBtn.textContent = m ? '🔇' : '🔊';
+  if (master) { try { master.gain.value = m ? 0 : 0.5; } catch (e) {} }
+}
+els.muteBtn.addEventListener('click', function (e) { e.stopPropagation(); setMuted(!muted); });
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', function () { setTimeout(resize, 120); });
+document.addEventListener('visibilitychange', function () {
+  if (document.hidden && AC && AC.suspend) { try { AC.suspend(); } catch (e) {} }
+});
+
+// ------------------------------------------------------------------ update
+function update(dt) {
+  impactBudget = 6; clangBudget = 4;
+  if (shake > 0) shake = Math.max(0, shake - dt * 2.6);
+
+  if (state === STATE_PLAY) {
+    updateRig(dt);
+    stepLads(dt);
+    relaxPile(1);                       // the pile keeps settling between freezes
+
+    // count lads that get past the wall
+    for (var i = 0; i < lads.length; i++) {
+      var L = lads[i];
+      if (L.counted) continue;
+      var c = L.centre();
+      // Over means past the far face OR standing on the battlement — a lad who
+      // rode the pile up and ended up on top has plainly made it, and requiring
+      // him to also topple off the inside made the pile assist feel worthless.
+      // Height is what separates that from a lad merely heaped against the
+      // outside, so both parts of the test matter.
+      var onBattlement = c.x > castle.wallX - 1.4 && c.y > castle.wallH + 0.15;
+      if (c.x > castle.breachLine + 0.6 || onBattlement) {
+        L.counted = true; over++;
+        sfx.over();
+        toast(over >= quota ? 'BREACHED!' : 'OVER! ' + over + '/' + quota, '#8ef2a4');
+        syncHud();
+      }
+    }
+    if (castle.banner) castle.banner.wob = Math.sin(now * 0.004) * 0.12;
+
+    if (over >= quota) { endLevel(true); }
+    else if (ammo <= 0 && lads.length === 0 && rig.broken <= 0) { endLevel(false); }
+  } else {
+    stepLads(dt);
+    relaxPile(1);
+  }
+
+  // tension bar
+  if (els.tensionFill) {
+    var t = clamp(rig.tension / 1.12, 0, 1);
+    els.tensionFill.style.width = (t * 100).toFixed(1) + '%';
+  }
+  if (els.tensionLabel) {
+    els.tensionLabel.textContent = rig.tension >= 1.0 ? 'ROPE STRAINING' :
+      (rig.tension > 0.86 ? 'TOO MUCH' : 'TENSION');
+  }
+}
+
+// ------------------------------------------------------------------ render
+var VP = new Float32Array(16), PROJ = new Float32Array(16), VIEW = new Float32Array(16);
+var camPos = { x: -20, y: 12, z: 0 }, camTgt = { x: 12, y: 4, z: 0 };
+
+function render() {
+  if (!gl) return;
+  instCount = 0;
+
+  // ---- camera: behind the rig, swinging with the turntable, drifting to
+  // follow whatever is in the air (a cameraman slightly too slow)
+  var focus = null, bestX = -1e9;
+  for (var i = 0; i < lads.length; i++) {
+    var c = lads[i].centre();
+    if (c.x > bestX) { bestX = c.x; focus = c; }
+  }
+  var yaw = rig.yaw;
+  // With nothing in the air, frame the whole battlefield — the machine, the
+  // heap and the wall in one shot. Looking at the wall alone left most of the
+  // screen as empty sky.
+  var wantTx = focus ? focus.x : (rig.x + castle.wallX) * 0.5 + 3;
+  var wantTy = focus ? Math.max(2.5, focus.y * 0.8) : castle.wallH * 0.5 + 1.5;
+  var wantTz = focus ? focus.z * 0.7 : rig.z * 0.4;
+  camTgt.x = lerp(camTgt.x, wantTx, 0.055);
+  camTgt.y = lerp(camTgt.y, wantTy, 0.055);
+  camTgt.z = lerp(camTgt.z, wantTz, 0.055);
+
+  // Three-quarter view, not dead astern. Straight behind the turntable the arm,
+  // the counterweight and the A-frame all line up into one dark blob; a small
+  // lateral offset gives the machine a readable profile. Height is set so the
+  // horizon sits high and the frame is battlefield rather than sky.
+  var backDist = 23, height = 20, sideAngle = 0.34;
+  var camAng = yaw + sideAngle;
+  var wantCx = rig.x - Math.cos(camAng) * backDist;
+  var wantCz = rig.z - Math.sin(camAng) * backDist;
+  camPos.x = lerp(camPos.x, wantCx, 0.09);
+  camPos.y = lerp(camPos.y, height, 0.09);
+  camPos.z = lerp(camPos.z, wantCz, 0.09);
+
+  var sh = shake * 0.5;
+  var ex = camPos.x + (Math.random() - 0.5) * sh, ey = camPos.y + (Math.random() - 0.5) * sh, ez = camPos.z + (Math.random() - 0.5) * sh;
+
+  var aspect = cv.width / Math.max(1, cv.height);
+  m4perspective(PROJ, 1.02, aspect, 0.5, 260);
+  m4lookAt(VIEW, ex, ey, ez, camTgt.x, camTgt.y, camTgt.z);
+  m4mul(VP, PROJ, VIEW);
+
+  // ---- ground slab
+  var g = GROUNDS[rig.ground].col;
+  box(GX0 + GNX * GBIN * 0.5, -1.0, GZ0 + GNZ * GBIN * 0.5,
+      GNX * GBIN, 2.0, GNZ * GBIN, 0.26, 0.38, 0.22);
+  // a patch of the chosen ground under the machine, so the emplacement reads
+  box(rig.x + 1, -0.55, rig.z, 9, 1.2, 9, g[0], g[1], g[2]);
+
+  // ---- pile columns (only where material actually is)
+  for (var iz = 0; iz < GNZ; iz++) {
+    for (var ix = 0; ix < GNX; ix++) {
+      var ci = iz * GNX + ix;
+      if (solid[ci] === 0) continue;
+      var h = pile[ci];
+      if (h < 0.06) continue;
+      // Inset and warm-tinted so a heap reads as tangled lads rather than
+      // paving: full-width grey slabs at low height looked like a courtyard
+      // floor, which is the opposite of the thing this game is about.
+      var t = clamp(h / 5, 0, 1);
+      var jitter = ((ix * 7 + iz * 13) % 5) * 0.03;
+      box(gCX(ix), h * 0.5, gCZ(iz), GBIN * 0.88, h, GBIN * 0.88,
+          lerp(0.56, 0.74, t) + jitter, lerp(0.52, 0.64, t), lerp(0.46, 0.56, t));
+    }
+  }
+
+  // ---- castle
+  for (var b = 0; b < castle.blocks.length; b++) {
+    var B = castle.blocks[b];
+    box(B.x, B.y, B.z, B.sx, B.sy, B.sz, B.r, B.g, B.b);
+  }
+  if (castle.banner) {
+    var bn = castle.banner;
+    box(bn.x, bn.y - 1.2, bn.z, 0.22, 3.4, 0.22, 0.36, 0.28, 0.18);
+    boxRot(bn.x + 0.9, bn.y, bn.z, 1.7, 1.2, 0.12, 0, bn.wob, 0.78, 0.22, 0.20);
+  }
+
+  // ---- the machine
+  var rx = rig.x, rz = rig.z, ry = -rig.sink + rig.hop;
+  var cyaw = Math.cos(rig.yaw), syaw = Math.sin(rig.yaw);
+  // turntable + frame
+  box(rx, ry + 0.35, rz, 5.2, 0.7, 4.4, 0.30, 0.22, 0.14);
+  boxRot(rx, ry + 1.1, rz, 4.6, 0.5, 0.6, rig.yaw, 0, 0.34, 0.25, 0.16);
+  // wheels
+  [[-1.7,-1.7],[-1.7,1.7],[1.7,-1.7],[1.7,1.7]].forEach(function (w) {
+    box(rx + w[0], ry + 0.35, rz + w[1], 0.5, 1.1, 1.1, 0.22, 0.16, 0.11);
+  });
+  // A-frame uprights + cross-beam. A single post read as a flagpole in a
+  // field; the angled pair plus the beam is what makes it legible as a machine.
+  boxRot(rx - 1.0 * cyaw, ry + 1.75, rz - 1.0 * syaw, 0.34, 3.5, 0.34, rig.yaw, 0.30, 0.30, 0.22, 0.14);
+  boxRot(rx + 1.0 * cyaw, ry + 1.75, rz + 1.0 * syaw, 0.34, 3.5, 0.34, rig.yaw, -0.30, 0.30, 0.22, 0.14);
+  boxRot(rx, ry + 3.15, rz, 0.4, 0.34, 2.9, rig.yaw, 0, 0.26, 0.19, 0.12);
+  // The throwing arm — its angle IS the machine's state, not an animation.
+  // Length is bounded by the pivot height: a 5.4m arm on a 2.9m pivot swung its
+  // tip two metres underground every time the crew wound it back.
+  var aLen = 3.6, aPivot = 3.4;
+  var ax = rx + Math.cos(rig.yaw) * Math.cos(rig.armAngle) * aLen * 0.5;
+  var az = rz + Math.sin(rig.yaw) * Math.cos(rig.armAngle) * aLen * 0.5;
+  var ay = ry + aPivot + Math.sin(rig.armAngle) * aLen * 0.5;
+  boxRot(ax, ay, az, aLen, 0.52, 0.52, rig.yaw, rig.armAngle, 0.40, 0.29, 0.18);
+  // sling cup at the throwing tip, so the arm reads as a catapult rather than
+  // a flagpole standing in a field
+  var tx2 = rx + Math.cos(rig.yaw) * Math.cos(rig.armAngle) * aLen;
+  var tz2 = rz + Math.sin(rig.yaw) * Math.cos(rig.armAngle) * aLen;
+  var ty2 = ry + aPivot + Math.sin(rig.armAngle) * aLen;
+  box(tx2, ty2, tz2, 1.0, 0.7, 1.0, 0.46, 0.34, 0.20);
+  box(tx2, ty2 - 0.5, tz2, 0.7, 0.5, 0.7, 0.30, 0.22, 0.14);
+  // counterweight on the short end
+  var wx2 = rx - Math.cos(rig.yaw) * Math.cos(rig.armAngle) * 1.35;
+  var wz2 = rz - Math.sin(rig.yaw) * Math.cos(rig.armAngle) * 1.35;
+  var wy2 = ry + aPivot - Math.sin(rig.armAngle) * 1.35;
+  box(wx2, wy2, wz2, 1.15, 1.15, 1.15, 0.20, 0.20, 0.24);
+  // the crew — three lads who are nearby when it goes wrong
+  var crewPan = rig.broken > 0 ? Math.sin(now * 0.03) * 0.9 : 0;
+  for (var c2 = 0; c2 < 3; c2++) {
+    var cz2 = rz - 2.6 + c2 * 2.6;
+    var lean = rig.winding ? -0.35 - rig.tension * 0.35 : 0;
+    box(rx - 3.4 + crewPan, ry + 0.9 + (rig.broken > 0 ? Math.abs(Math.sin(now * 0.02 + c2)) * 1.2 : 0), cz2,
+        0.55, 1.5, 0.55, 0.72, 0.62, 0.48);
+    box(rx - 3.4 + crewPan + lean * 0.6, ry + 1.85, cz2, 0.5, 0.5, 0.5, 0.86, 0.74, 0.58);
+  }
+
+  // ---- the cone of doubt: an honest ellipse of where it might land
+  if (state === STATE_PLAY && rig.broken <= 0 && ammo > 0) {
+    var land = predictLanding();
+    var sr = spreadRadius();
+    var segs = 30;
+    for (var s = 0; s < segs; s++) {
+      var th = s / segs * Math.PI * 2;
+      var px2 = land.x + Math.cos(th) * sr;
+      var pz2 = land.z + Math.sin(th) * sr * 0.78;
+      var hy = heightAt(px2, pz2);
+      var hot = rig.tension > 0.86;
+      box(px2, hy + 0.12, pz2, 0.5, 0.22, 0.5,
+          hot ? 0.95 : 0.98, hot ? 0.36 : 0.86, hot ? 0.28 : 0.34);
+    }
+    // the core: where it goes if the machine behaves
+    box(land.x, land.y + 0.16, land.z, 0.9, 0.3, 0.9, 1, 0.95, 0.6);
+  }
+
+  // ---- wind sock, so the crosswind is telegraphed and never a surprise
+  var wmag = Math.hypot(wind.x, wind.z);
+  box(rig.x + 7, 3.4, GZ0 + 4, 0.16, 6.8, 0.16, 0.4, 0.36, 0.3);
+  for (var f2 = 0; f2 < 4; f2++) {
+    box(rig.x + 7 + wind.x * (f2 + 1) * 0.5, 6.4 - f2 * 0.12, GZ0 + 4 + wind.z * (f2 + 1) * 0.5,
+        0.7, 0.5, 0.7, 0.9, 0.5 + f2 * 0.08, 0.22);
+  }
+
+  // ---- the lads
+  for (var li = 0; li < lads.length; li++) {
+    var L = lads[li];
+    var body = L.kind === 1 ? [0.74, 0.70, 0.42] : [0.70, 0.74, 0.82];
+    for (var j = 0; j < 7; j++) {
+      var q = L.p[j];
+      var isHelm = j === 0;
+      var d = q.r * 2;
+      box(q.x, q.y, q.z, d, d, d,
+          isHelm ? 0.88 : body[0], isHelm ? 0.86 : body[1], isHelm ? 0.52 : body[2]);
+    }
+  }
+
+  // ---- draw
+  gl.clearColor(0.42, 0.55, 0.68, 1);
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  gl.useProgram(prog);
+  gl.uniformMatrix4fv(uVP, false, VP);
+  gl.uniform3f(uSun, 0.46, 0.78, 0.42);
+  gl.uniform3f(uFog, 0.52, 0.63, 0.74);
+  bindAttribs();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vboInst);
+  gl.bufferSubData(gl.ARRAY_BUFFER, 0, instData.subarray(0, instCount * INST_FLOATS));
+  drawInstanced(gl.TRIANGLES, idxCount, instCount);
+}
+
+// ------------------------------------------------------------------ loop
+var last = 0, now = 0, frameErrs = 0, frames = 0;
+function frame(ts) {
+  try {
+    now = ts || (last + 16.7);
+    var dt = last ? Math.min(0.05, (now - last) / 1000) : 0.016;
+    last = now;
+    frames++;
+    try { update(dt); } catch (e) { frameErrs++; if (frameErrs < 4) console.error('[overwind] update:', e); }
+    try { render(); } catch (e2) { frameErrs++; if (frameErrs < 4) console.error('[overwind] render:', e2); }
+  } finally {
+    // self-healing: a throw anywhere above must never kill the loop
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(frame);
+  }
+}
+
+// ------------------------------------------------------------------ boot
+(function boot() {
+  resize();
+  if (!initGL() || !initScene()) {
+    document.body.innerHTML =
+      '<div style="color:#fff;font:600 16px system-ui;padding:32px;text-align:center">' +
+      '<h2>WebGL unavailable</h2><p style="color:#b9b0d8">Overwind is the arena\'s first 3D prototype and needs WebGL. ' +
+      'Try a different browser, or enable hardware acceleration.</p>' +
+      '<p><a style="color:#ffd76a" href="../../">← Back to the arena</a></p></div>';
+    return;
+  }
+  resize();
+  setMuted(!!save.muted);
+  buildCastle(1);
+  rigReset(1, 1337);
+  goTitle();
+  syncHud();
+  if (typeof requestAnimationFrame === 'function') requestAnimationFrame(frame);
+})();
+
+// test hook — harnesses drive the real loop, never a parallel copy of it
+if (typeof window !== 'undefined') {
+  window.__ow = {
+    frame: frame, update: update, render: render, resize: resize,
+    startLevel: startLevel, goTitle: goTitle, fireRig: fireRig, snapRope: snapRope,
+    get state() { return state; }, get lads() { return lads; },
+    get rig() { return rig; }, get pile() { return pile; },
+    get over() { return over; }, get ammo() { return ammo; },
+    get quota() { return quota; }, get level() { return level; },
+    get frames() { return frames; }, get frameErrs() { return frameErrs; },
+    get instCount() { return instCount; }, get frozen() { return frozenCount; },
+    get glOK() { return !!gl; }, get isGL2() { return isGL2; },
+    heightAt: heightAt, maxPile: maxPile, relaxPile: relaxPile,
+    spreadRadius: spreadRadius, predictLanding: predictLanding, launchVector: launchVector,
+    setAim: function (yaw, elev, tension) {
+      rig.yaw = clamp(yaw, -0.72, 0.72);
+      rig.elev = clamp(elev, 0.16, 1.28);
+      rig.tension = clamp(tension, 0, 1.12);
+    },
+    setPayload: function (n) { payload = n === 3 ? 3 : 1; },
+    // harness only: keep a siege alive so a threshold sweep is not cut short
+    // by running out of lads or by the level ending mid-measurement
+    __refill: function () { ammo = 40; quota = 999; state = STATE_PLAY;
+      els.endScreen.classList.remove('show'); syncHud(); },
+    save: save
+  };
+}
+</script>
+<script src="/analytics.js" defer></script>
+</body>
+</html>

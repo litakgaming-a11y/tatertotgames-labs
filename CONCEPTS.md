@@ -451,6 +451,61 @@ Sessions/DAU **4.9** · ARPDAU **$0.13–0.20** · LTV(90d) **$0.98** · Year-1 
 
 ---
 
+## 28. ⛰️ Cairn *(wave 8 — CONCEPT ONLY, not built: the useful death)*
+
+| | |
+|---|---|
+| **Genre** | Endless 3D climb / physics roguelite |
+| **Hyper-casual hook** | *He didn't make it. He helped.* |
+| **Concept** | You are one of an endless line of climbers on an impossible spire, and you are not going to make it. Leap, tap to reach, grab a hold — or fall. **When you come to rest you freeze in whatever pose you landed in, permanently, and that pose becomes solid geometry.** An arm thrown out toward the wall as you fall is a hook the next climber swings from; a panicked ball is a useless lump. So you learn to aim your corpse. Roughly 200m up, a band of sheer holdless stone can only be passed by deliberately throwing climbers at it until their outstretched arms become the route. |
+| **Meta layer** | The cairn itself — persisted locally, never reset. It is the save file, a monument you built, and a readable history of your own bad decisions. Four climber types trade climbing ability against corpse quality; the Anchor is a terrible climber whose job is to die somewhere specific. |
+| **Research grounding** | Inverts the worst emotional beat in the genre. Falling is normally dead time the player is punished with; here it is the beat with the most agency, which removes churn pressure at the exact moment competitors create it. |
+| **Why it can win** | The creative needs no text in any language — a frozen figure with an outstretched arm being grabbed by the next climber reads instantly in a scroll, which is what actually drives CPI down. Shares Siege Pile's load-bearing discovery (failure is construction) with none of its complexity. |
+| **Status** | **Design only — there is nothing to play.** The built wave-8-era 3D game is Overwind (#29). |
+
+**Projected stats** — CPI **$0.22–0.40** · D1 **49%** · D7 **19%** · D30 **8%** · Session **9 min** ·
+Sessions/DAU **4.4** · ARPDAU **$0.09–0.15** · LTV(90d) **$0.70** · Year-1 at scale: **9–16M downloads, $6–11M net**
+
+Full concept: **[CONCEPTS-WAVE8.md](CONCEPTS-WAVE8.md)**
+
+---
+
+## 29. ⚙️ Overwind *(wave 9 — the arena's first 3D game: the machine is the mistake)*
+
+| | |
+|---|---|
+| **Genre** | Simulated siege engine / physics artillery |
+| **Hyper-casual hook** | *The machine is the mistake.* |
+| **Concept** | There is no power slider — there is a machine. Hold to wind and the ratchet clicks faster, the rope creaks, the frame lifts at the front; drag while holding to swing the turntable and set the arc; release to fling a ragdoll at the wall. Wind into the red and the rope snaps: the arm flails, the crew scatter, and your lad is dumped three metres in front of his own catapult. Every bit of scatter comes from real machine state — tension, how far the frame has sunk into the mud, the crosswind — and the landing preview is an **ellipse of doubt** computed by the same integrator that flies the lad, so it can be vague but never dishonest. |
+| **Meta layer** | Endless escalating sieges with a persistent best. A full build adds the Workshop upgrade tracks (frame, windlass, sling, wheels, rope, crew) plus the two cut systems: free siting on an approach ring, and counter-battery fire that ranges in on you. |
+| **Research grounding** | Playable M1 cut of the reconceived catapult from the Siege Pile design work. The argument there: the ragdolls were simulated and the machine throwing them was not, which made the one dishonest object in the game the one the player touches most. |
+| **Why it can win** | Failure-as-terrain, measured rather than claimed: the lowest tension that clears the wall is **0.80** on bare ground and **0.68** with a 1.95 m heap of your own casualties banked against it. A 15% discount bought with the bodies of the lads who failed — and the rope-snap creative reads in a scroll with no text in any language. |
+
+**Projected stats** — CPI **$0.30–0.55** · D1 **47%** · D7 **18%** · D30 **7%** · Session **8 min** ·
+Sessions/DAU **4.1** · ARPDAU **$0.11–0.17** · LTV(90d) **$0.72** · Year-1 at scale: **5–10M downloads, $4–8M net**
+
+Full brief: **[CONCEPTS-WAVE9.md](CONCEPTS-WAVE9.md)**
+
+---
+
+## 30. 🏹 Rabble *(wave 9 — the warband version: you lead them, loosely)*
+
+| | |
+|---|---|
+| **Genre** | Warband siege / physics comedy |
+| **Hyper-casual hook** | *You lead them. Loosely.* |
+| **Concept** | Same catapult as Overwind, but you command an army and the only order available is *you, get in the catapult*. **Drag a unit out of the pen and drop it in the cup**, then wind and fling. There is no bracing and no pile — a body that lands is a person, not building material. A unit storms the castle **only if it lands on the other side of the wall**; land it short and it stands up and mills about outside for the rest of the assault, visibly not helping. Hold the banner circle to capture, against a garrison that defends the courtyard and will not be baited out. |
+| **Meta layer** | Escalating assaults with a bigger warband each time — and proportionally more archers, which is worse. |
+| **Research grounding** | The chaos-accuracy idea taken to its end: an arrow hits whoever it touches with no side check, and archers pick a friendly on purpose between a fifth and half the time. The deliberate mistake makes it frequent; the spread makes it feel like an accident. |
+| **Why it can win** | Friendly fire reads in two seconds of footage with no setup and no text, and the wasted-shot fantasy is unusually legible: the men you failed to get over the wall are still on screen, wandering about, for the whole assault. |
+
+**Projected stats** — CPI **$0.28–0.50** · D1 **48%** · D7 **18%** · D30 **7%** · Session **9 min** ·
+Sessions/DAU **4.3** · ARPDAU **$0.10–0.16** · LTV(90d) **$0.74** · Year-1 at scale: **6–11M downloads, $4–9M net**
+
+Full brief: **[CONCEPTS-WAVE9.md](CONCEPTS-WAVE9.md)**
+
+---
+
 ## Portfolio strategy
 
 | Game | Primary KPI bet | Monetization center of gravity |
@@ -482,6 +537,9 @@ Sessions/DAU **4.9** · ARPDAU **$0.13–0.20** · LTV(90d) **$0.98** · Year-1 
 | Morphforge | Highest D30/LTV (player-authored collection) | Rewarded (2nd knead) + essence IAP |
 | Weatherwright | Creative-legibility (arena spectacle) | Rewarded (Sky refill) + rune IAP |
 | Snapcatch | Shareability (the Album) | Rewarded (extra film) + lens IAP |
+| Cairn *(concept)* | Lowest CPI (wordless creative) + persistent-monument return rate | Interstitials between lives + climber unlocks (never sell a retry) |
+| Overwind | Ad-creative CTR (rope snap) + upgrade-meta depth | Interstitials between sieges + Workshop upgrade tracks |
+| Rabble | Ad-creative CTR (friendly fire) + session length | Interstitials between assaults + warband roster expansion |
 
 **Test plan:** all twenty-seven are shipped to Cloudflare and instrumented. Run $200–500 creative probes
 per concept on TikTok/Meta targeting CPI + 3-day retention; kill or double-down at 2 weeks; winners

@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Rabble — TaterTot Games Labs</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%B9%3C/text%3E%3C/svg%3E">
+<style>
+  :root{ --ink:#141021; --gold:#f2c14e; --accent:#e0533d; --steel:#a8bdd4; --moss:#6fbf7c; }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{
+    margin:0;padding:0;width:100%;height:100%;overflow:hidden;
+    background:#141021;touch-action:none;
+    -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,Roboto,"Helvetica Neue",Arial,sans-serif;
+    overscroll-behavior:none;
+  }
+  canvas{position:fixed;inset:0;display:block;touch-action:none}
+  .screen{
+    position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    pointer-events:none;opacity:0;transition:opacity .28s ease;z-index:20;text-align:center;
+    padding:calc(10px + env(safe-area-inset-top)) 12px calc(10px + env(safe-area-inset-bottom));
+  }
+  .screen.show{pointer-events:auto;opacity:1}
+
+  #titleScreen{justify-content:flex-start;padding-top:calc(5vh + env(safe-area-inset-top));overflow-y:auto;
+    background:radial-gradient(120% 80% at 50% 0%, rgba(20,16,33,.35), rgba(20,16,33,.88))}
+  #logo{font-size:min(17vw,96px);font-weight:900;letter-spacing:-.04em;line-height:.88;color:#fff;margin:0;
+    text-shadow:0 4px 0 rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.55);
+    animation:logoRock 3.1s ease-in-out infinite;transform-origin:50% 70%}
+  #logo .l2{color:var(--gold)}
+  @keyframes logoRock{0%,100%{transform:rotate(-2.6deg) scale(1)}32%{transform:rotate(2.2deg) scale(1.05)}64%{transform:rotate(-1.1deg) scale(.98)}}
+  #tagline{margin-top:10px;color:#e8dcffcc;font-weight:800;font-size:min(3.9vw,15px);letter-spacing:.05em}
+  #tapToPlay{margin-top:16px;font-size:min(6vw,26px);font-weight:900;color:#fff;letter-spacing:.14em;
+    animation:blink 1.15s ease-in-out infinite;text-shadow:0 3px 0 rgba(0,0,0,.35)}
+  @keyframes blink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.955)}}
+  #bestLine{margin-top:10px;color:#ffffffcc;font-weight:800;font-size:15px}
+  .howBox{margin-top:16px;max-width:min(94vw,440px);text-align:left;
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:14px 16px}
+  .howBox h4{margin:0 0 8px;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:#ffd97d}
+  .howBox p{margin:6px 0;color:#e8dcffcc;font-size:.86rem;line-height:1.5}
+  .howBox b{color:#fff}
+
+  /* ---------- HUD ---------- */
+  #hud{position:fixed;inset:0;pointer-events:none;z-index:5;
+    padding:calc(8px + env(safe-area-inset-top)) 10px calc(8px + env(safe-area-inset-bottom))}
+  .pill{position:absolute;background:rgba(12,9,22,.62);border:1px solid rgba(255,255,255,.14);
+    border-radius:999px;padding:7px 14px;color:#fff;font-weight:900;font-size:13.5px;letter-spacing:.03em;
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);white-space:nowrap}
+  #assaultPill{left:10px;top:calc(8px + env(safe-area-inset-top));color:var(--gold)}
+  #garrisonPill{right:10px;top:calc(8px + env(safe-area-inset-top));color:#ff9f8a}
+  #insidePill{left:10px;top:calc(46px + env(safe-area-inset-top));color:var(--moss)}
+  #ffPill{right:10px;top:calc(46px + env(safe-area-inset-top));font-size:12.5px;color:#ffb3a0}
+
+  /* capture bar */
+  #capWrap{position:absolute;left:50%;transform:translateX(-50%);top:calc(86px + env(safe-area-inset-top));
+    width:min(72vw,320px);height:20px;background:rgba(12,9,22,.62);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);
+    border-radius:999px;overflow:hidden}
+  #capFill{height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,#6fbf7c,#f2c14e)}
+  #capLabel{position:absolute;left:50%;transform:translateX(-50%);top:calc(110px + env(safe-area-inset-top));
+    font-weight:900;font-size:11.5px;letter-spacing:.14em;color:#fff;text-transform:uppercase;opacity:.85;
+    text-shadow:0 2px 0 rgba(0,0,0,.5)}
+
+  #toast{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%) scale(.86);
+    font-weight:900;font-size:min(8vw,38px);color:#fff;letter-spacing:.02em;opacity:0;
+    text-shadow:0 4px 0 rgba(0,0,0,.4),0 0 26px rgba(0,0,0,.5);text-align:center;line-height:1.05}
+  #toast.pop{animation:toastPop 1.2s cubic-bezier(.2,.9,.25,1) forwards}
+  @keyframes toastPop{
+    0%{opacity:0;transform:translate(-50%,-50%) scale(.7)}
+    15%{opacity:1;transform:translate(-50%,-50%) scale(1.12)}
+    30%{transform:translate(-50%,-50%) scale(1)}
+    78%{opacity:1}100%{opacity:0;transform:translate(-50%,-58%) scale(1)}
+  }
+
+  /* tension */
+  #tensionWrap{position:absolute;left:50%;transform:translateX(-50%);
+    bottom:calc(126px + env(safe-area-inset-bottom));width:min(64vw,290px);height:14px;
+    background:rgba(12,9,22,.6);border:1px solid rgba(255,255,255,.16);border-radius:999px;
+    overflow:hidden;opacity:0;transition:opacity .16s ease}
+  #tensionWrap.show{opacity:1}
+  #tensionFill{height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,#6fbf7c,#f2c14e 62%,#e0533d 88%)}
+  #dangerZone{position:absolute;right:0;top:0;height:100%;width:12%;
+    background:repeating-linear-gradient(45deg,rgba(224,83,61,.55) 0 6px,rgba(224,83,61,.2) 6px 12px)}
+  #tensionLabel{position:absolute;left:50%;transform:translateX(-50%);
+    bottom:calc(144px + env(safe-area-inset-bottom));font-weight:900;font-size:11.5px;letter-spacing:.14em;
+    color:#fff;text-transform:uppercase;opacity:0;transition:opacity .16s ease;text-shadow:0 2px 0 rgba(0,0,0,.5)}
+  #tensionLabel.show{opacity:.92}
+
+  /* ---------- the pen: drag a unit out of here onto the catapult ---------- */
+  #pen{position:absolute;left:0;right:0;bottom:calc(8px + env(safe-area-inset-bottom));
+    display:flex;gap:7px;justify-content:center;pointer-events:auto;flex-wrap:wrap;padding:0 8px}
+  .chip{position:relative;min-width:74px;min-height:62px;border-radius:14px;
+    background:rgba(12,9,22,.72);border:1px solid rgba(255,255,255,.16);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    cursor:grab;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    padding:6px 8px;transition:transform .12s ease,border-color .12s ease}
+  .chip .glyph{font-size:19px;line-height:1}
+  .chip .nm{font-weight:900;font-size:9.5px;letter-spacing:.08em;color:#fff}
+  .chip .ct{font-weight:900;font-size:12px;color:var(--gold)}
+  .chip.empty{opacity:.32;pointer-events:none}
+  .chip.armed{border-color:var(--gold);transform:translateY(-4px);box-shadow:0 0 0 2px #f2c14e55}
+  #penHint{position:absolute;left:50%;transform:translateX(-50%);
+    bottom:calc(78px + env(safe-area-inset-bottom));font-weight:900;font-size:11.5px;letter-spacing:.1em;
+    color:#ffd97d;text-transform:uppercase;text-shadow:0 2px 0 rgba(0,0,0,.5);pointer-events:none;
+    opacity:0;transition:opacity .2s ease}
+  #penHint.show{opacity:.95}
+
+  #ghost{position:absolute;width:44px;height:44px;border-radius:12px;pointer-events:none;
+    display:none;place-items:center;font-size:22px;z-index:12;
+    background:rgba(242,193,78,.92);box-shadow:0 6px 18px rgba(0,0,0,.5)}
+  #ghost.on{display:grid}
+
+  #muteBtn{position:absolute;right:10px;top:calc(84px + env(safe-area-inset-top));
+    pointer-events:auto;min-width:44px;min-height:44px;padding:10px 12px;border-radius:14px;
+    background:rgba(12,9,22,.66);border:1px solid rgba(255,255,255,.16);color:#fff;font-size:17px;cursor:pointer}
+
+  .endCard{background:rgba(16,12,30,.94);border:1px solid rgba(255,255,255,.14);border-radius:22px;
+    padding:24px 26px;max-width:min(92vw,430px);box-shadow:0 24px 60px rgba(0,0,0,.6)}
+  .endCard h2{margin:0;font-size:min(9vw,38px);font-weight:900;letter-spacing:-.02em;color:#fff}
+  .endCard .sub{margin-top:8px;color:#c9bff0;font-weight:700;font-size:.93rem;line-height:1.5}
+  .statRow{display:flex;gap:9px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+  .stat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:9px 13px;min-width:78px}
+  .stat b{display:block;font-size:1.3rem;color:var(--gold);font-weight:900;line-height:1.1}
+  .stat span{font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:#9a91c4;font-weight:800}
+  .bigBtn{margin-top:18px;display:inline-block;min-height:52px;padding:15px 40px;border-radius:16px;
+    font-weight:900;font-size:1.06rem;color:#241a06;border:0;cursor:pointer;
+    background:linear-gradient(92deg,#ffb703,#ffd76a);box-shadow:0 5px 0 rgba(0,0,0,.35)}
+  .bigBtn:active{transform:translateY(2px);box-shadow:0 3px 0 rgba(0,0,0,.35)}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div id="hud">
+  <div class="pill" id="assaultPill">ASSAULT 1</div>
+  <div class="pill" id="garrisonPill">GARRISON 6</div>
+  <div class="pill" id="insidePill">INSIDE 0</div>
+  <div class="pill" id="ffPill">FRIENDLY FIRE 0</div>
+  <div id="capWrap"><div id="capFill"></div></div>
+  <div id="capLabel">BANNER 0%</div>
+  <div id="toast"></div>
+  <div id="tensionLabel">TENSION</div>
+  <div id="tensionWrap"><div id="tensionFill"></div><div id="dangerZone"></div></div>
+  <div id="penHint">DRAG A UNIT ONTO THE CATAPULT</div>
+  <div id="pen"></div>
+  <button id="muteBtn" type="button">🔊</button>
+</div>
+<div id="ghost"></div>
+
+<div class="screen show" id="titleScreen">
+  <h1 id="logo">RAB<span class="l2">BLE</span></h1>
+  <div id="tagline">YOU LEAD THEM. LOOSELY.</div>
+  <div id="tapToPlay">TAP TO MUSTER</div>
+  <div id="bestLine">Best: assault 1</div>
+  <div class="howBox">
+    <h4>How it works</h4>
+    <p><b>Drag a unit</b> out of the pen and drop it on the catapult. That is the only way anyone goes anywhere.</p>
+    <p><b>Hold the field</b> to wind, drag to aim, release to fling. Wind into the red and the rope snaps.</p>
+    <p>Land them <b>inside the walls</b> and they storm the banner. Land them short and they just mill about outside, confused, forever. There is no forming up, no bracing, no plan.</p>
+    <p><b>Your archers will shoot your own men.</b> Constantly. This is not a bug and it cannot be turned off.</p>
+  </div>
+</div>
+
+<div class="screen" id="endScreen">
+  <div class="endCard">
+    <h2 id="endTitle">CASTLE TAKEN</h2>
+    <div class="sub" id="endSub">The banner is yours. Most of you are not.</div>
+    <div class="statRow">
+      <div class="stat"><b id="statIn">0</b><span>Got in</span></div>
+      <div class="stat"><b id="statOut">0</b><span>Milling</span></div>
+      <div class="stat"><b id="statFF">0</b><span>Friendly fire</span></div>
+      <div class="stat"><b id="statLost">0</b><span>Lost</span></div>
+    </div>
+    <button class="bigBtn" id="endBtn" type="button">NEXT ASSAULT</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ===========================================================================
+   RABBLE — TaterTot Games Labs
+   You are not an artillery officer. You are in charge of a warband, and the
+   only order you can give is "you, get in the catapult".
+
+   Rules that make it a different game from Overwind:
+     * NO BRACING. Nobody forms up, nobody props anybody, nothing piles into
+       terrain. A body that lands is a person, not construction material.
+     * A unit only storms the castle if it lands INSIDE the walls. Land short
+       and it stands up, mills about outside, and contributes precisely nothing.
+     * Ranged units shoot whatever is roughly in front of them, which is very
+       often each other. That is the engine of the whole thing.
+     * You DRAG a unit out of the pen onto the catapult to load it.
+
+   Single self-contained file: raw WebGL, verlet ragdolls, WebAudio, no
+   libraries and no external requests.
+   =========================================================================== */
+
+var clamp = function (v, a, b) { return v < a ? a : (v > b ? b : v); };
+var lerp = function (a, b, t) { return a + (b - a) * t; };
+var finite = function (v) { return typeof v === 'number' && isFinite(v); };
+
+function RNG(seed) { this.s = (seed >>> 0) || 1; }
+RNG.prototype.next = function () {
+  this.s = (this.s + 0x6D2B79F5) >>> 0;
+  var t = this.s;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
+RNG.prototype.range = function (a, b) { return a + (b - a) * this.next(); };
+RNG.prototype.spread = function (h) { return (this.next() - 0.5) * 2 * h; };
+
+// ------------------------------------------------------------------ mat4
+function m4perspective(o, fovy, aspect, near, far) {
+  var f = 1 / Math.tan(fovy / 2), nf = 1 / (near - far);
+  o[0]=f/aspect;o[1]=0;o[2]=0;o[3]=0; o[4]=0;o[5]=f;o[6]=0;o[7]=0;
+  o[8]=0;o[9]=0;o[10]=(far+near)*nf;o[11]=-1;
+  o[12]=0;o[13]=0;o[14]=2*far*near*nf;o[15]=0; return o;
+}
+function m4lookAt(o, ex, ey, ez, cx, cy, cz) {
+  var zx=ex-cx, zy=ey-cy, zz=ez-cz;
+  var zl=Math.hypot(zx,zy,zz)||1; zx/=zl; zy/=zl; zz/=zl;
+  var xx = zz, xy = 0, xz = -zx;                     // up x z, up = (0,1,0)
+  var xl=Math.hypot(xx,xy,xz); if (xl < 1e-6) { xx=1; xy=0; xz=0; xl=1; }
+  xx/=xl; xy/=xl; xz/=xl;
+  var yx=zy*xz-zz*xy, yy=zz*xx-zx*xz, yz=zx*xy-zy*xx;
+  o[0]=xx;o[1]=yx;o[2]=zx;o[3]=0;
+  o[4]=xy;o[5]=yy;o[6]=zy;o[7]=0;
+  o[8]=xz;o[9]=yz;o[10]=zz;o[11]=0;
+  o[12]=-(xx*ex+xy*ey+xz*ez);
+  o[13]=-(yx*ex+yy*ey+yz*ez);
+  o[14]=-(zx*ex+zy*ey+zz*ez);
+  o[15]=1; return o;
+}
+function m4mul(o, a, b) {
+  var a00=a[0],a01=a[1],a02=a[2],a03=a[3],a10=a[4],a11=a[5],a12=a[6],a13=a[7],
+      a20=a[8],a21=a[9],a22=a[10],a23=a[11],a30=a[12],a31=a[13],a32=a[14],a33=a[15];
+  for (var i = 0; i < 4; i++) {
+    var b0=b[i*4],b1=b[i*4+1],b2=b[i*4+2],b3=b[i*4+3];
+    o[i*4]  =b0*a00+b1*a10+b2*a20+b3*a30;
+    o[i*4+1]=b0*a01+b1*a11+b2*a21+b3*a31;
+    o[i*4+2]=b0*a02+b1*a12+b2*a22+b3*a32;
+    o[i*4+3]=b0*a03+b1*a13+b2*a23+b3*a33;
+  }
+  return o;
+}
+
+// ------------------------------------------------------------------ GL
+var cv = document.getElementById('cv');
+var gl = null, isGL2 = false, instExt = null;
+var W = 1, H = 1, DPR = 1, resizing = false;
+
+function initGL() {
+  var opts = { antialias: true, alpha: false, depth: true, powerPreference: 'high-performance' };
+  try { gl = cv.getContext('webgl2', opts); } catch (e) { gl = null; }
+  if (gl) { isGL2 = true; }
+  else {
+    try { gl = cv.getContext('webgl', opts) || cv.getContext('experimental-webgl', opts); } catch (e2) { gl = null; }
+    if (gl) { instExt = gl.getExtension('ANGLE_instanced_arrays'); if (!instExt) gl = null; }
+  }
+  return !!gl;
+}
+function divisor(loc, d) { if (isGL2) gl.vertexAttribDivisor(loc, d); else instExt.vertexAttribDivisorANGLE(loc, d); }
+function drawInstanced(mode, count, prim) {
+  if (isGL2) gl.drawElementsInstanced(mode, count, gl.UNSIGNED_SHORT, 0, prim);
+  else instExt.drawElementsInstancedANGLE(mode, count, gl.UNSIGNED_SHORT, 0, prim);
+}
+
+var VS = [
+  'attribute vec3 aPos; attribute vec3 aNrm;',
+  'attribute vec4 aM0; attribute vec4 aM1; attribute vec4 aM2; attribute vec4 aM3;',
+  'attribute vec3 aCol;',
+  'uniform mat4 uVP;',
+  'varying vec3 vNrm; varying vec3 vCol; varying float vDepth;',
+  'void main(){',
+  '  mat4 M = mat4(aM0,aM1,aM2,aM3);',
+  '  vec4 wp = M * vec4(aPos,1.0);',
+  '  vNrm = normalize(mat3(M) * aNrm);',
+  '  vCol = aCol;',
+  '  vec4 cp = uVP * wp;',
+  '  vDepth = cp.w;',
+  '  gl_Position = cp;',
+  '}'
+].join('\n');
+var FS = [
+  'precision mediump float;',
+  'varying vec3 vNrm; varying vec3 vCol; varying float vDepth;',
+  'uniform vec3 uSun; uniform vec3 uFog;',
+  'void main(){',
+  '  vec3 n = normalize(vNrm);',
+  '  float d = max(dot(n, uSun), 0.0);',
+  '  float sky = 0.5 + 0.5 * n.y;',
+  '  vec3 amb = mix(vec3(0.21,0.19,0.27), vec3(0.45,0.49,0.58), sky);',
+  '  vec3 c = vCol * (amb + d * vec3(1.05,0.99,0.86));',
+  '  float f = 1.0 - exp(-vDepth * 0.0072);',
+  '  c = mix(c, uFog, clamp(f,0.0,0.8));',
+  '  gl_FragColor = vec4(c, 1.0);',
+  '}'
+].join('\n');
+
+function mkShader(type, src) {
+  var s = gl.createShader(type);
+  gl.shaderSource(s, src); gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) { console.error('[rabble] shader:', gl.getShaderInfoLog(s)); return null; }
+  return s;
+}
+var prog=null, uVP=null, uSun=null, uFog=null;
+var locPos, locNrm, locM0, locM1, locM2, locM3, locCol;
+var vboGeo=null, iboGeo=null, vboInst=null, idxCount=0;
+var MAX_INST = 3600, INST_FLOATS = 19;
+var instData = new Float32Array(MAX_INST * INST_FLOATS);
+var instCount = 0;
+
+function initScene() {
+  var vs = mkShader(gl.VERTEX_SHADER, VS), fs = mkShader(gl.FRAGMENT_SHADER, FS);
+  if (!vs || !fs) return false;
+  prog = gl.createProgram();
+  gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { console.error('[rabble] link:', gl.getProgramInfoLog(prog)); return false; }
+  gl.useProgram(prog);
+  uVP = gl.getUniformLocation(prog, 'uVP');
+  uSun = gl.getUniformLocation(prog, 'uSun');
+  uFog = gl.getUniformLocation(prog, 'uFog');
+  locPos = gl.getAttribLocation(prog, 'aPos'); locNrm = gl.getAttribLocation(prog, 'aNrm');
+  locM0 = gl.getAttribLocation(prog, 'aM0'); locM1 = gl.getAttribLocation(prog, 'aM1');
+  locM2 = gl.getAttribLocation(prog, 'aM2'); locM3 = gl.getAttribLocation(prog, 'aM3');
+  locCol = gl.getAttribLocation(prog, 'aCol');
+
+  var p=[], n=[], idx=[];
+  var faces = [
+    [[ .5,-.5,-.5],[ .5, .5,-.5],[ .5, .5, .5],[ .5,-.5, .5],[ 1, 0, 0]],
+    [[-.5,-.5, .5],[-.5, .5, .5],[-.5, .5,-.5],[-.5,-.5,-.5],[-1, 0, 0]],
+    [[-.5, .5,-.5],[-.5, .5, .5],[ .5, .5, .5],[ .5, .5,-.5],[ 0, 1, 0]],
+    [[-.5,-.5, .5],[-.5,-.5,-.5],[ .5,-.5,-.5],[ .5,-.5, .5],[ 0,-1, 0]],
+    [[-.5,-.5, .5],[ .5,-.5, .5],[ .5, .5, .5],[-.5, .5, .5],[ 0, 0, 1]],
+    [[ .5,-.5,-.5],[-.5,-.5,-.5],[-.5, .5,-.5],[ .5, .5,-.5],[ 0, 0,-1]]
+  ];
+  for (var f=0; f<6; f++) {
+    var base=f*4, nr=faces[f][4];
+    for (var v=0; v<4; v++){ p.push(faces[f][v][0],faces[f][v][1],faces[f][v][2]); n.push(nr[0],nr[1],nr[2]); }
+    idx.push(base,base+1,base+2, base,base+2,base+3);
+  }
+  var inter = new Float32Array(p.length*2);
+  for (var i=0;i<p.length/3;i++){
+    inter[i*6]=p[i*3]; inter[i*6+1]=p[i*3+1]; inter[i*6+2]=p[i*3+2];
+    inter[i*6+3]=n[i*3]; inter[i*6+4]=n[i*3+1]; inter[i*6+5]=n[i*3+2];
+  }
+  vboGeo=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,vboGeo); gl.bufferData(gl.ARRAY_BUFFER,inter,gl.STATIC_DRAW);
+  iboGeo=gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,iboGeo);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(idx),gl.STATIC_DRAW);
+  idxCount = idx.length;
+  vboInst=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,vboInst);
+  gl.bufferData(gl.ARRAY_BUFFER,instData.byteLength,gl.DYNAMIC_DRAW);
+  gl.enable(gl.DEPTH_TEST); gl.enable(gl.CULL_FACE); gl.cullFace(gl.BACK);
+  return true;
+}
+function bindAttribs() {
+  gl.bindBuffer(gl.ARRAY_BUFFER, vboGeo);
+  gl.enableVertexAttribArray(locPos); gl.vertexAttribPointer(locPos,3,gl.FLOAT,false,24,0);
+  gl.enableVertexAttribArray(locNrm); gl.vertexAttribPointer(locNrm,3,gl.FLOAT,false,24,12);
+  divisor(locPos,0); divisor(locNrm,0);
+  gl.bindBuffer(gl.ARRAY_BUFFER, vboInst);
+  var stride = INST_FLOATS*4, locs=[locM0,locM1,locM2,locM3];
+  for (var i=0;i<4;i++){ gl.enableVertexAttribArray(locs[i]);
+    gl.vertexAttribPointer(locs[i],4,gl.FLOAT,false,stride,i*16); divisor(locs[i],1); }
+  gl.enableVertexAttribArray(locCol); gl.vertexAttribPointer(locCol,3,gl.FLOAT,false,stride,64); divisor(locCol,1);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iboGeo);
+}
+function box(cx,cy,cz,sx,sy,sz,r,g,b) {
+  if (instCount>=MAX_INST) return;
+  if (!finite(cx)||!finite(cy)||!finite(cz)) return;
+  var o=instCount*INST_FLOATS;
+  instData[o]=sx;instData[o+1]=0;instData[o+2]=0;instData[o+3]=0;
+  instData[o+4]=0;instData[o+5]=sy;instData[o+6]=0;instData[o+7]=0;
+  instData[o+8]=0;instData[o+9]=0;instData[o+10]=sz;instData[o+11]=0;
+  instData[o+12]=cx;instData[o+13]=cy;instData[o+14]=cz;instData[o+15]=1;
+  instData[o+16]=r;instData[o+17]=g;instData[o+18]=b;
+  instCount++;
+}
+function boxRot(cx,cy,cz,sx,sy,sz,yaw,pitch,r,g,b) {
+  if (instCount>=MAX_INST) return;
+  if (!finite(cx)||!finite(cy)||!finite(cz)) return;
+  var cy1=Math.cos(yaw), sy1=Math.sin(yaw), cp=Math.cos(pitch), sp=Math.sin(pitch);
+  var m00=cy1*cp, m01=-cy1*sp, m02=sy1, m10=sp, m11=cp, m12=0, m20=-sy1*cp, m21=sy1*sp, m22=cy1;
+  var o=instCount*INST_FLOATS;
+  instData[o]=m00*sx;instData[o+1]=m10*sx;instData[o+2]=m20*sx;instData[o+3]=0;
+  instData[o+4]=m01*sy;instData[o+5]=m11*sy;instData[o+6]=m21*sy;instData[o+7]=0;
+  instData[o+8]=m02*sz;instData[o+9]=m12*sz;instData[o+10]=m22*sz;instData[o+11]=0;
+  instData[o+12]=cx;instData[o+13]=cy;instData[o+14]=cz;instData[o+15]=1;
+  instData[o+16]=r;instData[o+17]=g;instData[o+18]=b;
+  instCount++;
+}
+function resize() {
+  if (resizing) return;
+  resizing = true;
+  try {
+    var iw=(typeof window!=='undefined'&&window.innerWidth)||0, ih=(typeof window!=='undefined'&&window.innerHeight)||0;
+    if (iw<2||ih<2) return;
+    DPR = Math.min(2,(typeof window!=='undefined'&&window.devicePixelRatio)||1);
+    W=iw; H=ih;
+    cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR);
+    // CRITICAL: a canvas is a replaced element. Without explicit CSS sizing it
+    // lays out at its attribute size (W*DPR) — double-size on every phone.
+    cv.style.width=W+'px'; cv.style.height=H+'px';
+    if (gl) gl.viewport(0,0,cv.width,cv.height);
+  } finally { resizing=false; }
+}
+
+// ------------------------------------------------------------------ audio
+var AC=null, master=null, muted=false;
+function ac() {
+  if (muted) return null;
+  try {
+    if (!AC) {
+      var Ctor = window.AudioContext || window.webkitAudioContext;
+      if (!Ctor) return null;
+      AC = new Ctor(); master = AC.createGain(); master.gain.value = 0.5; master.connect(AC.destination);
+    }
+    if (AC.state==='suspended' && AC.resume) AC.resume();
+    return AC;
+  } catch(e){ return null; }
+}
+function tone(freq,dur,type,vol,slideTo) {
+  var a=ac(); if(!a) return;
+  try {
+    var o=a.createOscillator(), g=a.createGain();
+    o.type=type||'sine'; o.frequency.setValueAtTime(freq,a.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(20,slideTo),a.currentTime+dur);
+    g.gain.setValueAtTime(0.0001,a.currentTime);
+    g.gain.exponentialRampToValueAtTime(vol||0.2,a.currentTime+0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+dur);
+    o.connect(g); g.connect(master); o.start(); o.stop(a.currentTime+dur+0.02);
+  } catch(e){}
+}
+function noise(dur,vol,lp,sweep) {
+  var a=ac(); if(!a) return;
+  try {
+    var n=Math.floor(a.sampleRate*dur);
+    var buf=a.createBuffer(1,n,a.sampleRate), d=buf.getChannelData(0);
+    for (var i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n);
+    var src=a.createBufferSource(); src.buffer=buf;
+    var f=a.createBiquadFilter(); f.type='lowpass'; f.frequency.setValueAtTime(lp||1400,a.currentTime);
+    if (sweep) f.frequency.exponentialRampToValueAtTime(Math.max(80,sweep),a.currentTime+dur);
+    var g=a.createGain(); g.gain.value=vol||0.22;
+    g.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+dur);
+    src.connect(f); f.connect(g); g.connect(master); src.start();
+  } catch(e){}
+}
+var sfx = {
+  ratchet:function(t){ tone(180+t*260,0.035,'square',0.05); },
+  creak:function(t){ tone(90+t*90,0.22,'sawtooth',0.035,60+t*60); },
+  fire:function(){ noise(0.26,0.28,2600,300); tone(150,0.16,'sawtooth',0.15,60); },
+  thud:function(v){ noise(0.15,clamp(0.06+v*0.2,0.05,0.28),700,120); },
+  clang:function(){ tone(760,0.15,'square',0.06,420); },
+  snap:function(){ noise(0.09,0.4,5200,900); tone(240,0.42,'sawtooth',0.2,42); },
+  bow:function(){ noise(0.05,0.12,3200,900); },
+  hit:function(){ noise(0.09,0.2,1600,260); tone(300,0.07,'square',0.05,180); },
+  ff:function(){ tone(520,0.09,'square',0.09,300); setTimeout(function(){tone(360,0.14,'square',0.08,180);},70); },
+  cheer:function(){ noise(0.5,0.14,900,500); },
+  win:function(){ [523,659,784,1046].forEach(function(f,i){ setTimeout(function(){tone(f,0.22,'triangle',0.13);}, i*95); }); },
+  lose:function(){ [400,320,250,190].forEach(function(f,i){ setTimeout(function(){tone(f,0.24,'sawtooth',0.1);}, i*115); }); }
+};
+
+// ------------------------------------------------------------------ world
+var GRAV = 24, SUB = 1/120, AIR = 0.9992, ITERS = 4, MAXSTEP = 1.4;
+var GROUND_MINX = -14, GROUND_MAXX = 64, GROUND_MINZ = -26, GROUND_MAXZ = 26;
+
+var castle = { wallX: 31, wallH: 3.4, wallT: 2.4, halfZ: 13, blocks: [], banner: null, inside: 0 };
+function buildCastle(level) {
+  castle.wallH = 3.4 + Math.min(2.0, (level-1)*0.3);
+  castle.inside = castle.wallX + castle.wallT*0.5;   // anything past this is "in"
+  var wx=castle.wallX, wh=castle.wallH, wt=castle.wallT, hz=castle.halfZ;
+  castle.blocks = [];
+  castle.blocks.push({x:wx,y:wh/2,z:0,sx:wt,sy:wh,sz:hz*2,r:.58,g:.58,b:.62});
+  for (var z=-hz+1; z<=hz-1; z+=2.6)
+    castle.blocks.push({x:wx,y:wh+0.55,z:z,sx:wt*0.86,sy:1.1,sz:1.3,r:.5,g:.5,b:.55});
+  [-hz,hz].forEach(function(tz){
+    castle.blocks.push({x:wx,y:(wh+2.4)/2,z:tz,sx:wt+1.6,sy:wh+2.4,sz:3.6,r:.52,g:.52,b:.57});
+  });
+  // Keep pushed well back and the banner pulled forward: with the keep at +11
+  // and the banner at +7 the objective sat in a 6m slot that the wall's top
+  // edge hid completely, so the player could not see the thing they were
+  // trying to capture.
+  castle.blocks.push({x:wx+15,y:(wh+1.5)/2,z:0,sx:6.5,sy:wh+1.5,sz:8.5,r:.44,g:.43,b:.5});
+  castle.banner = { x: wx + 5.5, y: 0, z: 0, r: 4.2 };   // the capture circle
+}
+
+// ------------------------------------------------------------------ units
+// 7 nodes: 0 helm, 1 chest, 2 hips, 3 handL, 4 handR, 5 footL, 6 footR
+var NODE_R = [0.30,0.36,0.34,0.20,0.20,0.22,0.22];
+var POSE = [[0,1.72,0],[0,1.30,0],[0,0.80,0],[-0.46,1.18,0],[0.46,1.18,0],[-0.22,0.14,0],[0.22,0.14,0]];
+var LA=[0,1,2,2,1,1,0,3,4,5,3,1,1], LB=[1,2,5,6,3,4,2,2,2,6,4,5,6];
+var LK=[1,1,.95,.95,.9,.9,.5,.35,.35,.28,.2,.45,.45];
+var LREST=[];
+(function(){ for(var i=0;i<LA.length;i++){ var a=POSE[LA[i]], b=POSE[LB[i]];
+  LREST.push(Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2])); } })();
+
+// ff = how often this unit shoots a friend on purpose. The lower tiers are a
+// public hazard; nobody is ever actually safe.
+// HP is generous on purpose. Three defenders focusing one arrival deal ~2.8
+// damage a second; at the original 3-7 hp a unit died in about a second, which
+// is faster than anyone can drag, wind and fire. Nobody could ever have two
+// men alive inside at once, so "lead an army" was arithmetically impossible.
+var KINDS = [
+  { key:'lad',    name:'LAD',    glyph:'🪵', col:[0.72,0.66,0.48], scale:0.94, hp:8,
+    ranged:false, dmg:1.0, speed:2.6, derp:0.55, ff:0.34, mass:1.0 },
+  { key:'spear',  name:'SPEAR',  glyph:'🔱', col:[0.62,0.70,0.78], scale:1.0,  hp:11,
+    ranged:false, dmg:1.5, speed:2.9, derp:0.34, ff:0.20, mass:1.05 },
+  { key:'archer', name:'ARCHER', glyph:'🏹', col:[0.52,0.68,0.52], scale:0.95, hp:7,
+    ranged:true,  dmg:1.2, speed:2.3, derp:0.40, ff:0.46, mass:0.95 },
+  { key:'bruiser',name:'BRUISER',glyph:'🪨', col:[0.74,0.52,0.40], scale:1.18, hp:18,
+    ranged:false, dmg:2.6, speed:1.9, derp:0.62, ff:0.10, mass:1.7 }
+];
+function kindByKey(k){ for (var i=0;i<KINDS.length;i++) if (KINDS[i].key===k) return KINDS[i]; return KINDS[0]; }
+
+var ST_FLY=0, ST_DOWN=1, ST_MILL=2, ST_STORM=3, ST_DEAD=4;
+
+function Unit(kind, foe, x, y, z, vx, vy, vz) {
+  this.k = kind; this.foe = !!foe;
+  this.p = []; this.state = ST_FLY; this.still = 0; this.downT = 0; this.hp = kind.hp;
+  this.cool = kind.ranged ? 0.6 + Math.random() * 1.4 : 0;
+  this.derpT = Math.random() * 2; this.stumble = 0; this.counted = false;
+  this.wobble = Math.random() * 6.28;
+  var s = kind.scale;
+  for (var i=0;i<7;i++) {
+    var o = POSE[i];
+    var px=x+o[0]*s, py=y+o[1]*s, pz=z+o[2]*s;
+    this.p.push({x:px,y:py,z:pz,px:px-vx*SUB,py:py-vy*SUB,pz:pz-vz*SUB,r:NODE_R[i]*s});
+  }
+  this.s = s;
+}
+Unit.prototype.centre = function () {
+  var cx=0,cy=0,cz=0;
+  for (var i=0;i<7;i++){ cx+=this.p[i].x; cy+=this.p[i].y; cz+=this.p[i].z; }
+  return {x:cx/7,y:cy/7,z:cz/7};
+};
+Unit.prototype.motion = function () {
+  var m=0;
+  for (var i=0;i<7;i++){ var q=this.p[i]; m+=Math.hypot(q.x-q.px,q.y-q.py,q.z-q.pz); }
+  return m/7;
+};
+Unit.prototype.sane = function () {
+  for (var i=0;i<7;i++){ var q=this.p[i]; if(!finite(q.x)||!finite(q.y)||!finite(q.z)) return false; }
+  return true;
+};
+Unit.prototype.shove = function (ix, iy, iz) {
+  for (var i=0;i<7;i++){ var q=this.p[i]; q.px-=ix; q.py-=iy; q.pz-=iz; }
+};
+
+// Simulation clock, advanced by the substep — NOT the rAF timestamp. Walk
+// wobble and milling drift read this. Using the frame timestamp meant the
+// weave froze whenever the loop was driven by anything other than rAF, which
+// left every unit walking at one fixed angle off target forever instead of
+// weaving onto it.
+var simT = 0;
+var units = [], arrows = [], corpses = [];
+var MAX_UNITS = 90, MAX_CORPSE = 40;
+
+// ------------------------------------------------------------------ sim
+function stepWorld(dt) {
+  var steps = Math.min(4, Math.max(1, Math.round(dt / SUB)));
+  for (var s=0; s<steps; s++) substep();
+  stepArrows(dt);
+  stepCapture(dt);
+}
+
+function substep() {
+  simT += SUB;
+  for (var i=units.length-1; i>=0; i--) {
+    var U = units[i];
+    if (!U.sane()) { units.splice(i,1); continue; }
+    if (U.state === ST_DEAD) { units.splice(i,1); continue; }
+
+    // --- drive: the ONLY units that advance are the ones already inside ---
+    var drive = 0, dz = 0;
+    if (U.state === ST_STORM || (U.foe && U.state !== ST_FLY && U.state !== ST_DOWN)) {
+      var tgt = U.foe ? nearestEnemyOf(U) : null;
+      var tx, tz;
+      if (U.foe) {
+        if (tgt) { var c1 = tgt.centre(); tx = c1.x; tz = c1.z; }
+        else { tx = castle.banner.x; tz = castle.banner.z; }
+      } else { tx = castle.banner.x; tz = castle.banner.z; }
+      var c = U.centre();
+      var ddx = tx - c.x, ddz = tz - c.z;
+      var d = Math.hypot(ddx, ddz) || 1;
+      if (d > 1.4) { drive = U.k.speed; dz = ddz / d; ddx /= d; } else { ddx = 0; dz = 0; }
+      // derp: a wobble that grows with how bad the unit is, plus stumbles
+      var wob = Math.sin(simT * 4.0 + U.wobble) * U.k.derp * 0.55;
+      var fx = (ddx * Math.cos(wob) - dz * Math.sin(wob)) * drive;
+      var fz = (ddx * Math.sin(wob) + dz * Math.cos(wob)) * drive;
+      if (U.stumble > 0) { U.stumble -= SUB; fx *= 0.1; fz *= 0.1; }
+      var hips = U.p[2];
+      hips.px -= fx * SUB * SUB * 34;
+      hips.pz -= fz * SUB * SUB * 34;
+    } else if (U.state === ST_MILL) {
+      // Milling: they got up outside the wall and there is no plan. They
+      // wander, they turn round, they achieve nothing. This is the cost of a
+      // short shot and it is deliberately not productive in any way.
+      var wob2 = simT * 1.2 + U.wobble;
+      var hips2 = U.p[2];
+      hips2.px -= Math.cos(wob2) * 0.9 * SUB * SUB * 34;
+      hips2.pz -= Math.sin(wob2 * 1.7) * 0.9 * SUB * SUB * 34;
+    }
+
+    // --- integrate ---
+    for (var j=0;j<7;j++) {
+      var q=U.p[j];
+      var vx=(q.x-q.px)*AIR, vy=(q.y-q.py)*AIR, vz=(q.z-q.pz)*AIR;
+      var sp=Math.hypot(vx,vy,vz);
+      if (sp>MAXSTEP){ var f=MAXSTEP/sp; vx*=f; vy*=f; vz*=f; }
+      q.px=q.x; q.py=q.y; q.pz=q.z;
+      q.x+=vx; q.y+=vy-GRAV*SUB*SUB; q.z+=vz;
+    }
+    for (var k=0;k<ITERS;k++) {
+      for (var L=0;L<LA.length;L++) {
+        var a=U.p[LA[L]], b=U.p[LB[L]];
+        var dx=b.x-a.x, dy=b.y-a.y, dzz=b.z-a.z;
+        var dd=Math.hypot(dx,dy,dzz); if (dd<1e-6) continue;
+        var rest=LREST[L]*U.s;
+        var diff=(dd-rest)/dd*0.5*LK[L];
+        dx*=diff; dy*=diff; dzz*=diff;
+        a.x+=dx; a.y+=dy; a.z+=dzz; b.x-=dx; b.y-=dy; b.z-=dzz;
+      }
+      // an upright unit gets a soft spring holding its head above its hips —
+      // enough to stand, nowhere near enough to look competent
+      if (U.state===ST_STORM || U.state===ST_MILL || (U.foe && U.state===ST_STORM)) {
+        var helm=U.p[0], hip=U.p[2];
+        var want = hip.y + 0.92*U.s;
+        helm.y += (want - helm.y) * 0.18;
+        helm.x += (hip.x - helm.x) * 0.08;
+        helm.z += (hip.z - helm.z) * 0.08;
+      }
+      collideUnit(U);
+    }
+
+    // --- state transitions ---
+    // Credit the crossing the MOMENT it happens, not when the unit settles. A
+    // lad who lands inside is usually mobbed on the spot and never comes to
+    // rest, so counting on settle left the INSIDE readout stuck at zero while
+    // the player was watching him fight in the courtyard.
+    if (!U.foe && !U.counted && U.centre().x > castle.inside) {
+      U.counted = true; gotIn++; syncHud();
+      toast('IN!', '#8ef2a4'); sfx.cheer();
+    }
+    if (U.state === ST_FLY || U.state === ST_DOWN) {
+      var mo = U.motion();
+      if (mo < 0.008) U.still++; else U.still = 0;
+      if (U.state === ST_FLY && U.centre().y < 1.4) U.state = ST_DOWN;
+      if (U.state === ST_DOWN) U.downT += SUB;
+      // Stand on stillness OR on a timeout. Stillness alone stranded anyone who
+      // landed in the middle of the garrison: they were jostled every frame, so
+      // they never settled, never became active, and stood in the banner circle
+      // contributing nothing to the capture while plainly being right there.
+      if (U.still > 24 || U.downT > 1.5) standUp(U);
+    }
+    if (U.k.ranged && U.state === ST_STORM) {
+      U.cool -= SUB;
+      if (U.cool <= 0) { loose(U); U.cool = 1.5 + Math.random() * 2.2; }
+    }
+    if (U.hp <= 0) { kill(U, i); continue; }
+  }
+}
+
+function standUp(U) {
+  var c = U.centre();
+  if (U.foe) { U.state = ST_STORM; U.still = 0; return; }
+  // THE rule: you only storm if you are already on the other side of the wall.
+  // Outside, a unit gets up and mills — it does not brace, does not prop
+  // anyone, does not pile, and never advances.
+  if (c.x > castle.inside) {
+    U.state = ST_STORM;
+  } else {
+    if (!U.counted) { U.counted = true; milling++; syncHud(); }
+    U.state = ST_MILL;
+  }
+  U.still = 0; U.downT = 0;
+}
+
+function kill(U, idx) {
+  var c = U.centre();
+  corpses.push({ x:c.x, y:0.22, z:c.z, foe:U.foe, t:0 });
+  if (corpses.length > MAX_CORPSE) corpses.shift();
+  if (!U.foe) lost++; else garrisonDown++;
+  units.splice(idx, 1);
+  syncHud();
+}
+
+function collideUnit(U) {
+  for (var j=0;j<7;j++) {
+    var q=U.p[j];
+    if (q.x < GROUND_MINX+0.5) q.x = GROUND_MINX+0.5;
+    if (q.x > GROUND_MAXX-0.5) q.x = GROUND_MAXX-0.5;
+    if (q.z < GROUND_MINZ+0.5) q.z = GROUND_MINZ+0.5;
+    if (q.z > GROUND_MAXZ-0.5) q.z = GROUND_MAXZ-0.5;
+    if (q.y - q.r < 0) {
+      var pen = q.r - q.y;
+      q.y += pen;
+      var vx=q.x-q.px, vy=q.y-q.py, vz=q.z-q.pz;
+      if (vy < 0) {
+        vy *= -0.16;
+        vx *= 0.74; vz *= 0.74;
+        if (Math.abs(vy) > 0.1 && impactBudget > 0) { impactBudget--; sfx.thud(Math.abs(vy)); }
+      }
+      q.px=q.x-vx; q.py=q.y-vy; q.pz=q.z-vz;
+    }
+    for (var b=0;b<castle.blocks.length;b++) {
+      var B=castle.blocks[b];
+      var hx=B.sx*0.5+q.r, hy=B.sy*0.5+q.r, hz=B.sz*0.5+q.r;
+      var ddx=q.x-B.x, ddy=q.y-B.y, ddz=q.z-B.z;
+      if (Math.abs(ddx)>=hx||Math.abs(ddy)>=hy||Math.abs(ddz)>=hz) continue;
+      var ox=hx-Math.abs(ddx), oy=hy-Math.abs(ddy), oz=hz-Math.abs(ddz);
+      var vx2=q.x-q.px, vy2=q.y-q.py, vz2=q.z-q.pz;
+      if (ox<=oy&&ox<=oz){ q.x+=ddx<0?-ox:ox; q.px=q.x+vx2*0.42; }
+      else if (oy<=oz){ q.y+=ddy<0?-oy:oy; q.py=q.y+vy2*0.3; q.px=q.x-vx2*0.62; q.pz=q.z-vz2*0.62; }
+      else { q.z+=ddz<0?-oz:oz; q.pz=q.z+vz2*0.42; }
+      if (clangBudget>0 && Math.hypot(vx2,vy2,vz2)>0.18){ clangBudget--; sfx.clang(); }
+    }
+  }
+  // melee: anyone upright and adjacent to an enemy takes a swing
+  if (U.state === ST_STORM && !U.k.ranged) {
+    var c = U.centre();
+    for (var u2=0; u2<units.length; u2++) {
+      var O = units[u2];
+      if (O === U || O.foe === U.foe) continue;
+      if (O.state === ST_FLY) continue;
+      var oc = O.centre();
+      var d = Math.hypot(oc.x-c.x, oc.z-c.z);
+      if (d < 1.5 && meleeBudget > 0) {
+        meleeBudget--;
+        // ~1.2 dmg/sec per attacker (at 5.2 a lad died in six tenths of a
+        // second and nobody ever reached the banner). Defenders hit at 65% of
+        // that: they arrive as a group and yours arrive one at a time, so
+        // symmetric damage meant a lone unit lost every 1-v-3 and the castle
+        // was mathematically untakeable without perfect massing.
+        O.hp -= U.k.dmg * SUB * (U.foe ? 0.78 : 1.2);
+        var ix = (oc.x-c.x)/(d||1)*0.012, iz = (oc.z-c.z)/(d||1)*0.012;
+        O.shove(-ix, -0.004, -iz);
+      }
+    }
+  }
+}
+
+function nearestEnemyOf(U) {
+  var best=null, bd=1e9, c=U.centre();
+  for (var i=0;i<units.length;i++) {
+    var O=units[i];
+    if (O===U || O.foe===U.foe || O.state===ST_FLY) continue;
+    // A GARRISON DEFENDS. Without this the defenders chased the men milling
+    // about outside, walked out of their own gate, and left the banner
+    // unguarded — so the fight happened in an empty field instead of the
+    // courtyard, and the units you failed to get over the wall were somehow
+    // still useful. Anything outside the walls is not their problem.
+    if (U.foe && O.centre().x < castle.inside - 1) continue;
+    var oc=O.centre(), d=Math.hypot(oc.x-c.x, oc.z-c.z);
+    if (d<bd){ bd=d; best=O; }
+  }
+  return best;
+}
+
+// --- archery, and the reason this game is called Rabble ---------------------
+function loose(U) {
+  var c = U.centre();
+  // Target selection is bad ON PURPOSE. A meaningful share of the time an
+  // archer simply picks one of his own side, and even a "good" shot carries a
+  // spread wide enough that anyone standing between here and there is fair
+  // game. Both halves matter: the deliberate mistake makes it frequent, the
+  // spread makes it feel like an accident.
+  var friendly = Math.random() < U.k.ff;
+  var pool = [];
+  for (var i=0;i<units.length;i++) {
+    var O = units[i];
+    if (O === U || O.state === ST_FLY) continue;
+    if (friendly ? (O.foe === U.foe) : (O.foe !== U.foe)) pool.push(O);
+  }
+  if (!pool.length) return;
+  var T = pool[(Math.random()*pool.length)|0];
+  var tc = T.centre();
+  var dx = tc.x-c.x, dz = tc.z-c.z;
+  var d = Math.hypot(dx,dz) || 1;
+  var spread = 0.20 + U.k.derp * 0.22;
+  var ang = Math.atan2(dz,dx) + (Math.random()-0.5) * 2 * spread;
+  var sp = 17 + Math.random()*3;
+  arrows.push({
+    x:c.x, y:c.y+0.25, z:c.z,
+    vx:Math.cos(ang)*sp, vy:4.2 + d*0.10, vz:Math.sin(ang)*sp,
+    foe:U.foe, dmg:U.k.dmg, life:3.2, meantFriendly:friendly
+  });
+  sfx.bow();
+}
+
+function stepArrows(dt) {
+  for (var i=arrows.length-1;i>=0;i--) {
+    var A=arrows[i];
+    A.life -= dt;
+    A.vy -= GRAV * dt;
+    A.x += A.vx*dt; A.y += A.vy*dt; A.z += A.vz*dt;
+    if (A.life<=0 || A.y < 0 || A.x<GROUND_MINX || A.x>GROUND_MAXX || A.z<GROUND_MINZ || A.z>GROUND_MAXZ) {
+      arrows.splice(i,1); continue;
+    }
+    // An arrow hits WHOEVER it touches. It does not check sides — that is the
+    // whole joke, and it means a well-aimed shot can still take out the man
+    // who wandered into the line.
+    for (var u=0;u<units.length;u++) {
+      var U=units[u];
+      if (U.state===ST_FLY) continue;
+      var c=U.centre();
+      if (Math.abs(A.x-c.x)<0.62 && Math.abs(A.z-c.z)<0.62 && A.y < c.y+0.95 && A.y > c.y-0.95) {
+        U.hp -= A.dmg;
+        U.shove(-A.vx*0.0016, -0.006, -A.vz*0.0016);
+        U.stumble = 0.5;
+        if (U.foe === A.foe) {
+          friendlyHits++;
+          if (ffBudget>0){ ffBudget--; sfx.ff(); }
+          if (!U.foe && Math.random()<0.5) toast(FF_QUIPS[(Math.random()*FF_QUIPS.length)|0], '#ffb3a0');
+        } else if (hitBudget>0) { hitBudget--; sfx.hit(); }
+        arrows.splice(i,1);
+        syncHud();
+        break;
+      }
+    }
+  }
+}
+var FF_QUIPS = ['THAT WAS OURS', 'FRIENDLY FIRE', 'WRONG MAN', 'HE WAS ON OUR SIDE', 'SORRY DEREK'];
+
+function stepCapture(dt) {
+  if (state !== STATE_PLAY) return;
+  var mine=0, theirs=0;
+  var B = castle.banner;
+  for (var i=0;i<units.length;i++) {
+    var U=units[i];
+    if (U.state!==ST_STORM) continue;
+    var c=U.centre();
+    if (Math.hypot(c.x-B.x, c.z-B.z) < B.r) { if (U.foe) theirs++; else mine++; }
+  }
+  inZone = mine;
+  if (mine>0 || theirs>0) {
+        // Defenders SLOW the capture, they do not cancel it. At 0.055 three of
+    // them exactly cancelled one of yours, so a single unit in the circle was
+    // worth literally nothing and the bar never moved.
+    capture = clamp(capture + dt * (mine*0.16 - theirs*0.028), 0, 1);
+  } else {
+    capture = clamp(capture - dt*0.02, 0, 1);
+  }
+  if (capture >= 1) endAssault(true);
+  else {
+    var anyLive = false;
+    for (var j=0;j<units.length;j++) if (!units[j].foe && units[j].state===ST_STORM) { anyLive=true; break; }
+    var anyLeft = rosterTotal() > 0 || loadedKind !== null;
+    var anyFlying = false;
+    for (var f=0;f<units.length;f++) if (!units[f].foe && (units[f].state===ST_FLY||units[f].state===ST_DOWN)) { anyFlying=true; break; }
+    if (!anyLive && !anyLeft && !anyFlying) endAssault(false);
+  }
+}
+
+// ------------------------------------------------------------------ catapult
+var rig = { x:-6, z:0, yaw:0, elev:0.62, tension:0, winding:false, sink:0, bias:0,
+  armAngle:-0.62, armVel:0, firing:false, cool:0, broken:0, hop:0, hopV:0, snaps:0 };
+var loadedKind = null;
+var ratchetPhase = 0;
+
+function rigReset(seed) {
+  var r = new RNG(seed);
+  rig.yaw=0; rig.elev=0.62; rig.tension=0; rig.winding=false; rig.sink=0;
+  rig.armAngle=-0.62; rig.armVel=0; rig.firing=false; rig.cool=0; rig.broken=0;
+  rig.hop=0; rig.hopV=0; rig.snaps=0;
+  rig.bias = r.spread(0.03);
+}
+function muzzleSpeed(){ return 17.5 + rig.tension * 17.5; }
+function spreadRadius(){
+  var base = 0.5 + rig.tension*rig.tension*2.6;
+  base *= 1 + rig.sink*1.7;
+  if (loadedKind && loadedKind.mass > 1.3) base *= 0.82;      // heavy flies truer
+  return clamp(base, 0.4, 12);
+}
+function launchVector() {
+  var yaw = rig.yaw + rig.bias;
+  var el = clamp(rig.elev - rig.sink*0.34, 0.14, 1.32);
+  var sp = muzzleSpeed() * (loadedKind ? (1.06 - loadedKind.mass*0.10) : 1);
+  return { vx:Math.cos(yaw)*Math.cos(el)*sp, vy:Math.sin(el)*sp, vz:Math.sin(yaw)*Math.cos(el)*sp, sp:sp };
+}
+function predictLanding() {
+  var v = launchVector();
+  var x=rig.x+1.2, y=2.6-rig.sink+0.6, z=rig.z;
+  var dx=v.vx*SUB, dy=v.vy*SUB, dz=v.vz*SUB;
+  for (var i=0;i<900;i++) {
+    dx*=AIR; dy=dy*AIR - GRAV*SUB*SUB; dz*=AIR;
+    x+=dx; y+=dy; z+=dz;
+    if (y <= 0.9) break;
+    if (x>GROUND_MAXX||x<GROUND_MINX) break;
+  }
+  return { x:x, z:z };
+}
+
+function fireRig() {
+  if (rig.cool>0 || rig.broken>0 || !loadedKind) return;
+  var v = launchVector(), sr = spreadRadius();
+  var ang = Math.random()*Math.PI*2, mag = Math.sqrt(Math.random())*sr*0.085;
+  var jx = Math.cos(ang)*mag, jz = Math.sin(ang)*mag;
+  var U = new Unit(loadedKind, false, rig.x+1.2, 2.6-rig.sink+0.6, rig.z,
+    v.vx + jx*v.sp*0.1, v.vy + (Math.random()-0.5)*sr*0.05*v.sp*0.06, v.vz + jz*v.sp*0.1);
+  units.push(U);
+  launched++;
+  loadedKind = null;
+  rig.armVel=15; rig.firing=true; rig.cool=0.5;
+  rig.hopV=3.4; rig.sink += 0.010*(0.5+rig.tension);
+  rig.tension=0; rig.winding=false;
+  sfx.fire(); shake=0.5;
+  renderPen(); syncHud();
+}
+function snapRope() {
+  rig.broken=2.2; rig.snaps++; rig.tension=0; rig.winding=false;
+  rig.armVel=26; rig.hopV=5.0;
+  if (loadedKind) {
+    // dumped at the machine's own feet, well outside the walls, where he will
+    // now mill about for the rest of the assault
+    units.push(new Unit(loadedKind, false, rig.x+3.2+(Math.random()-0.5)*2, 2.2, rig.z+(Math.random()-0.5)*2.4,
+      (Math.random()-0.5)*4, 3.4, (Math.random()-0.5)*4));
+    launched++;
+    loadedKind = null;
+    renderPen();
+  }
+  sfx.snap(); shake=1.4; toast('ROPE SNAPPED', '#ff8a6a'); syncHud();
+}
+function updateRig(dt) {
+  if (rig.cool>0) rig.cool-=dt;
+  if (rig.broken>0){ rig.broken-=dt; if (rig.broken<=0){ rig.broken=0; rig.armAngle=-0.62; rig.armVel=0; } }
+  if (rig.firing || rig.broken>0) {
+    rig.armVel -= rig.armAngle*6*dt;
+    rig.armAngle += rig.armVel*dt;
+    rig.armVel *= 0.94;
+    if (rig.armAngle>1.5){ rig.armAngle=1.5; rig.armVel*=-0.35; }
+    if (Math.abs(rig.armVel)<0.4 && rig.broken<=0) {
+      rig.armAngle = lerp(rig.armAngle, -0.62, 1-Math.pow(0.001,dt));
+      if (Math.abs(rig.armAngle+0.62)<0.05){ rig.firing=false; rig.armAngle=-0.62; rig.armVel=0; }
+    }
+  } else {
+    rig.armAngle = lerp(rig.armAngle, -0.62 - rig.tension*0.30, 1-Math.pow(0.0006,dt));
+  }
+  rig.hopV -= 26*dt; rig.hop += rig.hopV*dt;
+  if (rig.hop<0){ rig.hop=0; rig.hopV=0; }
+
+  if (rig.winding && rig.broken<=0 && rig.cool<=0 && loadedKind) {
+    var before = rig.tension;
+    rig.tension = clamp(rig.tension + dt*0.46, 0, 1.12);
+    var rate = 5 + rig.tension*16;
+    ratchetPhase += dt*rate;
+    if (ratchetPhase>1){ ratchetPhase-=1; sfx.ratchet(rig.tension); }
+    if (rig.tension>0.72 && before<=0.72) sfx.creak(rig.tension);
+    if (rig.tension>=1.0 && Math.random() < (rig.tension-1.0)*dt*26 + dt*1.4) snapRope();
+  }
+}
+
+// ------------------------------------------------------------------ state
+var STATE_TITLE=0, STATE_PLAY=1, STATE_END=2;
+var state = STATE_TITLE;
+var level=1, capture=0, inZone=0, gotIn=0, milling=0, lost=0, launched=0;
+var friendlyHits=0, garrisonDown=0, garrisonSize=0;
+var roster = {};
+var shake=0, impactBudget=6, clangBudget=4, meleeBudget=40, hitBudget=4, ffBudget=3;
+var save = { best:1, muted:false };
+try {
+  var raw = localStorage.getItem('rabble.v1');
+  if (raw){ var o=JSON.parse(raw); if(o&&typeof o==='object'){ save.best=o.best||1; save.muted=!!o.muted; } }
+} catch(e){}
+function persist(){ try{ localStorage.setItem('rabble.v1', JSON.stringify(save)); }catch(e){} }
+
+var els = {};
+['titleScreen','endScreen','toast','tensionWrap','tensionFill','tensionLabel',
+ 'assaultPill','garrisonPill','insidePill','ffPill','capFill','capLabel','bestLine',
+ 'endTitle','endSub','statIn','statOut','statFF','statLost','endBtn','muteBtn',
+ 'pen','penHint','ghost'].forEach(function(id){ els[id]=document.getElementById(id); });
+
+function toast(text,col){
+  if(!els.toast) return;
+  els.toast.textContent=text; els.toast.style.color=col||'#fff';
+  els.toast.classList.remove('pop'); void els.toast.offsetWidth; els.toast.classList.add('pop');
+}
+function rosterTotal(){ var t=0; for (var k in roster) t+=roster[k]; return t; }
+function syncHud(){
+  if (els.assaultPill) els.assaultPill.textContent='ASSAULT '+level;
+  if (els.garrisonPill) els.garrisonPill.textContent='GARRISON '+Math.max(0,garrisonSize-garrisonDown);
+  if (els.insidePill) els.insidePill.textContent='INSIDE '+gotIn+(milling?'  ·  MILLING '+milling:'');
+  if (els.ffPill) els.ffPill.textContent='FRIENDLY FIRE '+friendlyHits;
+  if (els.capFill) els.capFill.style.width=(capture*100).toFixed(1)+'%';
+  if (els.capLabel) els.capLabel.textContent='BANNER '+Math.round(capture*100)+'%'+(inZone?'  (+'+inZone+')':'');
+  if (els.bestLine) els.bestLine.textContent='Best: assault '+save.best;
+  if (els.penHint) {
+    if (state===STATE_PLAY && !loadedKind && rosterTotal()>0) els.penHint.classList.add('show');
+    else els.penHint.classList.remove('show');
+  }
+}
+function renderPen(){
+  if (!els.pen) return;
+  els.pen.innerHTML='';
+  KINDS.forEach(function(K){
+    var n = roster[K.key]|0;
+    var d = document.createElement('div');
+    d.className = 'chip' + (n<=0?' empty':'') + (loadedKind===K?' armed':'');
+    d.setAttribute('data-kind', K.key);
+    d.innerHTML = '<span class="glyph">'+K.glyph+'</span><span class="nm">'+K.name+'</span><span class="ct">x'+n+'</span>';
+    els.pen.appendChild(d);
+  });
+}
+
+function startLevel(n){
+  level=n;
+  capture=0; inZone=0; gotIn=0; milling=0; lost=0; launched=0; friendlyHits=0; garrisonDown=0;
+  simT=0;
+  units.length=0; arrows.length=0; corpses.length=0;
+  loadedKind=null;
+  buildCastle(n);
+  rigReset(4242+n*7919);
+  // the warband: more bodies each assault, and more archers, which is worse
+  roster = {
+    lad:     5 + Math.min(6, n),
+    spear:   2 + Math.min(5, Math.floor(n*0.7)),
+    archer:  2 + Math.min(5, Math.floor(n*0.8)),
+    bruiser: 1 + Math.min(3, Math.floor(n/2))
+  };
+  garrisonSize = 2 + Math.min(9, Math.floor(n*1.2));   // 3 on the first assault
+  spawnGarrison();
+  state=STATE_PLAY;
+  els.titleScreen.classList.remove('show');
+  els.endScreen.classList.remove('show');
+  renderPen(); syncHud();
+  toast('ASSAULT '+n, '#f2c14e');
+}
+function spawnGarrison(){
+  var r = new RNG(99+level*31337);
+  for (var i=0;i<garrisonSize;i++) {
+    var K = KINDS[i%3===2 ? 2 : (i%2 ? 1 : 0)];
+    // Spread across the courtyard rather than stacked on the banner (stacked,
+    // they contested it permanently and a first assault could never break
+    // even) — but strictly CLEAR OF THE WALL. The old range started at 31.5
+    // and the wall slab spans 29.8-32.2, so defenders spawned inside the
+    // masonry, got squeezed out through the outer face, and spent the assault
+    // stuck in the field unable to walk home.
+    var gx = castle.inside + 2.0 + r.next() * 7.5;
+    var U = new Unit(K, true, gx, 1.1, castle.banner.z + r.spread(9), 0,0,0);
+    U.state = ST_STORM; U.still = 0;
+    units.push(U);
+  }
+}
+function endAssault(won){
+  state=STATE_END;
+  if (won){
+    if (level+1>save.best){ save.best=level+1; persist(); }
+    sfx.win();
+    els.endTitle.textContent='CASTLE TAKEN';
+    els.endSub.textContent='The banner is yours. Most of them are not coming home.';
+    els.endBtn.textContent='NEXT ASSAULT';
+  } else {
+    sfx.lose();
+    els.endTitle.textContent='THE RABBLE DISPERSES';
+    els.endSub.textContent = milling>gotIn
+      ? 'Most of the warband never got over the wall. They are still out there, wandering.'
+      : 'Nobody left inside. The banner still flies.';
+    els.endBtn.textContent='TRY AGAIN';
+  }
+  els.statIn.textContent=String(gotIn);
+  els.statOut.textContent=String(milling);
+  els.statFF.textContent=String(friendlyHits);
+  els.statLost.textContent=String(lost);
+  els.endScreen.classList.add('show');
+}
+function goTitle(){
+  state=STATE_TITLE;
+  els.endScreen.classList.remove('show');
+  els.titleScreen.classList.add('show');
+  units.length=0; arrows.length=0; corpses.length=0;
+  buildCastle(1); rigReset(4242); roster={}; loadedKind=null;
+  garrisonSize=0; garrisonDown=0;
+  renderPen(); syncHud();
+}
+
+// ------------------------------------------------------------------ input
+var drag = { mode:null, id:null, sx:0, sy:0, baseYaw:0, baseElev:0, kind:null };
+
+function pointerFrom(e){
+  if (e.touches && e.touches.length) return {x:e.touches[0].clientX,y:e.touches[0].clientY,id:e.touches[0].identifier};
+  if (e.changedTouches && e.changedTouches.length) return {x:e.changedTouches[0].clientX,y:e.changedTouches[0].clientY,id:e.changedTouches[0].identifier};
+  return {x:e.clientX,y:e.clientY,id:'mouse'};
+}
+function chipAt(target){
+  if (!target || !target.closest) return null;
+  var c = target.closest('.chip');
+  return (c && !c.classList.contains('empty')) ? c : null;
+}
+
+function onDown(e){
+  ac();
+  if (state===STATE_TITLE){ startLevel(1); return; }
+  if (state!==STATE_PLAY) return;
+  var p = pointerFrom(e);
+  var chip = chipAt(e.target);
+  if (chip) {
+    // --- dragging a unit out of the pen ---
+    var K = kindByKey(chip.getAttribute('data-kind'));
+    if ((roster[K.key]|0) <= 0) return;
+    drag.mode='load'; drag.id=p.id; drag.kind=K;
+    els.ghost.textContent = K.glyph;
+    els.ghost.style.left = (p.x-22)+'px';
+    els.ghost.style.top = (p.y-22)+'px';
+    els.ghost.classList.add('on');
+    return;
+  }
+  if (e.target && e.target.closest && e.target.closest('#muteBtn')) return;
+  // --- winding the machine ---
+  drag.mode='aim'; drag.id=p.id; drag.sx=p.x; drag.sy=p.y;
+  drag.baseYaw=rig.yaw; drag.baseElev=rig.elev;
+  rig.winding=true;
+  if (els.tensionWrap) els.tensionWrap.classList.add('show');
+  if (els.tensionLabel) els.tensionLabel.classList.add('show');
+}
+function onMove(e){
+  if (!drag.mode || state!==STATE_PLAY) return;
+  var p = pointerFrom(e);
+  if (drag.mode==='load') {
+    els.ghost.style.left=(p.x-22)+'px';
+    els.ghost.style.top=(p.y-22)+'px';
+    return;
+  }
+  var dx=p.x-drag.sx, dy=p.y-drag.sy;
+  rig.yaw = clamp(drag.baseYaw - dx*0.0022, -0.72, 0.72);
+  rig.elev = clamp(drag.baseElev + dy*0.0022, 0.16, 1.28);
+}
+function onUp(e){
+  if (!drag.mode) return;
+  var p = pointerFrom(e);
+  if (drag.mode==='load') {
+    els.ghost.classList.remove('on');
+    // dropping anywhere on the field (not back on the pen) loads the machine
+    var penRect = els.pen.getBoundingClientRect();
+    var onField = p.y < penRect.top - 4;
+    if (onField && (roster[drag.kind.key]|0) > 0) {
+      roster[drag.kind.key] = (roster[drag.kind.key]|0) - 1;
+      loadedKind = drag.kind;
+      tone(660, 0.08, 'square', 0.08);
+      renderPen(); syncHud();
+    }
+    drag.mode=null; drag.kind=null;
+    return;
+  }
+  if (els.tensionWrap) els.tensionWrap.classList.remove('show');
+  if (els.tensionLabel) els.tensionLabel.classList.remove('show');
+  if (rig.tension>0.05) fireRig();
+  rig.winding=false; rig.tension=0;
+  drag.mode=null;
+}
+
+cv.addEventListener('mousedown', onDown);
+els.pen.addEventListener('mousedown', onDown);
+window.addEventListener('mousemove', onMove);
+window.addEventListener('mouseup', onUp);
+document.addEventListener('touchstart', function(e){
+  if (e.target && e.target.closest && e.target.closest('#muteBtn')) return;
+  e.preventDefault(); onDown(e);
+}, {passive:false});
+window.addEventListener('touchmove', function(e){ e.preventDefault(); onMove(e); }, {passive:false});
+window.addEventListener('touchend', function(e){ e.preventDefault(); onUp(e); }, {passive:false});
+window.addEventListener('touchcancel', function(e){ onUp(e); });
+
+els.titleScreen.addEventListener('click', function(){ if (state===STATE_TITLE){ ac(); startLevel(1); } });
+els.endBtn.addEventListener('click', function(){
+  ac();
+  if (els.endTitle.textContent==='CASTLE TAKEN') startLevel(level+1); else startLevel(level);
+});
+function setMuted(m){
+  muted=m; save.muted=m; persist();
+  if (els.muteBtn) els.muteBtn.textContent = m?'🔇':'🔊';
+  if (master){ try{ master.gain.value = m?0:0.5; }catch(e){} }
+}
+els.muteBtn.addEventListener('click', function(e){ e.stopPropagation(); setMuted(!muted); });
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', function(){ setTimeout(resize,120); });
+document.addEventListener('visibilitychange', function(){
+  if (document.hidden && AC && AC.suspend){ try{ AC.suspend(); }catch(e){} }
+});
+
+// ------------------------------------------------------------------ update
+function update(dt){
+  impactBudget=6; clangBudget=4; meleeBudget=40; hitBudget=4; ffBudget=3;
+  if (shake>0) shake=Math.max(0, shake-dt*2.6);
+  if (units.length > MAX_UNITS) units.splice(0, units.length-MAX_UNITS);
+  updateRig(dt);
+  stepWorld(dt);
+  for (var i=0;i<corpses.length;i++) corpses[i].t += dt;
+  if (els.tensionFill) els.tensionFill.style.width = (clamp(rig.tension/1.12,0,1)*100).toFixed(1)+'%';
+  if (els.tensionLabel) els.tensionLabel.textContent =
+    rig.tension>=1.0 ? 'ROPE STRAINING' : (rig.tension>0.86 ? 'TOO MUCH' : (loadedKind?'TENSION':'NOTHING LOADED'));
+  syncHud();
+}
+
+// ------------------------------------------------------------------ render
+var VP=new Float32Array(16), PROJ=new Float32Array(16), VIEW=new Float32Array(16);
+var camPos={x:-20,y:18,z:0}, camTgt={x:12,y:3,z:0};
+
+function render(){
+  if (!gl) return;
+  instCount=0;
+
+  var focus=null, bestX=-1e9;
+  for (var i=0;i<units.length;i++){
+    var U=units[i];
+    if (U.foe || U.state!==ST_FLY) continue;
+    var c=U.centre();
+    if (c.x>bestX){ bestX=c.x; focus=c; }
+  }
+  // The fight happens in the COURTYARD, which the wall hides from a low camera
+  // behind the machine. Once anyone is inside, drift the framing over the wall
+  // and climb — otherwise the player watches an empty field while six of their
+  // men are being killed just out of sight.
+  var anyInside = 0;
+  for (var ai=0; ai<units.length; ai++)
+    if (!units[ai].foe && units[ai].state === ST_STORM) anyInside++;
+  var pull = clamp(anyInside * 0.34, 0, 1);
+
+  var wantTx = focus ? focus.x : lerp((rig.x + castle.wallX)*0.5 + 5, castle.banner.x - 1, pull);
+  var wantTy = focus ? Math.max(2.5, focus.y*0.8) : castle.wallH*0.5 + 1.5;
+  var wantTz = focus ? focus.z*0.7 : 0;
+  camTgt.x=lerp(camTgt.x,wantTx,0.04);
+  camTgt.y=lerp(camTgt.y,wantTy,0.04);
+  camTgt.z=lerp(camTgt.z,wantTz,0.04);
+  var camAng = rig.yaw + 0.34;
+  var dist = lerp(23, 30, pull), high = lerp(21, 32, pull);
+  camPos.x=lerp(camPos.x, rig.x + pull*7 - Math.cos(camAng)*dist, 0.06);
+  camPos.y=lerp(camPos.y, high, 0.06);
+  camPos.z=lerp(camPos.z, rig.z-Math.sin(camAng)*dist, 0.06);
+
+  var sh=shake*0.5;
+  var ex=camPos.x+(Math.random()-0.5)*sh, ey=camPos.y+(Math.random()-0.5)*sh, ez=camPos.z+(Math.random()-0.5)*sh;
+  m4perspective(PROJ, 1.02, cv.width/Math.max(1,cv.height), 0.5, 260);
+  m4lookAt(VIEW, ex,ey,ez, camTgt.x,camTgt.y,camTgt.z);
+  m4mul(VP, PROJ, VIEW);
+
+  // ground + the emplacement
+  box((GROUND_MINX+GROUND_MAXX)*0.5, -1.0, 0, GROUND_MAXX-GROUND_MINX, 2.0, GROUND_MAXZ-GROUND_MINZ, 0.27,0.39,0.23);
+  box(rig.x+1, -0.55, rig.z, 9, 1.2, 9, 0.32,0.46,0.26);
+  // the courtyard reads as different ground so "inside" is legible at a glance
+  box(castle.wallX+11, -0.5, 0, 20, 1.15, 24, 0.40,0.40,0.34);
+
+  // castle
+  for (var b=0;b<castle.blocks.length;b++){
+    var B=castle.blocks[b];
+    box(B.x,B.y,B.z,B.sx,B.sy,B.sz,B.r,B.g,B.b);
+  }
+  // banner + capture ring
+  var BN=castle.banner;
+  box(BN.x, 2.4, BN.z, 0.2, 4.8, 0.2, 0.36,0.28,0.18);
+  var flagCol = capture>0.5 ? [0.36,0.78,0.44] : [0.78,0.22,0.20];
+  box(BN.x+0.85, 4.3, BN.z, 1.6, 1.1, 0.12, flagCol[0], flagCol[1], flagCol[2]);
+  for (var a=0;a<28;a++){
+    var th=a/28*Math.PI*2;
+    var lit = (a/28) < capture;
+    box(BN.x+Math.cos(th)*BN.r, 0.08, BN.z+Math.sin(th)*BN.r, 0.42,0.16,0.42,
+        lit?0.98:0.42, lit?0.86:0.42, lit?0.34:0.46);
+  }
+
+  // corpses lie where they fell — no piling, no bracing, just litter
+  for (var cp=0;cp<corpses.length;cp++){
+    var C=corpses[cp];
+    box(C.x, C.y, C.z, 1.5, 0.34, 0.6, C.foe?0.44:0.52, C.foe?0.34:0.46, C.foe?0.34:0.40);
+  }
+
+  // the machine
+  var rx=rig.x, rz=rig.z, ry=-rig.sink+rig.hop;
+  var cyaw=Math.cos(rig.yaw), syaw=Math.sin(rig.yaw);
+  box(rx, ry+0.35, rz, 5.2,0.7,4.4, 0.30,0.22,0.14);
+  boxRot(rx, ry+1.1, rz, 4.6,0.5,0.6, rig.yaw,0, 0.34,0.25,0.16);
+  [[-1.7,-1.7],[-1.7,1.7],[1.7,-1.7],[1.7,1.7]].forEach(function(w){
+    box(rx+w[0], ry+0.35, rz+w[1], 0.5,1.1,1.1, 0.22,0.16,0.11);
+  });
+  boxRot(rx-1.0*cyaw, ry+1.75, rz-1.0*syaw, 0.34,3.5,0.34, rig.yaw, 0.30, 0.30,0.22,0.14);
+  boxRot(rx+1.0*cyaw, ry+1.75, rz+1.0*syaw, 0.34,3.5,0.34, rig.yaw,-0.30, 0.30,0.22,0.14);
+  boxRot(rx, ry+3.15, rz, 0.4,0.34,2.9, rig.yaw,0, 0.26,0.19,0.12);
+  var aLen=3.6, aPivot=3.4;
+  var ax=rx+Math.cos(rig.yaw)*Math.cos(rig.armAngle)*aLen*0.5;
+  var az=rz+Math.sin(rig.yaw)*Math.cos(rig.armAngle)*aLen*0.5;
+  var ay=ry+aPivot+Math.sin(rig.armAngle)*aLen*0.5;
+  boxRot(ax,ay,az, aLen,0.52,0.52, rig.yaw, rig.armAngle, 0.40,0.29,0.18);
+  var tx2=rx+Math.cos(rig.yaw)*Math.cos(rig.armAngle)*aLen;
+  var tz2=rz+Math.sin(rig.yaw)*Math.cos(rig.armAngle)*aLen;
+  var ty2=ry+aPivot+Math.sin(rig.armAngle)*aLen;
+  box(tx2,ty2,tz2, 1.0,0.7,1.0, 0.46,0.34,0.20);
+  // whoever is currently sitting in the cup, waiting
+  if (loadedKind) {
+    box(tx2, ty2+0.75, tz2, 0.72,0.9,0.72,
+        loadedKind.col[0], loadedKind.col[1], loadedKind.col[2]);
+    box(tx2, ty2+1.35, tz2, 0.6,0.5,0.6, 0.90,0.82,0.55);
+  }
+  var wx2=rx-Math.cos(rig.yaw)*Math.cos(rig.armAngle)*1.35;
+  var wz2=rz-Math.sin(rig.yaw)*Math.cos(rig.armAngle)*1.35;
+  var wy2=ry+aPivot-Math.sin(rig.armAngle)*1.35;
+  box(wx2,wy2,wz2, 1.15,1.15,1.15, 0.20,0.20,0.24);
+
+  // aim ellipse
+  if (state===STATE_PLAY && rig.broken<=0 && loadedKind) {
+    var land=predictLanding(), sr=spreadRadius();
+    for (var s2=0;s2<26;s2++){
+      var th2=s2/26*Math.PI*2;
+      var hot = rig.tension>0.86;
+      box(land.x+Math.cos(th2)*sr, 0.12, land.z+Math.sin(th2)*sr*0.78, 0.46,0.2,0.46,
+          hot?0.95:0.98, hot?0.36:0.86, hot?0.28:0.34);
+    }
+  }
+
+  // units
+  for (var u=0;u<units.length;u++){
+    var U2=units[u];
+    var col = U2.k.col;
+    var tint = U2.foe ? 0.55 : 1.0;
+    for (var j=0;j<7;j++){
+      var q=U2.p[j], d=q.r*2;
+      var isHelm = j===0;
+      var r0 = isHelm ? (U2.foe?0.60:0.90) : col[0]*tint;
+      var g0 = isHelm ? (U2.foe?0.28:0.84) : col[1]*tint;
+      var b0 = isHelm ? (U2.foe?0.26:0.50) : col[2]*tint;
+      box(q.x,q.y,q.z, d,d,d, r0,g0,b0);
+    }
+  }
+  // arrows
+  for (var ar=0; ar<arrows.length; ar++){
+    var A=arrows[ar];
+    box(A.x,A.y,A.z, 0.5,0.12,0.12, 0.94,0.88,0.62);
+  }
+
+  gl.clearColor(0.42,0.55,0.68,1);
+  gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+  gl.useProgram(prog);
+  gl.uniformMatrix4fv(uVP,false,VP);
+  gl.uniform3f(uSun, 0.46,0.78,0.42);
+  gl.uniform3f(uFog, 0.52,0.63,0.74);
+  bindAttribs();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vboInst);
+  gl.bufferSubData(gl.ARRAY_BUFFER, 0, instData.subarray(0, instCount*INST_FLOATS));
+  drawInstanced(gl.TRIANGLES, idxCount, instCount);
+}
+
+// ------------------------------------------------------------------ loop
+var last=0, now=0, frameErrs=0, frames=0;
+function frame(ts){
+  try {
+    now = ts || (last+16.7);
+    var dt = last ? Math.min(0.05,(now-last)/1000) : 0.016;
+    last = now;
+    frames++;
+    try { update(dt); } catch(e){ frameErrs++; if (frameErrs<4) console.error('[rabble] update:', e); }
+    try { render(); } catch(e2){ frameErrs++; if (frameErrs<4) console.error('[rabble] render:', e2); }
+  } finally {
+    if (typeof requestAnimationFrame==='function') requestAnimationFrame(frame);
+  }
+}
+
+// ------------------------------------------------------------------ boot
+(function boot(){
+  resize();
+  if (!initGL() || !initScene()) {
+    document.body.innerHTML =
+      '<div style="color:#fff;font:600 16px system-ui;padding:32px;text-align:center">' +
+      '<h2>WebGL unavailable</h2><p style="color:#b9b0d8">Rabble is a 3D prototype and needs WebGL. ' +
+      'Try a different browser, or enable hardware acceleration.</p>' +
+      '<p><a style="color:#ffd76a" href="../../">← Back to the arena</a></p></div>';
+    return;
+  }
+  resize();
+  setMuted(!!save.muted);
+  buildCastle(1); rigReset(4242);
+  goTitle();
+  if (typeof requestAnimationFrame==='function') requestAnimationFrame(frame);
+})();
+
+// test hook — harnesses drive the real loop, never a parallel copy of it
+if (typeof window!=='undefined') {
+  window.__rb = {
+    frame:frame, update:update, render:render, resize:resize,
+    startLevel:startLevel, goTitle:goTitle, fireRig:fireRig, snapRope:snapRope,
+    get state(){return state;}, get units(){return units;}, get arrows(){return arrows;},
+    get rig(){return rig;}, get roster(){return roster;}, get loaded(){return loadedKind;},
+    get capture(){return capture;}, get gotIn(){return gotIn;}, get milling(){return milling;},
+    get friendlyHits(){return friendlyHits;}, get lost(){return lost;},
+    get garrisonDown(){return garrisonDown;}, get garrisonSize(){return garrisonSize;},
+    get frames(){return frames;}, get frameErrs(){return frameErrs;},
+    get instCount(){return instCount;}, get glOK(){return !!gl;}, get isGL2(){return isGL2;},
+    get inZone(){return inZone;}, get level(){return level;},
+    get __bannerX(){return castle.banner.x;}, get __inside(){return castle.inside;},
+    KINDS:KINDS, ST:{FLY:ST_FLY,DOWN:ST_DOWN,MILL:ST_MILL,STORM:ST_STORM,DEAD:ST_DEAD},
+    predictLanding:predictLanding, spreadRadius:spreadRadius, launchVector:launchVector,
+    setAim:function(yaw,elev,tension){
+      rig.yaw=clamp(yaw,-0.72,0.72); rig.elev=clamp(elev,0.16,1.28); rig.tension=clamp(tension,0,1.12);
+    },
+    load:function(key){
+      var K=kindByKey(key);
+      if ((roster[K.key]|0)>0){ roster[K.key]--; loadedKind=K; renderPen(); syncHud(); return true; }
+      return false;
+    },
+    countState:function(st,foe){
+      var n=0;
+      for (var i=0;i<units.length;i++) if (units[i].state===st && !!units[i].foe===!!foe) n++;
+      return n;
+    },
+    save:save
+  };
+}
+</script>
+<script src="/analytics.js" defer></script>
+</body>
+</html>

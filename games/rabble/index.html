@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Rabble — TaterTot Games Labs</title>
+<meta name="description" content="You lead them. Loosely. Drag your warband into a catapult one at a time and hope enough of them land inside the walls. Your archers will shoot your own men.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏹</text></svg>">
+<style>
+  :root{--bg:#0d0b16;--bg2:#151127;--card:#1c1734;--card2:#241d44;--line:rgba(255,255,255,.08);
+    --ink:#f6f3ff;--muted:#9a91c4;--dim:#6e659b;--accent:#6fbf7c;--r:20px}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden;position:relative}
+  body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:radial-gradient(900px 480px at 12% -6%, #6fbf7c22, transparent 62%),
+      radial-gradient(760px 420px at 106% 8%, rgba(224,83,61,.12), transparent 60%),
+      linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%)}
+  .wrap{max-width:1000px;margin:0 auto;padding:20px 18px 80px}
+  .back{display:inline-flex;align-items:center;gap:8px;padding:13px 18px;min-height:44px;border-radius:12px;
+    background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--muted);
+    text-decoration:none;font-weight:700;font-size:.86rem}
+  .back:hover{color:var(--ink);border-color:rgba(255,255,255,.2)}
+
+  .hero{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:34px;margin-top:26px;align-items:start}
+  @media (max-width:760px){ .hero{grid-template-columns:1fr;gap:22px} }
+  .shotFrame{position:relative;border-radius:26px;padding:9px;background:linear-gradient(160deg,#2a2350,#191333);
+    border:1px solid var(--line);box-shadow:0 20px 50px rgba(0,0,0,.55)}
+  .shotFrame img{display:block;width:100%;height:auto;border-radius:18px}
+  .shotTag{position:absolute;left:50%;transform:translateX(-50%);bottom:-11px;padding:5px 13px;border-radius:999px;
+    font-size:.6rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase;
+    background:#0d0b16;border:1px solid var(--line);color:var(--dim);white-space:nowrap}
+
+  .badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .b{padding:6px 13px;border-radius:999px;font-size:.68rem;font-weight:800;letter-spacing:.08em;
+    text-transform:uppercase;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--muted)}
+  .b.acc{background:#6fbf7c1f;border-color:#6fbf7c55;color:#6fbf7c}
+  h1{font-size:clamp(2rem,6vw,3rem);font-weight:900;letter-spacing:-.03em;line-height:1.02}
+  .hook{margin-top:10px;font-size:1.02rem;font-weight:800;color:var(--accent)}
+  .lede{margin-top:16px;color:var(--muted);font-size:1rem;line-height:1.68}
+  .why{margin-top:14px;padding:14px 16px;border-radius:14px;border-left:3px solid var(--accent);
+    background:rgba(255,255,255,.035);color:var(--muted);font-size:.94rem;line-height:1.6}
+  .why b{color:var(--ink)}
+
+  .playRow{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:22px}
+  .play{display:inline-block;padding:17px 44px;border-radius:16px;font-weight:900;font-size:1.1rem;
+    color:#120f1e;background:linear-gradient(92deg,#ffb703,#ffd76a);text-decoration:none;
+    box-shadow:0 6px 0 rgba(0,0,0,.35),0 0 30px rgba(255,183,3,.22)}
+  .play:active{transform:translateY(2px);box-shadow:0 4px 0 rgba(0,0,0,.35)}
+  .note{color:var(--dim);font-size:.82rem;font-weight:600}
+
+  section{margin-top:46px}
+  h2{font-size:1.15rem;font-weight:900;letter-spacing:.01em;margin-bottom:14px}
+  .steps{list-style:none;display:grid;gap:10px}
+  .steps li{display:flex;gap:13px;align-items:flex-start;padding:13px 15px;border-radius:14px;
+    background:rgba(255,255,255,.035);border:1px solid var(--line);color:var(--muted);font-size:.95rem;line-height:1.55}
+  .steps .n{flex:0 0 26px;height:26px;border-radius:8px;background:#6fbf7c22;border:1px solid #6fbf7c55;
+    color:#6fbf7c;font-weight:900;font-size:.8rem;display:grid;place-items:center}
+  .feats{list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+  .feats li{padding:13px 15px;border-radius:14px;background:rgba(255,255,255,.035);
+    border:1px solid var(--line);color:var(--muted);font-size:.93rem;line-height:1.5}
+  .units{list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+  .units li{padding:13px 15px;border-radius:14px;background:linear-gradient(140deg,var(--card),var(--card2));
+    border:1px solid var(--line);color:var(--muted);font-size:.92rem;line-height:1.5}
+  .units b{color:var(--ink);display:block;margin-bottom:3px}
+  .metaBox{padding:16px 18px;border-radius:16px;background:linear-gradient(140deg,var(--card),var(--card2));
+    border:1px solid var(--line);color:var(--muted);font-size:.95rem;line-height:1.65}
+  .metaBox b{color:var(--ink)}
+
+  .nav{display:flex;gap:12px;margin-top:48px;flex-wrap:wrap}
+  .nav a{flex:1 1 220px;padding:15px 18px;border-radius:14px;background:rgba(255,255,255,.04);
+    border:1px solid var(--line);color:var(--ink);text-decoration:none;font-weight:800;font-size:.95rem}
+  .nav a span{display:block;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:4px}
+  .nav a.r{text-align:right}
+  .nav a:hover{border-color:rgba(255,255,255,.2)}
+  footer{margin-top:56px;padding-top:22px;border-top:1px solid var(--line);color:var(--dim);
+    font-size:.8rem;line-height:1.7;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../../">← All prototypes</a>
+
+  <div class="hero">
+    <div>
+      <div class="shotFrame">
+        <img src="../../assets/shots/rabble.png" width="645" height="1290"
+             alt="Rabble gameplay: a warband pen along the bottom, a catapult with a unit loaded, and troops fighting the garrison inside the castle courtyard while the capture bar fills">
+        <span class="shotTag">Actual gameplay</span>
+      </div>
+    </div>
+    <div>
+      <div class="badges">
+        <span class="b acc">Wave 9</span>
+        <span class="b">Warband · 3D</span>
+        <span class="b">40–90s assaults</span>
+      </div>
+      <h1>🏹 Rabble</h1>
+      <p class="hook">You lead them. Loosely.</p>
+      <p class="lede">You command a warband and you have exactly one order available: <b>you, get in the catapult</b>. Drag a unit out of the pen, drop it in the cup, wind the rope and fling it at somebody else's castle. Land them inside the walls and they storm the banner. Land them short and they stand up, look around, and mill about outside for the rest of the assault.</p>
+      <p class="why"><b>Why it works:</b> there is no forming up and no bracing — a body that lands is a person, not a building material. Everything that happens is your army being bad at things in public. And your archers, who cannot be reasoned with, will keep shooting your own men, because an arrow hits whoever it touches and roughly a third of the time they were aiming at a friend on purpose.</p>
+      <div class="playRow">
+        <a class="play" href="play">▶ PLAY NOW</a>
+        <span class="note">Runs in your browser · no install · works on phones · needs WebGL</span>
+      </div>
+    </div>
+  </div>
+
+  <section>
+    <h2>How to play</h2>
+    <ol class="steps">
+      <li><span class="n">1</span><span><b>Drag a unit out of the pen</b> and drop it on the field. That loads the catapult — it is the only way anyone goes anywhere.</span></li>
+      <li><span class="n">2</span><span><b>Hold to wind, drag to aim, release to fling.</b> Wind into the red and the rope snaps and drops him at your feet.</span></li>
+      <li><span class="n">3</span><span>Only units that land <b>inside the walls</b> storm the castle. Everyone else mills about outside contributing nothing.</span></li>
+      <li><span class="n">4</span><span>Hold the banner circle to fill the capture bar. Send them in a steady stream — one at a time is one at a time to die.</span></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>The warband</h2>
+    <ul class="units">
+      <li><b>🪵 Lad</b>A peasant with a plank. Cheap, plentiful, swings wide, and will shoot a friend one time in three if you hand him anything ranged.</li>
+      <li><b>🔱 Spear</b>The closest thing you have to a professional. Faster, tougher, and only occasionally a hazard.</li>
+      <li><b>🏹 Archer</b>Shoots constantly. Picks a friendly on purpose about half the time, and the spread is wide enough that "on purpose" barely matters.</li>
+      <li><b>🪨 Bruiser</b>Slow, enormous, hits like a cart. Flies truer than the rest because nothing about him is aerodynamic enough to be pushed around.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>What's in it</h2>
+    <ul class="feats">
+      <li>Drag-and-drop loading — pull a unit out of the pen and into the cup</li>
+      <li>Verlet ragdolls that stagger rather than walk, and trip when hit</li>
+      <li>Arrows that hit whoever they touch, friend or foe, with no side check</li>
+      <li>A garrison that defends the courtyard and will not be baited outside</li>
+      <li>The full catapult: winding, tension, recoil, ground settling, rope snaps</li>
+      <li>A camera that climbs over the wall once your men are inside</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>The measured bit</h2>
+    <div class="metaBox">Three rules were tested rather than assumed. Fire four units short and <b>four mill, zero storm</b>; fire four long and <b>four get in</b> — the wall really is the switch. Six archers inside produce a steady stream of <b>friendly-fire hits on your own side</b>. And the castle is taken in roughly <b>two attempts out of three</b>, which is the number that made the balance honest: an earlier build had units dying in about a second, so nobody could ever have two men alive inside at once and "lead an army" was arithmetically impossible.</div>
+  </section>
+
+  <div class="nav">
+    <a href="../overwind/"><span>Previous</span>← ⚙️ Overwind</a>
+    <a class="r" href="../siege-pile/"><span>Related</span>⚔️ Siege Pile →</a>
+  </div>
+
+  <footer>
+    A single self-contained file — no engine, no libraries, no external requests.<br>
+    © 2026 TaterTot Games Labs
+  </footer>
+</div>
+</body>
+</html>

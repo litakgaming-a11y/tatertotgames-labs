@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Overwind — TaterTot Games Labs</title>
+<meta name="description" content="The machine is the mistake. A simulated catapult you wind, strain and snap — the arena's first 3D prototype, playable in your browser.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚙️</text></svg>">
+<style>
+  :root{--bg:#0d0b16;--bg2:#151127;--card:#1c1734;--card2:#241d44;--line:rgba(255,255,255,.08);
+    --ink:#f6f3ff;--muted:#9a91c4;--dim:#6e659b;--accent:#f2c14e;--r:20px}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden;position:relative}
+  body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:radial-gradient(900px 480px at 12% -6%, #f2c14e22, transparent 62%),
+      radial-gradient(760px 420px at 106% 8%, rgba(124,180,240,.10), transparent 60%),
+      linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%)}
+  .wrap{max-width:1000px;margin:0 auto;padding:20px 18px 80px}
+  .back{display:inline-flex;align-items:center;gap:8px;padding:13px 18px;min-height:44px;border-radius:12px;
+    background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--muted);
+    text-decoration:none;font-weight:700;font-size:.86rem}
+  .back:hover{color:var(--ink);border-color:rgba(255,255,255,.2)}
+
+  .hero{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:34px;margin-top:26px;align-items:start}
+  @media (max-width:760px){ .hero{grid-template-columns:1fr;gap:22px} }
+
+  .shotFrame{position:relative;border-radius:26px;padding:9px;background:linear-gradient(160deg,#2a2350,#191333);
+    border:1px solid var(--line);box-shadow:0 20px 50px rgba(0,0,0,.55)}
+  .shotFrame img{display:block;width:100%;height:auto;border-radius:18px}
+  .shotTag{position:absolute;left:50%;transform:translateX(-50%);bottom:-11px;padding:5px 13px;border-radius:999px;
+    font-size:.6rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase;
+    background:#0d0b16;border:1px solid var(--line);color:var(--dim);white-space:nowrap}
+
+  .badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .b{padding:6px 13px;border-radius:999px;font-size:.68rem;font-weight:800;letter-spacing:.08em;
+    text-transform:uppercase;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--muted)}
+  .b.acc{background:#f2c14e1f;border-color:#f2c14e55;color:#f2c14e}
+  h1{font-size:clamp(2rem,6vw,3rem);font-weight:900;letter-spacing:-.03em;line-height:1.02}
+  .hook{margin-top:10px;font-size:1.02rem;font-weight:800;color:var(--accent)}
+  .lede{margin-top:16px;color:var(--muted);font-size:1rem;line-height:1.68}
+  .why{margin-top:14px;padding:14px 16px;border-radius:14px;border-left:3px solid var(--accent);
+    background:rgba(255,255,255,.035);color:var(--muted);font-size:.94rem;line-height:1.6}
+  .why b{color:var(--ink)}
+
+  .playRow{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:22px}
+  .play{display:inline-block;padding:17px 44px;border-radius:16px;font-weight:900;font-size:1.1rem;
+    color:#120f1e;background:linear-gradient(92deg,#ffb703,#ffd76a);text-decoration:none;
+    box-shadow:0 6px 0 rgba(0,0,0,.35),0 0 30px rgba(255,183,3,.22)}
+  .play:active{transform:translateY(2px);box-shadow:0 4px 0 rgba(0,0,0,.35)}
+  .note{color:var(--dim);font-size:.82rem;font-weight:600}
+
+  section{margin-top:46px}
+  h2{font-size:1.15rem;font-weight:900;letter-spacing:.01em;margin-bottom:14px}
+  .steps{list-style:none;display:grid;gap:10px}
+  .steps li{display:flex;gap:13px;align-items:flex-start;padding:13px 15px;border-radius:14px;
+    background:rgba(255,255,255,.035);border:1px solid var(--line);color:var(--muted);font-size:.95rem;line-height:1.55}
+  .steps .n{flex:0 0 26px;height:26px;border-radius:8px;background:#f2c14e22;border:1px solid #f2c14e55;
+    color:#f2c14e;font-weight:900;font-size:.8rem;display:grid;place-items:center}
+  .feats{list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+  .feats li{padding:13px 15px;border-radius:14px;background:rgba(255,255,255,.035);
+    border:1px solid var(--line);color:var(--muted);font-size:.93rem;line-height:1.5}
+  .metaBox{padding:16px 18px;border-radius:16px;background:linear-gradient(140deg,var(--card),var(--card2));
+    border:1px solid var(--line);color:var(--muted);font-size:.95rem;line-height:1.65}
+  .metaBox b{color:var(--ink)}
+
+  .nav{display:flex;gap:12px;margin-top:48px;flex-wrap:wrap}
+  .nav a{flex:1 1 220px;padding:15px 18px;border-radius:14px;background:rgba(255,255,255,.04);
+    border:1px solid var(--line);color:var(--ink);text-decoration:none;font-weight:800;font-size:.95rem}
+  .nav a span{display:block;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:4px}
+  .nav a.r{text-align:right}
+  .nav a:hover{border-color:rgba(255,255,255,.2)}
+  footer{margin-top:56px;padding-top:22px;border-top:1px solid var(--line);color:var(--dim);
+    font-size:.8rem;line-height:1.7;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../../">← All prototypes</a>
+
+  <div class="hero">
+    <div>
+      <div class="shotFrame">
+        <img src="../../assets/shots/overwind.png" width="645" height="1290"
+             alt="Overwind gameplay: a catapult with its arm cocked back, a heap of fallen lads banked against a castle wall, and one lad standing on the battlement">
+        <span class="shotTag">Actual gameplay</span>
+      </div>
+    </div>
+    <div>
+      <div class="badges">
+        <span class="b acc">Wave 9</span>
+        <span class="b">First 3D prototype</span>
+        <span class="b">30–60s sieges</span>
+      </div>
+      <h1>⚙️ Overwind</h1>
+      <p class="hook">The machine is the mistake</p>
+      <p class="lede">Hold to wind the windlass. The ratchet clicks faster, the rope creaks, and the frame starts to lift at the front. Drag while you hold to swing the turntable and set the arc, then let go and a ragdoll goes over the wall — or into it. Wind too far and the rope snaps: the arm flails, the crew scatter, and your lad is dumped three metres in front of the machine, where he stands up and looks at you.</p>
+      <p class="why"><b>Why it works:</b> most artillery games hand you three sliders and a clean parabola. Here there is no power slider — there is a machine, simulated, and the spread comes out of its real state: how wound the rope is, how far the frame has sunk into the mud, which way the wind is pushing. The aiming preview is an <b>ellipse of doubt</b>, not a dotted line, and it is computed by the same code that flies the lad, so it can be vague but it can never lie to you.</p>
+      <div class="playRow">
+        <a class="play" href="play">▶ PLAY NOW</a>
+        <span class="note">Runs in your browser · no install · works on phones · needs WebGL</span>
+      </div>
+    </div>
+  </div>
+
+  <section>
+    <h2>How to play</h2>
+    <ol class="steps">
+      <li><span class="n">1</span><span>Hold anywhere to wind. Drag while holding to swing the turntable and set the arc.</span></li>
+      <li><span class="n">2</span><span>Release to fire. More tension throws further — and widens the ellipse of where it might actually land.</span></li>
+      <li><span class="n">3</span><span>Wind into the red and the rope snaps. You are not damaged, you are embarrassed.</span></li>
+      <li><span class="n">4</span><span>Lads who fall short heap up at the foot of the wall. That heap is solid ground, and it is how the next one gets over.</span></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>What's in it</h2>
+    <ul class="feats">
+      <li>A simulated rig: windlass, rope, weighted arm, A-frame and three crew who are nearby when it goes wrong</li>
+      <li>Rope snaps, recoil hops, and a frame that sinks a little deeper into soft ground with every shot</li>
+      <li>The cone of doubt — an honest landing ellipse that widens with tension, wind, ground and payload</li>
+      <li>Fallen lads freeze and rasterise into the terrain, then slump into a climbable ramp</li>
+      <li>One lad for precision, or three as grapeshot that collide with each other in mid-air</li>
+      <li>Three emplacements — turf, mud and rock — that each betray you differently</li>
+      <li>Verlet ragdolls and instanced WebGL in a single self-contained file, no libraries</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>The measured bit</h2>
+    <div class="metaBox">The premise is that failure is productive, so it was measured rather than asserted. On virgin ground the lowest tension that gets a lad over the wall is <b>0.80</b>. Heap six short shots at the foot of that wall and the same measurement reads <b>0.68</b> — a 1.95&nbsp;m pile of your own casualties cuts the power you need by fifteen percent. Every number in the game was set from a headless-browser sweep like that one, including the pass count on the pile's angle-of-repose relaxation.</div>
+  </section>
+
+  <div class="nav">
+    <a href="../snapcatch/"><span>Previous</span>← 📸 Snapcatch</a>
+    <a class="r" href="../siege-pile/"><span>Related</span>⚔️ Siege Pile →</a>
+  </div>
+
+  <footer>
+    A single self-contained file — no engine, no libraries, no external requests.<br>
+    © 2026 TaterTot Games Labs
+  </footer>
+</div>
+</body>
+</html>
