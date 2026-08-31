@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Handoff — TaterTot Games Labs</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%81%3C/text%3E%3C/svg%3E">
+<style>
+  :root{ --ink:#1a120b; --bg:#2e1f14; --panel:#4a3524; --wood:#6b4e33; --bevel:#94714a;
+         --dim:#c9a06a; --parch:#e8d5a8; --bright:#f5ecd4; --radiant:#f0b541; }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:var(--bg);
+    touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;overscroll-behavior:none}
+  canvas{position:fixed;inset:0;display:block;touch-action:none;image-rendering:pixelated}
+  .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    pointer-events:none;opacity:0;transition:opacity .25s ease;z-index:10;text-align:center;
+    padding:calc(12px + env(safe-area-inset-top)) 14px calc(12px + env(safe-area-inset-bottom));
+    background:rgba(26,18,11,.9)}
+  .screen.show{pointer-events:auto;opacity:1}
+  h1{font-size:min(12vw,54px);font-weight:900;letter-spacing:.05em;color:var(--bright);margin:0;text-shadow:0 3px 0 var(--ink)}
+  h1 .sub{display:block;font-size:min(3.5vw,14px);letter-spacing:.22em;color:var(--radiant);margin-top:8px}
+  .tag{margin-top:14px;color:var(--dim);font-size:min(3.6vw,13.5px);line-height:1.6;max-width:min(92vw,440px)}
+  .tag b{color:var(--parch)}
+  .go{margin-top:20px;min-height:52px;padding:15px 38px;border:0;border-radius:6px;cursor:pointer;
+    font-family:inherit;font-weight:900;font-size:1.05rem;letter-spacing:.1em;color:var(--ink);
+    background:var(--radiant);box-shadow:0 4px 0 #8c5c16}
+  .go:active{transform:translateY(2px);box-shadow:0 2px 0 #8c5c16}
+  .stats{margin-top:18px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .st{background:var(--panel);border:1px solid var(--wood);border-radius:5px;padding:8px 12px;min-width:74px}
+  .st b{display:block;color:var(--radiant);font-size:1.2rem}
+  .st span{font-size:.55rem;letter-spacing:.12em;color:var(--dim)}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div class="screen show" id="title">
+  <h1>HANDOFF<span class="sub">THE ORDER IS THE GAME</span></h1>
+  <div class="tag">
+    A Kinfold combat probe. You never touch the fight — you decide the <b>order</b> before it starts.<br><br>
+    When one of yours falls it <b>hands something to whoever walks in next</b>: a charged skill, a
+    speed step, a shield — or nothing, if the pairing is wrong.<br><br>
+    Drag to reorder. Read the chain. Lock it in and watch.
+  </div>
+  <button class="go" id="startBtn" type="button">MUSTER</button>
+</div>
+
+<div class="screen" id="over">
+  <h1 id="overTitle">CLEARED<span class="sub" id="overSub"></span></h1>
+  <div class="stats">
+    <div class="st"><b id="sStage">1</b><span>STAGE</span></div>
+    <div class="st"><b id="sChain">0</b><span>HANDOFFS</span></div>
+    <div class="st"><b id="sBest">0</b><span>BEST RUN</span></div>
+  </div>
+  <div class="tag" id="overNote"></div>
+  <button class="go" id="againBtn" type="button">AGAIN</button>
+</div>
+
+<script>
+"use strict";
+/* ===========================================================================
+   HANDOFF — a Kinfold combat probe (TaterTot Games Labs)
+
+   Tests one question: is squad ORDER, made explicit and given consequences,
+   a good enough decision to be the whole game?
+
+   Kinfold's own K-045 measured the answer's premise: stage 5-1 loses 0/10 in
+   one squad order and averages 64% across all three, a 2.24x swing riding on
+   one pairing. Order already matters more than levels, stars or runes — and it
+   is resolved on a menu. This probe moves that decision to the front of the
+   fight and adds the thing that makes ordering a CHAIN rather than a lead
+   choice: when one of yours faints it hands something to the next in line.
+
+   K-003 survives literally — there is no input during the battle at all.
+
+   Handoffs (each earned by the PAIRING, never by luck):
+     VENGEANCE — next shares the fallen one's type       -> enters with a charged hit
+     MOMENTUM  — fell while the enemy was under half HP  -> enters a step faster
+     SHELTER   — next is strong into the enemy that won  -> enters with a shield
+   =========================================================================== */
+
+var C = {
+  ink:'#1a120b', bg:'#2e1f14', panel:'#4a3524', wood:'#6b4e33', bevel:'#94714a',
+  dim:'#c9a06a', parch:'#e8d5a8', bright:'#f5ecd4',
+  ember:'#e0684a', ember3:'#f09a6a', ember7:'#b8442a',
+  verdant:'#4a8c4a', verdant3:'#7ac160', verdant7:'#2e5c33',
+  tide:'#4a8cc9', tide3:'#85bce0', tide7:'#2a5a8c',
+  radiant:'#f0b541', radiant3:'#f8d878',
+  umbral:'#7a5cb0', umbral3:'#a88cd9', sky:'#8cc9e0', dusk:'#34547a'
+};
+var TYPE = [
+  { n:'EMBER',   c:C.ember,   l:C.ember3,   d:C.ember7 },
+  { n:'VERDANT', c:C.verdant, l:C.verdant3, d:C.verdant7 },
+  { n:'TIDE',    c:C.tide,    l:C.tide3,    d:C.tide7 },
+  { n:'RADIANT', c:C.radiant, l:C.radiant3, d:'#8c5c16' },
+  { n:'UMBRAL',  c:C.umbral,  l:C.umbral3,  d:'#443060' }
+];
+function typeMult(a, d) {
+  if (a < 3 && d < 3) {
+    if ((a + 1) % 3 === d) return 1.5;
+    if ((d + 1) % 3 === a) return 0.67;
+    return 1;
+  }
+  if ((a === 3 && d === 4) || (a === 4 && d === 3)) return 1.5;
+  return 1;
+}
+
+function RNG(seed) { this.s = (seed >>> 0) || 1; }
+RNG.prototype.next = function () {
+  this.s = (this.s + 0x6D2B79F5) >>> 0;
+  var t = this.s;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
+RNG.prototype.int = function (n) { return Math.floor(this.next() * n) % n; };
+
+var SPECIES = [
+  { id:'emberpup',  name:'EMBERPUP',  t:0, hp:52, atk:15, def:9,  spd:12, shape:'pup' },
+  { id:'cindermol', name:'CINDERMOL', t:0, hp:66, atk:13, def:14, spd:8,  shape:'mole' },
+  { id:'sprigling', name:'SPRIGLING', t:1, hp:56, atk:13, def:12, spd:10, shape:'sprout' },
+  { id:'thornbuck', name:'THORNBUCK', t:1, hp:62, atk:16, def:10, spd:11, shape:'buck' },
+  { id:'tidewisp',  name:'TIDEWISP',  t:2, hp:50, atk:14, def:9,  spd:15, shape:'wisp' },
+  { id:'brinecrab', name:'BRINECRAB', t:2, hp:70, atk:12, def:16, spd:7,  shape:'crab' },
+  { id:'sunmoth',   name:'SUNMOTH',   t:3, hp:54, atk:15, def:10, spd:13, shape:'moth' },
+  { id:'duskrat',   name:'DUSKRAT',   t:4, hp:58, atk:16, def:9,  spd:12, shape:'rat' }
+];
+function byId(id){ for(var i=0;i<SPECIES.length;i++) if(SPECIES[i].id===id) return SPECIES[i]; return SPECIES[0]; }
+
+// ---------------------------------------------------------------- model
+var HO_NONE = 0, HO_VENGEANCE = 1, HO_MOMENTUM = 2, HO_SHELTER = 3;
+var HO_NAME = ['', 'VENGEANCE', 'MOMENTUM', 'SHELTER'];
+var HO_BLURB = ['', 'enters with a charged hit', 'enters a step faster', 'enters behind a shield'];
+
+function Mon(sp, level) {
+  var m = 1 + 0.08 * (level - 1);
+  this.sp = sp; this.level = level;
+  this.maxHp = Math.round(sp.hp * m * 1.6); this.hp = this.maxHp;
+  this.atk = Math.round(sp.atk * m); this.def = Math.round(sp.def * m); this.spd = Math.round(sp.spd * m);
+  this.charged = false; this.hasted = false; this.shield = 0;
+  this.flash = 0; this.bob = Math.random() * 6.28;
+}
+Mon.prototype.alive = function () { return this.hp > 0; };
+Mon.prototype.frac = function () { return this.maxHp <= 0 ? 0 : this.hp / this.maxHp; };
+Mon.prototype.reset = function () { this.hp = this.maxHp; this.charged=false; this.hasted=false; this.shield=0; };
+
+/** The whole design, in one function: which handoff does this pairing earn? */
+function handoffFor(fallen, next, killer, enemyFracAtFall) {
+  if (!fallen || !next || !killer) return HO_NONE;
+  if (next.sp.t === fallen.sp.t) return HO_VENGEANCE;
+  if (enemyFracAtFall < 0.5) return HO_MOMENTUM;
+  if (typeMult(next.sp.t, killer.sp.t) > 1.2) return HO_SHELTER;
+  return HO_NONE;
+}
+function applyHandoff(mon, kind) {
+  if (kind === HO_VENGEANCE) mon.charged = true;
+  else if (kind === HO_MOMENTUM) mon.hasted = true;
+  else if (kind === HO_SHELTER) mon.shield = Math.round(mon.maxHp * 0.28);
+}
+
+function hit(att, def, R) {
+  var mult = typeMult(att.sp.t, def.sp.t);
+  var variance = 0.9 + R.next() * 0.1;
+  var power = att.charged ? 62 : 44;
+  var dmg = Math.max(1, Math.round(att.atk * power / (def.def + 30) * mult * variance * 1.6));
+  att.charged = false;
+  if (def.shield > 0) { var a = Math.min(def.shield, dmg); def.shield -= a; dmg -= a; }
+  def.hp = Math.max(0, def.hp - dmg);
+  return { dmg: dmg, mult: mult };
+}
+
+/**
+ * Resolve a full 3v3 from a given order. Pure and seeded — the live battle and
+ * the forecast both call this, so what the card promises is what happens.
+ */
+function resolve(order, enemy, seed, useHandoffs) {
+  var R = new RNG(seed);
+  var team = [], en = [];
+  for (var i=0;i<order.length;i++){ var m = order[i]; m.reset(); team.push(m); }
+  for (var j=0;j<enemy.length;j++){ enemy[j].reset(); en.push(enemy[j]); }
+  var pi = 0, fi = 0, guard = 0, chain = [], log = [];
+  while (guard++ < 400) {
+    var p = team[pi], f = en[fi];
+    if (!p || !f) break;
+    var pFirst = p.spd + (p.hasted ? 6 : 0) >= f.spd ? R.next() < 0.74 : R.next() < 0.26;
+    for (var k = 0; k < 2; k++) {
+      var byP = k === 0 ? pFirst : !pFirst;
+      var att = byP ? p : f, dfn = byP ? f : p;
+      if (!att.alive() || !dfn.alive()) continue;
+      var r = hit(att, dfn, R);
+      log.push({ byP: byP, att: att, dfn: dfn, dmg: r.dmg, mult: r.mult });
+      if (!dfn.alive()) {
+        if (byP) {
+          var nf = -1; for (var a=0;a<en.length;a++) if (en[a].alive()) { nf=a; break; }
+          log.push({ faint: true, byP: true, who: dfn });
+          if (nf < 0) return { won: true, chain: chain, log: log };
+          fi = nf;
+        } else {
+          var np = -1; for (var b=pi+1;b<team.length;b++) if (team[b].alive()) { np=b; break; }
+          log.push({ faint: true, byP: false, who: dfn });
+          if (np < 0) return { won: false, chain: chain, log: log };
+          var kind = useHandoffs ? handoffFor(team[pi], team[np], en[fi], en[fi].frac()) : HO_NONE;
+          if (kind !== HO_NONE) { applyHandoff(team[np], kind); chain.push({ from: team[pi], to: team[np], kind: kind }); }
+          log.push({ handoff: true, kind: kind, to: team[np] });
+          pi = np;
+        }
+        break;
+      }
+    }
+  }
+  return { won: false, chain: chain, log: log };
+}
+
+/** Forecast a pairing for the card — the verdict band from K-045. */
+function verdict(mine, theirs) {
+  var a = typeMult(mine.sp.t, theirs.sp.t), b = typeMult(theirs.sp.t, mine.sp.t);
+  if (a > 1.2 && b <= 1.05) return { t:'STRONG', c:C.verdant3 };
+  if (b > 1.2 && a <= 1.05) return { t:'OUTMATCHED', c:C.ember };
+  if (a > 1.2 && b > 1.2) return { t:'TRADE', c:C.radiant };
+  return { t:'EVEN', c:C.dim };
+}
+
+// ---------------------------------------------------------------- state
+var ST_TITLE=0, ST_ORDER=1, ST_FIGHT=2, ST_OVER=3;
+var state = ST_TITLE;
+var stage = 1, best = 0, chainCount = 0;
+var rng = new RNG(1);
+var roster = [], order = [], enemy = [], seed = 1;
+var result = null, playIdx = 0, playT = 0, narration = [], shakeT = 0;
+var liveTeam = null, liveEn = null, livePi = 0, liveFi = 0, lastHandoff = null, handoffT = 0;
+var drag = { i: -1, y: 0, active: false };
+
+try { best = parseInt(localStorage.getItem('handoff.best') || '0', 10) || 0; } catch (e) {}
+
+function say(l){ narration.push(l); if (narration.length>2) narration.shift(); }
+
+function startRun() {
+  rng = new RNG(Date.now() & 0xffffff);
+  stage = 1; chainCount = 0;
+  roster = [ new Mon(byId('emberpup'), 6), new Mon(byId('sprigling'), 6), new Mon(byId('tidewisp'), 6) ];
+  order = roster.slice();
+  buildStage();
+  document.getElementById('title').classList.remove('show');
+  document.getElementById('over').classList.remove('show');
+}
+
+function buildStage() {
+  var lv = 5 + stage * 2;
+  enemy = [];
+  for (var i = 0; i < 3; i++) enemy.push(new Mon(SPECIES[rng.int(SPECIES.length)], lv));
+  seed = (rng.s ^ (stage * 2654435761)) >>> 0;
+  for (var j=0;j<order.length;j++) order[j].reset();
+  state = ST_ORDER;
+  narration = [];
+}
+
+function lockIn() {
+  result = resolve(order.slice(), enemy, seed, true);
+  chainCount += result.chain.length;
+  // live playback state
+  liveTeam = order.slice(); liveEn = enemy.slice();
+  for (var i=0;i<liveTeam.length;i++) liveTeam[i].reset();
+  for (var j=0;j<liveEn.length;j++) liveEn[j].reset();
+  livePi = 0; liveFi = 0; playIdx = 0; playT = 0;
+  lastHandoff = null; handoffT = 0;
+  narration = [];
+  state = ST_FIGHT;
+}
+
+function endRun(won) {
+  state = ST_OVER;
+  if (stage - 1 > best) { best = stage - 1; try { localStorage.setItem('handoff.best', String(best)); } catch (e) {} }
+  document.getElementById('sStage').textContent = String(stage);
+  document.getElementById('sChain').textContent = String(chainCount);
+  document.getElementById('sBest').textContent = String(best);
+  document.getElementById('overTitle').firstChild.nodeValue = won ? 'CLEARED' : 'HELD';
+  document.getElementById('overSub').textContent = won ? 'the chain held' : 'the chain broke';
+  var cmp = compareOrders();
+  document.getElementById('overNote').innerHTML =
+    'On this last stage the <b>best order won ' + cmp.best + '/12</b> and the <b>worst won ' +
+    cmp.worst + '/12</b>. That gap is the whole proposal.';
+  document.getElementById('over').classList.add('show');
+}
+
+/** The measurement the probe exists for: how much does order actually swing it? */
+function compareOrders() {
+  var perms = [[0,1,2],[0,2,1],[1,0,2],[1,2,0],[2,0,1],[2,1,0]];
+  var bestW = -1, worstW = 99;
+  for (var p = 0; p < perms.length; p++) {
+    var wins = 0;
+    for (var s = 0; s < 12; s++) {
+      var ord = [roster[perms[p][0]], roster[perms[p][1]], roster[perms[p][2]]];
+      if (resolve(ord, enemy, (seed + s * 7919) >>> 0, true).won) wins++;
+    }
+    if (wins > bestW) bestW = wins;
+    if (wins < worstW) worstW = wins;
+  }
+  for (var q=0;q<roster.length;q++) roster[q].reset();
+  return { best: bestW, worst: worstW };
+}
+
+// ---------------------------------------------------------------- playback
+var STEP = 0.42;
+function stepPlayback(dt) {
+  playT += dt;
+  if (handoffT > 0) handoffT = Math.max(0, handoffT - dt);
+  if (playT < STEP) return;
+  playT = 0;
+  if (!result || playIdx >= result.log.length) {
+    var won = result && result.won;
+    if (won) { stage++; buildStage(); } else { endRun(false); }
+    return;
+  }
+  var e = result.log[playIdx++];
+  if (e.handoff) {
+    if (e.kind !== HO_NONE) { lastHandoff = e; handoffT = 1.1; say(HO_NAME[e.kind] + '! ' + e.to.sp.name + ' ' + HO_BLURB[e.kind] + '.'); }
+    else say(e.to.sp.name + ' walks in cold.');
+    return;
+  }
+  if (e.faint) { say(e.who.sp.name + ' fainted!'); e.who.hp = 0; return; }
+  // apply to the live mirrors so the bars move with the narration
+  var att = e.att, dfn = e.dfn;
+  dfn.hp = Math.max(0, dfn.hp - e.dmg);
+  dfn.flash = 1; shakeT = 0.16;
+  say(att.sp.name + (e.mult > 1.2 ? ' — super effective!' : (e.mult < 0.9 ? ' — not very effective' : ' strikes!')));
+  if (!liveEn[liveFi].alive()) { for (var a=0;a<liveEn.length;a++) if (liveEn[a].alive()) { liveFi=a; break; } }
+  if (!liveTeam[livePi].alive()) { for (var b=0;b<liveTeam.length;b++) if (liveTeam[b].alive()) { livePi=b; break; } }
+}
+
+// ---------------------------------------------------------------- render
+var VW = 270, VH = 480;
+var cv = document.getElementById('cv');
+var off=null, octx=null, ctx=null, W=1,H=1,DPR=1, scale=1, ox=0, oy=0, resizing=false;
+
+function initCanvas() {
+  off = document.createElement('canvas'); off.width=VW; off.height=VH;
+  octx = off.getContext('2d'); ctx = cv.getContext('2d');
+  if (!octx || !ctx) return false;
+  octx.imageSmoothingEnabled = false; ctx.imageSmoothingEnabled = false;
+  return true;
+}
+function resize() {
+  if (resizing) return; resizing = true;
+  try {
+    var iw = window.innerWidth || 0, ih = window.innerHeight || 0;
+    if (iw < 2 || ih < 2) return;
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    W = iw; H = ih;
+    cv.width = Math.round(W*DPR); cv.height = Math.round(H*DPR);
+    // CRITICAL: a canvas is a replaced element — pin the CSS size or it lays out
+    // at its attribute size (W*DPR), double-size on every phone.
+    cv.style.width = W+'px'; cv.style.height = H+'px';
+    if (ctx) ctx.imageSmoothingEnabled = false;
+    scale = Math.min(cv.width / VW, cv.height / VH);   // fit, not integer-only
+    ox = Math.floor((cv.width - VW*scale)/2); oy = Math.floor((cv.height - VH*scale)/2);
+  } finally { resizing = false; }
+}
+function px(x,y,w,h,col){ octx.fillStyle=col; octx.fillRect(x|0,y|0,w|0,h|0); }
+function frame(x,y,w,h,fill,edge){ px(x,y,w,h,edge); px(x+1,y+1,w-2,h-2,fill); }
+function text(s,x,y,col,size,align){
+  octx.fillStyle=col; octx.font='900 '+(size||8)+'px ui-monospace, Menlo, Consolas, monospace';
+  octx.textAlign=align||'left'; octx.textBaseline='top'; octx.fillText(s,x|0,y|0);
+}
+function drawMon(m,cx,cy,s,facingLeft){
+  if(!m) return;
+  var t=TYPE[m.sp.t];
+  var bob=Math.sin(now*0.0026+m.bob)*(s*0.55);
+  var y=cy+bob, body = m.flash>0 && (Math.floor(now/60)%2===0) ? C.bright : t.c;
+  octx.globalAlpha=0.3; px(cx-s*2.2, cy+s*1.9, s*4.4, s*0.7, C.ink); octx.globalAlpha=1;
+  var w=s*3.4, h=s*2.6;
+  px(cx-w/2-1, y-h/2-1, w+2, h+2, C.ink);
+  px(cx-w/2, y-h/2, w, h, body);
+  px(cx-w/2, y+h/2-s*0.7, w, s*0.7, t.d);
+  px(cx-w/2+1, y-h/2+1, w-2, s*0.5, t.l);
+  var sp=m.sp.shape;
+  if(sp==='pup'||sp==='rat'){ px(cx-w/2+1,y-h/2-s*0.9,s*0.8,s*0.9,body); px(cx+w/2-s*0.8-1,y-h/2-s*0.9,s*0.8,s*0.9,body); }
+  else if(sp==='sprout'){ px(cx-s*0.3,y-h/2-s*1.1,s*0.6,s*1.1,C.verdant3); px(cx-s*0.9,y-h/2-s*0.8,s*0.6,s*0.4,C.verdant3); }
+  else if(sp==='buck'){ px(cx-s*1.2,y-h/2-s*1.2,s*0.4,s*1.2,t.d); px(cx+s*0.8,y-h/2-s*1.2,s*0.4,s*1.2,t.d); }
+  else if(sp==='wisp'||sp==='moth'){ px(cx-w/2-s*0.9,y-s*0.4,s*0.9,s*1.1,t.l); px(cx+w/2,y-s*0.4,s*0.9,s*1.1,t.l); }
+  else if(sp==='crab'){ px(cx-w/2-s*0.8,y+s*0.2,s*0.8,s*0.8,t.d); px(cx+w/2,y+s*0.2,s*0.8,s*0.8,t.d); }
+  else if(sp==='mole'){ px(facingLeft?cx-w/2-s*0.7:cx+w/2, y, s*0.7, s*0.6, t.l); }
+  var ex=facingLeft?cx-s*0.9:cx+s*0.3;
+  px(ex,y-s*0.4,s*0.5,s*0.6,C.ink); px(ex+s*0.9,y-s*0.4,s*0.5,s*0.6,C.ink);
+  if (m.shield > 0) { octx.globalAlpha=0.5; px(cx-w/2-2, y-h/2-2, w+4, h+4, C.tide3); octx.globalAlpha=1; }
+}
+function chip(x,y,w,h,label,col,fill){ frame(x,y,w,h,fill||C.panel,C.ink); text(label,x+w/2,y+(h-8)/2,col||C.parch,8,'center'); }
+
+// ---- ORDER screen: the game
+function renderOrder() {
+  px(0,0,VW,VH,C.bg);
+  px(0,0,VW,26,C.panel); px(0,26,VW,1,C.ink);
+  text('STAGE ' + stage, 8, 9, C.radiant, 10);
+  text('SET YOUR ORDER', VW-8, 9, C.dim, 8, 'right');
+
+  // enemy line
+  text('THEY SEND', 10, 34, C.dim, 8);
+  for (var e = 0; e < enemy.length; e++) {
+    var ex = 12 + e * 84;
+    frame(ex, 44, 76, 50, C.panel, e === 0 ? C.radiant : C.ink);
+    if (e === 0) text('LEADS', ex+38, 46, C.radiant, 6, 'center');
+    drawMon(enemy[e], ex + 38, 68, 5, true);
+    text(enemy[e].sp.name.slice(0,8), ex+38, 84, C.parch, 6, 'center');
+  }
+
+  text('YOUR ORDER  —  DRAG TO SWAP', 10, 102, C.dim, 8);
+  for (var i = 0; i < order.length; i++) {
+    var m = order[i];
+    var y = 114 + i * 62;
+    var dragging = drag.active && drag.i === i;
+    if (dragging) y = drag.y - 26;
+    var edge = i === 0 ? C.radiant : C.ink;
+    frame(8, y, VW-16, 56, dragging ? C.wood : C.panel, edge);
+    drawMon(m, 40, y + 28, 7, false);
+    text(m.sp.name, 74, y + 8, C.bright, 9);
+    text(TYPE[m.sp.t].n + '  L' + m.level, 74, y + 20, TYPE[m.sp.t].l, 7);
+    // slot label + verdict against the enemy it will actually meet
+    text(i === 0 ? 'LEADS' : (i === 1 ? '2ND' : '3RD'), VW-14, y + 6, C.dim, 7, 'right');
+    var opp = enemy[Math.min(i, enemy.length-1)];
+    if (opp) {
+      var v = verdict(m, opp);
+      text(v.t, VW-14, y + 20, v.c, 8, 'right');
+    }
+    // what this slot hands to the next one
+    if (i < order.length - 1) {
+      var kind = handoffFor(m, order[i+1], enemy[0], 0.6);
+      var hc = kind === HO_NONE ? C.wood : C.radiant3;
+      text(kind === HO_NONE ? 'hands over nothing' : ('hands ' + HO_NAME[kind]), 74, y + 40, hc, 7);
+      px(20, y + 56, 2, 6, kind === HO_NONE ? C.wood : C.radiant3);
+    }
+  }
+  // The chain, read out end to end — this is the decision, so it gets the space.
+  var cy = 114 + 3 * 62 + 8;
+  frame(8, cy, VW-16, 52, C.panel, C.ink);
+  text('THE CHAIN', 14, cy + 4, C.dim, 7);
+  var linked = 0;
+  for (var c = 0; c < order.length; c++) {
+    var lx = 14 + c * 84;
+    text(order[c].sp.name.slice(0, 8), lx, cy + 17, TYPE[order[c].sp.t].l, 7);
+    if (c < order.length - 1) {
+      var kk = handoffFor(order[c], order[c+1], enemy[0], 0.6);
+      if (kk !== HO_NONE) linked++;
+      text('>', lx + 72, cy + 17, kk === HO_NONE ? C.wood : C.radiant3, 8);
+      text(kk === HO_NONE ? '--' : HO_NAME[kk].slice(0, 4), lx + 22, cy + 29,
+           kk === HO_NONE ? C.wood : C.radiant3, 6);
+    }
+  }
+  text(linked === 0 ? 'no links — reorder to build one'
+                    : linked + ' link' + (linked === 1 ? '' : 's') + ' in this order',
+       14, cy + 40, linked === 0 ? C.wood : C.radiant3, 7);
+
+  chip(8, VH - 76, VW-16, 40, 'LOCK IN AND WATCH', C.ink, C.radiant);
+}
+
+// ---- FIGHT screen
+function renderFight() {
+  px(0,0,VW,VH,C.dusk);
+  px(0,0,VW,150,C.sky); px(0,138,VW,14,C.verdant7);
+  px(0,150,VW,VH-150,C.bg); px(0,150,VW,3,C.ink);
+  var sx = shakeT>0 ? (Math.random()-0.5)*3 : 0;
+  octx.save(); octx.translate(sx|0,0);
+  drawMon(liveEn && liveEn[liveFi], 186, 116, 8, true);
+  drawMon(liveTeam && liveTeam[livePi], 82, 214, 11, false);
+  octx.restore();
+
+  drawBar(liveEn && liveEn[liveFi], 140, 26, 118);
+  drawBar(liveTeam && liveTeam[livePi], 12, 246, 118);
+
+  frame(10,8,60,14,C.panel,C.ink); text('STAGE '+stage, 40, 11, C.parch, 8, 'center');
+
+  // the queue — who is next and what they will inherit
+  text('IN LINE', 10, 286, C.dim, 7);
+  for (var i = 0; i < (liveTeam?liveTeam.length:0); i++) {
+    var m = liveTeam[i];
+    var x = 10 + i * 84;
+    var isNow = i === livePi;
+    frame(x, 298, 76, 30, isNow ? C.wood : C.panel, m.alive() ? (isNow?C.radiant:C.ink) : C.ember7);
+    text(m.sp.name.slice(0,8), x+38, 302, m.alive()?C.parch:C.wood, 7, 'center');
+    var tagline = m.charged ? 'CHARGED' : (m.hasted ? 'FAST' : (m.shield>0 ? 'SHIELD' : (m.alive()?'':'DOWN')));
+    text(tagline, x+38, 314, m.charged||m.hasted||m.shield>0 ? C.radiant3 : C.wood, 7, 'center');
+  }
+
+  if (handoffT > 0 && lastHandoff) {
+    var a = Math.min(1, handoffT / 0.3);
+    octx.globalAlpha = 0.9 * a;
+    frame(28, 200, VW-56, 34, C.radiant, C.bright);
+    text(HO_NAME[lastHandoff.kind], VW/2, 206, C.ink, 12, 'center');
+    text(HO_BLURB[lastHandoff.kind], VW/2, 220, C.ink, 7, 'center');
+    octx.globalAlpha = 1;
+  }
+  drawNarration();
+}
+function drawBar(m,x,y,w){
+  if(!m) return;
+  frame(x,y,w,12,C.panel,C.ink);
+  text(m.sp.name,x+3,y+2,C.parch,7);
+  var bw=w-6,f=m.frac();
+  px(x+3,y+8,bw,2,C.ink);
+  px(x+3,y+8,Math.max(0,Math.round(bw*f)),2, f>0.5?C.verdant3:(f>0.25?C.radiant:C.ember));
+  text('L'+m.level,x+w-3,y+2,C.dim,7,'right');
+}
+function drawNarration(){
+  var y=VH-96,h=56;
+  frame(8,y,VW-16,h,C.panel,C.ink); px(10,y+2,VW-20,1,C.bevel);
+  for(var i=0;i<narration.length;i++) text(narration[i],15,y+12+i*16,i===narration.length-1?C.bright:C.dim,9);
+}
+
+function render() {
+  if (!octx) return;
+  if (state === ST_ORDER) renderOrder();
+  else if (state === ST_FIGHT) renderFight();
+  else { px(0,0,VW,VH,C.bg); }
+  ctx.fillStyle = C.ink; ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.drawImage(off,0,0,VW,VH,ox,oy,VW*scale,VH*scale);
+}
+
+// ---------------------------------------------------------------- update
+function update(dt) {
+  if (shakeT>0) shakeT = Math.max(0, shakeT-dt);
+  var all = [].concat(order||[], enemy||[]);
+  for (var i=0;i<all.length;i++) if (all[i]) all[i].flash = Math.max(0, all[i].flash - dt*4);
+  if (state === ST_FIGHT) stepPlayback(dt);
+}
+
+// ---------------------------------------------------------------- input
+function slotAt(y) {
+  for (var i = 0; i < order.length; i++) { var sy = 114 + i*62; if (y >= sy && y <= sy + 56) return i; }
+  return -1;
+}
+function onDown(x, y) {
+  if (state !== ST_ORDER) return;
+  if (y >= VH - 76 && y <= VH - 36 && x >= 8 && x <= VW-8) { lockIn(); return; }
+  var i = slotAt(y);
+  if (i >= 0) { drag.i = i; drag.active = true; drag.y = y; }
+}
+function onMove(x, y) { if (drag.active) drag.y = y; }
+function onUp() {
+  if (!drag.active) return;
+  var target = slotAt(drag.y);
+  if (target >= 0 && target !== drag.i) {
+    var m = order.splice(drag.i, 1)[0];
+    order.splice(target, 0, m);
+  }
+  drag.active = false; drag.i = -1;
+}
+
+// ---------------------------------------------------------------- loop
+var last=0, now=0, frames=0, frameErrs=0;
+function tick(ts){
+  try {
+    now = ts || (last+16.7);
+    var dt = last ? Math.min(0.05,(now-last)/1000) : 0.016;
+    last = now; frames++;
+    try { update(dt); } catch(e){ frameErrs++; if(frameErrs<4) console.error('[handoff] update:', e); }
+    try { render(); } catch(e2){ frameErrs++; if(frameErrs<4) console.error('[handoff] render:', e2); }
+  } finally { if (typeof requestAnimationFrame==='function') requestAnimationFrame(tick); }
+}
+
+function toVirtual(cx, cy) {
+  var r = cv.getBoundingClientRect();
+  return { x: ((cx-r.left)*(cv.width/r.width) - ox)/scale, y: ((cy-r.top)*(cv.height/r.height) - oy)/scale };
+}
+function evPos(e){ var t=(e.touches&&e.touches[0])||(e.changedTouches&&e.changedTouches[0])||e; return toVirtual(t.clientX,t.clientY); }
+cv.addEventListener('mousedown', function(e){ var v=evPos(e); onDown(v.x,v.y); });
+window.addEventListener('mousemove', function(e){ var v=evPos(e); onMove(v.x,v.y); });
+window.addEventListener('mouseup', onUp);
+cv.addEventListener('touchstart', function(e){ e.preventDefault(); var v=evPos(e); onDown(v.x,v.y); }, {passive:false});
+window.addEventListener('touchmove', function(e){ e.preventDefault(); var v=evPos(e); onMove(v.x,v.y); }, {passive:false});
+window.addEventListener('touchend', function(e){ e.preventDefault(); onUp(); }, {passive:false});
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', function(){ setTimeout(resize,120); });
+document.getElementById('startBtn').addEventListener('click', startRun);
+document.getElementById('againBtn').addEventListener('click', startRun);
+
+(function boot(){
+  resize();
+  if (!initCanvas()) {
+    document.body.innerHTML = '<div style="color:#e8d5a8;font:600 15px system-ui;padding:30px;text-align:center">' +
+      '<h2>Canvas unavailable</h2><p><a style="color:#f0b541" href="../../">Back to the arena</a></p></div>';
+    return;
+  }
+  resize();
+  if (typeof requestAnimationFrame==='function') requestAnimationFrame(tick);
+})();
+
+if (typeof window !== 'undefined') {
+  window.__ho = {
+    update:update, render:render, resize:resize, startRun:startRun, lockIn:lockIn,
+    resolve:resolve, handoffFor:handoffFor, typeMult:typeMult, compareOrders:compareOrders,
+    get state(){return state;}, get stage(){return stage;}, get order(){return order;},
+    get roster(){return roster;}, get enemy(){return enemy;}, get result(){return result;},
+    get chainCount(){return chainCount;}, get frames(){return frames;}, get frameErrs(){return frameErrs;},
+    setOrder:function(idx){ order = [roster[idx[0]], roster[idx[1]], roster[idx[2]]]; },
+    ST:{TITLE:ST_TITLE,ORDER:ST_ORDER,FIGHT:ST_FIGHT,OVER:ST_OVER},
+    HO:{NONE:HO_NONE,VENGEANCE:HO_VENGEANCE,MOMENTUM:HO_MOMENTUM,SHELTER:HO_SHELTER},
+    /** Order-swing measurement across many seeds — the probe's actual result. */
+    swing:function(trials){
+      var perms=[[0,1,2],[0,2,1],[1,0,2],[1,2,0],[2,0,1],[2,1,0]], out=[];
+      for(var p=0;p<perms.length;p++){
+        var w=0;
+        for(var s=0;s<(trials||24);s++){
+          var ord=[roster[perms[p][0]],roster[perms[p][1]],roster[perms[p][2]]];
+          if(resolve(ord,enemy,(seed+s*7919)>>>0,true).won) w++;
+        }
+        out.push({order:perms[p].join(''), wins:w, of:(trials||24)});
+      }
+      for(var q=0;q<roster.length;q++) roster[q].reset();
+      return out;
+    },
+    virtual:{W:VW,H:VH}
+  };
+}
+</script>
+<script src="/analytics.js" defer></script>
+</body>
+</html>

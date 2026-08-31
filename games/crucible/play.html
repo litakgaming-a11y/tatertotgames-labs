@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Crucible — TaterTot Games Labs</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%A5%3C/text%3E%3C/svg%3E">
+<style>
+  :root{ --ink:#1a120b; --bg:#2e1f14; --panel:#4a3524; --wood:#6b4e33; --bevel:#94714a;
+         --dim:#c9a06a; --parch:#e8d5a8; --bright:#f5ecd4; --radiant:#f0b541; --ember:#e0684a; }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:var(--bg);
+    touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;overscroll-behavior:none}
+  canvas{position:fixed;inset:0;display:block;touch-action:none;image-rendering:pixelated}
+  .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    pointer-events:none;opacity:0;transition:opacity .25s ease;z-index:10;text-align:center;
+    padding:calc(12px + env(safe-area-inset-top)) 14px calc(12px + env(safe-area-inset-bottom));
+    background:rgba(26,18,11,.9)}
+  .screen.show{pointer-events:auto;opacity:1}
+  h1{font-size:min(12vw,52px);font-weight:900;letter-spacing:.05em;color:var(--bright);margin:0;text-shadow:0 3px 0 var(--ink)}
+  h1 .sub{display:block;font-size:min(3.4vw,14px);letter-spacing:.22em;color:var(--radiant);margin-top:8px}
+  .tag{margin-top:14px;color:var(--dim);font-size:min(3.6vw,13.5px);line-height:1.6;max-width:min(92vw,440px)}
+  .tag b{color:var(--parch)}
+  .go{margin-top:20px;min-height:52px;padding:15px 38px;border:0;border-radius:6px;cursor:pointer;
+    font-family:inherit;font-weight:900;font-size:1.05rem;letter-spacing:.1em;color:var(--ink);
+    background:var(--radiant);box-shadow:0 4px 0 #8c5c16}
+  .go:active{transform:translateY(2px);box-shadow:0 2px 0 #8c5c16}
+  .stats{margin-top:18px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .st{background:var(--panel);border:1px solid var(--wood);border-radius:5px;padding:8px 12px;min-width:78px}
+  .st b{display:block;color:var(--radiant);font-size:1.2rem}
+  .st span{font-size:.55rem;letter-spacing:.12em;color:var(--dim)}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div class="screen show" id="title">
+  <h1>CRUCIBLE<span class="sub">STOP BEFORE IT CRACKS</span></h1>
+  <div class="tag">
+    A Kinfold economy probe. Capture charms are the game's real scarcity — and today they come from
+    tapping a recipe.<br><br>
+    Here you <b>feed cores in one at a time</b>. The pot tempers the whole batch: every core becomes a
+    charm at whatever tier you reach, so a hotter pot is worth more per core — and past the line,
+    every core you add might crack it.<br><br>
+    <b>You can never lose what you put in</b> — a crack banks the batch at the last tier you passed.
+    The only thing at stake is how much you leave on the table.
+  </div>
+  <button class="go" id="startBtn" type="button">LIGHT IT</button>
+</div>
+
+<div class="screen" id="over">
+  <h1>SHIFT OVER<span class="sub" id="overSub">the fire goes out</span></h1>
+  <div class="stats">
+    <div class="st"><b id="sVal">0</b><span>CHARM VALUE</span></div>
+    <div class="st"><b id="sMade">0</b><span>CHARMS</span></div>
+    <div class="st"><b id="sCracks">0</b><span>CRACKS</span></div>
+    <div class="st"><b id="sBest">0</b><span>BEST</span></div>
+  </div>
+  <div class="tag" id="overNote"></div>
+  <button class="go" id="againBtn" type="button">AGAIN</button>
+</div>
+
+<script>
+"use strict";
+/* ===========================================================================
+   CRUCIBLE — a Kinfold economy probe (TaterTot Games Labs)
+
+   Tests one question: is push-your-luck crafting EV-positive enough that a
+   player would rather play it than tap a flat recipe?
+
+   Kinfold's K-004 is explicit — there is no energy, and the scarcity is capture
+   items. That makes the Workshop the one building the whole free loop bottlenecks
+   on, and it is currently a menu. This probe attaches a toy to it.
+
+   The shape is chosen to satisfy K-018 (no fail states, nothing confiscated):
+   there is NO downside limb. A crack banks the last tier you passed, so the
+   worst outcome of greed is a smaller reward, never a loss. If that still reads
+   as punishing in playtest, the concept is wrong and should be dropped rather
+   than softened, because softening it further removes the tension entirely.
+
+   __cru.evTest() is the falsifiable bit: a naive stop-at-the-line policy must
+   beat the flat recipe per core, or the toy is a tax dressed as a minigame.
+   =========================================================================== */
+
+var C = {
+  ink:'#1a120b', bg:'#2e1f14', panel:'#4a3524', wood:'#6b4e33', bevel:'#94714a',
+  dim:'#c9a06a', parch:'#e8d5a8', bright:'#f5ecd4',
+  ember:'#e0684a', ember3:'#f09a6a', ember7:'#b8442a', ember9:'#7a2618', flame:'#f8cc8c',
+  radiant:'#f0b541', radiant3:'#f8d878', radiant1:'#fcf0b4',
+  tide:'#4a8cc9', tide3:'#85bce0', verdant3:'#7ac160'
+};
+
+function RNG(seed) { this.s = (seed >>> 0) || 1; }
+RNG.prototype.next = function () {
+  this.s = (this.s + 0x6D2B79F5) >>> 0;
+  var t = this.s;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
+
+// ---------------------------------------------------------------- model
+// Kinfold ships 3 charm tiers (CaptureTierRate 0.30/0.50/0.75). The probe adds
+// two more so the push has somewhere to go — if the toy is adopted, tiers 4-5
+// are the part that needs a K-decision, not the toy.
+var TIERS = [
+  { n:'CRUDE',    rate:0.30, cores:1 },
+  { n:'FIRM',     rate:0.50, cores:2 },
+  { n:'TRUE',     rate:0.75, cores:3 },
+  { n:'RADIANT',  rate:0.88, cores:5 },
+  { n:'PERFECT',  rate:0.95, cores:8 }
+];
+var SAFE_HEAT = 62;            // the shimmer line — below this a feed can never crack
+var HEAT_PER  = 17;            // heat added per core (plus a little noise)
+var CRACK_K   = 0.021;         // crack chance per point of heat over the line
+
+function crackChance(heat) { return heat <= SAFE_HEAT ? 0 : Math.min(0.92, (heat - SAFE_HEAT) * CRACK_K); }
+function tierOfCores(fed) {
+  var t = 0;
+  for (var i = 0; i < TIERS.length; i++) if (fed >= TIERS[i].cores) t = i;
+  return fed >= TIERS[0].cores ? t : -1;
+}
+/**
+ * Charm value in expected captures.
+ *
+ * The pot tempers a BATCH: every core you committed becomes a charm at whatever
+ * tier the pot reached. This is the fix for a real collision the EV gate caught.
+ * Kinfold's WorkshopEngine prices higher tiers to be per-core WORSE on purpose —
+ * "higher tiers are not a better deal, they are insurance" — so value per core
+ * halves as tiers rise (0.030 -> 0.020 -> 0.0125). Under that curve a toy that
+ * pushes toward higher tiers is EV-NEGATIVE by construction, and the first
+ * version measured 10.05 against a flat recipe's 12.00: a tax dressed as a
+ * minigame. Batching makes per-core value RISE with tier, so pushing is a real
+ * gamble rather than a slow way to lose, and it leaves the recipe path's
+ * insurance pricing untouched.
+ */
+function valueOfBatch(cores, t) { return t < 0 ? 0 : cores * TIERS[t].rate; }
+/** Cores that were committed when tier t was last reached — what a crack banks. */
+function coresAtTier(t) { return t < 0 ? 0 : TIERS[t].cores; }
+
+// ---------------------------------------------------------------- state
+var ST_TITLE=0, ST_PLAY=1, ST_OVER=2;
+var state = ST_TITLE;
+
+var CORE_BUDGET = 40;          // a shift's worth of Cores — the fixed thing you spend
+var coresLeft = 0, fed = 0, heat = 0, banked = 0, madeCount = 0, cracks = 0, best = 0;
+var rng = new RNG(1);
+var cracking = 0, banking = 0, shakeT = 0, glow = 0;
+var drops = [];                // cores falling into the pot
+var msg = '', msgT = 0;
+
+try { best = parseFloat(localStorage.getItem('crucible.best') || '0') || 0; } catch (e) {}
+
+function say(s) { msg = s; msgT = 0; }
+
+function startRun() {
+  rng = new RNG(Date.now() & 0xffffff);
+  coresLeft = CORE_BUDGET; fed = 0; heat = 0; banked = 0; madeCount = 0; cracks = 0;
+  cracking = 0; banking = 0; drops = [];
+  state = ST_PLAY;
+  say('Feed cores. Bank before it cracks.');
+  document.getElementById('title').classList.remove('show');
+  document.getElementById('over').classList.remove('show');
+}
+
+function feed() {
+  if (state !== ST_PLAY || coresLeft <= 0 || cracking > 0 || banking > 0) return;
+  coresLeft--; fed++;
+  heat += HEAT_PER + rng.next() * 5;
+  glow = 1;
+  drops.push({ x: 135 + (rng.next()-0.5)*28, y: 150, vy: 0, life: 1 });
+  shakeT = 0.08;
+
+  var p = crackChance(heat);
+  if (p > 0 && rng.next() < p) {
+    // Crack: you keep the LAST tier you passed. Never nothing (K-018).
+    var kept = tierOfCores(fed - 1);
+    cracks++;
+    cracking = 1; shakeT = 0.35;
+    if (kept >= 0) {
+      var keptCores = coresAtTier(kept);
+      banked += valueOfBatch(keptCores, kept); madeCount += keptCores;
+      say('CRACKED — kept ' + keptCores + ' ' + TIERS[kept].n + ' charms.');
+    } else say('CRACKED — nothing had set yet.');
+    resetPot();
+    return;
+  }
+  var t = tierOfCores(fed);
+  if (t >= 0) say(TIERS[t].n + ' charm forming...');
+  if (fed >= TIERS[TIERS.length-1].cores && heat <= SAFE_HEAT) say('PERFECT. Bank it.');
+  if (coresLeft <= 0) checkEnd();
+}
+
+function bank() {
+  if (state !== ST_PLAY || banking > 0 || cracking > 0) return;
+  var t = tierOfCores(fed);
+  if (t < 0) { say('Nothing has set yet.'); return; }
+  banked += valueOfBatch(fed, t); madeCount += fed;
+  banking = 1; glow = 1;
+  say('Banked ' + fed + ' ' + TIERS[t].n + ' charm' + (fed === 1 ? '' : 's') + '.');
+  resetPot();
+  checkEnd();
+}
+
+function resetPot() { fed = 0; heat = 0; }
+
+function checkEnd() {
+  if (coresLeft <= 0 && fed === 0) endRun();
+}
+
+function endRun() {
+  state = ST_OVER;
+  var v = Math.round(banked * 100) / 100;
+  if (v > best) { best = v; try { localStorage.setItem('crucible.best', String(best)); } catch (e) {} }
+  document.getElementById('sVal').textContent = v.toFixed(2);
+  document.getElementById('sMade').textContent = String(madeCount);
+  document.getElementById('sCracks').textContent = String(cracks);
+  document.getElementById('sBest').textContent = best.toFixed(2);
+  var flat = CORE_BUDGET / TIERS[0].cores * TIERS[0].rate;     // the recipe this replaces
+  var pct = Math.round((v / flat - 1) * 100);
+  document.getElementById('overSub').textContent = v > flat ? 'you beat the recipe' : 'the recipe beat you';
+  document.getElementById('overNote').innerHTML =
+    'Tapping the flat tier-1 recipe with the same ' + CORE_BUDGET + ' cores is worth <b>' +
+    flat.toFixed(2) + '</b>. You made <b>' + v.toFixed(2) + '</b> — ' +
+    (pct >= 0 ? '<b>+' + pct + '%</b>.' : '<b>' + pct + '%</b>.');
+  document.getElementById('over').classList.add('show');
+}
+
+// ---------------------------------------------------------------- render
+var VW=270, VH=480;
+var cv = document.getElementById('cv');
+var off=null, octx=null, ctx=null, W=1,H=1,DPR=1, scale=1, ox=0, oy=0, resizing=false;
+
+function initCanvas(){
+  off=document.createElement('canvas'); off.width=VW; off.height=VH;
+  octx=off.getContext('2d'); ctx=cv.getContext('2d');
+  if(!octx||!ctx) return false;
+  octx.imageSmoothingEnabled=false; ctx.imageSmoothingEnabled=false; return true;
+}
+function resize(){
+  if(resizing) return; resizing=true;
+  try{
+    var iw=window.innerWidth||0, ih=window.innerHeight||0;
+    if(iw<2||ih<2) return;
+    DPR=Math.min(2, window.devicePixelRatio||1);
+    W=iw; H=ih; cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR);
+    // CRITICAL: pin the CSS size — a bare canvas lays out at its attribute size.
+    cv.style.width=W+'px'; cv.style.height=H+'px';
+    if(ctx) ctx.imageSmoothingEnabled=false;
+    scale = Math.min(cv.width / VW, cv.height / VH);   // fit, not integer-only
+    ox=Math.floor((cv.width-VW*scale)/2); oy=Math.floor((cv.height-VH*scale)/2);
+  } finally { resizing=false; }
+}
+function px(x,y,w,h,c){ octx.fillStyle=c; octx.fillRect(x|0,y|0,w|0,h|0); }
+function frame(x,y,w,h,f,e){ px(x,y,w,h,e); px(x+1,y+1,w-2,h-2,f); }
+function text(s,x,y,c,sz,al){
+  octx.fillStyle=c; octx.font='900 '+(sz||8)+'px ui-monospace, Menlo, Consolas, monospace';
+  octx.textAlign=al||'left'; octx.textBaseline='top'; octx.fillText(s,x|0,y|0);
+}
+
+function render() {
+  if (!octx) return;
+  px(0,0,VW,VH,C.bg);
+  // workshop wall + bench
+  px(0,0,VW,40,C.panel); px(0,40,VW,1,C.ink);
+  px(0,300,VW,VH-300,'#3a2718'); px(0,300,VW,2,C.ink);
+
+  var sx = shakeT>0 ? (Math.random()-0.5)*4 : 0;
+  octx.save(); octx.translate(sx|0,0);
+
+  var heatFrac = Math.min(1.4, heat / 100);
+  // hearth glow behind the pot
+  var g = Math.min(1, heatFrac * 0.9 + glow * 0.3);
+  octx.globalAlpha = 0.20 + g * 0.5;
+  var gr = 34 + g * 26;
+  octx.fillStyle = heat > SAFE_HEAT ? C.ember : C.radiant;
+  octx.beginPath(); octx.arc(135, 208, gr, 0, 6.2832); octx.fill();
+  octx.globalAlpha = 1;
+
+  // the crucible: a chunky pot
+  px(96, 176, 78, 8, C.wood);
+  px(94, 184, 82, 56, cracking>0 ? C.ember9 : C.panel);
+  px(94, 184, 82, 3, C.bevel);
+  px(94, 240, 82, 6, C.ink);
+  px(88, 246, 94, 8, C.wood);
+  // molten contents rise with cores fed
+  var lvl = Math.min(46, fed * 7);
+  if (lvl > 0) {
+    var molten = heat > SAFE_HEAT ? C.ember3 : C.radiant3;
+    px(98, 236 - lvl, 74, lvl, molten);
+    px(98, 236 - lvl, 74, 2, C.flame);
+    // bubbles
+    for (var b = 0; b < 3; b++) {
+      var bx = 104 + ((now * 0.05 + b * 37) % 62);
+      var by = 236 - Math.min(lvl, 4 + ((now * 0.09 + b * 21) % Math.max(6, lvl)));
+      px(bx, by, 2, 2, C.flame);
+    }
+  }
+  // falling cores
+  for (var d = drops.length - 1; d >= 0; d--) {
+    var dr = drops[d];
+    px(dr.x, dr.y, 5, 5, C.tide3);
+    px(dr.x+1, dr.y+1, 3, 3, C.tide);
+  }
+  octx.restore();
+
+  // ---- heat gauge
+  var gx = 22, gy = 112, gw = VW - 44, gh = 16;   // clear of the tier ladder above
+  frame(gx, gy, gw, gh, C.ink, C.wood);
+  var safeW = Math.round((gw - 2) * SAFE_HEAT / 100);
+  px(gx+1, gy+1, safeW, gh-2, '#2a3a22');                       // safe band
+  var hw = Math.max(0, Math.min(gw - 2, Math.round((gw - 2) * heat / 100)));
+  px(gx+1, gy+1, hw, gh-2, heat > SAFE_HEAT ? C.ember : C.radiant);
+  // the line you are deciding about
+  px(gx + 1 + safeW, gy - 3, 1, gh + 6, C.bright);
+  text('HEAT', gx, gy - 11, C.dim, 7);
+  var cc = crackChance(heat);
+  text(cc > 0 ? Math.round(cc*100) + '% CRACK' : 'SAFE', gx + gw, gy - 11,
+       cc > 0 ? C.ember : C.verdant3, 7, 'right');
+
+  // ---- tier ladder
+  text('CHARM', 22, 44, C.dim, 7);
+  var cur = tierOfCores(fed);
+  for (var i = 0; i < TIERS.length; i++) {
+    var tx = 22 + i * 46, on = i <= cur;
+    frame(tx, 56, 42, 30, on ? C.radiant : C.panel, on ? C.bright : C.ink);
+    text(TIERS[i].n.slice(0,4), tx+21, 60, on ? C.ink : C.wood, 7, 'center');
+    text(Math.round(TIERS[i].rate*100)+'%', tx+21, 72, on ? C.ink : C.wood, 8, 'center');
+  }
+
+  // ---- readouts
+  frame(12, 262, 118, 30, C.panel, C.ink);
+  text('CORES LEFT', 71, 266, C.dim, 7, 'center');
+  text(String(coresLeft), 71, 276, C.tide3, 11, 'center');
+  frame(140, 262, 118, 30, C.panel, C.ink);
+  text('BANKED VALUE', 199, 266, C.dim, 7, 'center');
+  text(banked.toFixed(2), 199, 276, C.radiant3, 11, 'center');
+
+  // ---- message
+  frame(12, 310, VW-24, 26, C.panel, C.ink);
+  text(msg, VW/2, 318, C.parch, 8, 'center');
+
+  // ---- buttons (44px+ in device px at any sane scale)
+  var by = 350;
+  var canFeed = coresLeft > 0 && cracking <= 0;
+  frame(12, by, 118, 52, canFeed ? C.ember7 : C.panel, canFeed ? C.ember3 : C.ink);
+  text('FEED', 71, by+14, canFeed ? C.bright : C.wood, 13, 'center');
+  text(canFeed ? '+1 CORE' : 'NO CORES', 71, by+32, canFeed ? C.flame : C.wood, 7, 'center');
+
+  var canBank = tierOfCores(fed) >= 0 && cracking <= 0;
+  frame(140, by, 118, 52, canBank ? '#2e5c33' : C.panel, canBank ? C.verdant3 : C.ink);
+  text('BANK', 199, by+14, canBank ? C.bright : C.wood, 13, 'center');
+  text(canBank ? (fed + 'x ' + TIERS[tierOfCores(fed)].n) : 'NOTHING SET', 199, by+32, canBank ? C.verdant3 : C.wood, 7, 'center');
+
+  frame(12, by+62, VW-24, 30, C.panel, C.ink);
+  text('END SHIFT', VW/2, by+70, C.dim, 9, 'center');
+
+  if (cracking > 0) {
+    octx.globalAlpha = cracking * 0.55;
+    px(0,0,VW,VH,C.ember);
+    octx.globalAlpha = 1;
+    text('CRACKED', VW/2, 150, C.bright, 18, 'center');
+  }
+  if (banking > 0) {
+    octx.globalAlpha = banking * 0.4;
+    px(0,0,VW,VH,C.radiant3);
+    octx.globalAlpha = 1;
+  }
+
+  ctx.fillStyle = C.ink; ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.drawImage(off,0,0,VW,VH,ox,oy,VW*scale,VH*scale);
+}
+
+// ---------------------------------------------------------------- update
+function update(dt) {
+  if (shakeT>0) shakeT=Math.max(0,shakeT-dt);
+  if (glow>0) glow=Math.max(0,glow-dt*2.2);
+  if (cracking>0) cracking=Math.max(0,cracking-dt*1.5);
+  if (banking>0) banking=Math.max(0,banking-dt*2.2);
+  msgT += dt;
+  for (var i=drops.length-1;i>=0;i--) {
+    var d=drops[i]; d.vy += 420*dt; d.y += d.vy*dt;
+    if (d.y > 214) drops.splice(i,1);
+  }
+}
+
+// ---------------------------------------------------------------- input
+function onTap(x,y) {
+  if (state !== ST_PLAY) return;
+  var by = 350;
+  if (y>=by && y<=by+52) { if (x<135) feed(); else bank(); return; }
+  if (y>=by+62 && y<=by+92) { if (fed>0) bank(); endRun(); return; }
+}
+
+// ---------------------------------------------------------------- EV test
+/**
+ * The falsifiable claim: a naive stop-at-the-line policy must beat the flat
+ * tier-1 recipe per core. If it does not, this toy is a tax and should be cut.
+ */
+function evTest(runs, seed0) {
+  function play(policy, seed) {
+    var R = new RNG(seed), left = CORE_BUDGET, f = 0, h = 0, val = 0;
+    var guard = 0;
+    while (left > 0 && guard++ < 5000) {
+      // decide
+      var stop = false;
+      if (policy === 'line') stop = h + HEAT_PER > SAFE_HEAT && tierOfCores(f) >= 0;
+      else if (policy === 'greedy') stop = tierOfCores(f) >= TIERS.length - 1;
+      else if (policy === 'flat') stop = tierOfCores(f) >= 0;      // bank at tier 1 every time
+      if (stop) { val += valueOfBatch(f, tierOfCores(f)); f = 0; h = 0; continue; }
+      left--; f++; h += HEAT_PER + R.next() * 5;
+      var p = crackChance(h);
+      if (p > 0 && R.next() < p) {
+        var kept = tierOfCores(f - 1);
+        if (kept >= 0) val += valueOfBatch(coresAtTier(kept), kept);
+        f = 0; h = 0;
+      }
+    }
+    if (tierOfCores(f) >= 0) val += valueOfBatch(f, tierOfCores(f));
+    return val;
+  }
+  var out = {};
+  ['flat','line','greedy'].forEach(function (pol) {
+    var tot = 0;
+    for (var r = 0; r < (runs||400); r++) tot += play(pol, (seed0||99) + r*7919);
+    out[pol] = tot / (runs||400);
+  });
+  out.flatRecipe = CORE_BUDGET / TIERS[0].cores * TIERS[0].rate;
+  out.lineBeatsFlat = out.line > out.flatRecipe;
+  return out;
+}
+
+// ---------------------------------------------------------------- loop
+var last=0, now=0, frames=0, frameErrs=0;
+function tick(ts){
+  try{
+    now = ts || (last+16.7);
+    var dt = last ? Math.min(0.05,(now-last)/1000) : 0.016;
+    last=now; frames++;
+    try{ update(dt); }catch(e){ frameErrs++; if(frameErrs<4) console.error('[crucible] update:',e); }
+    try{ render(); }catch(e2){ frameErrs++; if(frameErrs<4) console.error('[crucible] render:',e2); }
+  } finally { if(typeof requestAnimationFrame==='function') requestAnimationFrame(tick); }
+}
+
+function toVirtual(cx,cy){
+  var r=cv.getBoundingClientRect();
+  return { x:((cx-r.left)*(cv.width/r.width)-ox)/scale, y:((cy-r.top)*(cv.height/r.height)-oy)/scale };
+}
+function handleDown(e){
+  var t=(e.touches&&e.touches[0])||(e.changedTouches&&e.changedTouches[0])||e;
+  var v=toVirtual(t.clientX,t.clientY); onTap(v.x,v.y);
+}
+cv.addEventListener('mousedown', handleDown);
+cv.addEventListener('touchstart', function(e){ e.preventDefault(); handleDown(e); }, {passive:false});
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', function(){ setTimeout(resize,120); });
+document.getElementById('startBtn').addEventListener('click', startRun);
+document.getElementById('againBtn').addEventListener('click', startRun);
+
+(function boot(){
+  resize();
+  if(!initCanvas()){
+    document.body.innerHTML='<div style="color:#e8d5a8;font:600 15px system-ui;padding:30px;text-align:center">'+
+      '<h2>Canvas unavailable</h2><p><a style="color:#f0b541" href="../../">Back to the arena</a></p></div>';
+    return;
+  }
+  resize();
+  if(typeof requestAnimationFrame==='function') requestAnimationFrame(tick);
+})();
+
+if (typeof window !== 'undefined') {
+  window.__cru = {
+    update:update, render:render, resize:resize, startRun:startRun,
+    feed:feed, bank:bank, onTap:onTap, evTest:evTest,
+    crackChance:crackChance, tierOfCores:tierOfCores, valueOfBatch:valueOfBatch, coresAtTier:coresAtTier,
+    get state(){return state;}, get fed(){return fed;}, get heat(){return heat;},
+    get coresLeft(){return coresLeft;}, get banked(){return banked;},
+    get cracks(){return cracks;}, get made(){return madeCount;},
+    get frames(){return frames;}, get frameErrs(){return frameErrs;},
+    TIERS:TIERS, SAFE_HEAT:SAFE_HEAT, CORE_BUDGET:CORE_BUDGET,
+    ST:{TITLE:ST_TITLE,PLAY:ST_PLAY,OVER:ST_OVER},
+    virtual:{W:VW,H:VH}
+  };
+}
+</script>
+<script src="/analytics.js" defer></script>
+</body>
+</html>

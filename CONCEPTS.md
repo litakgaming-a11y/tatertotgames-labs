@@ -506,6 +506,54 @@ Full brief: **[CONCEPTS-WAVE9.md](CONCEPTS-WAVE9.md)**
 
 ---
 
+## 31. 🔶 Tell *(wave 10 — Kinfold Lab: the optional parry)*
+
+| | |
+|---|---|
+| **Genre** | Combat probe / auto-battler layer |
+| **The question** | *Can an optional elemental parry make a watch-only auto-battler active without breaking it?* |
+| **Concept** | Every enemy attack telegraphs its element during the wind-up. Tap the element that beats it and your Kinmon interposes for a fraction of the damage and charges the capture meter. Tap wrong, or never tap at all, and the battle resolves **exactly** as Kinfold's does today — the parry is strictly additive and never punishing. Radiant and Umbral show a grey tell meaning there is no answer, which teaches the opposed-pair rule better than a tooltip. |
+| **Measured** | A never-tapping run clears the ladder **6/60**; a perfectly-tapping run clears **47/60**. Additive, and worth playing. |
+| **What it would cost** | Breaks K-003 — the throw would no longer be the only input. Survives the SKIP rule only while it stays optional. |
+
+## 32. 🔁 Handoff *(wave 10 — Kinfold Lab: the order is the game)*
+
+| | |
+|---|---|
+| **Genre** | Combat probe / pre-fight puzzle |
+| **The question** | *Is squad order, made explicit and given consequences, enough to be the whole game?* |
+| **Concept** | You never touch the fight. You drag three Kinmon into order against a revealed enemy squad, read what each hands to the next when it falls — a charged hit, a speed step, a shield, or nothing — and lock in. Order stops being about who meets the lead and becomes a sequence of three deaths you plan in advance. |
+| **Measured** | Same squad, same seeds: the best ordering wins **24/24** and the worst wins **0/24**. With handoffs on, the best order goes 32/40; with them off, 19/40. |
+| **What it would cost** | K-003 survives literally. The real cost is SKIP — a mandatory pre-fight puzzle on every re-clear needs a per-stage order memory shipped alongside it. |
+
+## 33. 🔥 Crucible *(wave 10 — Kinfold Lab: push your luck)*
+
+| | |
+|---|---|
+| **Genre** | Economy probe / crafting toy |
+| **The question** | *Would a player rather play this than tap the recipe it replaces?* |
+| **Concept** | Feed cores into the pot one at a time. Each raises the tier and the heat, and the pot tempers the whole batch — every core becomes a charm at whatever tier you reach. Past the line each core might crack it, and a crack banks the batch at the last tier you passed. There is no downside limb: you cannot lose what you put in, only leave value on the table. |
+| **Measured** | Over 500 shifts of a 40-core budget: the flat recipe is worth **12.00**, stop-at-the-line **29.53**, reckless greed 21.68. |
+| **What it would cost** | Nothing ratified. But the first build **failed its own EV gate** (10.05 vs 12.00) because Kinfold prices higher tiers to be per-core worse on purpose; batching is the fix and the part that needs a decision. |
+
+## 34. 🫱 Bonds *(wave 10 — Kinfold Lab: squad or job, never both)*
+
+| | |
+|---|---|
+| **Genre** | Meta probe / assignment tension |
+| **The question** | *Is exclusive assignment a real decision once something accrues on both sides of it?* |
+| **Concept** | Every Kinmon is on your squad or on a job, never both. Jobs pay Essence and Essence is levels — but a pair builds Bond only by fighting side by side, and a bonded pair unlocks a Duo: sideways utility, never raw power. Levels are rented, bonds are earned, and neither buys the other. |
+| **Measured** | Sixteen days under each pure strategy: all-jobs reaches stage 2 with 0 duos and level 9.5; all-squad stage 3 with 3 duos at level 5.0; **mixed reaches stage 7** with 3 duos at level 8.0. |
+| **What it would cost** | A Duo is structurally a two-piece set bonus, and K-007 rejected rune sets deliberately. If the team reads it that way, K-007 should win and this should be dropped. |
+
+Full briefs: **[CONCEPTS-WAVE10.md](CONCEPTS-WAVE10.md)**
+
+*Wave 10 carries no projected KPIs. These are instruments built to answer one design
+question each before the system costs Unity time — they have no retention curves, and
+publishing invented ones would dress instruments up as products.*
+
+---
+
 ## Portfolio strategy
 
 | Game | Primary KPI bet | Monetization center of gravity |
@@ -540,6 +588,7 @@ Full brief: **[CONCEPTS-WAVE9.md](CONCEPTS-WAVE9.md)**
 | Cairn *(concept)* | Lowest CPI (wordless creative) + persistent-monument return rate | Interstitials between lives + climber unlocks (never sell a retry) |
 | Overwind | Ad-creative CTR (rope snap) + upgrade-meta depth | Interstitials between sieges + Workshop upgrade tracks |
 | Rabble | Ad-creative CTR (friendly fire) + session length | Interstitials between assaults + warband roster expansion |
+| *Kinfold Lab (31-34)* | *Not products — design instruments for the Kinfold Unity project* | *n/a* |
 
 **Test plan:** all twenty-seven are shipped to Cloudflare and instrumented. Run $200–500 creative probes
 per concept on TikTok/Meta targeting CPI + 3-day retention; kill or double-down at 2 weeks; winners

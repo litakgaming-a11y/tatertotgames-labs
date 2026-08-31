@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Crucible — TaterTot Games Labs</title>
+<meta name="description" content="Is push-your-luck crafting worth more than tapping a flat recipe? A Kinfold economy probe.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔥</text></svg>">
+<style>
+  :root{--bg:#0d0b16;--bg2:#151127;--card:#1c1734;--card2:#241d44;--line:rgba(255,255,255,.08);
+    --ink:#f6f3ff;--muted:#9a91c4;--dim:#6e659b;--accent:#f09a6a;--r:20px}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden;position:relative}
+  body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:radial-gradient(900px 480px at 12% -6%, #f09a6a22, transparent 62%),
+      radial-gradient(760px 420px at 106% 8%, rgba(240,181,65,.10), transparent 60%),
+      linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%)}
+  .wrap{max-width:1000px;margin:0 auto;padding:20px 18px 80px}
+  .back{display:inline-flex;align-items:center;gap:8px;padding:13px 18px;min-height:44px;border-radius:12px;
+    background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--muted);
+    text-decoration:none;font-weight:700;font-size:.86rem}
+  .back:hover{color:var(--ink);border-color:rgba(255,255,255,.2)}
+  .kin{display:inline-block;margin-left:10px;padding:6px 12px;border-radius:999px;font-size:.62rem;
+    font-weight:900;letter-spacing:.12em;text-transform:uppercase;background:rgba(240,181,65,.12);
+    border:1px solid rgba(240,181,65,.4);color:#f0b541;vertical-align:middle}
+  .hero{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:34px;margin-top:26px;align-items:start}
+  @media (max-width:760px){ .hero{grid-template-columns:1fr;gap:22px} }
+  .shotFrame{position:relative;border-radius:26px;padding:9px;background:linear-gradient(160deg,#2a2350,#191333);
+    border:1px solid var(--line);box-shadow:0 20px 50px rgba(0,0,0,.55)}
+  .shotFrame img{display:block;width:100%;height:auto;border-radius:18px;image-rendering:pixelated}
+  .shotTag{position:absolute;left:50%;transform:translateX(-50%);bottom:-11px;padding:5px 13px;border-radius:999px;
+    font-size:.6rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase;
+    background:#0d0b16;border:1px solid var(--line);color:var(--dim);white-space:nowrap}
+  .badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .b{padding:6px 13px;border-radius:999px;font-size:.68rem;font-weight:800;letter-spacing:.08em;
+    text-transform:uppercase;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--muted)}
+  .b.acc{background:#f09a6a1f;border-color:#f09a6a55;color:#f09a6a}
+  h1{font-size:clamp(2rem,6vw,3rem);font-weight:900;letter-spacing:-.03em;line-height:1.02}
+  .hook{margin-top:10px;font-size:1.02rem;font-weight:800;color:var(--accent)}
+  .lede{margin-top:16px;color:var(--muted);font-size:1rem;line-height:1.68}
+  .lede b{color:var(--ink)}
+  .why{margin-top:14px;padding:14px 16px;border-radius:14px;border-left:3px solid var(--accent);
+    background:rgba(255,255,255,.035);color:var(--muted);font-size:.94rem;line-height:1.6}
+  .why b{color:var(--ink)}
+  .playRow{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:22px}
+  .play{display:inline-block;padding:17px 44px;border-radius:16px;font-weight:900;font-size:1.1rem;
+    color:#120f1e;background:linear-gradient(92deg,#ffb703,#ffd76a);text-decoration:none;
+    box-shadow:0 6px 0 rgba(0,0,0,.35),0 0 30px rgba(255,183,3,.22)}
+  .play:active{transform:translateY(2px);box-shadow:0 4px 0 rgba(0,0,0,.35)}
+  .note{color:var(--dim);font-size:.82rem;font-weight:600}
+  section{margin-top:46px}
+  h2{font-size:1.15rem;font-weight:900;letter-spacing:.01em;margin-bottom:14px}
+  .steps{list-style:none;display:grid;gap:10px}
+  .steps li{display:flex;gap:13px;align-items:flex-start;padding:13px 15px;border-radius:14px;
+    background:rgba(255,255,255,.035);border:1px solid var(--line);color:var(--muted);font-size:.95rem;line-height:1.55}
+  .steps .n{flex:0 0 26px;height:26px;border-radius:8px;background:#f09a6a22;border:1px solid #f09a6a55;
+    color:#f09a6a;font-weight:900;font-size:.8rem;display:grid;place-items:center}
+  table{width:100%;border-collapse:collapse;font-size:.9rem}
+  th,td{text-align:left;padding:11px 13px;border-bottom:1px solid var(--line);color:var(--muted)}
+  th{color:var(--ink);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+  td b{color:#f09a6a}
+  .metaBox{padding:16px 18px;border-radius:16px;background:linear-gradient(140deg,var(--card),var(--card2));
+    border:1px solid var(--line);color:var(--muted);font-size:.95rem;line-height:1.65}
+  .metaBox b{color:var(--ink)}
+  .warn{margin-top:14px;padding:14px 16px;border-radius:14px;border-left:3px solid #e0684a;
+    background:rgba(224,104,74,.07);color:var(--muted);font-size:.92rem;line-height:1.6}
+  .warn b{color:#f09a6a}
+  .nav{display:flex;gap:12px;margin-top:48px;flex-wrap:wrap}
+  .nav a{flex:1 1 220px;padding:15px 18px;border-radius:14px;background:rgba(255,255,255,.04);
+    border:1px solid var(--line);color:var(--ink);text-decoration:none;font-weight:800;font-size:.95rem}
+  .nav a span{display:block;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:4px}
+  .nav a.r{text-align:right}
+  .nav a:hover{border-color:rgba(255,255,255,.2)}
+  footer{margin-top:56px;padding-top:22px;border-top:1px solid var(--line);color:var(--dim);
+    font-size:.8rem;line-height:1.7;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../../">← All prototypes</a><span class="kin">Kinfold Lab</span>
+
+  <div class="hero">
+    <div>
+      <div class="shotFrame">
+        <img src="../../assets/shots/crucible.png" width="645" height="1290" alt="Crucible gameplay: a tier ladder, a heat gauge past the danger line reading 32% crack, a glowing crucible, and FEED and BANK buttons">
+        <span class="shotTag">Actual gameplay</span>
+      </div>
+    </div>
+    <div>
+      <div class="badges">
+        <span class="b acc">Wave 10</span>
+        <span class="b">Economy probe</span>
+        <span class="b">System probe</span>
+      </div>
+      <h1>🔥 Crucible</h1>
+      <p class="hook">Stop before it cracks</p>
+      <p class="lede">Feed cores into the pot one at a time. Each one raises the tier and raises the heat, and the pot tempers the <b>whole batch</b> — every core becomes a charm at whatever tier you reach. Past the line, each core you add might crack it. Bank early and you leave value on the table; push too far and the crack banks the last tier you passed.</p>
+      <p class="why"><b>Why it exists:</b> Kinfold has no energy system by decree, which makes capture charms the one thing the entire free loop bottlenecks on — and they currently come from tapping a recipe. This attaches a toy to the actual scarcity, shaped so there is <b>no downside limb</b>: you cannot lose what you put in, only fail to gain more.</p>
+      <div class="playRow">
+        <a class="play" href="play">▶ PLAY NOW</a>
+        <span class="note">Runs in your browser · no install · works on phones</span>
+      </div>
+    </div>
+  </div>
+
+  <section>
+    <h2>How to play</h2>
+    <ol class="steps">
+      <li><span class="n">1</span><span>FEED a core. The tier climbs, and so does the heat.</span></li>
+      <li><span class="n">2</span><span>Watch the line. Below it a feed can never crack; above it the crack chance is shown and rising.</span></li>
+      <li><span class="n">3</span><span>BANK to keep the whole batch at its current tier.</span></li>
+      <li><span class="n">4</span><span>If it cracks you still keep the batch at the last tier you passed. Nothing is ever confiscated.</span></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>The question, and the measurement</h2>
+    <div class="metaBox">Would a player rather play this than tap the recipe it replaces? The probe simulates 500 shifts of a fixed 40-core budget under three policies and compares them to the flat tier-1 recipe.</div>
+    <table>
+      <tr><th>Measurement</th><th>Result</th></tr>
+      <tr><td>Flat tier-1 recipe (the baseline)</td><td><b>12.00</b></td></tr>
+      <tr><td>Stop-at-the-line policy</td><td><b><b>29.53</b></b></td></tr>
+      <tr><td>Reckless greed policy</td><td><b>21.68</b></td></tr>
+      <tr><td>Does judgement beat both greed and the recipe?</td><td><b>Yes</b></td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>What it would cost Kinfold</h2>
+    <div class="warn">Nothing ratified — it is purely additive. But the first build of this probe <b>failed its own EV gate</b> at 10.05 against the recipe's 12.00, because Kinfold prices higher charm tiers to be per-core <i>worse</i> on purpose (“higher tiers are not a better deal, they are insurance”). Under that curve any toy that pushes toward higher tiers is EV-negative by construction. Batching is the fix, and it is the part that would need a decision. The other risk is tonal: this is a second variance system in a game that already has a gacha.</div>
+  </section>
+
+  <div class="nav">
+    <a href="../handoff/"><span>Previous</span>← 🔁 Handoff</a>
+    <a class="r" href="../bonds/"><span>Next</span>🫱 Bonds →</a>
+  </div>
+
+  <footer>
+    A single self-contained file — no engine, no libraries, no external requests.<br>
+    Palette and type rules follow Kinfold's locked 40-colour set.<br>
+    © 2026 TaterTot Games Labs
+  </footer>
+</div>
+</body>
+</html>

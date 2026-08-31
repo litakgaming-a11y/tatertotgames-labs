@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Tell — TaterTot Games Labs</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%B6%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --earth950:#1a120b; --earth900:#2e1f14; --earth700:#4a3524; --earth500:#6b4e33;
+    --earth300:#94714a; --parchdim:#c9a06a; --parch:#e8d5a8; --parchbright:#f5ecd4;
+    --ember:#e0684a; --verdant:#4a8c4a; --tide:#4a8cc9; --radiant:#f0b541; --umbral:#7a5cb0;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{
+    margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:var(--earth900);
+    touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;overscroll-behavior:none;
+  }
+  canvas{position:fixed;inset:0;display:block;touch-action:none;image-rendering:pixelated}
+  .screen{
+    position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    pointer-events:none;opacity:0;transition:opacity .25s ease;z-index:10;text-align:center;
+    padding:calc(12px + env(safe-area-inset-top)) 14px calc(12px + env(safe-area-inset-bottom));
+    background:rgba(26,18,11,.88);
+  }
+  .screen.show{pointer-events:auto;opacity:1}
+  h1{font-size:min(13vw,58px);font-weight:900;letter-spacing:.06em;color:var(--parchbright);margin:0;
+     text-shadow:0 3px 0 var(--earth950)}
+  h1 .sub{display:block;font-size:min(3.6vw,15px);letter-spacing:.24em;color:var(--radiant);margin-top:8px}
+  .tag{margin-top:14px;color:var(--parchdim);font-size:min(3.7vw,14px);line-height:1.6;max-width:min(92vw,430px)}
+  .tag b{color:var(--parch)}
+  .go{margin-top:22px;min-height:52px;padding:15px 40px;border:0;border-radius:6px;cursor:pointer;
+      font-family:inherit;font-weight:900;font-size:1.05rem;letter-spacing:.1em;color:var(--earth950);
+      background:var(--radiant);box-shadow:0 4px 0 #8c5c16}
+  .go:active{transform:translateY(2px);box-shadow:0 2px 0 #8c5c16}
+  .note{margin-top:16px;color:var(--earth300);font-size:min(3.2vw,12px);letter-spacing:.05em}
+  .stats{margin-top:18px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .st{background:var(--earth700);border:1px solid var(--earth500);border-radius:5px;padding:8px 12px;min-width:76px}
+  .st b{display:block;color:var(--radiant);font-size:1.2rem}
+  .st span{font-size:.55rem;letter-spacing:.12em;color:var(--parchdim)}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div class="screen show" id="title">
+  <h1>TELL<span class="sub">READ THE WIND-UP</span></h1>
+  <div class="tag">
+    A Kinfold combat probe. The battle fights itself — <b>except</b> that every enemy attack
+    telegraphs its element first.<br><br>
+    <b>Tap the element that beats it</b> and your Kinmon interposes: less damage, and the capture
+    meter charges.<br><br>
+    Tap wrong, or don't tap at all, and the battle resolves exactly as it would have.
+    <b>You are never punished for not playing.</b>
+  </div>
+  <button class="go" id="startBtn" type="button">BEGIN</button>
+  <div class="note">Ember beats Verdant · Verdant beats Tide · Tide beats Ember</div>
+</div>
+
+<div class="screen" id="over">
+  <h1 id="overTitle">RUN ENDED<span class="sub" id="overSub">the wild wins this one</span></h1>
+  <div class="stats">
+    <div class="st"><b id="sStage">1</b><span>STAGE</span></div>
+    <div class="st"><b id="sAns">0%</b><span>ANSWERED</span></div>
+    <div class="st"><b id="sPrev">0</b><span>DMG SAVED</span></div>
+    <div class="st"><b id="sCaught">0</b><span>CAUGHT</span></div>
+  </div>
+  <div class="tag" id="overNote"></div>
+  <button class="go" id="againBtn" type="button">AGAIN</button>
+</div>
+
+<script>
+"use strict";
+/* ===========================================================================
+   TELL — a Kinfold combat probe (TaterTot Games Labs)
+
+   Tests one question: can an OPTIONAL elemental parry make a watch-only
+   auto-battler active without breaking it?
+
+   Kinfold's K-003 says the capture throw is the only input during a battle,
+   and its own justification names the risk — "a battle you touch zero times is
+   a screensaver". TELL adds a second input that is strictly additive: a wrong
+   answer and no answer resolve identically to the battle Kinfold already has.
+   That property is the whole proposal, and __tell.simulate() measures it.
+
+   Type rules mirror Kinfold K-009/K-044: Ember -> Verdant -> Tide -> Ember is
+   a one-way cycle; Radiant and Umbral are an opposed pair that answers nothing.
+   A Radiant or Umbral wind-up therefore shows a GREY tell meaning "there is no
+   answer to this one", which teaches K-044 better than a tooltip.
+
+   Single self-contained file. Palette is Kinfold's locked 40 (K-037).
+   =========================================================================== */
+
+// ---------------------------------------------------------------- palette
+var C = {
+  ink:'#1a120b', bg:'#2e1f14', panel:'#4a3524', wood:'#6b4e33', bevel:'#94714a',
+  dim:'#c9a06a', parch:'#e8d5a8', bright:'#f5ecd4',
+  ember:'#e0684a', ember3:'#f09a6a', ember7:'#b8442a',
+  verdant:'#4a8c4a', verdant3:'#7ac160', verdant7:'#2e5c33',
+  tide:'#4a8cc9', tide3:'#85bce0', tide7:'#2a5a8c',
+  radiant:'#f0b541', radiant3:'#f8d878',
+  umbral:'#7a5cb0', umbral3:'#a88cd9',
+  sky:'#8cc9e0', dusk:'#34547a'
+};
+var TYPE = [
+  { n:'EMBER',   c:C.ember,   l:C.ember3,   d:C.ember7 },
+  { n:'VERDANT', c:C.verdant, l:C.verdant3, d:C.verdant7 },
+  { n:'TIDE',    c:C.tide,    l:C.tide3,    d:C.tide7 },
+  { n:'RADIANT', c:C.radiant, l:C.radiant3, d:'#8c5c16' },
+  { n:'UMBRAL',  c:C.umbral,  l:C.umbral3,  d:'#443060' }
+];
+
+// K-009 + K-044: a one-way 3-cycle, plus an opposed pair that answers nothing.
+function typeMult(a, d) {
+  if (a < 3 && d < 3) {
+    if ((a + 1) % 3 === d) return 1.5;      // a is strong into d
+    if ((d + 1) % 3 === a) return 0.67;     // d resists a
+    return 1;
+  }
+  if ((a === 3 && d === 4) || (a === 4 && d === 3)) return 1.5;
+  return 1;
+}
+/** Which cycle type answers an incoming attack of type t. -1 = no answer exists (K-044). */
+function counterOf(t) { return t < 3 ? (t + 2) % 3 : -1; }
+
+// ---------------------------------------------------------------- rng
+function RNG(seed) { this.s = (seed >>> 0) || 1; }
+RNG.prototype.next = function () {
+  this.s = (this.s + 0x6D2B79F5) >>> 0;
+  var t = this.s;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
+RNG.prototype.range = function (a, b) { return a + (b - a) * this.next(); };
+RNG.prototype.int = function (n) { return Math.floor(this.next() * n) % n; };
+
+// ---------------------------------------------------------------- roster
+// Chunky silhouettes, one per type family, drawn procedurally at low res.
+var SPECIES = [
+  { id:'emberpup',  name:'EMBERPUP',  t:0, hp:52, atk:15, def:9,  spd:12, shape:'pup' },
+  { id:'cindermol', name:'CINDERMOL', t:0, hp:64, atk:13, def:13, spd:8,  shape:'mole' },
+  { id:'sprigling', name:'SPRIGLING', t:1, hp:56, atk:13, def:12, spd:10, shape:'sprout' },
+  { id:'thornbuck', name:'THORNBUCK', t:1, hp:62, atk:16, def:10, spd:11, shape:'buck' },
+  { id:'tidewisp',  name:'TIDEWISP',  t:2, hp:50, atk:14, def:9,  spd:15, shape:'wisp' },
+  { id:'brinecrab', name:'BRINECRAB', t:2, hp:68, atk:12, def:16, spd:7,  shape:'crab' },
+  { id:'sunmoth',   name:'SUNMOTH',   t:3, hp:54, atk:15, def:10, spd:13, shape:'moth' },
+  { id:'duskrat',   name:'DUSKRAT',   t:4, hp:58, atk:16, def:9,  spd:12, shape:'rat' }
+];
+function speciesById(id) { for (var i=0;i<SPECIES.length;i++) if (SPECIES[i].id===id) return SPECIES[i]; return SPECIES[0]; }
+
+var SKILLS = [
+  { n:'SCORCH',   t:0, p:44 }, { n:'CINDERSTEP', t:0, p:38 },
+  { n:'BRAMBLE',  t:1, p:44 }, { n:'ROOTLASH',   t:1, p:38 },
+  { n:'RIPTIDE',  t:2, p:44 }, { n:'MISTVEIL',   t:2, p:38 },
+  { n:'FLARE',    t:3, p:46 }, { n:'GLOAM',      t:4, p:46 }
+];
+function skillsFor(t) { var o=[]; for (var i=0;i<SKILLS.length;i++) if (SKILLS[i].t===t) o.push(SKILLS[i]); return o.length?o:[SKILLS[0]]; }
+
+// ---------------------------------------------------------------- battle model
+var GUARD_MULT = 0.42;         // damage taken through a correct interpose
+var METER_PER_GUARD = 34;      // capture meter charge for a right answer
+var CAPTURE_HP = 0.35;         // K-005 threshold: CATCH arms below this hpFrac
+
+function Mon(sp, level) {
+  var m = 1 + 0.08 * (level - 1);
+  this.sp = sp; this.level = level;
+  this.maxHp = Math.round(sp.hp * m * 1.6);
+  this.hp = this.maxHp;
+  this.atk = Math.round(sp.atk * m);
+  this.def = Math.round(sp.def * m);
+  this.spd = Math.round(sp.spd * m);
+  this.skills = skillsFor(sp.t);
+  this.flash = 0; this.shake = 0; this.bob = Math.random() * 6.28;
+}
+Mon.prototype.alive = function () { return this.hp > 0; };
+Mon.prototype.frac = function () { return this.maxHp <= 0 ? 0 : this.hp / this.maxHp; };
+
+function damage(att, def, skill, mult, rng) {
+  var variance = 0.9 + rng.next() * 0.1;
+  var raw = att.atk * skill.p / (def.def + 30);
+  return Math.max(1, Math.round(raw * mult * variance * 1.6));
+}
+
+// ---------------------------------------------------------------- state
+var ST_TITLE = 0, ST_PLAY = 1, ST_OVER = 2;
+var state = ST_TITLE;
+
+var stage = 1, caught = 0;
+var tellsSeen = 0, tellsAnswered = 0, dmgPrevented = 0;
+var rng = new RNG(1);
+var party = [], foes = [], pIdx = 0, fIdx = 0;
+var meter = 0, narration = [], narrTimer = 0;
+
+// battle phase machine
+var PH_INTRO = 0, PH_PICK = 1, PH_TELL = 2, PH_IMPACT = 3, PH_AFTER = 4, PH_FAINT = 5, PH_DONE = 6;
+var phase = PH_INTRO, phaseT = 0;
+var pending = null;            // the attack being wound up
+var answer = -1;               // pip the player tapped this tell
+var lastGuard = 0;             // 1 right, -1 wrong, 0 none — drives the flash
+var captureArmed = false, captureFlash = 0;
+var shakeT = 0, shakeMag = 0;
+
+function say(line) {
+  narration.push(line);
+  if (narration.length > 2) narration.shift();
+  narrTimer = 0;
+}
+
+function startRun(seed) {
+  rng = new RNG(seed || (Date.now() & 0xffffff));
+  stage = 1; caught = 0; tellsSeen = 0; tellsAnswered = 0; dmgPrevented = 0;
+  party = [ new Mon(speciesById('emberpup'), 5), new Mon(speciesById('sprigling'), 5), new Mon(speciesById('tidewisp'), 5) ];
+  buildStage();
+  state = ST_PLAY;
+  document.getElementById('title').classList.remove('show');
+  document.getElementById('over').classList.remove('show');
+}
+
+function buildStage() {
+  // The party levels with the ladder and heals between stages. Without this the
+  // enemy scaled and the party did not, so the run ended on a stat wall around
+  // stage 1 and the probe measured attrition instead of the parry — both the
+  // never-tap and always-tap policies cleared 0/60.
+  for (var h = 0; h < party.length; h++) {
+    if (stage > 1) { party[h].level += 2; var mm = 1 + 0.08 * (party[h].level - 1);
+      party[h].maxHp = Math.round(party[h].sp.hp * mm * 1.6);
+      party[h].atk = Math.round(party[h].sp.atk * mm);
+      party[h].def = Math.round(party[h].sp.def * mm);
+      party[h].spd = Math.round(party[h].sp.spd * mm); }
+    party[h].hp = party[h].maxHp;
+  }
+  var lv = 2 + stage * 2;   // one band under the party: tapping is an edge, not the entry fee
+  foes = [];
+  var n = stage < 2 ? 2 : 3;
+  for (var i = 0; i < n; i++) {
+    var sp = SPECIES[rng.int(SPECIES.length)];
+    foes.push(new Mon(sp, lv));
+  }
+  pIdx = firstAlive(party); fIdx = 0;
+  meter = 0; captureArmed = false;
+  phase = PH_INTRO; phaseT = 0; pending = null; answer = -1;
+  narration = [];
+  say('STAGE ' + stage + ' — a wild ' + foes[0].sp.name + ' appears!');
+}
+
+function firstAlive(list) { for (var i=0;i<list.length;i++) if (list[i].alive()) return i; return -1; }
+
+// ---------------------------------------------------------------- turn logic
+function planTurn() {
+  var p = party[pIdx], f = foes[fIdx];
+  if (!p || !f) return null;
+  // Faster side acts. The player's swing has no tell (you are defending, not aiming).
+  var playerFirst = p.spd >= f.spd ? rng.next() < 0.72 : rng.next() < 0.28;
+  return { playerFirst: playerFirst };
+}
+
+function beginAttack(byPlayer) {
+  var att = byPlayer ? party[pIdx] : foes[fIdx];
+  var def = byPlayer ? foes[fIdx] : party[pIdx];
+  if (!att || !def) return;
+  var sk = att.skills[rng.int(att.skills.length)];
+  pending = { byPlayer: byPlayer, att: att, def: def, sk: sk };
+  answer = -1;
+  if (byPlayer) {
+    phase = PH_IMPACT; phaseT = 0;         // your own attacks resolve immediately
+  } else {
+    phase = PH_TELL; phaseT = 0;           // the enemy telegraphs
+    tellsSeen++;
+  }
+}
+
+function resolveImpact() {
+  var a = pending; if (!a) return;
+  var mult = typeMult(a.sk.t, a.def.sp.t);
+  var dmg = damage(a.att, a.def, a.sk, mult, rng);
+
+  var guarded = false;
+  if (!a.byPlayer) {
+    var want = counterOf(a.sk.t);
+    if (answer >= 0 && want >= 0 && answer === want) {
+      guarded = true; tellsAnswered++;
+      var full = dmg;
+      dmg = Math.max(1, Math.round(dmg * GUARD_MULT));
+      dmgPrevented += full - dmg;
+      meter = Math.min(100, meter + METER_PER_GUARD);
+      lastGuard = 1;
+    } else if (answer >= 0) {
+      lastGuard = -1;
+    } else {
+      lastGuard = 0;
+    }
+  }
+
+  a.def.hp = Math.max(0, a.def.hp - dmg);
+  a.def.flash = 1; a.def.shake = 1;
+  shakeT = 0.18; shakeMag = Math.min(4, 1 + dmg / 22);
+
+  say(a.att.sp.name + ' used ' + a.sk.n + '!');
+  if (guarded) say(a.def.sp.name + ' braced — it held!');
+  else if (mult > 1.2) say("It's super effective!");
+  else if (mult < 0.9) say("It's not very effective...");
+
+  if (!a.byPlayer && answer >= 0 && counterOf(a.sk.t) < 0) say('There was no answer to that one.');
+
+  phase = PH_AFTER; phaseT = 0;
+}
+
+function afterImpact() {
+  var f = foes[fIdx], p = party[pIdx];
+  // capture window (K-005): armed below the HP threshold, with the meter charged
+  captureArmed = !!(f && f.alive() && f.frac() <= CAPTURE_HP && meter >= 100);
+
+  if (f && !f.alive()) { say(f.sp.name + ' fainted!'); phase = PH_FAINT; phaseT = 0; return; }
+  if (p && !p.alive()) { say(p.sp.name + ' fainted!'); phase = PH_FAINT; phaseT = 0; return; }
+  phase = PH_PICK; phaseT = 0;
+}
+
+function resolveFaint() {
+  if (foes[fIdx] && !foes[fIdx].alive()) {
+    var nx = firstAlive(foes);
+    if (nx < 0) { stage++; if (stage > LADDER) { endRun(true); return; } buildStage(); return; }
+    fIdx = nx; meter = Math.max(0, meter - 20); captureArmed = false;
+    say('The wild sends out ' + foes[fIdx].sp.name + '!');
+  } else if (party[pIdx] && !party[pIdx].alive()) {
+    var np = firstAlive(party);
+    if (np < 0) { endRun(false); return; }
+    pIdx = np;
+    say('Go, ' + party[pIdx].sp.name + '!');
+  }
+  phase = PH_PICK; phaseT = 0;
+}
+
+function tryCapture() {
+  if (!captureArmed) return;
+  var f = foes[fIdx];
+  captureArmed = false; meter = 0; captureFlash = 1;
+  caught++;
+  say('Gotcha! ' + f.sp.name + ' was caught!');
+  f.hp = 0;
+  phase = PH_FAINT; phaseT = 0;
+}
+
+function endRun(won) {
+  state = ST_OVER;
+  document.getElementById('sStage').textContent = String(stage);
+  var pct = tellsSeen ? Math.round(tellsAnswered / tellsSeen * 100) : 0;
+  document.getElementById('sAns').textContent = pct + '%';
+  document.getElementById('sPrev').textContent = String(dmgPrevented);
+  document.getElementById('sCaught').textContent = String(caught);
+  document.getElementById('overTitle').firstChild.nodeValue = won ? 'CLEARED' : 'RUN ENDED';
+  document.getElementById('overSub').textContent = won ? 'the wild gives way' : 'the wild wins this one';
+  document.getElementById('overNote').innerHTML = pct >= 50
+    ? 'You answered <b>' + pct + '%</b> of the wind-ups and saved <b>' + dmgPrevented + '</b> damage doing it.'
+    : 'You answered <b>' + pct + '%</b>. The battle still played itself — that is the point of the probe.';
+  document.getElementById('over').classList.add('show');
+}
+
+// ---------------------------------------------------------------- update
+var TELL_TIME = 0.78, IMPACT_TIME = 0.34, AFTER_TIME = 0.46, PICK_TIME = 0.30, FAINT_TIME = 0.70;
+var turnOrder = null, turnStep = 0;
+
+function update(dt) {
+  if (captureFlash > 0) captureFlash = Math.max(0, captureFlash - dt * 1.6);
+  if (shakeT > 0) shakeT = Math.max(0, shakeT - dt);
+  for (var i=0;i<party.length;i++){ party[i].flash=Math.max(0,party[i].flash-dt*4); party[i].shake=Math.max(0,party[i].shake-dt*5); }
+  for (var j=0;j<foes.length;j++){ foes[j].flash=Math.max(0,foes[j].flash-dt*4); foes[j].shake=Math.max(0,foes[j].shake-dt*5); }
+  if (state !== ST_PLAY) return;
+  narrTimer += dt;
+  phaseT += dt;
+
+  switch (phase) {
+    case PH_INTRO:
+      if (phaseT > 0.9) { phase = PH_PICK; phaseT = 0; }
+      break;
+    case PH_PICK:
+      if (phaseT > PICK_TIME) {
+        if (!turnOrder || turnStep >= 2) { turnOrder = planTurn(); turnStep = 0; }
+        if (!turnOrder) { phase = PH_DONE; break; }
+        var byPlayer = turnStep === 0 ? turnOrder.playerFirst : !turnOrder.playerFirst;
+        turnStep++;
+        beginAttack(byPlayer);
+      }
+      break;
+    case PH_TELL:
+      if (phaseT > TELL_TIME) { phase = PH_IMPACT; phaseT = 0; }
+      break;
+    case PH_IMPACT:
+      if (phaseT > IMPACT_TIME) resolveImpact();
+      break;
+    case PH_AFTER:
+      if (phaseT > AFTER_TIME) afterImpact();
+      break;
+    case PH_FAINT:
+      if (phaseT > FAINT_TIME) resolveFaint();
+      break;
+  }
+}
+
+// ---------------------------------------------------------------- input
+function onTap(x, y) {
+  if (state !== ST_PLAY) return;
+  // pip row
+  var pipY = VH - 74, pipH = 34;
+  if (y >= pipY - 6 && y <= pipY + pipH + 6) {
+    for (var i = 0; i < 3; i++) {
+      var px = 18 + i * 82;
+      if (x >= px && x <= px + 74) {
+        if (phase === PH_TELL && pending && !pending.byPlayer) answer = i;
+        return;
+      }
+    }
+  }
+  // catch button
+  if (captureArmed && y >= VH - 132 && y <= VH - 98 && x >= VW/2 - 62 && x <= VW/2 + 62) {
+    tryCapture();
+  }
+}
+
+// ---------------------------------------------------------------- render
+var VW = 270, VH = 480;                       // fixed internal resolution (pixel-art)
+var cv = document.getElementById('cv');
+var octx = null, off = null, ctx = null;
+var W = 1, H = 1, DPR = 1, scale = 1, ox = 0, oy = 0, resizing = false;
+
+function initCanvas() {
+  off = document.createElement('canvas');
+  off.width = VW; off.height = VH;
+  octx = off.getContext('2d');
+  ctx = cv.getContext('2d');
+  if (!octx || !ctx) return false;
+  octx.imageSmoothingEnabled = false;
+  ctx.imageSmoothingEnabled = false;
+  return true;
+}
+
+function resize() {
+  if (resizing) return;
+  resizing = true;
+  try {
+    var iw = (window.innerWidth) || 0, ih = (window.innerHeight) || 0;
+    if (iw < 2 || ih < 2) return;
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    W = iw; H = ih;
+    cv.width = Math.round(W * DPR);
+    cv.height = Math.round(H * DPR);
+    // CRITICAL: a canvas is a replaced element. Without explicit CSS sizing it lays
+    // out at its attribute size (W*DPR) — double-size on every phone.
+    cv.style.width = W + 'px';
+    cv.style.height = H + 'px';
+    if (ctx) ctx.imageSmoothingEnabled = false;
+    // integer scale keeps the pixels square; letterbox the remainder
+    scale = Math.min(cv.width / VW, cv.height / VH);   // fit, not integer-only
+    ox = Math.floor((cv.width - VW * scale) / 2);
+    oy = Math.floor((cv.height - VH * scale) / 2);
+  } finally { resizing = false; }
+}
+
+function px(x, y, w, h, col) { octx.fillStyle = col; octx.fillRect(x | 0, y | 0, w | 0, h | 0); }
+function frame(x, y, w, h, fill, edge) {
+  px(x, y, w, h, edge); px(x + 1, y + 1, w - 2, h - 2, fill);
+}
+function text(s, x, y, col, size, align) {
+  octx.fillStyle = col;
+  octx.font = '900 ' + (size || 8) + 'px ui-monospace, Menlo, Consolas, monospace';
+  octx.textAlign = align || 'left';
+  octx.textBaseline = 'top';
+  octx.fillText(s, x | 0, y | 0);
+}
+
+// --- creature drawing: chunky procedural silhouettes, outlined in earth-950
+function drawMon(m, cx, cy, s, facingLeft) {
+  if (!m) return;
+  var t = TYPE[m.sp.t];
+  var bob = Math.sin(now * 0.0026 + m.bob) * (s * 0.6);
+  var sh = m.shake > 0 ? (Math.random() - 0.5) * 3 : 0;
+  var y = cy + bob;
+  var body = m.flash > 0 && (Math.floor(now / 60) % 2 === 0) ? C.bright : t.c;
+  var dark = t.d, lite = t.l;
+
+  // platform shadow (Gen-1 staging, K-002)
+  octx.globalAlpha = 0.30;
+  px(cx - s * 2.2, cy + s * 1.9, s * 4.4, s * 0.7, C.ink);
+  octx.globalAlpha = 1;
+
+  var X = cx + sh;
+  var w = s * 3.4, h = s * 2.6;
+  // outline then body — one pixel of earth-950 all round
+  px(X - w/2 - 1, y - h/2 - 1, w + 2, h + 2, C.ink);
+  px(X - w/2, y - h/2, w, h, body);
+  px(X - w/2, y + h/2 - s*0.7, w, s*0.7, dark);          // underside shade
+  px(X - w/2 + 1, y - h/2 + 1, w - 2, s*0.5, lite);      // top sheen
+
+  var sp = m.sp.shape;
+  if (sp === 'pup' || sp === 'rat') {                    // ears
+    px(X - w/2 + 1, y - h/2 - s*0.9, s*0.8, s*0.9, body);
+    px(X + w/2 - s*0.8 - 1, y - h/2 - s*0.9, s*0.8, s*0.9, body);
+  } else if (sp === 'sprout') {                          // leaf
+    px(X - s*0.3, y - h/2 - s*1.1, s*0.6, s*1.1, C.verdant3);
+    px(X - s*0.9, y - h/2 - s*0.8, s*0.6, s*0.4, C.verdant3);
+  } else if (sp === 'buck') {                            // antlers
+    px(X - s*1.2, y - h/2 - s*1.2, s*0.4, s*1.2, dark);
+    px(X + s*0.8, y - h/2 - s*1.2, s*0.4, s*1.2, dark);
+  } else if (sp === 'wisp' || sp === 'moth') {           // wings
+    px(X - w/2 - s*0.9, y - s*0.4, s*0.9, s*1.1, lite);
+    px(X + w/2, y - s*0.4, s*0.9, s*1.1, lite);
+  } else if (sp === 'crab') {                            // claws
+    px(X - w/2 - s*0.8, y + s*0.2, s*0.8, s*0.8, dark);
+    px(X + w/2, y + s*0.2, s*0.8, s*0.8, dark);
+  } else if (sp === 'mole') {                            // snout
+    px(facingLeft ? X - w/2 - s*0.7 : X + w/2, y, s*0.7, s*0.6, lite);
+  }
+  // eyes
+  var ex = facingLeft ? X - s*0.9 : X + s*0.3;
+  px(ex, y - s*0.4, s*0.5, s*0.6, C.ink);
+  px(ex + s*0.9, y - s*0.4, s*0.5, s*0.6, C.ink);
+}
+
+function drawHpBar(m, x, y, w, right) {
+  if (!m) return;
+  frame(x, y, w, 12, C.panel, C.ink);
+  text(m.sp.name, x + 3, y + 2, C.parch, 7);
+  var bw = w - 6, f = m.frac();
+  px(x + 3, y + 8, bw, 2, C.ink);
+  var col = f > 0.5 ? C.verdant3 : (f > CAPTURE_HP ? C.radiant : C.ember);
+  px(x + 3, y + 8, Math.max(0, Math.round(bw * f)), 2, col);
+  text('L' + m.level, x + w - 3, y + 2, C.dim, 7, 'right');
+}
+
+function drawTellGlyph() {
+  if (phase !== PH_TELL || !pending || pending.byPlayer) return;
+  var t = TYPE[pending.sk.t];
+  var noAnswer = counterOf(pending.sk.t) < 0;
+  var p = Math.min(1, phaseT / TELL_TIME);
+  var fx = 186, fy = 116;
+  // ring closing in — the timer you read
+  var r = 22 - p * 9;
+  octx.globalAlpha = 0.9;
+  octx.strokeStyle = noAnswer ? C.bevel : t.c;
+  octx.lineWidth = 2;
+  octx.beginPath(); octx.arc(fx, fy, r, 0, 6.2832); octx.stroke();
+  octx.globalAlpha = 1;
+  frame(fx - 15, fy - 9, 30, 18, noAnswer ? C.wood : t.d, C.ink);
+  text(noAnswer ? '??' : t.n.slice(0, 2), fx, fy - 5, noAnswer ? C.dim : C.bright, 9, 'center');
+}
+
+function drawPips() {
+  var y = VH - 74;
+  var live = phase === PH_TELL && pending && !pending.byPlayer;
+  var want = live ? counterOf(pending.sk.t) : -2;
+  for (var i = 0; i < 3; i++) {
+    var x = 18 + i * 82;
+    var t = TYPE[i];
+    var picked = answer === i;
+    var pulse = live && (Math.floor(now / 140) % 2 === 0);
+    var edge = picked ? C.bright : (pulse ? t.l : C.ink);
+    frame(x, y, 74, 34, live ? t.d : C.panel, edge);
+    text(t.n, x + 37, y + 6, live ? C.bright : C.dim, 9, 'center');
+    text('beats ' + TYPE[(i + 1) % 3].n.slice(0,3), x + 37, y + 20, live ? t.l : C.wood, 6, 'center');
+    if (picked) {
+      // the answer you gave, right or wrong — coloured after the fact
+      var col = want === i ? C.verdant3 : C.ember;
+      px(x, y + 32, 74, 2, col);
+    }
+  }
+}
+
+function drawNarration() {
+  var y = VH - 176, h = 62;
+  frame(8, y, VW - 16, h, C.panel, C.ink);
+  px(10, y + 2, VW - 20, 1, C.bevel);
+  for (var i = 0; i < narration.length; i++) {
+    text(narration[i], 15, y + 12 + i * 16, i === narration.length - 1 ? C.bright : C.dim, 9);
+  }
+}
+
+function drawMeter() {
+  var y = VH - 196, w = VW - 16;
+  px(8, y, w, 8, C.ink);
+  px(9, y + 1, Math.round((w - 2) * meter / 100), 6, meter >= 100 ? C.radiant3 : C.radiant);
+  text('CAPTURE', 12, y - 9, C.dim, 7);
+  if (captureArmed) {
+    var bx = VW/2 - 62, by = VH - 132;
+    var glow = Math.floor(now / 180) % 2 === 0;
+    frame(bx, by, 124, 34, glow ? C.radiant : C.radiant3, C.bright);
+    text('CATCH', VW/2, by + 12, C.ink, 11, 'center');
+  }
+}
+
+function render() {
+  if (!octx) return;
+  // sky + ground
+  px(0, 0, VW, VH, C.dusk);
+  px(0, 0, VW, 150, C.sky);
+  px(0, 138, VW, 14, C.verdant7);
+  px(0, 150, VW, VH - 150, C.bg);
+  px(0, 150, VW, 3, C.ink);
+
+  var sx = shakeT > 0 ? (Math.random() - 0.5) * shakeMag : 0;
+  octx.save();
+  octx.translate(sx | 0, 0);
+
+  // Gen-1 staging (K-002): enemy front-right and small, yours back-left and large
+  drawMon(foes[fIdx], 186, 116, 8, true);
+  drawMon(party[pIdx], 82, 214, 11, false);
+
+  octx.restore();
+
+  drawHpBar(foes[fIdx], 140, 26, 118, true);
+  drawHpBar(party[pIdx], 12, 246, 118, false);
+  drawTellGlyph();
+
+  // stage chip
+  frame(10, 8, 60, 14, C.panel, C.ink);
+  text('STAGE ' + stage, 40, 11, C.parch, 8, 'center');
+
+  drawMeter();
+  drawNarration();
+  drawPips();
+
+  // guard feedback flash
+  if (lastGuard !== 0 && phase === PH_AFTER && phaseT < 0.3) {
+    octx.globalAlpha = 0.22 * (1 - phaseT / 0.3);
+    px(0, 0, VW, VH, lastGuard > 0 ? C.verdant3 : C.ember);
+    octx.globalAlpha = 1;
+  }
+  if (captureFlash > 0) {
+    octx.globalAlpha = captureFlash * 0.5;
+    px(0, 0, VW, VH, C.radiant3);
+    octx.globalAlpha = 1;
+  }
+
+  // blit
+  ctx.fillStyle = C.ink;
+  ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.drawImage(off, 0, 0, VW, VH, ox, oy, VW * scale, VH * scale);
+}
+
+// ---------------------------------------------------------------- harness sim
+/**
+ * Headless answer to the ONE question this probe exists for: is TELL additive?
+ * Runs the same maths the live battle runs, with a policy of never / always
+ * answering, and reports how the two differ. If "never" cannot clear what
+ * "always" clears, TELL has stopped being optional and the proposal has failed
+ * on its own terms.
+ */
+var LADDER = 4;                 // stages in a run; the sim and the live ladder share it
+function simulate(runs, policy, seed0) {
+  var wins = 0, stagesTotal = 0;
+  for (var r = 0; r < runs; r++) {
+    var R = new RNG((seed0 || 1234) + r * 7919);
+    var team = [ new Mon(speciesById('emberpup'), 5), new Mon(speciesById('sprigling'), 5), new Mon(speciesById('tidewisp'), 5) ];
+    var st = 1, guard = 0;
+    while (st <= LADDER && guard++ < 4000) {
+      var lv = 2 + st * 2, en = [];
+      var n = st < 2 ? 2 : 3;
+      for (var i = 0; i < n; i++) en.push(new Mon(SPECIES[R.int(SPECIES.length)], lv));
+      var pi = 0, fi = 0, safety = 0;
+      while (safety++ < 600) {
+        var p = team[pi], f = en[fi];
+        if (!p || !f) break;
+        var pFirst = p.spd >= f.spd ? R.next() < 0.72 : R.next() < 0.28;
+        for (var k = 0; k < 2; k++) {
+          var byP = k === 0 ? pFirst : !pFirst;
+          var att = byP ? p : f, dfn = byP ? f : p;
+          if (!att.alive() || !dfn.alive()) continue;
+          var sk = att.skills[R.int(att.skills.length)];
+          var mult = typeMult(sk.t, dfn.sp.t);
+          var dmg = damage(att, dfn, sk, mult, R);
+          if (!byP && policy === 'always' && counterOf(sk.t) >= 0) dmg = Math.max(1, Math.round(dmg * GUARD_MULT));
+          dfn.hp = Math.max(0, dfn.hp - dmg);
+        }
+        if (!f.alive()) { var nf = -1; for (var a=0;a<en.length;a++) if (en[a].alive()) { nf=a; break; } if (nf<0) break; fi = nf; }
+        if (!p.alive()) { var np = -1; for (var b=0;b<team.length;b++) if (team[b].alive()) { np=b; break; } if (np<0) break; pi = np; }
+      }
+      var anyAlive = false; for (var c=0;c<team.length;c++) if (team[c].alive()) anyAlive = true;
+      if (!anyAlive) break;
+      // Level AND heal between stages — mirroring the live game exactly. A
+      // simulation that models a different progression curve measures a
+      // different game and its verdict is worthless.
+      for (var d=0;d<team.length;d++) {
+        team[d].level += 2;
+        var mm = 1 + 0.08 * (team[d].level - 1);
+        team[d].maxHp = Math.round(team[d].sp.hp * mm * 1.6);
+        team[d].atk = Math.round(team[d].sp.atk * mm);
+        team[d].def = Math.round(team[d].sp.def * mm);
+        team[d].spd = Math.round(team[d].sp.spd * mm);
+        team[d].hp = team[d].maxHp;
+      }
+      st++;
+    }
+    stagesTotal += st - 1;
+    if (st > LADDER) wins++;
+  }
+  return { runs: runs, policy: policy, clears: wins, avgStages: stagesTotal / runs };
+}
+
+// ---------------------------------------------------------------- loop
+var last = 0, now = 0, frames = 0, frameErrs = 0;
+function tick(ts) {
+  try {
+    now = ts || (last + 16.7);
+    var dt = last ? Math.min(0.05, (now - last) / 1000) : 0.016;
+    last = now; frames++;
+    try { update(dt); } catch (e) { frameErrs++; if (frameErrs < 4) console.error('[tell] update:', e); }
+    try { render(); } catch (e2) { frameErrs++; if (frameErrs < 4) console.error('[tell] render:', e2); }
+  } finally {
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(tick);
+  }
+}
+
+// ---------------------------------------------------------------- boot
+function toVirtual(clientX, clientY) {
+  var r = cv.getBoundingClientRect();
+  var cxp = (clientX - r.left) * (cv.width / r.width);
+  var cyp = (clientY - r.top) * (cv.height / r.height);
+  return { x: (cxp - ox) / scale, y: (cyp - oy) / scale };
+}
+function handleDown(e) {
+  var t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]) || e;
+  var v = toVirtual(t.clientX, t.clientY);
+  onTap(v.x, v.y);
+}
+cv.addEventListener('mousedown', handleDown);
+cv.addEventListener('touchstart', function (e) { e.preventDefault(); handleDown(e); }, { passive: false });
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', function () { setTimeout(resize, 120); });
+document.getElementById('startBtn').addEventListener('click', function () { startRun(); });
+document.getElementById('againBtn').addEventListener('click', function () { startRun(); });
+
+(function boot() {
+  resize();
+  if (!initCanvas()) {
+    document.body.innerHTML = '<div style="color:#e8d5a8;font:600 15px system-ui;padding:30px;text-align:center">' +
+      '<h2>Canvas unavailable</h2><p><a style="color:#f0b541" href="../../">Back to the arena</a></p></div>';
+    return;
+  }
+  resize();
+  if (typeof requestAnimationFrame === 'function') requestAnimationFrame(tick);
+})();
+
+// test hook — harnesses drive the real loop, never a parallel copy of it
+if (typeof window !== 'undefined') {
+  window.__tell = {
+    update: update, render: render, resize: resize, startRun: startRun, onTap: onTap,
+    simulate: simulate, typeMult: typeMult, counterOf: counterOf,
+    get state() { return state; }, get phase() { return phase; },
+    get pending() { return pending; }, get answer() { return answer; },
+    get stage() { return stage; }, get meter() { return meter; },
+    get tellsSeen() { return tellsSeen; }, get tellsAnswered() { return tellsAnswered; },
+    get dmgPrevented() { return dmgPrevented; }, get caught() { return caught; },
+    get party() { return party; }, get foes() { return foes; },
+    get frames() { return frames; }, get frameErrs() { return frameErrs; },
+    get captureArmed() { return captureArmed; },
+    PH: { INTRO: PH_INTRO, PICK: PH_PICK, TELL: PH_TELL, IMPACT: PH_IMPACT, AFTER: PH_AFTER, FAINT: PH_FAINT },
+    answerNow: function (i) { if (phase === PH_TELL && pending && !pending.byPlayer) { answer = i; return true; } return false; },
+    answerCorrect: function () { if (phase === PH_TELL && pending && !pending.byPlayer) { var w = counterOf(pending.sk.t); if (w >= 0) { answer = w; return true; } } return false; },
+    virtual: { W: VW, H: VH }
+  };
+}
+</script>
+<script src="/analytics.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Bonds — TaterTot Games Labs</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%AB%B1%3C/text%3E%3C/svg%3E">
+<style>
+  :root{ --ink:#1a120b; --bg:#2e1f14; --panel:#4a3524; --wood:#6b4e33; --bevel:#94714a;
+         --dim:#c9a06a; --parch:#e8d5a8; --bright:#f5ecd4; --radiant:#f0b541; }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:var(--bg);
+    touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;overscroll-behavior:none}
+  canvas{position:fixed;inset:0;display:block;touch-action:none;image-rendering:pixelated}
+  .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    pointer-events:none;opacity:0;transition:opacity .25s ease;z-index:10;text-align:center;
+    padding:calc(12px + env(safe-area-inset-top)) 14px calc(12px + env(safe-area-inset-bottom));
+    background:rgba(26,18,11,.9)}
+  .screen.show{pointer-events:auto;opacity:1}
+  h1{font-size:min(12vw,52px);font-weight:900;letter-spacing:.05em;color:var(--bright);margin:0;text-shadow:0 3px 0 var(--ink)}
+  h1 .sub{display:block;font-size:min(3.4vw,14px);letter-spacing:.2em;color:var(--radiant);margin-top:8px}
+  .tag{margin-top:14px;color:var(--dim);font-size:min(3.6vw,13.5px);line-height:1.6;max-width:min(92vw,440px)}
+  .tag b{color:var(--parch)}
+  .go{margin-top:20px;min-height:52px;padding:15px 38px;border:0;border-radius:6px;cursor:pointer;
+    font-family:inherit;font-weight:900;font-size:1.05rem;letter-spacing:.1em;color:var(--ink);
+    background:var(--radiant);box-shadow:0 4px 0 #8c5c16}
+  .go:active{transform:translateY(2px);box-shadow:0 2px 0 #8c5c16}
+  .stats{margin-top:18px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .st{background:var(--panel);border:1px solid var(--wood);border-radius:5px;padding:8px 12px;min-width:74px}
+  .st b{display:block;color:var(--radiant);font-size:1.2rem}
+  .st span{font-size:.55rem;letter-spacing:.12em;color:var(--dim)}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div class="screen show" id="title">
+  <h1>BONDS<span class="sub">SQUAD OR JOB. NEVER BOTH.</span></h1>
+  <div class="tag">
+    A Kinfold meta probe. Every Kinmon is either <b>on your squad</b> or <b>working a job</b> —
+    the game's own rule, and its central tension.<br><br>
+    Jobs pay Essence, and Essence is levels. But a pair only builds a <b>Bond</b> by fighting side
+    by side, and a bonded pair learns a move only the two of them can do.<br><br>
+    Levels are rented. Bonds are earned. You cannot buy either with the other.
+  </div>
+  <button class="go" id="startBtn" type="button">OPEN THE BASE</button>
+</div>
+
+<div class="screen" id="over">
+  <h1 id="overTitle">SEASON OVER<span class="sub" id="overSub"></span></h1>
+  <div class="stats">
+    <div class="st"><b id="sDay">0</b><span>DAYS</span></div>
+    <div class="st"><b id="sStage">0</b><span>STAGE</span></div>
+    <div class="st"><b id="sDuo">0</b><span>DUOS</span></div>
+    <div class="st"><b id="sLvl">0</b><span>AVG LVL</span></div>
+  </div>
+  <div class="tag" id="overNote"></div>
+  <button class="go" id="againBtn" type="button">AGAIN</button>
+</div>
+
+<script>
+"use strict";
+/* ===========================================================================
+   BONDS — a Kinfold meta probe (TaterTot Games Labs)
+
+   Tests one question: is "squad or job, never both" a real decision once
+   something is accruing on BOTH sides of it?
+
+   K-010 makes assignment exclusive and the GDD calls that the engine of the
+   whole game — but today only one side of the trade accrues. Jobs pay a
+   resource; the squad pays experience that the jobs could also have bought.
+   BONDS puts a second, non-purchasable currency on the squad side: a pair only
+   builds Bond by fighting together, and Bond is the only route to a Duo skill.
+
+   Deliberately NOT a stat set. K-007 rejected rune sets, and a Duo that added
+   raw power would be that system by the back door. Duos are sideways — a second
+   hit, a cleanse, a shield — and they are earned by playing rather than
+   acquired, which is the distinction this probe exists to test.
+
+   __bo.strategyTest() runs the three degenerate strategies (all-jobs,
+   all-squad, mixed) so the decision can be shown to be a real one.
+   =========================================================================== */
+
+var C = {
+  ink:'#1a120b', bg:'#2e1f14', panel:'#4a3524', wood:'#6b4e33', bevel:'#94714a',
+  dim:'#c9a06a', parch:'#e8d5a8', bright:'#f5ecd4',
+  ember:'#e0684a', ember3:'#f09a6a', ember7:'#b8442a',
+  verdant:'#4a8c4a', verdant3:'#7ac160', verdant7:'#2e5c33',
+  tide:'#4a8cc9', tide3:'#85bce0', tide7:'#2a5a8c',
+  radiant:'#f0b541', radiant3:'#f8d878',
+  umbral:'#7a5cb0', umbral3:'#a88cd9', sky:'#8cc9e0', dusk:'#34547a'
+};
+var TYPE = [
+  { n:'EMBER',   c:C.ember,   l:C.ember3,   d:C.ember7 },
+  { n:'VERDANT', c:C.verdant, l:C.verdant3, d:C.verdant7 },
+  { n:'TIDE',    c:C.tide,    l:C.tide3,    d:C.tide7 },
+  { n:'RADIANT', c:C.radiant, l:C.radiant3, d:'#8c5c16' },
+  { n:'UMBRAL',  c:C.umbral,  l:C.umbral3,  d:'#443060' }
+];
+function typeMult(a,d){
+  if(a<3&&d<3){ if((a+1)%3===d) return 1.5; if((d+1)%3===a) return 0.67; return 1; }
+  if((a===3&&d===4)||(a===4&&d===3)) return 1.5;
+  return 1;
+}
+function RNG(seed){ this.s=(seed>>>0)||1; }
+RNG.prototype.next=function(){
+  this.s=(this.s+0x6D2B79F5)>>>0;
+  var t=this.s; t=Math.imul(t^(t>>>15),t|1); t^=t+Math.imul(t^(t>>>7),t|61);
+  return ((t^(t>>>14))>>>0)/4294967296;
+};
+RNG.prototype.int=function(n){ return Math.floor(this.next()*n)%n; };
+
+var SPECIES = [
+  { id:'emberpup',  name:'EMBERPUP',  t:0, hp:52, atk:15, def:9,  spd:12, shape:'pup' },
+  { id:'cindermol', name:'CINDERMOL', t:0, hp:66, atk:13, def:14, spd:8,  shape:'mole' },
+  { id:'sprigling', name:'SPRIGLING', t:1, hp:56, atk:13, def:12, spd:10, shape:'sprout' },
+  { id:'thornbuck', name:'THORNBUCK', t:1, hp:62, atk:16, def:10, spd:11, shape:'buck' },
+  { id:'tidewisp',  name:'TIDEWISP',  t:2, hp:50, atk:14, def:9,  spd:15, shape:'wisp' },
+  { id:'brinecrab', name:'BRINECRAB', t:2, hp:70, atk:12, def:16, spd:7,  shape:'crab' }
+];
+
+// Duos are SIDEWAYS, never raw power (see the K-007 note above).
+var DUOS = [
+  { n:'TWIN EMBER',  blurb:'a second hit, every third round',  kind:'double' },
+  { n:'ROOTED CALM', blurb:'shrugs off the first big hit',     kind:'shield' },
+  { n:'TIDE TURN',   blurb:'strikes first when it matters',    kind:'first'  },
+  { n:'OLD HABIT',   blurb:'covers for a fallen partner',      kind:'cover'  }
+];
+var BOND_TIER = [4, 10, 18];         // battles fought together for tier 1/2/3
+var DUO_AT = 10;                     // duo unlocks at bond tier 2
+
+function pairKey(a,b){ return a < b ? a+'|'+b : b+'|'+a; }
+
+// ---------------------------------------------------------------- model
+function Mon(sp, idx) {
+  this.sp = sp; this.idx = idx; this.level = 5;
+  this.job = null;                  // 'grove' | 'pens' | null  (EXCLUSIVE with squad)
+  this.bob = Math.random()*6.28; this.flash = 0;
+  this.hp = 0; this.maxHp = 0;
+}
+Mon.prototype.derive = function(){
+  var m = 1 + 0.08*(this.level-1);
+  this.maxHp = Math.round(this.sp.hp*m*1.6);
+  this.atk = Math.round(this.sp.atk*m); this.def = Math.round(this.sp.def*m); this.spd = Math.round(this.sp.spd*m);
+  this.hp = this.maxHp;
+  return this;
+};
+Mon.prototype.alive = function(){ return this.hp > 0; };
+Mon.prototype.frac = function(){ return this.maxHp<=0?0:this.hp/this.maxHp; };
+
+// ---------------------------------------------------------------- state
+var ST_TITLE=0, ST_BASE=1, ST_FIGHT=2, ST_OVER=3;
+var state = ST_TITLE;
+
+var roster = [], squad = [], bonds = {}, duos = {};
+var day = 0, stage = 1, essence = 0, rng = new RNG(1);
+var JOB_SLOTS = 2, ESSENCE_PER_JOB = 9, LEVEL_COST = 16;
+var msg = '', narration = [], enemy = [], fightLog = [], fightIdx = 0, fightT = 0;
+var liveSquad = null, liveEn = null, lsi = 0, lei = 0, shakeT = 0;
+var duoPopup = null, duoT = 0, lastResult = null;
+
+function say(l){ narration.push(l); if(narration.length>2) narration.shift(); }
+
+function startRun(){
+  rng = new RNG(Date.now() & 0xffffff);
+  roster = []; bonds = {}; duos = {};
+  for (var i=0;i<SPECIES.length;i++) roster.push(new Mon(SPECIES[i], i).derive());
+  squad = [0,1,2];
+  roster[3].job = 'grove'; roster[4].job = 'pens';
+  day = 0; stage = 1; essence = 0;
+  msg = 'Assign your Kinmon, then fight.';
+  state = ST_BASE;
+  document.getElementById('title').classList.remove('show');
+  document.getElementById('over').classList.remove('show');
+}
+
+function inSquad(i){ return squad.indexOf(i) >= 0; }
+function jobCount(){ var n=0; for (var i=0;i<roster.length;i++) if (roster[i].job) n++; return n; }
+
+/** The K-010 rule, enforced in one place: squad or job, never both. */
+function toggle(i) {
+  var m = roster[i];
+  if (inSquad(i)) {
+    squad.splice(squad.indexOf(i), 1);
+    msg = m.sp.name + ' stands down.';
+  } else if (m.job) {
+    m.job = null;
+    msg = m.sp.name + ' comes off the job.';
+  } else if (squad.length < 3) {
+    squad.push(i);
+    msg = m.sp.name + ' joins the squad.';
+  } else if (jobCount() < JOB_SLOTS) {
+    m.job = jobCount() === 0 ? 'grove' : 'pens';
+    msg = m.sp.name + ' takes a job.';
+  } else {
+    msg = 'No room. Stand someone down first.';
+  }
+}
+
+function bondOf(a,b){ return bonds[pairKey(a,b)] || 0; }
+function bondTier(v){ var t=0; for (var i=0;i<BOND_TIER.length;i++) if (v>=BOND_TIER[i]) t=i+1; return t; }
+function duoOf(a,b){ return duos[pairKey(a,b)] || null; }
+
+function buildEnemy(){
+  var lv = 4 + stage*2;
+  enemy = [];
+  for (var i=0;i<3;i++){ var sp=SPECIES[rng.int(SPECIES.length)]; var m=new Mon(sp,-1); m.level=lv; enemy.push(m.derive()); }
+}
+
+// ---------------------------------------------------------------- the day
+function runDay(){
+  if (state !== ST_BASE) return;
+  if (squad.length === 0) { msg = 'Send at least one Kinmon.'; return; }
+  day++;
+  // jobs pay first — this is the half you gave up battles for
+  var earned = 0;
+  for (var i=0;i<roster.length;i++) if (roster[i].job) earned += ESSENCE_PER_JOB;
+  essence += earned;
+  buildEnemy();
+  simulateFight();
+  state = ST_FIGHT;
+  narration = [];
+  if (earned > 0) say('The base paid ' + earned + ' Essence.');
+}
+
+function simulateFight(){
+  var R = new RNG((rng.s ^ (day*2654435761)) >>> 0);
+  var team = [], en = [];
+  for (var i=0;i<squad.length;i++){ var m=roster[squad[i]]; m.derive(); team.push(m); }
+  for (var j=0;j<enemy.length;j++){ enemy[j].derive(); en.push(enemy[j]); }
+  fightLog = []; fightIdx = 0; fightT = 0;
+  var pi=0, fi=0, guard=0, round=0;
+
+  // duo bookkeeping for the squad actually fielded
+  var duoDouble = false, duoShield = false, duoFirst = false, duoCover = false;
+  for (var a=0;a<squad.length;a++) for (var b=a+1;b<squad.length;b++) {
+    var d = duoOf(squad[a], squad[b]);
+    if (!d) continue;
+    if (d.kind==='double') duoDouble = true;
+    if (d.kind==='shield') duoShield = true;
+    if (d.kind==='first')  duoFirst = true;
+    if (d.kind==='cover')  duoCover = true;
+    fightLog.push({ duo:true, name:d.n, blurb:d.blurb });
+  }
+  var shieldLeft = duoShield ? 1 : 0, coverLeft = duoCover ? 1 : 0;
+
+  while (guard++ < 300) {
+    var p = team[pi], f = en[fi];
+    if (!p || !f) break;
+    round++;
+    var pFirst = duoFirst ? true : (p.spd >= f.spd ? R.next()<0.72 : R.next()<0.28);
+    for (var k=0;k<2;k++){
+      var byP = k===0 ? pFirst : !pFirst;
+      var att = byP ? p : f, dfn = byP ? f : p;
+      if (!att.alive() || !dfn.alive()) continue;
+      var hits = (byP && duoDouble && round % 3 === 0) ? 2 : 1;
+      for (var h=0; h<hits; h++){
+        if (!dfn.alive()) break;
+        var mult = typeMult(att.sp.t, dfn.sp.t);
+        var dmg = Math.max(1, Math.round(att.atk*44/(dfn.def+30)*mult*(0.9+R.next()*0.1)*1.6));
+        if (!byP && shieldLeft > 0 && dmg > dfn.maxHp*0.25) { dmg = Math.round(dmg*0.35); shieldLeft--; fightLog.push({shield:true, who:dfn}); }
+        dfn.hp = Math.max(0, dfn.hp - dmg);
+        fightLog.push({ byP:byP, att:att, dfn:dfn, dmg:dmg, mult:mult, extra:h>0 });
+      }
+      if (!dfn.alive()){
+        fightLog.push({ faint:true, who:dfn, byP:byP });
+        if (byP){
+          var nf=-1; for (var x=0;x<en.length;x++) if (en[x].alive()){ nf=x; break; }
+          if (nf<0){ fightLog.push({ end:true, won:true }); finishFight(true, team); return; }
+          fi=nf;
+        } else {
+          if (coverLeft > 0) { coverLeft--; dfn.hp = Math.round(dfn.maxHp*0.3); fightLog.push({cover:true, who:dfn}); continue; }
+          var np=-1; for (var y=0;y<team.length;y++) if (team[y].alive()){ np=y; break; }
+          if (np<0){ fightLog.push({ end:true, won:false }); finishFight(false, team); return; }
+          pi=np;
+        }
+        break;
+      }
+    }
+  }
+  fightLog.push({ end:true, won:false });
+  finishFight(false, team);
+}
+
+function finishFight(won, team){
+  lastResult = { won: won };
+  // Bond accrues for every PAIR that was fielded together — win or lose (K-018).
+  var newDuos = [];
+  for (var a=0;a<squad.length;a++) for (var b=a+1;b<squad.length;b++){
+    var key = pairKey(squad[a], squad[b]);
+    bonds[key] = (bonds[key]||0) + 1;
+    if (bonds[key] >= DUO_AT && !duos[key]) {
+      var pick = DUOS[(squad[a]*3 + squad[b]) % DUOS.length];
+      duos[key] = pick;
+      newDuos.push({ key:key, a:squad[a], b:squad[b], duo:pick });
+    }
+  }
+  lastResult.newDuos = newDuos;
+  if (won) stage++;
+}
+
+function levelUp(i){
+  if (essence < LEVEL_COST) { msg = 'Not enough Essence.'; return; }
+  essence -= LEVEL_COST; roster[i].level++; roster[i].derive();
+  msg = roster[i].sp.name + ' reached level ' + roster[i].level + '.';
+}
+
+function endSeason(){
+  state = ST_OVER;
+  var lv = 0; for (var i=0;i<roster.length;i++) lv += roster[i].level;
+  var duoCount = 0; for (var k in duos) if (duos.hasOwnProperty(k)) duoCount++;
+  document.getElementById('sDay').textContent = String(day);
+  document.getElementById('sStage').textContent = String(stage);
+  document.getElementById('sDuo').textContent = String(duoCount);
+  document.getElementById('sLvl').textContent = (lv/roster.length).toFixed(1);
+  document.getElementById('overTitle').firstChild.nodeValue = 'SEASON OVER';
+  document.getElementById('overSub').textContent = duoCount > 0 ? 'the squad remembers' : 'nobody bonded';
+  document.getElementById('overNote').innerHTML = duoCount > 0
+    ? 'You unlocked <b>' + duoCount + '</b> duo' + (duoCount===1?'':'s') + ' and reached stage <b>' + stage +
+      '</b>. Bond only accrues from fielding — every duo above cost you job Essence you did not earn.'
+    : 'No duos. You levelled instead, and reached stage <b>' + stage + '</b>. That is the other half of the trade.';
+  document.getElementById('over').classList.add('show');
+}
+
+// ---------------------------------------------------------------- playback
+var STEP = 0.30;
+function stepFight(dt){
+  if (duoT > 0) { duoT = Math.max(0, duoT - dt); return; }
+  fightT += dt;
+  if (fightT < STEP) return;
+  fightT = 0;
+  if (fightIdx >= fightLog.length) {
+    if (lastResult && lastResult.newDuos && lastResult.newDuos.length) {
+      var nd = lastResult.newDuos.shift();
+      duoPopup = nd; duoT = 1.6;
+      say(roster[nd.a].sp.name + ' and ' + roster[nd.b].sp.name + ' moved together!');
+      return;
+    }
+    state = ST_BASE;
+    msg = lastResult && lastResult.won ? 'Stage cleared. The wild pushes back harder.' : 'Held. Nothing lost.';
+    return;
+  }
+  var e = fightLog[fightIdx++];
+  if (e.duo) { say(e.name + ' is ready — ' + e.blurb + '.'); return; }
+  if (e.shield) { say(e.who.sp.name + ' shrugged it off!'); return; }
+  if (e.cover) { say(e.who.sp.name + ' was covered — still standing!'); return; }
+  if (e.faint) { say(e.who.sp.name + ' fainted!'); return; }
+  if (e.end) { say(e.won ? 'The wild gives way!' : 'The squad falls back.'); return; }
+  shakeT = 0.14; e.dfn.flash = 1;
+  say(e.att.sp.name + (e.extra ? ' strikes again!' : (e.mult>1.2 ? ' — super effective!' : (e.mult<0.9 ? ' — not very effective' : ' attacks!'))));
+  if (!liveEn) return;
+  for (var a=0;a<liveEn.length;a++) if (liveEn[a].alive()){ lei=a; break; }
+  for (var b=0;b<liveSquad.length;b++) if (liveSquad[b].alive()){ lsi=b; break; }
+}
+
+// ---------------------------------------------------------------- render
+var VW=270, VH=480;
+var cv=document.getElementById('cv');
+var off=null,octx=null,ctx=null,W=1,H=1,DPR=1,scale=1,ox=0,oy=0,resizing=false;
+function initCanvas(){
+  off=document.createElement('canvas'); off.width=VW; off.height=VH;
+  octx=off.getContext('2d'); ctx=cv.getContext('2d');
+  if(!octx||!ctx) return false;
+  octx.imageSmoothingEnabled=false; ctx.imageSmoothingEnabled=false; return true;
+}
+function resize(){
+  if(resizing) return; resizing=true;
+  try{
+    var iw=window.innerWidth||0, ih=window.innerHeight||0;
+    if(iw<2||ih<2) return;
+    DPR=Math.min(2, window.devicePixelRatio||1);
+    W=iw;H=ih; cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR);
+    // CRITICAL: pin the CSS size or the canvas lays out at its attribute size.
+    cv.style.width=W+'px'; cv.style.height=H+'px';
+    if(ctx) ctx.imageSmoothingEnabled=false;
+    scale = Math.min(cv.width / VW, cv.height / VH);   // fit, not integer-only
+    ox=Math.floor((cv.width-VW*scale)/2); oy=Math.floor((cv.height-VH*scale)/2);
+  } finally { resizing=false; }
+}
+function px(x,y,w,h,c){ octx.fillStyle=c; octx.fillRect(x|0,y|0,w|0,h|0); }
+function frame(x,y,w,h,f,e){ px(x,y,w,h,e); px(x+1,y+1,w-2,h-2,f); }
+function text(s,x,y,c,sz,al){
+  octx.fillStyle=c; octx.font='900 '+(sz||8)+'px ui-monospace, Menlo, Consolas, monospace';
+  octx.textAlign=al||'left'; octx.textBaseline='top'; octx.fillText(s,x|0,y|0);
+}
+function drawMon(m,cx,cy,s,left){
+  if(!m) return;
+  var t=TYPE[m.sp.t], bob=Math.sin(now*0.0026+m.bob)*(s*0.5), y=cy+bob;
+  var body = m.flash>0 && (Math.floor(now/60)%2===0) ? C.bright : t.c;
+  octx.globalAlpha=0.3; px(cx-s*2.2, cy+s*1.9, s*4.4, s*0.7, C.ink); octx.globalAlpha=1;
+  var w=s*3.4,h=s*2.6;
+  px(cx-w/2-1,y-h/2-1,w+2,h+2,C.ink); px(cx-w/2,y-h/2,w,h,body);
+  px(cx-w/2,y+h/2-s*0.7,w,s*0.7,t.d); px(cx-w/2+1,y-h/2+1,w-2,s*0.5,t.l);
+  var sp=m.sp.shape;
+  if(sp==='pup'){ px(cx-w/2+1,y-h/2-s*0.9,s*0.8,s*0.9,body); px(cx+w/2-s*0.8-1,y-h/2-s*0.9,s*0.8,s*0.9,body); }
+  else if(sp==='sprout'){ px(cx-s*0.3,y-h/2-s*1.1,s*0.6,s*1.1,C.verdant3); }
+  else if(sp==='buck'){ px(cx-s*1.2,y-h/2-s*1.2,s*0.4,s*1.2,t.d); px(cx+s*0.8,y-h/2-s*1.2,s*0.4,s*1.2,t.d); }
+  else if(sp==='wisp'){ px(cx-w/2-s*0.9,y-s*0.4,s*0.9,s*1.1,t.l); px(cx+w/2,y-s*0.4,s*0.9,s*1.1,t.l); }
+  else if(sp==='crab'){ px(cx-w/2-s*0.8,y+s*0.2,s*0.8,s*0.8,t.d); px(cx+w/2,y+s*0.2,s*0.8,s*0.8,t.d); }
+  else if(sp==='mole'){ px(left?cx-w/2-s*0.7:cx+w/2,y,s*0.7,s*0.6,t.l); }
+  var ex=left?cx-s*0.9:cx+s*0.3;
+  px(ex,y-s*0.4,s*0.5,s*0.6,C.ink); px(ex+s*0.9,y-s*0.4,s*0.5,s*0.6,C.ink);
+}
+
+function renderBase(){
+  px(0,0,VW,VH,C.bg);
+  px(0,0,VW,30,C.panel); px(0,30,VW,1,C.ink);
+  text('DAY '+day, 8, 11, C.parch, 9);
+  text('STAGE '+stage, VW/2, 11, C.radiant, 9, 'center');
+  text(essence+' ESS', VW-8, 11, C.verdant3, 9, 'right');
+
+  text('SQUAD '+squad.length+'/3   ·   JOBS '+jobCount()+'/'+JOB_SLOTS, 8, 36, C.dim, 7);
+
+  for (var i=0;i<roster.length;i++){
+    var m = roster[i], y = 46 + i*46;
+    var sq = inSquad(i), jb = !!m.job;
+    var edge = sq ? C.radiant : (jb ? C.verdant3 : C.ink);
+    frame(6, y, VW-12, 42, sq ? C.wood : C.panel, edge);
+    drawMon(m, 26, y+21, 5, false);
+    text(m.sp.name, 46, y+4, C.bright, 8);
+    text(TYPE[m.sp.t].n+'  L'+m.level, 46, y+15, TYPE[m.sp.t].l, 7);
+    text(sq ? 'SQUAD' : (jb ? 'JOB: '+m.job.toUpperCase() : 'IDLE'), 46, y+26,
+         sq ? C.radiant : (jb ? C.verdant3 : C.wood), 7);
+    // level button
+    var canLvl = essence >= LEVEL_COST;
+    frame(VW-56, y+7, 46, 28, canLvl ? '#2e5c33' : C.panel, canLvl ? C.verdant3 : C.ink);
+    text('LVL+', VW-33, y+11, canLvl?C.bright:C.wood, 8, 'center');
+    text(LEVEL_COST+'e', VW-33, y+22, canLvl?C.verdant3:C.wood, 6, 'center');
+  }
+
+  // bond web for the fielded squad — the thing jobs cost you
+  var by = 46 + roster.length*46 + 4;
+  text('BONDS IN THIS SQUAD', 8, by, C.dim, 7);
+  var row = 0;
+  for (var a=0;a<squad.length;a++) for (var b=a+1;b<squad.length;b++){
+    var v = bondOf(squad[a],squad[b]), tier = bondTier(v), d = duoOf(squad[a],squad[b]);
+    var yy = by+10+row*14; row++;
+    text(roster[squad[a]].sp.name.slice(0,7)+'+'+roster[squad[b]].sp.name.slice(0,7), 8, yy, C.parch, 7);
+    var bx = 128, bw = 78;
+    px(bx, yy+2, bw, 4, C.ink);
+    var frac = Math.min(1, v / DUO_AT);
+    px(bx, yy+2, Math.round(bw*frac), 4, d ? C.radiant3 : C.tide3);
+    text(d ? d.n : (v+'/'+DUO_AT), VW-8, yy, d?C.radiant3:C.dim, 7, 'right');
+  }
+  if (row === 0) text('field two together to start one', 8, by+10, C.wood, 7);
+
+  frame(6, VH-70, VW-12, 32, C.radiant, C.bright);
+  text('SEND THEM OUT', VW/2, VH-61, C.ink, 11, 'center');
+  frame(6, VH-34, VW-12, 26, C.panel, C.ink);
+  text(msg, VW/2, VH-27, C.parch, 7, 'center');
+}
+
+function renderFight(){
+  px(0,0,VW,VH,C.dusk); px(0,0,VW,150,C.sky);
+  px(0,138,VW,14,C.verdant7); px(0,150,VW,VH-150,C.bg); px(0,150,VW,3,C.ink);
+  var sx = shakeT>0?(Math.random()-0.5)*3:0;
+  octx.save(); octx.translate(sx|0,0);
+  drawMon(liveEn && liveEn[lei], 186, 116, 8, true);
+  drawMon(liveSquad && liveSquad[lsi], 82, 214, 11, false);
+  octx.restore();
+  bar(liveEn && liveEn[lei], 140, 26, 118);
+  bar(liveSquad && liveSquad[lsi], 12, 246, 118);
+  frame(10,8,60,14,C.panel,C.ink); text('STAGE '+stage,40,11,C.parch,8,'center');
+
+  // narration box (K-023: the text box is the game's voice)
+  var y=VH-96;
+  frame(8,y,VW-16,56,C.panel,C.ink); px(10,y+2,VW-20,1,C.bevel);
+  for(var i=0;i<narration.length;i++) text(narration[i],15,y+12+i*16,i===narration.length-1?C.bright:C.dim,9);
+
+  if (duoT > 0 && duoPopup) {
+    octx.globalAlpha = Math.min(1, duoT/0.4);
+    frame(20, 190, VW-40, 52, C.radiant, C.bright);
+    text('DUO UNLOCKED', VW/2, 196, C.ink, 8, 'center');
+    text(duoPopup.duo.n, VW/2, 208, C.ink, 13, 'center');
+    text(duoPopup.duo.blurb, VW/2, 226, C.ink, 7, 'center');
+    octx.globalAlpha = 1;
+  }
+}
+function bar(m,x,y,w){
+  if(!m) return;
+  frame(x,y,w,12,C.panel,C.ink); text(m.sp.name,x+3,y+2,C.parch,7);
+  var bw=w-6,f=m.frac();
+  px(x+3,y+8,bw,2,C.ink);
+  px(x+3,y+8,Math.max(0,Math.round(bw*f)),2, f>0.5?C.verdant3:(f>0.25?C.radiant:C.ember));
+  text('L'+m.level,x+w-3,y+2,C.dim,7,'right');
+}
+
+function render(){
+  if(!octx) return;
+  if (state===ST_BASE) renderBase();
+  else if (state===ST_FIGHT) renderFight();
+  else px(0,0,VW,VH,C.bg);
+  ctx.fillStyle=C.bg; ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.drawImage(off,0,0,VW,VH,ox,oy,VW*scale,VH*scale);
+}
+
+function update(dt){
+  if(shakeT>0) shakeT=Math.max(0,shakeT-dt);
+  for(var i=0;i<roster.length;i++) roster[i].flash=Math.max(0,roster[i].flash-dt*4);
+  for(var j=0;j<enemy.length;j++) enemy[j].flash=Math.max(0,enemy[j].flash-dt*4);
+  if (state===ST_FIGHT) stepFight(dt);
+}
+
+// ---------------------------------------------------------------- input
+function onTap(x,y){
+  if (state===ST_BASE){
+    for (var i=0;i<roster.length;i++){
+      var ry = 46 + i*46;
+      if (y>=ry && y<=ry+42){
+        if (x >= VW-56 && x <= VW-10) levelUp(i);
+        else toggle(i);
+        return;
+      }
+    }
+    if (y>=VH-70 && y<=VH-38) { runDay(); return; }
+    if (y>=VH-34 && day>=8) { endSeason(); return; }
+  }
+}
+
+// ---------------------------------------------------------------- strategy test
+/**
+ * The measurement: are all-jobs, all-squad and mixed genuinely different?
+ * If they land in the same place the exclusive-assignment rule is decorative.
+ */
+function strategyTest(days, seed0){
+  function run(policy, seed){
+    var R = new RNG(seed);
+    var rs = [];
+    for (var i=0;i<SPECIES.length;i++){ var m=new Mon(SPECIES[i],i); m.level=5; rs.push(m.derive()); }
+    var bd = {}, du = {}, ess = 0, st = 1, sq = [0,1,2];
+    for (var d=0; d<(days||14); d++){
+      // assignment
+      var jobs = policy==='alljobs' ? 3 : (policy==='allsquad' ? 0 : 2);
+      ess += jobs * ESSENCE_PER_JOB;
+      while (ess >= LEVEL_COST) { ess -= LEVEL_COST; rs[d % 3].level++; rs[d % 3].derive(); }
+      // squad size shrinks if everyone is working
+      var fielded = policy==='alljobs' ? [0] : sq;
+      // bond
+      for (var a=0;a<fielded.length;a++) for (var b=a+1;b<fielded.length;b++){
+        var key = pairKey(fielded[a],fielded[b]);
+        bd[key] = (bd[key]||0)+1;
+        if (bd[key] >= DUO_AT && !du[key]) du[key] = DUOS[(fielded[a]*3+fielded[b])%DUOS.length];
+      }
+      // fight
+      var lv = 4 + st*2, en = [];
+      for (var e=0;e<3;e++){ var em=new Mon(SPECIES[R.int(SPECIES.length)],-1); em.level=lv; en.push(em.derive()); }
+      var team = []; for (var t=0;t<fielded.length;t++){ rs[fielded[t]].derive(); team.push(rs[fielded[t]]); }
+      var duoDouble=false; for (var k in du) if (du.hasOwnProperty(k) && du[k].kind==='double') duoDouble=true;
+      var pi=0, fi=0, g=0, round=0, won=false;
+      while (g++ < 300){
+        var p=team[pi], f=en[fi];
+        if(!p||!f) break;
+        round++;
+        for (var kk=0;kk<2;kk++){
+          var byP = kk===0;
+          var att=byP?p:f, dfn=byP?f:p;
+          if(!att.alive()||!dfn.alive()) continue;
+          var hits = (byP && duoDouble && round%3===0)?2:1;
+          for (var hh=0;hh<hits;hh++){
+            if(!dfn.alive()) break;
+            var mult=typeMult(att.sp.t,dfn.sp.t);
+            dfn.hp = Math.max(0, dfn.hp - Math.max(1, Math.round(att.atk*44/(dfn.def+30)*mult*(0.9+R.next()*0.1)*1.6)));
+          }
+        }
+        if(!f.alive()){ var nf=-1; for(var q=0;q<en.length;q++) if(en[q].alive()){nf=q;break;} if(nf<0){won=true;break;} fi=nf; }
+        if(!p.alive()){ var np=-1; for(var w=0;w<team.length;w++) if(team[w].alive()){np=w;break;} if(np<0) break; pi=np; }
+      }
+      if (won) st++;
+    }
+    var duoN=0; for (var z in du) if (du.hasOwnProperty(z)) duoN++;
+    var lvSum=0; for (var y2=0;y2<rs.length;y2++) lvSum+=rs[y2].level;
+    return { stage:st, duos:duoN, avgLevel:+(lvSum/rs.length).toFixed(1) };
+  }
+  return {
+    allJobs:  run('alljobs',  (seed0||7)+1),
+    allSquad: run('allsquad', (seed0||7)+2),
+    mixed:    run('mixed',    (seed0||7)+3)
+  };
+}
+
+// ---------------------------------------------------------------- loop
+var last=0, now=0, frames=0, frameErrs=0;
+function tick(ts){
+  try{
+    now = ts || (last+16.7);
+    var dt = last?Math.min(0.05,(now-last)/1000):0.016;
+    last=now; frames++;
+    try{ update(dt);}catch(e){frameErrs++; if(frameErrs<4) console.error('[bonds] update:',e);}
+    try{ render();}catch(e2){frameErrs++; if(frameErrs<4) console.error('[bonds] render:',e2);}
+  } finally { if(typeof requestAnimationFrame==='function') requestAnimationFrame(tick); }
+}
+function toVirtual(cx,cy){
+  var r=cv.getBoundingClientRect();
+  return { x:((cx-r.left)*(cv.width/r.width)-ox)/scale, y:((cy-r.top)*(cv.height/r.height)-oy)/scale };
+}
+function handleDown(e){
+  var t=(e.touches&&e.touches[0])||(e.changedTouches&&e.changedTouches[0])||e;
+  var v=toVirtual(t.clientX,t.clientY); onTap(v.x,v.y);
+}
+cv.addEventListener('mousedown', handleDown);
+cv.addEventListener('touchstart', function(e){ e.preventDefault(); handleDown(e); }, {passive:false});
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', function(){ setTimeout(resize,120); });
+document.getElementById('startBtn').addEventListener('click', startRun);
+document.getElementById('againBtn').addEventListener('click', startRun);
+
+(function boot(){
+  resize();
+  if(!initCanvas()){
+    document.body.innerHTML='<div style="color:#e8d5a8;font:600 15px system-ui;padding:30px;text-align:center">'+
+      '<h2>Canvas unavailable</h2><p><a style="color:#f0b541" href="../../">Back to the arena</a></p></div>';
+    return;
+  }
+  resize();
+  if(typeof requestAnimationFrame==='function') requestAnimationFrame(tick);
+})();
+
+if (typeof window !== 'undefined') {
+  window.__bo = {
+    update:update, render:render, resize:resize, startRun:startRun, runDay:runDay,
+    toggle:toggle, levelUp:levelUp, onTap:onTap, strategyTest:strategyTest, endSeason:endSeason,
+    bondOf:bondOf, duoOf:duoOf, pairKey:pairKey, typeMult:typeMult,
+    get state(){return state;}, get day(){return day;}, get stage(){return stage;},
+    get roster(){return roster;}, get squad(){return squad;}, get bonds(){return bonds;},
+    get duos(){return duos;}, get essence(){return essence;}, get msg(){return msg;},
+    get frames(){return frames;}, get frameErrs(){return frameErrs;},
+    get jobCount(){return jobCount();},
+    DUO_AT:DUO_AT, JOB_SLOTS:JOB_SLOTS,
+    ST:{TITLE:ST_TITLE,BASE:ST_BASE,FIGHT:ST_FIGHT,OVER:ST_OVER},
+    /** Fast-forward a whole day without watching the playback (harness only). */
+    fastDay:function(){ runDay(); var g=0; while(state===ST_FIGHT && g++<4000) stepFight(1); },
+    virtual:{W:VW,H:VH}
+  };
+}
+</script>
+<script src="/analytics.js" defer></script>
+</body>
+</html>
