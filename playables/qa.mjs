@@ -25,7 +25,7 @@ const chrome = spawn(CHROME, ['--headless=new', `--remote-debugging-port=${PORT}
 process.on('exit', () => chrome.kill());
 
 async function target() {
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 150; i++) {
     try { return await (await fetch(`http://127.0.0.1:${PORT}/json/new?about:blank`, { method: 'PUT' })).json(); }
     catch { await sleep(200); }
   }
