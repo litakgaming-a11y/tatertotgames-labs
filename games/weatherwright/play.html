@@ -141,14 +141,14 @@
       <button class="mBtn" id="almBtn">📖 ALMANAC</button>
       <button class="mBtn gold" id="shopBtn">🛠️ SKY</button>
     </div>
-    <a id="badge" href="../../">TaterTot Games Labs</a>
+    <a id="badge" href="https://tatertotgames.com">tatertotgames.com</a>
   </div>
 
   <div id="hud" class="screen">
     <div id="hudTop">
       <div class="chip" id="hudDuel">DUEL 1</div>
-      <div class="chip" id="hudFoe">vs —</div>
-      <div class="chip" id="hudMode" style="display:none">—</div>
+      <div class="chip" id="hudFoe">vs, </div>
+      <div class="chip" id="hudMode" style="display:none">-</div>
     </div>
     <div id="banner"></div>
     <div id="toast"></div>
@@ -330,7 +330,7 @@ const INTERACTIONS = [
     fx: { amp: { gloom: .30 }, regen: { verdant: 1.6, gloom: 1.2 }, vfx: 'moonflower' } },
 
   /* --- sky x glim --- */
-  { a: 'w:rain',  b: 'e:spark',   id: 'conductive', nm: 'Conductive Field', kind: 'combo',   gl: '🌧️⚡', ds: 'Wet air carries the charge — lightning forks and chains.',
+  { a: 'w:rain',  b: 'e:spark',   id: 'conductive', nm: 'Conductive Field', kind: 'combo',   gl: '🌧️⚡', ds: 'Wet air carries the charge, lightning forks and chains.',
     fx: { amp: { spark: .55 }, chain: 1, crit: { spark: .2 }, vfx: 'chain' } },
   { a: 'w:sun',   b: 'e:verdant', id: 'overgrowth', nm: 'Explosive Overgrowth', kind: 'combo', gl: '☀️🌿', ds: 'Photosynthesis gone feral. Verdant grows mid-swing.',
     fx: { amp: { verdant: .55 }, regen: { verdant: 1.4 }, burst: 1, vfx: 'overgrowth' } },
@@ -358,7 +358,7 @@ const INTERACTIONS = [
     fx: { amp: { verdant: .35 }, regen: { verdant: 2.2 }, vfx: 'wildgrowth' } },
   { a: 'w:bloom', b: 'e:ember',   id: 'wildfire',   nm: 'Wildfire',         kind: 'combo',   gl: '🌸🔥', ds: 'All that dry bloom is kindling. Ember goes wide.',
     fx: { amp: { ember: .45 }, aura: .5, vfx: 'wildfire' } },
-  { a: 'w:night', b: 'e:ember',   id: 'emberglow',  nm: 'Ember Glow',       kind: 'combo',   gl: '🌙🔥', ds: 'In the dark, even a small Ember is a beacon — and a target.',
+  { a: 'w:night', b: 'e:ember',   id: 'emberglow',  nm: 'Ember Glow',       kind: 'combo',   gl: '🌙🔥', ds: 'In the dark, even a small Ember is a beacon, and a target.',
     fx: { amp: { ember: .28 }, guard: { ember: -.2 }, crit: { ember: .2 }, vfx: 'glow' } },
   { a: 'w:fog',   b: 'e:spark',   id: 'statichaze', nm: 'Static Haze',      kind: 'combo',   gl: '🌫️⚡', ds: 'The whole fog holds a charge. Spark arcs at random.',
     fx: { amp: { spark: .30 }, aura: .45, vfx: 'static' } },
@@ -458,7 +458,7 @@ const cv = $('cv');
 const cx = cv.getContext('2d');
 let W = 320, H = 560, DPR = 1;
 let resizing = false;
-// arena geometry (all initialized — the loop draws from boot)
+// arena geometry (all initialized, the loop draws from boot)
 let groundY = 400, arenaTop = 90, arenaMid = 160, trayY = 470, runeR = 30;
 let runeSlots = [];     // {id, x, y, r}
 let skyBar = { x: 10, y: 440, w: 300, h: 14 };
@@ -797,8 +797,8 @@ function startDuel(n) {
   d.foeName = foeNm;
   refreshHud();
   banner('DUEL ' + n, plan.boss ? '⛈️ STORMCALLER' : (plan.champion ? '🏆 CHAMPION' : 'READ THE SKY'));
-  if (plan.hazard) setTimeout(() => { if (state === 'play') toast(plan.hazard.ic + ' <b>' + plan.hazard.nm + '</b> — ' + plan.hazard.ds); }, 900);
-  else if (plan.drought) setTimeout(() => { if (state === 'play') toast('🏜️ <b>Sky Drought</b> — the meter refills slowly here.'); }, 900);
+  if (plan.hazard) setTimeout(() => { if (state === 'play') toast(plan.hazard.ic + ' <b>' + plan.hazard.nm + '</b>-' + plan.hazard.ds); }, 900);
+  else if (plan.drought) setTimeout(() => { if (state === 'play') toast('🏜️ <b>Sky Drought</b>, the meter refills slowly here.'); }, 900);
   window.TTG?.track('level_start', { level: n });
 }
 function refreshHud() {
@@ -807,7 +807,7 @@ function refreshHud() {
   const hf = $('hudFoe');
   if (hf) {
     const o = d.o;
-    hf.textContent = 'vs ' + (o ? (ESS[o.ess].ic + ' ' + o.nm) : '—');
+    hf.textContent = 'vs ' + (o ? (ESS[o.ess].ic + ' ' + o.nm) : '-');
     hf.className = 'chip' + (d.boss ? ' boss' : '');
   }
   const hm = $('hudMode');
@@ -1174,7 +1174,7 @@ function update(dtRaw) {
   const dt = dtRaw * d.timeScale;
   d.t += dt;
 
-  // sky economy — always refills, so weather can never be permanently unaffordable
+  // sky economy, always refills, so weather can never be permanently unaffordable
   d.sky = Math.min(d.skyMax, d.sky + d.skyRefill * dt);
 
   // weather timers
@@ -1253,7 +1253,7 @@ function update(dtRaw) {
   // stall guards: sudden light, then a hard tiebreak that can always end the duel
   if (d.t > SUDDEN_T && !d.suddenAnnounced) {
     d.suddenAnnounced = true;
-    banner('SUDDEN LIGHT', 'the sky burns hot — no more mending');
+    banner('SUDDEN LIGHT', 'the sky burns hot, no more mending');
   }
   if (d.t >= HARD_T) {
     d.tiebreak = true;
@@ -1678,7 +1678,7 @@ function drawGlim(g) {
     cx.beginPath();
     cx.arc(0, -r * 1.48, r * 0.24, 0, TAU); cx.fill();
   }
-  // eyes — stance readable at a glance
+  // eyes, stance readable at a glance
   const ey = -r * 0.82, ex = r * 0.26;
   cx.fillStyle = '#12182c';
   const sq = g.stance === 'press' ? 0.62 : (g.stance === 'retreat' ? 1.25 : 1);
@@ -2310,7 +2310,7 @@ refreshTitle();
 setMute(save.muted);
 requestAnimationFrame(loop);
 
-/* test hook — harmless in production, lets the verification harness drive the sim */
+/* test hook, harmless in production, lets the verification harness drive the sim */
 window.__WW = {
   get state() { return state; }, set state(v) { state = v; },
   get duel() { return duel; },

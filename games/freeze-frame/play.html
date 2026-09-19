@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Freeze Frame! — TaterTot Games Labs</title>
+<title>Freeze Frame! | TaterTot Games</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E❄️%3C/text%3E%3C/svg%3E">
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
@@ -22,11 +22,11 @@
 </head>
 <body>
 <canvas id="c"></canvas>
-<a id="badge" href="../../">🥔 TaterTot Games Labs</a>
+<a id="badge" href="https://tatertotgames.com">tatertotgames.com</a>
 <script>
 'use strict';
 /* ============================================================
-   FREEZE FRAME! — tap-to-freeze timing rescue game
+   FREEZE FRAME!, tap-to-freeze timing rescue game
    ============================================================ */
 const TAU = Math.PI * 2;
 const SAVE_KEY = 'ttg_freeze';
@@ -1198,7 +1198,7 @@ function drawHUD(t) {
       ctx.globalAlpha = a * 0.9;
       ctx.font = '700 16px ' + FONT;
       ctx.fillStyle = '#cfe8ff';
-      ctx.fillText('Save ' + game.required + ' of ' + game.total + ' puffins — tap water to freeze!', W / 2, view.H * 0.32 + 42);
+      ctx.fillText('Save ' + game.required + ' of ' + game.total + ' puffins, tap water to freeze!', W / 2, view.H * 0.32 + 42);
       ctx.globalAlpha = 1;
     }
   }
@@ -1355,7 +1355,7 @@ function drawVillage(t) {
     ctx.font = '700 14px ' + FONT;
     ctx.fillStyle = 'rgba(90,120,150,0.9)';
     ctx.textAlign = 'center';
-    ctx.fillText('Your snow village awaits — save puffins to grow it!', W / 2, vy + 34);
+    ctx.fillText('Your snow village awaits, save puffins to grow it!', W / 2, vy + 34);
   }
 }
 
@@ -1414,7 +1414,7 @@ function drawTitle(dt, t) {
   /* stats */
   ctx.font = '700 15px ' + FONT;
   ctx.fillStyle = '#bfe3ff';
-  ctx.fillText('❄ Snow Village Lv ' + vl + ' — ' + store.total + ' puffins saved ❄', W / 2, H * 0.52);
+  ctx.fillText('❄ Snow Village Lv ' + vl + '-' + store.total + ' puffins saved ❄', W / 2, H * 0.52);
   if (store.best > 0) {
     ctx.fillStyle = 'rgba(190,225,255,0.7)';
     ctx.fillText('Best level: ' + store.best, W / 2, H * 0.52 + 24);

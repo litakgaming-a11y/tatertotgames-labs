@@ -140,7 +140,7 @@
     <div class="statRow">🛡️ Best wave <span id="bestWave">0</span> <span class="dim" id="bestCombo"></span></div>
     <button id="playBtn">🛡️ TAP TO PLAY</button>
     <button id="shopBtn">🔧 THE BASTION</button>
-    <a id="badge" href="../../">TaterTot Games Labs</a>
+    <a id="badge" href="https://tatertotgames.com">tatertotgames.com</a>
   </div>
 
   <div id="hud" class="screen">
@@ -183,7 +183,7 @@
 (() => {
 'use strict';
 /* =========================================================================
-   RETURN FIRE — reflection dynamics + momentum transfer
+   RETURN FIRE, reflection dynamics + momentum transfer
    All state that the loop touches is initialised at declaration: the rAF
    loop runs from boot on the title screen, long before a wave exists.
    ========================================================================= */
@@ -237,7 +237,7 @@ function persist() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save));
 
 /* ============================= meta data ============================= */
 const UPG = [
-  { id: 'arc',   ic: '🛡️', nm: 'Shield Arc',      ds: 'Wider shield — easier blocks, blinder flank', base: 60, max: 5 },
+  { id: 'arc',   ic: '🛡️', nm: 'Shield Arc',      ds: 'Wider shield, easier blocks, blinder flank', base: 60, max: 5 },
   { id: 'kin',   ic: '💥', nm: 'Kinetic Gain',    ds: 'More swipe speed transfers into the return',  base: 80, max: 5 },
   { id: 'plate', ic: '🔩', nm: 'Core Plating',    ds: '+1 core hit every 2 levels',                  base: 95, max: 5 },
   { id: 'heat',  ic: '🔥', nm: 'Overheat Charge', ds: 'CRITICAL triggers after fewer deflections',   base: 85, max: 5 },
@@ -302,7 +302,7 @@ function resize() {
   try {
     const w = window.innerWidth, h = window.innerHeight;
     // 0-size guard (backgrounded webviews / hidden panes). sizeOk stays false so
-    // the loop keeps retrying until the viewport is real — otherwise the canvas
+    // the loop keeps retrying until the viewport is real, otherwise the canvas
     // would render forever at its 300x150 attribute default.
     if (!(w > 10) || !(h > 10)) { sizeOk = false; return; }
     DPR = Math.min(window.devicePixelRatio || 1, 2.5);
@@ -310,7 +310,7 @@ function resize() {
     cv.width = Math.round(W * DPR);
     cv.height = Math.round(H * DPR);
     // A canvas is a replaced element: without an explicit CSS size it lays out
-    // at its attribute size (W*DPR) — double the viewport on phones. Pin it.
+    // at its attribute size (W*DPR), double the viewport on phones. Pin it.
     cv.style.width = W + 'px';
     cv.style.height = H + 'px';
     cx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -387,7 +387,7 @@ function noiseHit(dur, vol, type, freq, t0, q, slideTo) {
     src.start(t); src.stop(t + dur + 0.03);
   } catch (e) {}
 }
-/* metallic clang — timbre varies with impact angle + shield skin */
+/* metallic clang, timbre varies with impact angle + shield skin */
 function sfxClang(incidence, energy, skin) {
   if (!AC) return;
   const inc = clamp(incidence, 0, 1);            // 0 = square on, 1 = grazing
@@ -398,7 +398,7 @@ function sfxClang(incidence, energy, skin) {
   tone(base * 2.51, 0.09, 'square', 0.09, undefined, base * 1.6);
   tone(base * 4.13, 0.05, 'triangle', 0.05);
 }
-/* rising whistle — pitch tracks the speed you gave it */
+/* rising whistle, pitch tracks the speed you gave it */
 function sfxWhistle(speedFactor) {
   if (!AC) return;
   const f0 = 380 + 300 * clamp(speedFactor, 0, 3);
@@ -896,7 +896,7 @@ function buildWave(n) {
   paletteTarget = 0;
   const count = clamp(3 + Math.floor(n * 0.75), 3, 13);
   const angs = [];
-  if (n <= 3) {                                   // single side — teaches angle
+  if (n <= 3) {                                   // single side, teaches angle
     for (let i = 0; i < count; i++) angs.push(-Math.PI / 2 + (i - (count - 1) / 2) * 0.38);
   } else if (n <= 8) {                            // two-side crossfire
     const cA = -Math.PI * 0.78, cB = -Math.PI * 0.22;
@@ -937,7 +937,7 @@ function buildWave(n) {
   }
 }
 
-/* fire scheduler — engineered tension: shots are staggered so a rotating
+/* fire scheduler, engineered tension: shots are staggered so a rotating
    shield can always physically reach the next one. */
 const SLEW = 3.4;                 // rad/s the spring-lagged shield can reliably cover
 const ARR_MARGIN = 0.17;          // slack between two consecutive arrivals
@@ -963,7 +963,7 @@ function nextFireGap(n) {
 function distToCore(e) { return Math.hypot(e.x - core.x, e.y - core.y); }
 
 /* Shots are aimed at a point on the SHIELD RING, so the arrival angle around
-   the core is exact — that is what makes the tension schedulable. */
+   the core is exact, that is what makes the tension schedulable. */
 function enemyFire(e, off, typeOv) {
   if (!e || e.dead) return;
   const type = (typeOv === undefined || typeOv < 0) ? e.shoot : typeOv;
@@ -1425,7 +1425,7 @@ function updateBoss(b, dt) {
     fireTimer = Math.max(fireTimer, 0.8);
   }
 }
-/* Boss volleys sweep across the shield instead of arriving all at once — the
+/* Boss volleys sweep across the shield instead of arriving all at once, the
    bullet-hell reads as a wall of fire but stays physically deflectable. */
 function fireBossPattern(b) {
   b.volley = (b.volley || 0) + 1;
@@ -1639,7 +1639,7 @@ function updateHUD() {
     bw.classList.toggle('on', on);
     if (on) {
       $('bossFill').style.width = (clamp(bossRef.hp / bossRef.maxhp, 0, 1) * 100).toFixed(1) + '%';
-      $('bossName').textContent = bossRef.armorOpen ? 'SIEGE MECH — CORE EXPOSED' : ('SIEGE MECH — ARMOR ' + Math.min(3, bossRef.mortRet) + '/3');
+      $('bossName').textContent = bossRef.armorOpen ? 'SIEGE MECH, CORE EXPOSED' : ('SIEGE MECH, ARMOR ' + Math.min(3, bossRef.mortRet) + '/3');
     }
   }
 }

@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Sky Bloom — TaterTot Games Labs</title>
-<meta name="description" content="Burst it at exactly the right height. Timed spectacle prototype from the TaterTot Games Labs testing arena — playable in your browser.">
+<title>Sky Bloom | TaterTot Games</title>
+<meta name="description" content="Burst it at exactly the right height. Timed spectacle game from the TaterTot Games Labs testing arena, playable in your browser.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎆</text></svg>">
 <style>
   :root{--bg:#0d0b16;--bg2:#151127;--card:#1c1734;--card2:#241d44;--line:rgba(255,255,255,.08);
@@ -86,11 +86,14 @@
     text-transform:uppercase;color:var(--dim);margin-bottom:5px}
   .nav .r{text-align:right}
   footer{margin-top:40px;text-align:center;color:#5c5486;font-size:.8rem;line-height:1.7}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .top .site,footer a{color:inherit;font-weight:700;text-decoration:none}
+  .top .site:hover,footer a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="back" href="../../">← All prototypes</a>
+  <div class="top"><a class="back" href="../../">← All games</a><a class="site" href="https://tatertotgames.com">tatertotgames.com</a></div>
 
   <div class="hero">
     <div>
@@ -102,14 +105,13 @@
     </div>
     <div>
       <div class="badges">
-        <span class="b acc">Wave 3</span>
+        <span class="b acc">Arcade</span>
         <span class="b">Timed spectacle</span>
         <span class="b">20–30s shows</span>
       </div>
       <h1>🎆 Sky Bloom</h1>
       <p class="hook">Burst it at exactly the right height</p>
       <p class="lede">Rockets launch themselves from the barge, each climbing toward a target ring. Tap while the rocket is inside its ring and it opens into a full bloom with a crowd's ooooh; tap early or late and you get a fizzle. Chain perfects and the blooms grow bigger and more elaborate.</p>
-      <p class="why"><b>Why it works:</b> Almost nothing to learn and an enormous payoff — it is the most purely spectacular game here, and the perfect-timing window is deliberately generous early so the escalation feels like your own improvement.</p>
       <div class="playRow">
         <a class="play" href="play">▶ PLAY NOW</a>
         <span class="note">Runs in your browser · no install · works on phones</span>
@@ -122,7 +124,7 @@
     <ol class="steps">
         <li><span class="n">1</span><span>Watch each rocket climb toward its target ring.</span></li>
         <li><span class="n">2</span><span>Tap the instant it is inside the ring for a perfect bloom.</span></li>
-        <li><span class="n">3</span><span>Do not tap the duds — chain perfects into the grand finale.</span></li>
+        <li><span class="n">3</span><span>Do not tap the duds, chain perfects into the grand finale.</span></li>
     </ol>
   </section>
 
@@ -140,7 +142,7 @@
 
   <section>
     <h2>The meta layer</h2>
-    <div class="metaBox">Festival earnings unlock firework types — willow, ring, heart, dragon — and a Festival Album that saves your best finale from each night.</div>
+    <div class="metaBox">Festival earnings unlock firework types, willow, ring, heart, dragon, and a Festival Album that saves your best finale from each night.</div>
   </section>
 
   <div class="nav">
@@ -148,10 +150,7 @@
     <a class="r" href="../fold-friends/"><span>Next</span>🦢 Fold Friends →</a>
   </div>
 
-  <footer>
-    A single self-contained file — no engine, no libraries, no external requests.<br>
-    © 2026 TaterTot Games Labs
-  </footer>
+  <footer>© 2026 TaterTot Games · <a href="https://tatertotgames.com">tatertotgames.com</a></footer>
 </div>
 </body>
 </html>

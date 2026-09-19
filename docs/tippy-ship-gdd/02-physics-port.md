@@ -1,4 +1,4 @@
-# 02 — Physics Port
+# 02, Physics Port
 
 > **The prototype is the spec.** [`games/tippy-ship/play.html`](../../games/tippy-ship/play.html) is the authoritative reference for feel. Where this document and the prototype disagree, the prototype wins and this document is wrong.
 
@@ -15,11 +15,11 @@
 | Water drag, wave slope sway | **Ported** | Tuned feel |
 | Ballast righting moment | **Ported** | Upgrade-visible |
 | Mooring spring | **Ported** | Keeps the hull under the crane |
-| Weld-to-hull sleeping | **Ported** | See §6 — Box2D sleep is not equivalent |
+| Weld-to-hull sleeping | **Ported** | See §6, Box2D sleep is not equivalent |
 | Wind gust heeling torque | **Ported** | Applied above deck |
 | Gull weight at offset | **Ported** | Delightfully literal |
 
-## 2. Constants — port these exactly
+## 2. Constants, port these exactly
 
 From `play.html` lines 505–560. **Do not "clean up" these numbers.** Several are the result of tuning that is not obvious from reading them.
 
@@ -40,7 +40,7 @@ public static class Sim
     public const float HULL_W0      = 184f;
     public const float HULL_H       = 52f;
 
-    public const float KEEL_INERTIA_MULT = 2.2f;  // see §4 — critical
+    public const float KEEL_INERTIA_MULT = 2.2f;  // see §4, critical
     public const float TERMINAL_FALL     = 640f;
 }
 ```
@@ -52,8 +52,8 @@ Unity project settings:
 | `Time.fixedDeltaTime` | `0.0066667` (1/150) |
 | `Physics2D.velocityIterations` | 8 |
 | `Physics2D.positionIterations` | 3 |
-| `Physics2D.simulationMode` | `Script` — we drive it manually |
-| `Physics2D.gravity` | `(0, 0)` — gravity is applied per-body in the sim |
+| `Physics2D.simulationMode` | `Script`, we drive it manually |
+| `Physics2D.gravity` | `(0, 0)`, gravity is applied per-body in the sim |
 | `Physics2D.autoSyncTransforms` | `false` |
 
 Gravity is zero at the `Physics2D` level because buoyant bodies need gravity applied in the same pass as buoyancy, in a controlled order. See §5.
@@ -80,9 +80,9 @@ wave.a1 = region.baseSwell;      // 3.0 .. 8.5
 wave.a2 = region.chop;           // 1.5 .. 4.3
 ```
 
-`waveT` advances by `dt * timeScale` — **not raw `dt`**. The water must slow down with the slow-motion, or the capsize sequence looks broken.
+`waveT` advances by `dt * timeScale`, **not raw `dt`**. The water must slow down with the slow-motion, or the capsize sequence looks broken.
 
-## 4. Hull buoyancy — the core port
+## 4. Hull buoyancy, the core port
 
 Port of `applyHullForces()`, `play.html:845`.
 
@@ -137,7 +137,7 @@ void ApplyHullForces(Hull h, float dt)
         h.vx += WaterSlopeAt(h.x) * 40f * q * dt;
     }
 
-    // 8. welded sleepers still weigh on the ship — see §6
+    // 8. welded sleepers still weigh on the ship, see §6
     foreach (var sb in weldedCargo)
     {
         float Fw = sb.m * Sim.G;
@@ -145,13 +145,13 @@ void ApplyHullForces(Hull h, float dt)
         h.va += ((sb.x - h.x) * Fw) * h.invI * dt;
     }
 
-    // 9. ballast keel — explicit righting moment, upgrade-scaled
+    // 9. ballast keel, explicit righting moment, upgrade-scaled
     h.va += -Mathf.Sin(h.a) * (1.2f + 0.6f * ballastTier) * dt * 2.6f;
 
     // 10. mooring spring keeps her under the crane
     h.vx += (-2.2f * h.x - 1.6f * h.vx) * dt;
 
-    // 11. wind gust — horizontal force above the deck → heeling torque
+    // 11. wind gust, horizontal force above the deck → heeling torque
     if (wind.gustT > 0f)
     {
         float f = wind.gust * wind.dir;
@@ -159,7 +159,7 @@ void ApplyHullForces(Hull h, float dt)
         h.va += f * 0.00055f * dt;
     }
 
-    // 12. seagull standing on one rail — real weight at a real offset
+    // 12. seagull standing on one rail, real weight at a real offset
     if (gull.state == GullState.Landed)
     {
         float ca = Mathf.Cos(h.a), sa = Mathf.Sin(h.a);
@@ -171,7 +171,7 @@ void ApplyHullForces(Hull h, float dt)
 }
 ```
 
-### The keel inertia trick — do not lose this
+### The keel inertia trick, do not lose this
 
 ```csharp
 // makeHull(), play.html:548
@@ -187,7 +187,7 @@ In Unity, set this explicitly:
 rb.inertia = baseInertia * Sim.KEEL_INERTIA_MULT;
 ```
 
-`Rigidbody2D.inertia` is only settable after `useAutoMass` is disabled and mass is assigned. Verify with an assertion in `Awake` — a silent revert to auto-inertia will change the entire game's feel and it will not be obvious why.
+`Rigidbody2D.inertia` is only settable after `useAutoMass` is disabled and mass is assigned. Verify with an assertion in `Awake`, a silent revert to auto-inertia will change the entire game's feel and it will not be obvious why.
 
 ### Starting draft
 
@@ -233,9 +233,9 @@ void ApplyCargoForces(Body b, float dt)
 }
 ```
 
-Note `RHO / b.dens` — cargo denser than water sinks, less dense floats. Bullion at `dens 1.05` sinks; a Barrel at `0.62` bobs. This falls out of the physics rather than being special-cased, which is why the cargo types feel coherent.
+Note `RHO / b.dens`, cargo denser than water sinks, less dense floats. Bullion at `dens 1.05` sinks; a Barrel at `0.62` bobs. This falls out of the physics rather than being special-cased, which is why the cargo types feel coherent.
 
-## 6. Weld-to-hull sleeping — port this, do not use Box2D sleep
+## 6. Weld-to-hull sleeping, port this, do not use Box2D sleep
 
 Port of `trySleep()` / `syncSleeper()`, `play.html:932`.
 
@@ -278,9 +278,9 @@ void SyncSleeper(Body b, Hull h)
 }
 ```
 
-**Sleepers still weigh.** A kinematic body contributes nothing to the solver, so its load would vanish from the hull. Step 8 of `ApplyHullForces` re-applies each sleeper's weight and moment explicitly. Losing this makes a fully-loaded ship float *higher* than an empty one — a catastrophic and very confusing bug.
+**Sleepers still weigh.** A kinematic body contributes nothing to the solver, so its load would vanish from the hull. Step 8 of `ApplyHullForces` re-applies each sleeper's weight and moment explicitly. Losing this makes a fully-loaded ship float *higher* than an empty one, a catastrophic and very confusing bug.
 
-### `WakeAll()` — mandatory call sites
+### `WakeAll()`, mandatory call sites
 
 Every event that changes the world under a sleeping stack must wake everything:
 
@@ -295,7 +295,7 @@ Every event that changes the world under a sleeping stack must wake everything:
 
 Missing one produces cargo frozen in mid-air relative to a hull that has moved. Add a debug assertion that no sleeper's world position differs from `SyncSleeper`'s prediction by more than 0.5 u.
 
-## 7. Update order — this order is load-bearing
+## 7. Update order, this order is load-bearing
 
 ```
 for each substep of PH:
@@ -325,7 +325,7 @@ Substep count per frame: `ceil(frameDt * timeScale / PH)`, clamped to 6 to preve
 | Bullion | box | 30 × 26 | **1.05** | 0.60 | 0.04 | Heavy, sinks the rail |
 | Glassware | box | 27 × 22 | 0.38 | 0.60 | 0.02 | Breaks under load or impact |
 
-Deck friction: `deckMu = 0.72 + 0.08 × deckTier` (4 tiers → 0.96 at max). Applied as the hull's `PhysicsMaterial2D.friction`; Box2D combines contact friction as `sqrt(muA × muB)`, which matches the prototype's behaviour closely enough. **Verify this in the parity harness** — if it drifts, override the friction combine with a custom contact callback.
+Deck friction: `deckMu = 0.72 + 0.08 × deckTier` (4 tiers → 0.96 at max). Applied as the hull's `PhysicsMaterial2D.friction`; Box2D combines contact friction as `sqrt(muA × muB)`, which matches the prototype's behaviour closely enough. **Verify this in the parity harness**, if it drifts, override the friction combine with a custom contact callback.
 
 ### Glassware break conditions
 
@@ -338,14 +338,14 @@ b.impulseFromAbove *= 0.7f;   // decay per frame
 
 `impulseFromAbove` accumulates normal impulse from contacts whose normal points downward into the body. `crush` is the sustained normal force from above, normalised by the body's own weight.
 
-## 9. The parity harness — non-negotiable
+## 9. The parity harness, non-negotiable
 
 Without this, tuning silently drifts during the port and the game's feel is lost with no way to detect it.
 
 **Build a headless test scene** that:
 
 1. Loads a fixed seed (start with `4471`, `9102`, `31337`).
-2. Replays a canned input tape — trolley x, hold durations, card choices.
+2. Replays a canned input tape, trolley x, hold durations, card choices.
 3. Records `hull.a`, `hull.y`, `hull.subFrac` at 30 Hz for 30 simulated seconds.
 4. Compares against a golden CSV exported from the prototype.
 
@@ -365,14 +365,14 @@ Run in CI on every commit touching the sim. A failure is a **build blocker**, no
 
 ### The harness must cross the serialisation boundary
 
-Kinfold shipped a re-simulation feature whose determinism test **could not see the bug that broke it**, and would never have seen it ([15-lessons-from-prior-builds.md L1](15-lessons-from-prior-builds.md)). A ghost was "a snapshot + a seed, re-simulated"; the snapshot's `ToJson` silently dropped four fields, so every ghost re-simulated a *different fight than its owner actually fought*. The test re-ran an **in-memory** ghost against itself, never crossing JSON — the only place anything could be lost — so it stayed green for months.
+Kinfold shipped a re-simulation feature whose determinism test **could not see the bug that broke it**, and would never have seen it ([15-lessons-from-prior-builds.md L1](15-lessons-from-prior-builds.md)). A ghost was "a snapshot + a seed, re-simulated"; the snapshot's `ToJson` silently dropped four fields, so every ghost re-simulated a *different fight than its owner actually fought*. The test re-ran an **in-memory** ghost against itself, never crossing JSON, the only place anything could be lost, so it stayed green for months.
 
 > **The rule, in the words of the log that earned it:** *when a thing is defined by surviving a boundary, the test has to cross the boundary.*
 
 A `RunTape` is that exact thing. Therefore:
 
 1. The parity harness replays from **serialised tape bytes**, never an in-memory struct.
-2. A reflection test asserts every field of `RunSetup` and `RunTape` appears in the written payload — it **fails on any newly added field** until that field is written *and* read back.
+2. A reflection test asserts every field of `RunSetup` and `RunTape` appears in the written payload, it **fails on any newly added field** until that field is written *and* read back.
 3. One test round-trips a tape through JSON *and* through the Cloud Code path, asserting an identical **event log**, not merely an identical final score. A matching score with a divergent log means the two runs differed and happened to land on the same number.
 4. Tapes written before a field existed back-fill to a **defined default**, never to zero. Kinfold's all-zero fallback produced units weaker than anything else in the game.
 
@@ -380,11 +380,11 @@ A determinism test that does not serialise is only testing that the sim is a pur
 
 ### Expected divergence sources, in order of likelihood
 
-1. `Rigidbody2D.inertia` silently reverting to auto — check first, always.
+1. `Rigidbody2D.inertia` silently reverting to auto, check first, always.
 2. Friction combine mode differing from the prototype's `mu` handling.
 3. `waveT` advancing on raw `dt` instead of `dt * timeScale`.
 4. Substep count differing under frame-rate variation.
-5. Float accumulation order in the least-squares fit — use `double` for the accumulators if this bites.
+5. Float accumulation order in the least-squares fit, use `double` for the accumulators if this bites.
 
 ## 10. Determinism rules
 
@@ -395,18 +395,18 @@ Replays, the Weekly Regatta and server-side validation all depend on the sim bei
 - `Time.deltaTime`, `Time.time`, `Time.realtimeSinceStartup`
 - `UnityEngine.Random`, `System.Random` without an explicit seed
 - `DateTime.Now`
-- Iteration over `Dictionary` or `HashSet` where order affects results — see below, this one has bitten a sibling project three times in one system
+- Iteration over `Dictionary` or `HashSet` where order affects results, see below, this one has bitten a sibling project three times in one system
 - Any physics query returning results in unspecified order
 - `float` parsing from localised strings
 
 ### Hash-container order is a simulation bug, not a style issue
 
-Gloamdelve shipped three separate determinism leaks of exactly this kind, all inside the system its determinism rule existed to protect ([15-lessons-from-prior-builds.md L2](15-lessons-from-prior-builds.md)). The shape: `Dictionary.Values` copied to a `List`, then picked **by index**. Removing an entry permutes the buckets, so the same seed produced a different outcome — and because the save serialiser recompacted the map on reload, **a save/load changed the answer**.
+Gloamdelve shipped three separate determinism leaks of exactly this kind, all inside the system its determinism rule existed to protect ([15-lessons-from-prior-builds.md L2](15-lessons-from-prior-builds.md)). The shape: `Dictionary.Values` copied to a `List`, then picked **by index**. Removing an entry permutes the buckets, so the same seed produced a different outcome, and because the save serialiser recompacted the map on reload, **a save/load changed the answer**.
 
 Two accepted fixes, no others:
 
 ```csharp
-// (a) impose a total order before use — ids are unique, so this is total
+// (a) impose a total order before use, ids are unique, so this is total
 candidates.Sort((a, b) => string.CompareOrdinal(a.Id, b.Id));
 
 // (b) iterate a fixed enum order and look up
@@ -414,13 +414,13 @@ foreach (CargoType t in Enum.GetValues(typeof(CargoType)))
     if (stock.TryGetValue(t, out var n) && n > 0) list.Add(t);
 ```
 
-Never expose a `Dictionary.Values` or `HashSet` enumeration from a sim type at all — not even as a read-only property. The leak in Gloamdelve escaped through exactly such a `Snapshot` property.
+Never expose a `Dictionary.Values` or `HashSet` enumeration from a sim type at all, not even as a read-only property. The leak in Gloamdelve escaped through exactly such a `Snapshot` property.
 
 **Required:**
 
 - All RNG through a single seeded `Mulberry32` instance, ported from `play.html:246`, threaded explicitly.
 - Fixed substep only. No variable-step fallback path, ever.
-- The sim assembly compiles with `[assembly: DisableRuntimeInitializeOnLoad]` style isolation and has **no reference to UnityEngine.Input** — input arrives as a value type from the tape or the live capture layer.
+- The sim assembly compiles with `[assembly: DisableRuntimeInitializeOnLoad]` style isolation and has **no reference to UnityEngine.Input**, input arrives as a value type from the tape or the live capture layer.
 - Enforce with an assembly-definition boundary and a Roslyn analyzer banning the forbidden APIs. This is cheap and it will save the project.
 
 ## 11. Performance budget

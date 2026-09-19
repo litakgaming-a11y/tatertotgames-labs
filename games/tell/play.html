@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Tell — TaterTot Games Labs</title>
+<title>Tell | TaterTot Games</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%B6%3C/text%3E%3C/svg%3E">
 <style>
   :root{
@@ -47,7 +47,7 @@
 <div class="screen show" id="title">
   <h1>TELL<span class="sub">READ THE WIND-UP</span></h1>
   <div class="tag">
-    A Kinfold combat probe. The battle fights itself — <b>except</b> that every enemy attack
+    The battle fights itself, <b>except</b> that every enemy attack
     telegraphs its element first.<br><br>
     <b>Tap the element that beats it</b> and your Kinmon interposes: less damage, and the capture
     meter charges.<br><br>
@@ -73,13 +73,13 @@
 <script>
 "use strict";
 /* ===========================================================================
-   TELL — a Kinfold combat probe (TaterTot Games Labs)
+   TELL, a Kinfold combat probe (TaterTot Games Labs)
 
    Tests one question: can an OPTIONAL elemental parry make a watch-only
    auto-battler active without breaking it?
 
    Kinfold's K-003 says the capture throw is the only input during a battle,
-   and its own justification names the risk — "a battle you touch zero times is
+   and its own justification names the risk, "a battle you touch zero times is
    a screensaver". TELL adds a second input that is strictly additive: a wrong
    answer and no answer resolve identically to the battle Kinfold already has.
    That property is the whole proposal, and __tell.simulate() measures it.
@@ -198,7 +198,7 @@ var PH_INTRO = 0, PH_PICK = 1, PH_TELL = 2, PH_IMPACT = 3, PH_AFTER = 4, PH_FAIN
 var phase = PH_INTRO, phaseT = 0;
 var pending = null;            // the attack being wound up
 var answer = -1;               // pip the player tapped this tell
-var lastGuard = 0;             // 1 right, -1 wrong, 0 none — drives the flash
+var lastGuard = 0;             // 1 right, -1 wrong, 0 none, drives the flash
 var captureArmed = false, captureFlash = 0;
 var shakeT = 0, shakeMag = 0;
 
@@ -221,7 +221,7 @@ function startRun(seed) {
 function buildStage() {
   // The party levels with the ladder and heals between stages. Without this the
   // enemy scaled and the party did not, so the run ended on a stat wall around
-  // stage 1 and the probe measured attrition instead of the parry — both the
+  // stage 1 and the probe measured attrition instead of the parry, both the
   // never-tap and always-tap policies cleared 0/60.
   for (var h = 0; h < party.length; h++) {
     if (stage > 1) { party[h].level += 2; var mm = 1 + 0.08 * (party[h].level - 1);
@@ -242,7 +242,7 @@ function buildStage() {
   meter = 0; captureArmed = false;
   phase = PH_INTRO; phaseT = 0; pending = null; answer = -1;
   narration = [];
-  say('STAGE ' + stage + ' — a wild ' + foes[0].sp.name + ' appears!');
+  say('STAGE ' + stage + ', a wild ' + foes[0].sp.name + ' appears!');
 }
 
 function firstAlive(list) { for (var i=0;i<list.length;i++) if (list[i].alive()) return i; return -1; }
@@ -298,7 +298,7 @@ function resolveImpact() {
   shakeT = 0.18; shakeMag = Math.min(4, 1 + dmg / 22);
 
   say(a.att.sp.name + ' used ' + a.sk.n + '!');
-  if (guarded) say(a.def.sp.name + ' braced — it held!');
+  if (guarded) say(a.def.sp.name + ' braced, it held!');
   else if (mult > 1.2) say("It's super effective!");
   else if (mult < 0.9) say("It's not very effective...");
 
@@ -353,7 +353,7 @@ function endRun(won) {
   document.getElementById('overSub').textContent = won ? 'the wild gives way' : 'the wild wins this one';
   document.getElementById('overNote').innerHTML = pct >= 50
     ? 'You answered <b>' + pct + '%</b> of the wind-ups and saved <b>' + dmgPrevented + '</b> damage doing it.'
-    : 'You answered <b>' + pct + '%</b>. The battle still played itself — that is the point of the probe.';
+    : 'You answered <b>' + pct + '%</b>. The battle still played itself, and that is fine.';
   document.getElementById('over').classList.add('show');
 }
 
@@ -446,7 +446,7 @@ function resize() {
     cv.width = Math.round(W * DPR);
     cv.height = Math.round(H * DPR);
     // CRITICAL: a canvas is a replaced element. Without explicit CSS sizing it lays
-    // out at its attribute size (W*DPR) — double-size on every phone.
+    // out at its attribute size (W*DPR), double-size on every phone.
     cv.style.width = W + 'px';
     cv.style.height = H + 'px';
     if (ctx) ctx.imageSmoothingEnabled = false;
@@ -486,7 +486,7 @@ function drawMon(m, cx, cy, s, facingLeft) {
 
   var X = cx + sh;
   var w = s * 3.4, h = s * 2.6;
-  // outline then body — one pixel of earth-950 all round
+  // outline then body, one pixel of earth-950 all round
   px(X - w/2 - 1, y - h/2 - 1, w + 2, h + 2, C.ink);
   px(X - w/2, y - h/2, w, h, body);
   px(X - w/2, y + h/2 - s*0.7, w, s*0.7, dark);          // underside shade
@@ -534,7 +534,7 @@ function drawTellGlyph() {
   var noAnswer = counterOf(pending.sk.t) < 0;
   var p = Math.min(1, phaseT / TELL_TIME);
   var fx = 186, fy = 116;
-  // ring closing in — the timer you read
+  // ring closing in, the timer you read
   var r = 22 - p * 9;
   octx.globalAlpha = 0.9;
   octx.strokeStyle = noAnswer ? C.bevel : t.c;
@@ -559,7 +559,7 @@ function drawPips() {
     text(t.n, x + 37, y + 6, live ? C.bright : C.dim, 9, 'center');
     text('beats ' + TYPE[(i + 1) % 3].n.slice(0,3), x + 37, y + 20, live ? t.l : C.wood, 6, 'center');
     if (picked) {
-      // the answer you gave, right or wrong — coloured after the fact
+      // the answer you gave, right or wrong, coloured after the fact
       var col = want === i ? C.verdant3 : C.ember;
       px(x, y + 32, 74, 2, col);
     }
@@ -676,7 +676,7 @@ function simulate(runs, policy, seed0) {
       }
       var anyAlive = false; for (var c=0;c<team.length;c++) if (team[c].alive()) anyAlive = true;
       if (!anyAlive) break;
-      // Level AND heal between stages — mirroring the live game exactly. A
+      // Level AND heal between stages, mirroring the live game exactly. A
       // simulation that models a different progression curve measures a
       // different game and its verdict is worthless.
       for (var d=0;d<team.length;d++) {
@@ -740,7 +740,7 @@ document.getElementById('againBtn').addEventListener('click', function () { star
   if (typeof requestAnimationFrame === 'function') requestAnimationFrame(tick);
 })();
 
-// test hook — harnesses drive the real loop, never a parallel copy of it
+// test hook, harnesses drive the real loop, never a parallel copy of it
 if (typeof window !== 'undefined') {
   window.__tell = {
     update: update, render: render, resize: resize, startRun: startRun, onTap: onTap,

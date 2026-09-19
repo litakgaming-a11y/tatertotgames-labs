@@ -1,0 +1,206 @@
+# YouTube Playables submission kit
+
+YouTube Playables takes **games, one at a time**, not websites. Each prototype in `games/` is
+submitted as its own Playable: its own ZIP, its own listing, its own certification review. The
+hub page (`index.html`) is never uploaded.
+
+Requirements quoted here are from Google's certification pages, checked 2026-09-19:
+<https://developers.google.com/youtube/gaming/playables/certification/requirements>.
+Google revises them; re-read the revision history before each submission.
+
+## 1. Get access
+
+1. The publishing YouTube channel must be **onboarded to Playables**. That starts with the
+   developer interest form linked from <https://developers.google.com/youtube/gaming/playables>.
+   Access is by approval.
+2. Anyone uploading needs **Editor or Manager** on that channel (YouTube Studio → Settings →
+   Permissions).
+3. Uploads, the test link and the listing all live in the **Playables Developer Portal**.
+
+## 2. Build the bundles
+
+```bash
+python playables/build.py
+```
+
+That writes, for every game:
+
+| Path | What it is |
+|---|---|
+| `dist/playables/<slug>.zip` | **The file you upload.** `index.html` at the ZIP root. |
+| `dist/playables/<slug>/` | The same bundle unzipped. |
+| `dist/playables-dev/<slug>/` | A test copy that loads `mock-sdk.js` instead of the real SDK. Never upload this. |
+| `dist/playables/report.json` | Size and rule-check results per bundle. |
+
+The build fails (exit code 1) if any bundle breaks a mechanical rule.
+
+Automated play test (needs Chrome and a static server on port 8791 serving the repo root):
+
+```bash
+python -m http.server 8791
+```
+
+```bash
+node playables/qa.mjs
+```
+
+It plays every test bundle in headless Chrome, resizes it mid-game through 9:16, 16:9, 32:9,
+9:32, 1:1 and phone-landscape 844×390, opens every menu, and checks the following:
+
+- The SDK calls happen in the right order.
+- Pause stops rendering, timers, input and audio; resume brings them back.
+- YouTube mute silences audio, and a tap can't un-mute it.
+- No control is pushed off screen.
+- Every menu opens with a real tap and closes with a real tap on its own Back/Close/Done button,
+  and with Esc.
+- Scrollable menus scroll under a real touch drag.
+- Nothing invisible catches a tap.
+- No network request leaves the bundle.
+
+Results go to `dist/qa/report.json`, with screenshots in `dist/qa/`.
+
+Draft thumbnails:
+
+```bash
+node playables/thumbs.mjs
+```
+
+This captures `dist/submission/<slug>/thumb-16x9.png`, `thumb-1x1.png` and `thumb-5x7.png` at 2×.
+
+## 3. What the build changes
+
+The source games stay exactly as they are on the website. The build rewrites a copy.
+
+| Website prototype | Playables bundle | Rule |
+|---|---|---|
+| Loads `/analytics.js` and posts to `/api/collect` | Removed. No request leaves the bundle. | Privacy 3.1: no external calls |
+| Saves to `localStorage` | Saves through `ytgame.game.saveData`, loaded with `loadData` before the game starts | Integration 4: saveData/loadData only, await loadData before saving |
+| Pauses on the Page Visibility API | Pauses on `ytgame.system.onPause` / `onResume`. Rendering, timers, input and audio all stop. | Integration 6: no Page Visibility API |
+| Own mute buttons (🔊): title-screen, in-play HUD (`muteBtn2`) and canvas-drawn | All hidden. Audio follows `isAudioEnabled` / `onAudioEnabledChange`, and a tap can't override YouTube mute. | Integration 5; Design 6.4: no icons like the Playables buttons nearby |
+| Morphforge's ✖ "back to title" button in the top-right HUD | Shows ↩, so it can't be mistaken for YouTube's close button | Design 6.4 |
+| `navigator.vibrate` haptics | Removed, so no haptics toggle is needed | Design 2.8 |
+| "TaterTot Games Labs" / "Back to the arena" links | Removed | Design 6.2: no clickable external links; 6.5: no exit buttons |
+| Absolute path `/analytics.js` | Only relative paths remain | Stability 8 |
+| Emoji favicon | Inline empty icon, so the browser doesn't request `/favicon.ico` | Privacy 3.1 |
+| No SDK | `https://www.youtube.com/game_api/v1` is the first script. `firstFrameReady` fires at boot, `gameReady` once the title screen is interactive. | Integration 1, 2 |
+
+The bridge (`playables/bridge.js`) also fixes three things the audit found broken at YouTube's aspect ratios:
+
+- **Invisible buttons caught taps (12 games).** These games hide a screen with
+  `opacity:0; pointer-events:none`, but a `.btn{pointer-events:auto}` rule turns its buttons
+  back on. Invisible Retry, Next and Title buttons sat over the playfield. The bridge marks a
+  screen `inert` for exactly as long as it is switched off. The website versions still have
+  this bug; fixing it in `games/*/play.html` would also let the bridge drop the workaround.
+- **Shop lists couldn't be scrolled by touch.** The games cancel `touchmove` on the whole page,
+  which also froze scrollable menus. When a phone is sideways (about 390px tall) the Back button
+  sits below the fold, so a player could get stuck in the shop.
+- **Menus taller than the screen.** Full-screen overlays that overflow are scaled to fit (never
+  below 60%), then scroll.
+
+It also makes Esc close the open menu (Design 2.6, a SHOULD), without cancelling the Esc event (Design 2.7).
+
+## 4. Compliance matrix
+
+✅ means verified by the build validator or the QA run on all 33 bundles. 👤 means a person has to check it.
+
+| Requirement | Status |
+|---|---|
+| Stability 1–3: initial bundle < 30 MiB, total < 250 MiB, each file < 30 MiB (SHOULD < 512 KiB) | ✅ Largest bundle is about 120 KiB, three files |
+| Stability 4: saved game < 3 MiB (SHOULD < 500 KiB) | ✅ Largest save seen is under 1 KiB |
+| Stability 5: interactive in under 5 s (SHOULD) | ✅ One HTML file, two scripts, no assets to fetch |
+| Stability 6: no crashes; JS heap < 512 MB | ✅ No errors in QA · 👤 run a 10-minute session on a low-end Android |
+| Stability 7: works in every YouTube-supported browser and the Android/iOS app | 👤 Test with the portal's test link on a real iPhone and Android |
+| Stability 8–10: relative paths, file names `[A-Za-z0-9_.-]`, ≤ 8000 files | ✅ |
+| Integration 1: SDK loads before game code | ✅ |
+| Integration 2: `firstFrameReady` then `gameReady`, and not while a splash shows | ✅ |
+| Integration 3: `sendScore` (MAY) | Not used |
+| Integration 4: cloud saves via `saveData`/`loadData` only; await `loadData` first | ✅ Saves 750 ms after each change and on pause |
+| Integration 5: respect YouTube mute; no unexpected audio | ✅ |
+| Integration 6: pause everything on `onPause`; no Page Visibility API | ✅ |
+| Design 1.1, 1.2: playable at every aspect ratio, or letterboxed | ✅ Layouts adapt from 9:32 to 32:9 · 👤 play each game through once in landscape |
+| Design 1.3: no orientation lock | ✅ |
+| Design 1.4: state survives a resize | ✅ QA resizes mid-game five times with no errors |
+| Design 2.1, 2.2: touch and mouse for every interaction | ✅ 27 games use pointer events; the Kinfold probes, Overwind and Rabble use separate mouse and touch handlers · 👤 confirm on a phone |
+| Design 2.5: keyboard for directional input (SHOULD) | Not supported. These are one-touch games. |
+| Design 2.6, 2.7: Esc closes dialogs (SHOULD); never `preventDefault` on Esc | ✅ |
+| Design 3.1: crisp text and graphics at every density | ✅ Canvases scale with `devicePixelRatio` · 👤 check on a 3× phone |
+| Design 4.1, 4.2: full metadata; no branding or logos in title, description, thumbnails | ✅ `metadata.json` · 👤 pick thumbnails with no wordmark or menu showing |
+| Design 5.1: say when there is no more content | ✅ Levels are endless or loop with harder variants · 👤 make sure finishing a meta goal (a town fully built, a collection complete) says so on screen |
+| Design 6.1–6.5: no share prompts, links, extra user agreements, look-alike buttons, or exit buttons | ✅ |
+| Privacy 3.1–3.3: no external calls, no workarounds, no QR codes | ✅ |
+| Privacy 4.1, 4.2: no clipboard, no personal data, no login screens | ✅ |
+| Privacy 5.1: no obfuscation | ✅ Source ships readable |
+| Privacy 7.1: no WebAssembly, eval or Workers | ✅ |
+| Privacy 8.1: single-page app | ✅ |
+| i18n 1–3: no `navigator.language`; English supported | ✅ |
+| Monetization: no off-platform ads or IAP | ✅ Shops spend in-game coins only |
+| Trust & Safety 1.1, 1.2: Community Guidelines; general audience 13+, not made for kids | 👤 See §6 |
+| Trust & Safety 1.3, 2.2–2.5: honest metadata; cleared IP, music and likeness; no duplicate games | ✅ All art is code-drawn and all audio is synthesised in WebAudio · 👤 see §6 |
+| Accessibility 1.1, 2.1: WCAG AA (SHOULD); honest AGI tags | 👤 Choose tags in the portal, e.g. one-touch input and no time pressure where true |
+
+## 5. Listing data
+
+`playables/metadata.json` holds, for every game:
+
+- a title (≤ 50 characters)
+- a short description (≤ 150 characters, with no studio branding)
+- one or two suggested genres (use the portal's closest match)
+- a submission tier
+
+Publisher and developer are both "TaterTot Games".
+
+Each listing also needs:
+
+- **Thumbnails at 1:1, 5:7 and 16:9.** `thumbs.mjs` makes drafts. Pick frames showing play,
+  with no logo, wordmark or open menu.
+- **A 16:9 preview video.** Record real play in the dev bundle at 1920×1080: serve the repo,
+  open `http://localhost:8791/dist/playables-dev/<slug>/` in a 16:9 window, and capture 15–30
+  seconds of the core loop (OBS, or the Xbox Game Bar with Win+Alt+R).
+
+## 6. What to submit, and in what order
+
+A rejection costs a review cycle, so lead with the strongest, most distinct games.
+
+**Tier A: submit first.** Puff Puff Fit, Topple Party, Kaboom Crane, Bounce Brigade, Harbor
+Hustle, Sandfall, Tippy Ship, Cut Loose, Return Fire, Siege Pile. Each has a clear one-touch
+hook, a meta loop and a distinct mechanic.
+
+**Tier B: after Tier A passes.** The rest of waves 1–7.
+
+**Hold. Don't submit yet:**
+
+- **Overwind and Rabble.** They share Siege Pile's premise: shots that fall short pile up into
+  the ramp. Trust & Safety 2.2 rejects "duplicate or substantially identical" games, so submit
+  one siege game (Siege Pile), and the others only once they clearly play differently. They are
+  also the only WebGL 3D games, so test their performance on a low-end phone first.
+- **Tell, Handoff, Crucible and Bonds.** These are Kinfold *system probes*: single-mechanic tests
+  written for the design team, with intro text to match. Their creatures are called "Kinmon". A
+  "-mon" creature-battler invites a trade-dress look from reviewers (Trust & Safety 2.3). Ship
+  them as a finished game, not as probes.
+
+**Content notes for every listing:**
+
+- Return Fire, Siege Pile, Chopper Drop and Broadside Baron have cartoon combat with no blood.
+  That fits a general 13+ audience.
+- Buzzcut Buddies, Fold Friends and Bloom Drop look cute. The listing must not pitch them *to
+  children*: "made for kids" content isn't allowed (Trust & Safety 1.2).
+- The Glimmerwild games (Morphforge, Weatherwright, Snapcatch) are original creatures. Keep
+  their thumbnails and descriptions free of any comparison to existing creature franchises.
+
+## 7. Before every upload
+
+1. `python playables/build.py <slug>` passes.
+2. `node playables/qa.mjs <slug>` reports `ok`.
+3. Upload `dist/playables/<slug>.zip` in the Developer Portal and open its **test link** on a
+   real iPhone and a real Android. Check all of these:
+   - Play a full session in portrait and in landscape.
+   - Pause from YouTube's menu, then resume.
+   - Mute from YouTube, then unmute.
+   - Close and reopen the game, and confirm progress was kept (that proves cloud save).
+   - Open every shop and upgrade screen, and leave it with its Back button.
+4. Fill in the listing from `metadata.json`, attach the chosen thumbnails and the preview video,
+   and choose accessibility tags.
+5. Submit for review.
+
+The website is unaffected. The analytics dashboard keeps counting web players only; YouTube
+players never reach `/api/collect`.

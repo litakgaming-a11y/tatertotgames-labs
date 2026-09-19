@@ -1,4 +1,4 @@
-# Tuning — Economy Tables
+# Tuning, Economy Tables
 
 All values Remote Config driven. See [03-economy.md §9](../03-economy.md).
 
@@ -14,7 +14,7 @@ All values Remote Config driven. See [03-economy.md §9](../03-economy.md).
 | Glassware | 26 | 1.9 | Glassworks | 5 |
 | Bullion | 40 | 2.4 | Mint | 3 |
 
-## Greed multiplier — all-Crate reference
+## Greed multiplier, all-Crate reference
 
 ```
 mult(n) = 1.0 + Σ(k=1..n) weight(k) × 0.20 × 1.18^(k−1)
@@ -115,7 +115,7 @@ Demolition refund: 40%.
 
 | Hull | `basePrice` | Unlock |
 |---|---|---|
-| Tugboat | — | start |
+| Tugboat |, | start |
 | Clipper | 4,500 | Coins |
 | Barge | 12,000 | Coins |
 | Tanker | 38,000 | Coins |
@@ -125,8 +125,8 @@ Demolition refund: 40%.
 | Junk | 900,000 | Coins, region 5 |
 | Paddle Steamer | 2,400,000 | Coins, region 6 |
 | Icebreaker | 6,000,000 | Coins, region 5 |
-| Ironclad | — | Prestige 1 |
-| Windjammer | — | Prestige 3 |
+| Ironclad |, | Prestige 1 |
+| Windjammer |, | Prestige 3 |
 
 ```
 hullUpgradeCost(tier) = basePrice × 0.30 × 3.1^(tier−1)
@@ -217,10 +217,10 @@ globalMult = 1 + 0.35 × prestigeRank
 | Rank | Multiplier | Legacy hull |
 |---|---|---|
 | 1 | ×1.35 | Ironclad |
-| 2 | ×1.70 | — |
+| 2 | ×1.70 |, |
 | 3 | ×2.05 | Windjammer |
-| 4 | ×2.40 | — |
-| 5 | ×2.75 | — |
+| 4 | ×2.40 |, |
+| 5 | ×2.75 |, |
 
 Unlock: 250 total Port Tiers.
 

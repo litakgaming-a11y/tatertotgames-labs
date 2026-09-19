@@ -1,6 +1,6 @@
-# 00 — Overview
+# 00, Overview
 
-> **Tippy Ship** — hybrid-casual mobile game.
+> **Tippy Ship**, hybrid-casual mobile game.
 > Unity 6 LTS · 2D pixel art · iOS + Android · portrait, one-handed.
 >
 > Build spec. Written to be executed against, not admired.
@@ -20,7 +20,7 @@ Every other decision in this document descends from that sentence. It is the joi
 
 ## 2. What already exists
 
-The playable prototype lives at [`games/tippy-ship/play.html`](../../games/tippy-ship/play.html) — 2,439 lines, one self-contained file, zero dependencies. It is not a mockup. It contains a working custom rigid-body solver and a genuine displaced-area buoyancy model, and it is the **authoritative reference for feel**. See [02-physics-port.md](02-physics-port.md).
+The playable prototype lives at [`games/tippy-ship/play.html`](../../games/tippy-ship/play.html), 2,439 lines, one self-contained file, zero dependencies. It is not a mockup. It contains a working custom rigid-body solver and a genuine displaced-area buoyancy model, and it is the **authoritative reference for feel**. See [02-physics-port.md](02-physics-port.md).
 
 | Already proven in the prototype | Status for v1 |
 |---|---|
@@ -35,20 +35,20 @@ The playable prototype lives at [`games/tippy-ship/play.html`](../../games/tippy
 
 ## 3. Design pillars
 
-**P1 — The boat is legible.**
+**P1, The boat is legible.**
 A player who has never seen the game must be able to look at the screen and know the boat is in trouble. The waterline is the highest-contrast edge on screen at all times. Cargo silhouette encodes mass. The bubble inclinometer states the roll numerically. Nothing may obscure these three.
 
-**P2 — Greed is the game.**
+**P2, Greed is the game.**
 Quota is never the challenge. The challenge is a number the player chooses. Every run is authored by the player's own appetite, so every outcome is their story and not the game's.
 
-**P3 — Feedback moves as one body.**
+**P3, Feedback moves as one body.**
 All continuous feedback derives from a single `Tension` scalar. When tension releases, every channel releases in the same beat. This is why `SAVED!` lands. See [07-juice-audio.md](07-juice-audio.md).
 
-**P4 — Nothing rubber-bands.**
+**P4, Nothing rubber-bands.**
 Authored difficulty, permanently. The feeling that a route which once terrified you is now routine *is* the progression. Scaling content to fleet power would delete it.
 
-**P5 — Idle serves skill, never replaces it.**
-Every passive system exists to make the next manual run more meaningful — more cargo to risk, a better hull to risk it in, a bigger multiplier to chase.
+**P5, Idle serves skill, never replaces it.**
+Every passive system exists to make the next manual run more meaningful, more cargo to risk, a better hull to risk it in, a bigger multiplier to chase.
 
 ## 4. The loop, one page
 
@@ -137,7 +137,7 @@ Soft-launch markets: **PH, ID, BR** for retention and funnel, then **CA, UK** fo
 | Logical resolution | 540 × 960, point-filtered |
 | Device floor | 2018-era Android, 3 GB RAM, Snapdragon 660-class |
 | Frame target | 60 fps; 30 fps hard floor on the device floor |
-| Physics step | Fixed 1/150 s — see [02-physics-port.md](02-physics-port.md) |
+| Physics step | Fixed 1/150 s, see [02-physics-port.md](02-physics-port.md) |
 | Install size | < 150 MB |
 | Cold start to first input | < 4 s |
 

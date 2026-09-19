@@ -1,0 +1,47 @@
+YouTube Playables application: TaterTot Games
+
+
+1. Describe your game(s).
+
+We're TaterTot Games (https://tatertotgames.com). We make small games you can pick up in a few seconds and keep coming back to.
+
+Each game is built around one simple action. You hold to inflate a blob without popping it on a spike, draw a line of dominoes and watch it fall, or drop crates onto a boat that really floats and starts to tip. Behind that there's something to grow: coins, upgrades, a town, a garden or a collection.
+
+They're plain HTML5 with no engine. Every game is one small file (under 130 KB), loads almost instantly and works with touch or mouse in portrait, landscape and on desktop. Our YouTube builds already use the Playables SDK for cloud saves, pause and resume, YouTube's mute, and the loading events. They make no outside network calls.
+
+
+2. Game(s) you wish for us to consider.
+
+All of our games can be played here: https://tatertotgames-labs.pages.dev
+
+These are the ones we'd like to start with:
+
+Puff Puff Fit: inflate a squishy blob to fill the chamber, and let go before it hits a spike.
+https://tatertotgames-labs.pages.dev/games/puff-puff-fit/
+
+Tippy Ship: stack crates from a swinging crane onto a boat that really floats.
+https://tatertotgames-labs.pages.dev/games/tippy-ship/
+
+Sandfall: falling-sand physics. Draw shelves to guide each color into its jar.
+https://tatertotgames-labs.pages.dev/games/sandfall/
+
+Kaboom Crane: swing a wrecking ball with well-timed taps, then let it fly.
+https://tatertotgames-labs.pages.dev/games/kaboom-crane/
+
+Topple Party: draw domino runs with your finger and watch them knock over every target.
+https://tatertotgames-labs.pages.dev/games/topple-party/
+
+Cut Loose: cut the right rope at the right moment and let physics deliver the package.
+https://tatertotgames-labs.pages.dev/games/cut-loose/
+
+Harbor Hustle: stop and start six boats with a tap and keep them from crashing.
+https://tatertotgames-labs.pages.dev/games/harbor-hustle/
+
+Bounce Brigade: place trampolines to bounce people from a burning building into the net.
+https://tatertotgames-labs.pages.dev/games/bounce-brigade/
+
+Return Fire: you have no gun, only a shield. Bounce the enemy's shots back at them.
+https://tatertotgames-labs.pages.dev/games/return-fire/
+
+Siege Pile: fling knights at a castle wall. The ones who fall short become the ramp.
+https://tatertotgames-labs.pages.dev/games/siege-pile/

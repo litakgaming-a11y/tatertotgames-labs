@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Ping Pilot — TaterTot Games Labs</title>
-<meta name="description" content="The cave is dark. Your tap is sonar.. Information reveal prototype from the TaterTot Games Labs testing arena — playable in your browser.">
+<title>Ping Pilot | TaterTot Games</title>
+<meta name="description" content="The cave is dark. Your tap is sonar.. Information reveal game from the TaterTot Games Labs testing arena, playable in your browser.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📡</text></svg>">
 <style>
   :root{--bg:#0d0b16;--bg2:#151127;--card:#1c1734;--card2:#241d44;--line:rgba(255,255,255,.08);
@@ -86,11 +86,14 @@
     text-transform:uppercase;color:var(--dim);margin-bottom:5px}
   .nav .r{text-align:right}
   footer{margin-top:40px;text-align:center;color:#5c5486;font-size:.8rem;line-height:1.7}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .top .site,footer a{color:inherit;font-weight:700;text-decoration:none}
+  .top .site:hover,footer a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="back" href="../../">← All prototypes</a>
+  <div class="top"><a class="back" href="../../">← All games</a><a class="site" href="https://tatertotgames.com">tatertotgames.com</a></div>
 
   <div class="hero">
     <div>
@@ -102,14 +105,13 @@
     </div>
     <div>
       <div class="badges">
-        <span class="b acc">Wave 3</span>
+        <span class="b acc">Arcade</span>
         <span class="b">Information reveal</span>
         <span class="b">20–35s dives</span>
       </div>
       <h1>📡 Ping Pilot</h1>
       <p class="hook">The cave is dark. Your tap is sonar.</p>
-      <p class="lede">You are piloting a salvage sub through a cave with the lights off. Tapping fires a sonar ping — an expanding ring that paints the walls, the pearls and the hazards for about two seconds before they fade back into black. Pings are limited, and they recharge slowly.</p>
-      <p class="why"><b>Why it works:</b> The tension is unusual and genuinely yours to manage: the anglerfish patrolling the cave is drawn to your pings, so every time you buy information you also give away your position.</p>
+      <p class="lede">You are piloting a salvage sub through a cave with the lights off. Tapping fires a sonar ping, an expanding ring that paints the walls, the pearls and the hazards for about two seconds before they fade back into black. Pings are limited, and they recharge slowly.</p>
       <div class="playRow">
         <a class="play" href="play">▶ PLAY NOW</a>
         <span class="note">Runs in your browser · no install · works on phones</span>
@@ -122,7 +124,7 @@
     <ol class="steps">
         <li><span class="n">1</span><span>Hold to steer the sub toward your finger.</span></li>
         <li><span class="n">2</span><span>Tap to fire a sonar ping and reveal the cave around you.</span></li>
-        <li><span class="n">3</span><span>Collect the pearl quota and reach the exit — quietly.</span></li>
+        <li><span class="n">3</span><span>Collect the pearl quota and reach the exit, quietly.</span></li>
     </ol>
   </section>
 
@@ -131,7 +133,7 @@
     <ul class="feats">
       <li>Expanding wavefront that lights objects in sequence as it passes</li>
       <li>Echo audio delay that scales with distance</li>
-      <li>An anglerfish that hunts your pings — information has a cost</li>
+      <li>An anglerfish that hunts your pings, information has a cost</li>
       <li>Current jets, false-echo crystals and one-ping blackout levels</li>
       <li>A faint ambient outline nearby so darkness never feels unfair</li>
       <li>High-contrast palette that stays readable on a dim phone screen</li>
@@ -148,10 +150,7 @@
     <a class="r" href="../bounce-brigade/"><span>Next</span>🤸 Bounce Brigade →</a>
   </div>
 
-  <footer>
-    A single self-contained file — no engine, no libraries, no external requests.<br>
-    © 2026 TaterTot Games Labs
-  </footer>
+  <footer>© 2026 TaterTot Games · <a href="https://tatertotgames.com">tatertotgames.com</a></footer>
 </div>
 </body>
 </html>

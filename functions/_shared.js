@@ -55,7 +55,7 @@ export const EVENT_SET = new Set(EVENTS);
 export const MAX_BODY_BYTES = 32 * 1024; // 32KB
 export const MAX_EVENTS_PER_BATCH = 50;
 
-/** Permissive CORS — the collector accepts anonymous beacons from anywhere. */
+/** Permissive CORS, the collector accepts anonymous beacons from anywhere. */
 export const CORS = Object.freeze({
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
@@ -92,7 +92,7 @@ export function utcDay(ms) {
   return new Date(ms).toISOString().slice(0, 10);
 }
 
-/** Coarse device bucket. Deliberately lossy — no fingerprinting value. */
+/** Coarse device bucket. Deliberately lossy, no fingerprinting value. */
 export function classifyUserAgent(ua) {
   const s = (ua || '').toLowerCase();
   if (!s) return 'other';

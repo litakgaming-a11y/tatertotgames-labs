@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Tippy Ship — TaterTot Games Labs</title>
+<title>Tippy Ship | TaterTot Games</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9B%B5%3C/text%3E%3C/svg%3E">
 <style>
   :root{
@@ -197,7 +197,7 @@
   <div id="bestLine">BEST PORT 1</div>
   <div id="routeLine">🏘️ 0 ports delivered</div>
   <div id="titleBtns"><button class="btn btnSmall" id="shopBtn">🛠️ DOCKYARD</button></div>
-  <div id="footerBadge"><a href="../../">🥔 TaterTot Games Labs</a></div>
+  <div id="footerBadge"><a href="https://tatertotgames.com">tatertotgames.com</a></div>
 </div>
 
 <div class="screen" id="winScreen">
@@ -232,7 +232,7 @@
 <script>
 'use strict';
 /* =====================================================================
-   TIPPY SHIP — load the boat, don't tip the boat
+   TIPPY SHIP, load the boat, don't tip the boat
    TaterTot Games Labs · self-contained, canvas-drawn, WebAudio-synth
    Physics: 2D rigid bodies (impulse solver, fixed substeps) stacking on
    a hull with real displaced-area buoyancy, wave forcing and water drag.
@@ -288,7 +288,7 @@ function loadSave() {
   var o = null;
   if (raw) { try { o = JSON.parse(raw); } catch (e) { o = null; } }
   if (!o || typeof o !== 'object') o = {};
-  // schema repair — every field coerced and clamped, unknown shapes discarded
+  // schema repair, every field coerced and clamped, unknown shapes discarded
   save.coins = num(o.coins, 0, 0, 1e9);
   save.earned = num(o.earned, 0, 0, 1e9);
   save.best = num(o.best, 1, 1, 9999);
@@ -318,7 +318,7 @@ loadSave();
 var UPGRADES = [
   { k: 'hull',    icon: '🛳️', name: 'Wider Hull',  desc: 'A beamier hull sits flatter and carries more before she tips.', max: 3, costs: [250, 550, 1000] },
   { k: 'ballast', icon: '⚖️', name: 'Ballast',     desc: 'Keel weight pulls her upright faster after every roll.',        max: 3, costs: [220, 500, 900] },
-  { k: 'deck',    icon: '🟩', name: 'Rubber Deck', desc: 'Grippy decking — cargo slides overboard far less easily.',      max: 3, costs: [200, 420, 800] },
+  { k: 'deck',    icon: '🟩', name: 'Rubber Deck', desc: 'Grippy decking, cargo slides overboard far less easily.',      max: 3, costs: [200, 420, 800] },
   { k: 'brake',   icon: '🪝', name: 'Crane Brake', desc: 'The trolley slows over the ship for easier center drops.',      max: 3, costs: [180, 400, 750] },
 ];
 var SKINS = [
@@ -352,7 +352,7 @@ var safeProbe = el('safeProbe');
 
 // ---------------------------------------------------------------- audio
 var ac = null, master = null, noiseBuf = null, audioDead = false;
-// A machine with no output device throws on construction — audio must never
+// A machine with no output device throws on construction, audio must never
 // be able to abort a caller (every input handler calls initAudio first).
 function initAudio() {
   if (audioDead) return;
@@ -484,7 +484,7 @@ function resize() {
     cv.width = Math.round(W * DPR);
     cv.height = Math.round(H * DPR);
     // CRITICAL: a canvas is a replaced element. Without an explicit CSS size it
-    // lays out at its attribute size (W*DPR) — double the viewport on a phone.
+    // lays out at its attribute size (W*DPR), double the viewport on a phone.
     cv.style.width = W + 'px';
     cv.style.height = H + 'px';
     readSafe();
@@ -510,7 +510,7 @@ var VEL_ITERS = 8, POS_ITERS = 2;
 var SLOP = 0.6, POS_PCT = 0.4;
 var MAX_V = 1900, MAX_VA = 9;
 var CAPSIZE_ANG = 0.70;  // ~40°
-var WARN_ANG = 0.44;     // ~25° — slow-mo + heartbeat
+var WARN_ANG = 0.44;     // ~25°, slow-mo + heartbeat
 var SAVED_ANG = 0.28;    // recover below this → "SAVED!"
 var HULL_DENS = 0.34;
 var HULL_W0 = 184, HULL_H = 52;
@@ -550,7 +550,7 @@ function makeHull() {
   var b = makeBox(0, 0, hw * 2, HULL_H, HULL_DENS, 'hull');
   b.mu = deckMu(); b.e = 0.02;
   // extra roll inertia (keel + machinery low in the hull): slows roll build-up
-  // without changing the buoyancy equilibrium — the forgiving-early tuning knob
+  // without changing the buoyancy equilibrium, the forgiving-early tuning knob
   b.I *= 2.2; b.invI /= 2.2; b.invI0 = b.invI;
   b.y = -HULL_H / 2 + (b.m / RHO) / (hw * 2); // start near equilibrium draft
   return b;
@@ -693,7 +693,7 @@ function collideCircleCircle(a, b) {
   return { nx: nx, ny: ny, pts: [{ x: a.x + nx * a.r, y: a.y + ny * a.r, pen: rr - d }] };
 }
 // hull compound geometry: deck box + two low bulwark lips at the ends.
-// Parts are geometry-only proxies — contacts still apply impulses to the hull
+// Parts are geometry-only proxies, contacts still apply impulses to the hull
 // body itself (contact r-vectors are measured from the hull CoM).
 var LIP_W = 7, LIP_H = 17;
 function hullParts(hb) {
@@ -709,7 +709,7 @@ function hullParts(hb) {
   }
   return parts;
 }
-// dispatcher — normal always points from a to b
+// dispatcher, normal always points from a to b
 function collide(a, b) {
   if (a.shape === 'box' && b.shape === 'box') return collideBoxBox(a, b);
   if (a.shape === 'circle' && b.shape === 'circle') return collideCircleCircle(a, b);
@@ -908,7 +908,7 @@ function applyHullForces(h) {
 }
 function applyCargoForces(b, h) {
   b.vy += G * h;
-  if (b.vy > 640) b.vy = 640; // terminal fall speed — keeps landings thunky, not explosive
+  if (b.vy > 640) b.vy = 640; // terminal fall speed, keeps landings thunky, not explosive
   // partial buoyancy for cargo dipping into water (still colliding)
   var wy = waterYAt(b.x);
   var half = b.shape === 'circle' ? b.r : b.h / 2;
@@ -937,7 +937,7 @@ function trySleep(b, h) {
     b.sleepT += h;
     if (b.sleepT > 0.4) {
       b.sleeping = true;
-      b.invM = 0; b.invI = 0; // kinematic while asleep — supports neighbors without jitter
+      b.invM = 0; b.invI = 0; // kinematic while asleep, supports neighbors without jitter
       var c = Math.cos(-hull.a), s = Math.sin(-hull.a);
       var dx = b.x - hull.x, dy = b.y - hull.y;
       b.lx = c * dx - s * dy; b.ly = s * dx + c * dy; b.la = b.a - hull.a;
@@ -1012,7 +1012,7 @@ var creakCD = 0, heartCD = 0, lastRoll = 0;
 var hudCache = { port: '', cargo: '', supply: '', coins: '' };
 var hintT = 0;
 
-// juice pools — initialized at declaration; render/update touch them from boot
+// juice pools, initialized at declaration; render/update touch them from boot
 var particles = [], popups = [], ripples = [], smokes = [];
 var titleGulls = [], clouds = [];
 var shakeT = 0, shakeDur = 1, shakeMag = 0;
@@ -1081,7 +1081,7 @@ function genManifest(n) {
   }
   for (i = 0; i < planks; i++) defs.push({ t: 'plank', w: 62 + Math.floor(r() * 12), h: 13, dens: 0.5, val: 12, col: '#deb373' });
   for (i = 0; i < barrels; i++) defs.push({ t: 'barrel', r: 12 + Math.floor(r() * 3), dens: 0.62, val: 12, col: '#8a5a33' });
-  // shuffle the middle, keep golds early (heavy first) — then fragiles LAST (must go on top)
+  // shuffle the middle, keep golds early (heavy first), then fragiles LAST (must go on top)
   var mid = defs.slice(golds);
   for (i = mid.length - 1; i > 0; i--) {
     var j = Math.floor(r() * (i + 1)), tmp = mid[i]; mid[i] = mid[j]; mid[j] = tmp;
@@ -1228,7 +1228,7 @@ function showWin(stars, aboard, newPort) {
       if (i < stars) { spans[i].classList.add('on'); sndStar(i); }
     }
   }
-  winSubEl.textContent = lost === 0 ? 'Perfect load — not a splinter lost!' :
+  winSubEl.textContent = lost === 0 ? 'Perfect load, not a splinter lost!' :
     (lost === 1 ? 'One crate went swimming. Forgiven.' : lost + ' crates sleep with the fishes.');
   if (newPortEl && newPortEl.style) newPortEl.style.display = newPort ? 'inline-block' : 'none';
   if (newPortEl) newPortEl.textContent = '🏘️ ' + portName(level) + ' LIT UP!';
@@ -1245,7 +1245,7 @@ function loseLevel(reason) {
     loseSubEl.textContent = 'The whole stack went for a swim in glorious slow motion. Keep your coins and try the port again.';
   } else {
     loseTitleEl.textContent = 'CARGO LOST! 📦';
-    loseSubEl.textContent = 'Too many crates overboard — the manifest can\'t be filled. The fish are thrilled. Try again!';
+    loseSubEl.textContent = 'Too many crates overboard, the manifest can\'t be filled. The fish are thrilled. Try again!';
   }
   setScreens();
   sndLose(); vibrate(60);
@@ -1485,7 +1485,7 @@ function update(dt) {
 
   if (state !== 'play' && state !== 'win' && state !== 'lose') return;
 
-  // physics — fixed substeps on scaled time (slow-mo scales the sim, not the UI)
+  // physics, fixed substeps on scaled time (slow-mo scales the sim, not the UI)
   var simDt = dt * timeScale;
   var acc = clamp(simDt, 0, PH * 7);
   while (acc > 1e-6) {
@@ -1570,7 +1570,7 @@ function buildShop() {
   shopCoinsEl.textContent = '🪙 ' + save.coins;
   shopListEl.innerHTML = '';
   var head1 = document.createElement('div');
-  head1.className = 'shopHead'; head1.textContent = 'SHIP UPGRADES — visible in the sim';
+  head1.className = 'shopHead'; head1.textContent = 'SHIP UPGRADES, visible in the sim';
   shopListEl.appendChild(head1);
   var i;
   for (i = 0; i < UPGRADES.length; i++) buildUpgRow(UPGRADES[i]);
@@ -1663,7 +1663,7 @@ cv.addEventListener('pointerdown', function (ev) {
   initAudio();
   if (state === 'play') releaseCrate();
 });
-cv.addEventListener('pointercancel', function () { /* tap-only input — nothing held */ });
+cv.addEventListener('pointercancel', function () { /* tap-only input, nothing held */ });
 titleScreen.addEventListener('pointerdown', function (ev) {
   var t = ev && ev.target;
   if (t && (t.id === 'shopBtn' || (t.closest && t.closest('#footerBadge')))) return;
@@ -1955,7 +1955,7 @@ function drawShip() {
   ctx.translate(wx2s(hull.x), wy2s(hull.y));
   ctx.rotate(hull.a);
   var skin = save.skin;
-  // hull base — trapezoid with rounded bow/stern
+  // hull base, trapezoid with rounded bow/stern
   var bodyCol = skin === 'junk' ? '#7a4b26' : (skin === 'paddle' ? '#f4f0e6' : '#3d5f85');
   var bellyCol = skin === 'junk' ? '#5b3a1e' : (skin === 'paddle' ? '#c94f4f' : '#c0392b');
   ctx.fillStyle = bodyCol;
@@ -2005,7 +2005,7 @@ function drawShip() {
     ctx.fillStyle = '#22314a';
     ctx.fillRect(hw * 0.28, -hh - 30 * VS, 11 * VS, 5 * VS);
     ctx.fillRect(hw * 0.5, -hh - 30 * VS, 11 * VS, 5 * VS);
-    // paddle wheel — spins with hull horizontal speed
+    // paddle wheel, spins with hull horizontal speed
     ctx.save();
     ctx.translate(-hw * 0.55, hh * 0.1);
     ctx.rotate(bgT * 2 + hull.x * 0.05);
@@ -2028,7 +2028,7 @@ function drawShip() {
     ctx.fillStyle = '#22314a';
     ctx.fillRect(hw * 0.2 - 1 * VS, -hh - 32 * VS, 11 * VS, 4 * VS);
   }
-  // bulwark lips — drawn to match their physical collision size
+  // bulwark lips, drawn to match their physical collision size
   ctx.fillStyle = 'rgba(10,24,44,0.55)';
   rr(-hw, -hh - 17 * VS, 7 * VS, 17 * VS, 2 * VS); ctx.fill();
   rr(hw - 7 * VS, -hh - 17 * VS, 7 * VS, 17 * VS, 2 * VS); ctx.fill();
@@ -2389,7 +2389,7 @@ function render() {
     ctx.fillStyle = vg;
     ctx.fillRect(0, 0, W, H);
   }
-  // roll meter — a tiny inclinometer, pure canvas
+  // roll meter, a tiny inclinometer, pure canvas
   if (state === 'play') {
     var mx = W / 2, my = SAFE.t + 62;
     ctx.globalAlpha = 0.9;

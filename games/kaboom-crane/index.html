@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Kaboom Crane — TaterTot Games Labs</title>
-<meta name="description" content="Tap in rhythm, then let it fly. Rhythm demolition prototype from the TaterTot Games Labs testing arena — playable in your browser.">
+<title>Kaboom Crane | TaterTot Games</title>
+<meta name="description" content="Tap in rhythm, then let it fly. Rhythm demolition game from the TaterTot Games Labs testing arena, playable in your browser.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏗️</text></svg>">
 <style>
   :root{--bg:#0d0b16;--bg2:#151127;--card:#1c1734;--card2:#241d44;--line:rgba(255,255,255,.08);
@@ -86,11 +86,14 @@
     text-transform:uppercase;color:var(--dim);margin-bottom:5px}
   .nav .r{text-align:right}
   footer{margin-top:40px;text-align:center;color:#5c5486;font-size:.8rem;line-height:1.7}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .top .site,footer a{color:inherit;font-weight:700;text-decoration:none}
+  .top .site:hover,footer a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="back" href="../../">← All prototypes</a>
+  <div class="top"><a class="back" href="../../">← All games</a><a class="site" href="https://tatertotgames.com">tatertotgames.com</a></div>
 
   <div class="hero">
     <div>
@@ -102,14 +105,13 @@
     </div>
     <div>
       <div class="badges">
-        <span class="b acc">Wave 2</span>
+        <span class="b acc">Arcade</span>
         <span class="b">Rhythm demolition</span>
         <span class="b">20–40s contracts</span>
       </div>
       <h1>🏗️ Kaboom Crane</h1>
       <p class="hook">Tap in rhythm, then let it fly</p>
-      <p class="lede">A wrecking ball hangs from a crane, and you build its swing exactly the way you'd push someone on a playground swing — tap in time with the arc and the amplitude climbs. When it's big enough, hit RELEASE and the ball flies off tangentially into the building.</p>
-      <p class="why"><b>Why it works:</b> Everyone already knows how to push a swing, so there is no tutorial — and the payoff is a physics demolition with slow-motion, collapsing towers and chained TNT. Two dopamine spikes per loop instead of one.</p>
+      <p class="lede">A wrecking ball hangs from a crane, and you build its swing exactly the way you'd push someone on a playground swing, tap in time with the arc and the amplitude climbs. When it's big enough, hit RELEASE and the ball flies off tangentially into the building.</p>
       <div class="playRow">
         <a class="play" href="play">▶ PLAY NOW</a>
         <span class="note">Runs in your browser · no install · works on phones</span>
@@ -120,7 +122,7 @@
   <section>
     <h2>How to play</h2>
     <ol class="steps">
-        <li><span class="n">1</span><span>Tap in rhythm with the swing to build amplitude — aim for PERFECT PUSH.</span></li>
+        <li><span class="n">1</span><span>Tap in rhythm with the swing to build amplitude, aim for PERFECT PUSH.</span></li>
         <li><span class="n">2</span><span>When the meter is ready, hit RELEASE to launch the ball.</span></li>
         <li><span class="n">3</span><span>Wreck the target percentage of the building before you run out of balls.</span></li>
     </ol>
@@ -140,7 +142,7 @@
 
   <section>
     <h2>The meta layer</h2>
-    <div class="metaBox">Contracts with silly names fund four upgrade tracks — Heavier Ball, Chain Length, Extra Ball and TNT Luck — each visibly changing the demolition.</div>
+    <div class="metaBox">Contracts with silly names fund four upgrade tracks, Heavier Ball, Chain Length, Extra Ball and TNT Luck, each visibly changing the demolition.</div>
   </section>
 
   <div class="nav">
@@ -148,10 +150,7 @@
     <a class="r" href="../buzzcut-buddies/"><span>Next</span>✂️ Buzzcut Buddies →</a>
   </div>
 
-  <footer>
-    A single self-contained file — no engine, no libraries, no external requests.<br>
-    © 2026 TaterTot Games Labs
-  </footer>
+  <footer>© 2026 TaterTot Games · <a href="https://tatertotgames.com">tatertotgames.com</a></footer>
 </div>
 </body>
 </html>

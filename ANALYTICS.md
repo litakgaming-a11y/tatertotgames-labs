@@ -1,14 +1,14 @@
-# TaterTot Games Labs — Playtest Analytics
+# TaterTot Games Labs, Playtest Analytics
 
 A privacy-friendly, first-party analytics backend for the playtest site. No third
 party ever sees a request. No cookies. No IP addresses stored. No PII, ever.
 
 It exists to answer one question: **do these hybrid-casual prototypes hold up on
-the KPIs that decide whether a prototype graduates?** — retention (D1/D7/D30),
+the KPIs that decide whether a prototype graduates?**, retention (D1/D7/D30),
 session length, sessions per user, level funnel drop-off, and monetization intent.
 
 - **Stack:** Cloudflare Pages Functions + D1 (SQLite). Ships with the same Pages
-  project as the site — there is no separate Worker to deploy or keep in sync.
+  project as the site, there is no separate Worker to deploy or keep in sync.
 - **Database:** `tatertot-analytics` (`dba5d10d-a59b-4c7e-b334-b3135bf149d1`),
   bound to the Pages project as `DB`.
 - **Client:** `/analytics.js`, 2.9 KB, zero dependencies.
@@ -42,10 +42,10 @@ returns a body the client has to parse.
 | `n`   | event name (must be in the taxonomy below) |
 | `g`   | per-event game slug override; falls back to the batch `game` |
 | `lvl` | integer level / wave |
-| `val` | numeric payload — seconds, coins, combo, whatever the event means |
+| `val` | numeric payload, seconds, coins, combo, whatever the event means |
 | `to`  | **t**ime **o**ffset: milliseconds *before the batch was sent*. The server computes `ts = now - to`, so ordering inside a batch survives without trusting the client's wall clock. Clamped to 6 hours. |
 
-**Validation** — every one of these returns `400` with a short JSON reason:
+**Validation**, every one of these returns `400` with a short JSON reason:
 
 | Condition | Reason |
 |---|---|
@@ -55,7 +55,7 @@ returns a body the client has to parse.
 | `events` missing or empty | `no_events` |
 | `sid` missing or not `[A-Za-z0-9_-]{6,64}` | `invalid_session` |
 
-Unknown **game slugs** and unknown **event names** are not an error — those
+Unknown **game slugs** and unknown **event names** are not an error, those
 individual events are silently dropped and the rest of the batch is written.
 A batch where nothing survives still returns `204`. This is deliberate: a stale
 cached copy of `analytics.js` must never generate client-visible errors.
@@ -92,22 +92,22 @@ Both the client and the server whitelist these. Anything else is dropped.
 ### Lifecycle
 | Event | Fired when | `val` |
 |---|---|---|
-| `page_view` | every page load | — |
-| `session_start` | new session (first load, or 30 min inactivity) | — |
+| `page_view` | every page load |, |
+| `session_start` | new session (first load, or 30 min inactivity) |, |
 | `session_end` | `pagehide` / tab hidden | elapsed seconds |
 | `heartbeat` | every 30 s while visible | elapsed seconds |
-| `game_launch` | game page opened, or a hub card clicked | — |
+| `game_launch` | game page opened, or a hub card clicked |, |
 
-`session_end` fires on *every* hide, not just the final one — that is how mobile
+`session_end` fires on *every* hide, not just the final one, that is how mobile
 session length stays accurate. Stats takes `MAX(value)` per session, so repeats
 are harmless.
 
 ### Progression / funnel
 | Event | `lvl` | `val` |
 |---|---|---|
-| `level_start` | level / wave entered | — |
+| `level_start` | level / wave entered |, |
 | `level_complete` | level cleared | reward earned |
-| `level_fail` | level lost (reserved) | — |
+| `level_fail` | level lost (reserved) |, |
 | `game_over` | run ended | score / progress |
 
 ### Monetization proxies
@@ -135,7 +135,7 @@ Raw IP addresses. Raw User-Agent strings. Cookies. Screen/canvas/font
 fingerprints. City-level geography. Referrers. Query strings. Anything typed by
 a player. There is no field in the schema that could hold personal data.
 
-### `visitor_hash` — anonymous, daily-rotating
+### `visitor_hash`, anonymous, daily-rotating
 
 ```
 visitor_hash = SHA-256(ip + "|" + user-agent + "|" + UTC-date + "|" + SECRET_SALT)
@@ -147,7 +147,7 @@ completely different value tomorrow.** It cannot be reversed to a person and
 cannot be linked across days. It is used for one thing: counting unique visitors
 *within* a day (DAU).
 
-### `cohort_id` — the honest tradeoff
+### `cohort_id`, the honest tradeoff
 
 A daily-rotating hash mathematically *cannot* express retention: measuring
 whether someone came back on day 7 requires linking two different days.
@@ -158,7 +158,7 @@ the browser** and kept in `localStorage`, which the server stores only as
 
 What that means in practice:
 
-- It is **random** — not derived from the IP, the device, or anything about the
+- It is **random**, not derived from the IP, the device, or anything about the
   person. It identifies a *browser profile*, not a human.
 - It carries **no information**. On its own it is 24 hex characters.
 - The user can **erase it at any time** by clearing site data, and it is never
@@ -175,8 +175,8 @@ without any lookup on our side). `ua_class` is bucketed to
 `mobile | tablet | desktop | bot | other` and the original string is thrown away.
 
 ### Opt-out
-Analytics disables itself completely — no identifiers generated, no storage
-written, no requests sent — when **either**:
+Analytics disables itself completely, no identifiers generated, no storage
+written, no requests sent, when **either**:
 
 - the browser sends Do-Not-Track (`navigator.doNotTrack === '1'`), or
 - the URL contains `?noanalytics=1`.
@@ -230,17 +230,17 @@ $s = (Invoke-WebRequest 'https://tatertotgames-labs.pages.dev/api/stats?days=30'
 | `countries[]`, `devices[]` | coarse mix | traffic sanity |
 
 **Retention denominators are honest.** `eligible` counts only cohort members who
-have *had the chance* to return — someone who first played today is not counted
+have *had the chance* to return, someone who first played today is not counted
 in the D7 denominator. A `rate` of `null` means nobody is eligible yet, which is
 different from 0% and is shown as such.
 
 **Where the funnel breaks** is `level_funnel[].levels[]`. `pct_of_level_1` is the
-share of level-1 players who ever reached level N — the level where that falls
+share of level-1 players who ever reached level N, the level where that falls
 off a cliff is the one to retune. `completion_rate` (completes ÷ starts) tells
 you whether they're bouncing off difficulty or just leaving.
 
 **Session length** prefers the client-reported elapsed seconds carried on
-`heartbeat`/`session_end`, floored by the server timestamp spread — so a lost
+`heartbeat`/`session_end`, floored by the server timestamp spread, so a lost
 final beacon undercounts rather than losing the session entirely.
 
 ### Sample shape
@@ -285,7 +285,7 @@ npx wrangler d1 execute tatertot-analytics --remote -y `
 npx wrangler d1 execute tatertot-analytics --remote -y `
   --command="SELECT game, day, COUNT(DISTINCT visitor_hash) dau FROM events WHERE day >= date('now','-14 day') GROUP BY game, day ORDER BY day DESC;"
 
-# Where players stop — funnel by level
+# Where players stop, funnel by level
 npx wrangler d1 execute tatertot-analytics --remote -y `
   --command="SELECT game, level, COUNT(*) starts FROM events WHERE event='level_start' GROUP BY game, level ORDER BY game, level;"
 
@@ -297,7 +297,7 @@ npx wrangler d1 execute tatertot-analytics --remote -y `
 npx wrangler d1 execute tatertot-analytics --remote -y `
   --command="SELECT game, event, COUNT(*) n, ROUND(AVG(value),1) avg_val FROM events WHERE event IN ('shop_open','purchase','upgrade_bought','building_built','village_levelup','offline_claim') GROUP BY game, event;"
 
-# Re-apply the schema (idempotent — CREATE TABLE/INDEX IF NOT EXISTS)
+# Re-apply the schema (idempotent, CREATE TABLE/INDEX IF NOT EXISTS)
 npx wrangler d1 execute tatertot-analytics --remote -y --file=schema.sql
 ```
 
@@ -332,7 +332,7 @@ npx wrangler pages deploy . --project-name tatertotgames-labs --branch main --co
 ```
 
 The D1 binding comes from `wrangler.toml` (`binding = "DB"`) and is applied on
-every deploy — there is nothing to configure in the dashboard.
+every deploy, there is nothing to configure in the dashboard.
 
 ## 7. Adding tracking to new code
 
@@ -342,5 +342,5 @@ window.TTG?.track('game_launch',    { game: 'volt-rush' });   // slug override
 ```
 
 Always use `?.` so a blocked or missing library is harmless. To add a new event
-name, add it to `EVENTS` in `functions/_shared.js` — the server drops anything
+name, add it to `EVENTS` in `functions/_shared.js`, the server drops anything
 not on that list.

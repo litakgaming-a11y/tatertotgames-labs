@@ -227,7 +227,7 @@
   <button id="playBtn" class="btn">TAP TO PLAY</button>
   <button id="vaultBtn" class="btn secondary">🐚 REEF VAULT</button>
   <div id="bestLine">BEST DIVE <b>1</b> &nbsp;&middot;&nbsp; 🦪 <b>0</b></div>
-  <div id="footerBadge"><a href="../../">TaterTot Games Labs</a></div>
+  <div id="footerBadge"><a href="https://tatertotgames.com">tatertotgames.com</a></div>
 </div>
 
 <div id="vault" class="screen hidden">
@@ -248,7 +248,7 @@
 
 <div id="lose" class="screen hidden">
   <h2>SUB LOST</h2>
-  <div id="loseHint">The dark closes in... Upgrade at the Reef Vault, or dive again — the cave is always listening.</div>
+  <div id="loseHint">The dark closes in... Upgrade at the Reef Vault, or dive again, the cave is always listening.</div>
   <button id="retryBtn" class="btn">RETRY</button>
   <button id="loseVaultBtn" class="btn secondary">🐚 REEF VAULT</button>
   <button id="loseTitleBtn" class="btn ghost">TITLE</button>
@@ -257,7 +257,7 @@
 <script>
 'use strict';
 /* ================================================================
-   PING PILOT — TaterTot Games Labs
+   PING PILOT, TaterTot Games Labs
    Pitch-dark sonar cave diving. Single file, zero deps.
    ================================================================ */
 
@@ -361,7 +361,7 @@ function tone(freq, dur, type, vol, opts) {
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
     o.connect(g); g.connect(master);
     o.start(t0); o.stop(t0 + dur + 0.05);
-  } catch (e) { /* audio glitch — never break a frame */ }
+  } catch (e) { /* audio glitch, never break a frame */ }
 }
 
 function noiseBurst(dur, vol, freq, opts) {
@@ -396,7 +396,7 @@ function sfxPing() {
   noiseBurst(0.22, 0.05, 1800, { type: 'bandpass', slideTo: 600 });
 }
 function sfxEchoWall(k) {
-  // wavefront scraping geometry — soft filtered tick, volume by hit density
+  // wavefront scraping geometry, soft filtered tick, volume by hit density
   noiseBurst(0.1, 0.02 + 0.05 * clamp(k, 0, 1), 900 + 700 * k, { type: 'bandpass', slideTo: 380 });
 }
 function sfxEchoObj(kind, near) {
@@ -550,7 +550,7 @@ const G = {
   grid: new Uint8Array(1),      // 1 = solid rock
   worldW: CELL, worldH: CELL,
 
-  // echo geometry (flat typed arrays — no per-frame allocation)
+  // echo geometry (flat typed arrays, no per-frame allocation)
   eN: 0,
   eX: new Float32Array(0),
   eY: new Float32Array(0),
@@ -646,7 +646,7 @@ function solidAtWorld(x, y) {
   return cellSolid(Math.floor(x / CELL), Math.floor(y / CELL));
 }
 
-// circle vs grid resolution — returns collision impulse magnitude (0 = clean)
+// circle vs grid resolution, returns collision impulse magnitude (0 = clean)
 function resolveCircle(b, radius, bounce) {
   const c0 = Math.floor((b.x - radius) / CELL), c1 = Math.floor((b.x + radius) / CELL);
   const r0 = Math.floor((b.y - radius) / CELL), r1 = Math.floor((b.y + radius) / CELL);
@@ -660,7 +660,7 @@ function resolveCircle(b, radius, bounce) {
       let dx = b.x - nx, dy = b.y - ny;
       let d = Math.sqrt(dx * dx + dy * dy);
       if (d >= radius) continue;
-      if (d < 0.0001) {  // deep inside — push toward cell centre axis
+      if (d < 0.0001) {  // deep inside, push toward cell centre axis
         dx = b.x - (rx + CELL / 2); dy = b.y - (ry + CELL / 2);
         d = Math.sqrt(dx * dx + dy * dy) || 1;
         if (Math.abs(dx) > Math.abs(dy)) { dy = 0; } else { dx = 0; }
@@ -1106,7 +1106,7 @@ function collectPearl(e) {
   popup(e.x, e.y - 16, '+1 🦪', '#ffe6a1', 18);
   if (G.combo >= 3) popup(e.x, e.y + 14, 'ECHO ×' + G.combo, '#8fe6ff', 13 + Math.min(8, G.combo));
   if (G.collected === G.required) {
-    popup(G.sub.x, G.sub.y - 46, 'QUOTA MET — FIND THE GROTTO', '#7cf7c8', 17);
+    popup(G.sub.x, G.sub.y - 46, 'QUOTA MET, FIND THE GROTTO', '#7cf7c8', 17);
     G.exit.lit = Math.max(G.exit.lit, 0.9);
   }
   updateHUD();
@@ -1429,7 +1429,7 @@ function drawEchoField(vx0, vy0, vx1, vy1) {
 }
 
 function drawAmbientOutline() {
-  // faint always-on outline of immediate surroundings — the darkness must never feel unfair
+  // faint always-on outline of immediate surroundings, the darkness must never feel unfair
   if (G.eN === 0) return;
   const sub = G.sub;
   const R = AMBIENT_R * (G.pingsLeft <= 0 ? 1.22 : 1);
@@ -1587,7 +1587,7 @@ function drawAngler() {
   if (!A.active) return;
   const dx = A.x - G.sub.x, dy = A.y - G.sub.y;
   const d = Math.hypot(dx, dy);
-  // the lure is ALWAYS faintly visible — telegraph the threat, never a cheap death
+  // the lure is ALWAYS faintly visible, telegraph the threat, never a cheap death
   const lure = clamp(1 - d / 520, 0, 1);
   const a = clamp(Math.max(A.lit, lure * 0.9), 0, 1);
   if (a <= 0.02) return;
@@ -1712,7 +1712,7 @@ function draw() {
   const vx0 = G.cam.x - halfW, vx1 = G.cam.x + halfW;
   const vy0 = G.cam.y - halfH, vy1 = G.cam.y + halfH;
 
-  // sub's own lamp (cached sprite — no per-frame gradient)
+  // sub's own lamp (cached sprite, no per-frame gradient)
   if (glowSprite) {
     const R = AMBIENT_R * 1.9;
     ctx.globalAlpha = 0.85;

@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Tell — TaterTot Games Labs</title>
-<meta name="description" content="Can an optional elemental parry make a watch-only auto-battler active without breaking it? A Kinfold combat probe.">
+<title>Tell | TaterTot Games</title>
+<meta name="description" content="Every enemy attack shows its element as it winds up. Tap the element that beats it and your creature steps in to block.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔶</text></svg>">
 <style>
   :root{--bg:#0d0b16;--bg2:#151127;--card:#1c1734;--card2:#241d44;--line:rgba(255,255,255,.08);
@@ -75,11 +75,14 @@
   .nav a:hover{border-color:rgba(255,255,255,.2)}
   footer{margin-top:56px;padding-top:22px;border-top:1px solid var(--line);color:var(--dim);
     font-size:.8rem;line-height:1.7;text-align:center}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .top .site,footer a{color:inherit;font-weight:700;text-decoration:none}
+  .top .site:hover,footer a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="back" href="../../">← All prototypes</a><span class="kin">Kinfold Lab</span>
+  <div class="top"><a class="back" href="../../">← All games</a><a class="site" href="https://tatertotgames.com">tatertotgames.com</a></div><span class="kin">Kinfold Lab</span>
 
   <div class="hero">
     <div>
@@ -90,14 +93,13 @@
     </div>
     <div>
       <div class="badges">
-        <span class="b acc">Wave 10</span>
-        <span class="b">Combat probe</span>
-        <span class="b">System probe</span>
+        <span class="b acc">Strategy</span>
+        <span class="b">Reaction battles</span>
+        <span class="b">Short battles</span>
       </div>
       <h1>🔶 Tell</h1>
       <p class="hook">Read the wind-up</p>
-      <p class="lede">Kinfold's battles fight themselves — the capture throw is the only thing you touch. <b>Tell</b> adds one more thing: every enemy attack telegraphs its element for about half a second before it lands, and you tap the element that beats it. Get it right and your Kinmon interposes, takes far less damage, and charges the capture meter.</p>
-      <p class="why"><b>Why it exists:</b> the rule it questions (K-003) names its own risk out loud — <i>“a battle you touch zero times is a screensaver and players skip it by day three”</i>. Tell is built so that tapping wrong, or never tapping at all, resolves <b>exactly</b> as today's battle does. That optionality is the entire proposal, so the probe measures it rather than asserting it.</p>
+      <p class="lede">The battle plays out on its own, and you only step in when it counts. Every enemy attack shows its element for about half a second before it lands. Tap the element that beats it and your Kinmon jumps in, takes far less damage, and charges the capture meter.</p>
       <div class="playRow">
         <a class="play" href="play">▶ PLAY NOW</a>
         <span class="note">Runs in your browser · no install · works on phones</span>
@@ -109,27 +111,10 @@
     <h2>How to play</h2>
     <ol class="steps">
       <li><span class="n">1</span><span>Watch. The battle resolves on its own, as Kinfold's does.</span></li>
-      <li><span class="n">2</span><span>When the enemy winds up, a coloured glyph appears and a ring closes — that is your window.</span></li>
+      <li><span class="n">2</span><span>When the enemy winds up, a coloured glyph appears and a ring closes, that is your window.</span></li>
       <li><span class="n">3</span><span>Tap the element that beats it. Ember beats Verdant, Verdant beats Tide, Tide beats Ember.</span></li>
       <li><span class="n">4</span><span>A grey glyph means Radiant or Umbral: there is <b>no</b> answer to that one, which is the type chart teaching itself.</span></li>
     </ol>
-  </section>
-
-  <section>
-    <h2>The question, and the measurement</h2>
-    <div class="metaBox">Is Tell genuinely additive, or does it quietly become mandatory? The probe runs the same ladder under two policies — never answering, and always answering correctly — over 60 seeded runs each.</div>
-    <table>
-      <tr><th>Measurement</th><th>Result</th></tr>
-      <tr><td>Ladder cleared, <b>never</b> tapping</td><td><b>6 / 60</b></td></tr>
-      <tr><td>Ladder cleared, always tapping correctly</td><td><b>47 / 60</b></td></tr>
-      <tr><td>Average stages reached, never / always</td><td><b>1.85 → 3.57</b></td></tr>
-      <tr><td>Is answering ever worse than not answering?</td><td><b>No, by construction</b></td></tr>
-    </table>
-  </section>
-
-  <section>
-    <h2>What it would cost Kinfold</h2>
-    <div class="warn">It breaks <b>K-003</b>, the load-bearing rule of Kinfold's combat design — the throw would no longer be the only input. The defence is that it is one tap on one of three fixed pips, entirely optional, and teaches itself in a stage. But there is a sharper danger: Kinfold unlocks SKIP after a stage's first clear so that grinding is never labour. <b>The moment anyone balances a stage around Tell, SKIP dies</b> and this proposal loses its only real defence.</div>
   </section>
 
   <div class="nav">
@@ -137,11 +122,7 @@
     <a class="r" href="../handoff/"><span>Next</span>🔁 Handoff →</a>
   </div>
 
-  <footer>
-    A single self-contained file — no engine, no libraries, no external requests.<br>
-    Palette and type rules follow Kinfold's locked 40-colour set.<br>
-    © 2026 TaterTot Games Labs
-  </footer>
+  <footer>© 2026 TaterTot Games · <a href="https://tatertotgames.com">tatertotgames.com</a></footer>
 </div>
 </body>
 </html>

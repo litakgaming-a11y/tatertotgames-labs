@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Handoff — TaterTot Games Labs</title>
+<title>Handoff | TaterTot Games</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%81%3C/text%3E%3C/svg%3E">
 <style>
   :root{ --ink:#1a120b; --bg:#2e1f14; --panel:#4a3524; --wood:#6b4e33; --bevel:#94714a;
@@ -38,9 +38,9 @@
 <div class="screen show" id="title">
   <h1>HANDOFF<span class="sub">THE ORDER IS THE GAME</span></h1>
   <div class="tag">
-    A Kinfold combat probe. You never touch the fight — you decide the <b>order</b> before it starts.<br><br>
+    You never touch the fight, you decide the <b>order</b> before it starts.<br><br>
     When one of yours falls it <b>hands something to whoever walks in next</b>: a charged skill, a
-    speed step, a shield — or nothing, if the pairing is wrong.<br><br>
+    speed step, a shield, or nothing, if the pairing is wrong.<br><br>
     Drag to reorder. Read the chain. Lock it in and watch.
   </div>
   <button class="go" id="startBtn" type="button">MUSTER</button>
@@ -60,24 +60,24 @@
 <script>
 "use strict";
 /* ===========================================================================
-   HANDOFF — a Kinfold combat probe (TaterTot Games Labs)
+   HANDOFF, a Kinfold combat probe (TaterTot Games Labs)
 
    Tests one question: is squad ORDER, made explicit and given consequences,
    a good enough decision to be the whole game?
 
    Kinfold's own K-045 measured the answer's premise: stage 5-1 loses 0/10 in
    one squad order and averages 64% across all three, a 2.24x swing riding on
-   one pairing. Order already matters more than levels, stars or runes — and it
+   one pairing. Order already matters more than levels, stars or runes, and it
    is resolved on a menu. This probe moves that decision to the front of the
    fight and adds the thing that makes ordering a CHAIN rather than a lead
    choice: when one of yours faints it hands something to the next in line.
 
-   K-003 survives literally — there is no input during the battle at all.
+   K-003 survives literally, there is no input during the battle at all.
 
    Handoffs (each earned by the PAIRING, never by luck):
-     VENGEANCE — next shares the fallen one's type       -> enters with a charged hit
-     MOMENTUM  — fell while the enemy was under half HP  -> enters a step faster
-     SHELTER   — next is strong into the enemy that won  -> enters with a shield
+     VENGEANCE, next shares the fallen one's type       -> enters with a charged hit
+     MOMENTUM, fell while the enemy was under half HP  -> enters a step faster
+     SHELTER, next is strong into the enemy that won  -> enters with a shield
    =========================================================================== */
 
 var C = {
@@ -171,7 +171,7 @@ function hit(att, def, R) {
 }
 
 /**
- * Resolve a full 3v3 from a given order. Pure and seeded — the live battle and
+ * Resolve a full 3v3 from a given order. Pure and seeded, the live battle and
  * the forecast both call this, so what the card promises is what happens.
  */
 function resolve(order, enemy, seed, useHandoffs) {
@@ -212,7 +212,7 @@ function resolve(order, enemy, seed, useHandoffs) {
   return { won: false, chain: chain, log: log };
 }
 
-/** Forecast a pairing for the card — the verdict band from K-045. */
+/** Forecast a pairing for the card, the verdict band from K-045. */
 function verdict(mine, theirs) {
   var a = typeMult(mine.sp.t, theirs.sp.t), b = typeMult(theirs.sp.t, mine.sp.t);
   if (a > 1.2 && b <= 1.05) return { t:'STRONG', c:C.verdant3 };
@@ -323,7 +323,7 @@ function stepPlayback(dt) {
   var att = e.att, dfn = e.dfn;
   dfn.hp = Math.max(0, dfn.hp - e.dmg);
   dfn.flash = 1; shakeT = 0.16;
-  say(att.sp.name + (e.mult > 1.2 ? ' — super effective!' : (e.mult < 0.9 ? ' — not very effective' : ' strikes!')));
+  say(att.sp.name + (e.mult > 1.2 ? ', super effective!' : (e.mult < 0.9 ? ', not very effective' : ' strikes!')));
   if (!liveEn[liveFi].alive()) { for (var a=0;a<liveEn.length;a++) if (liveEn[a].alive()) { liveFi=a; break; } }
   if (!liveTeam[livePi].alive()) { for (var b=0;b<liveTeam.length;b++) if (liveTeam[b].alive()) { livePi=b; break; } }
 }
@@ -348,7 +348,7 @@ function resize() {
     DPR = Math.min(2, window.devicePixelRatio || 1);
     W = iw; H = ih;
     cv.width = Math.round(W*DPR); cv.height = Math.round(H*DPR);
-    // CRITICAL: a canvas is a replaced element — pin the CSS size or it lays out
+    // CRITICAL: a canvas is a replaced element, pin the CSS size or it lays out
     // at its attribute size (W*DPR), double-size on every phone.
     cv.style.width = W+'px'; cv.style.height = H+'px';
     if (ctx) ctx.imageSmoothingEnabled = false;
@@ -403,7 +403,7 @@ function renderOrder() {
     text(enemy[e].sp.name.slice(0,8), ex+38, 84, C.parch, 6, 'center');
   }
 
-  text('YOUR ORDER  —  DRAG TO SWAP', 10, 102, C.dim, 8);
+  text('YOUR ORDER, DRAG TO SWAP', 10, 102, C.dim, 8);
   for (var i = 0; i < order.length; i++) {
     var m = order[i];
     var y = 114 + i * 62;
@@ -429,7 +429,7 @@ function renderOrder() {
       px(20, y + 56, 2, 6, kind === HO_NONE ? C.wood : C.radiant3);
     }
   }
-  // The chain, read out end to end — this is the decision, so it gets the space.
+  // The chain, read out end to end, this is the decision, so it gets the space.
   var cy = 114 + 3 * 62 + 8;
   frame(8, cy, VW-16, 52, C.panel, C.ink);
   text('THE CHAIN', 14, cy + 4, C.dim, 7);
@@ -445,7 +445,7 @@ function renderOrder() {
            kk === HO_NONE ? C.wood : C.radiant3, 6);
     }
   }
-  text(linked === 0 ? 'no links — reorder to build one'
+  text(linked === 0 ? 'no links, reorder to build one'
                     : linked + ' link' + (linked === 1 ? '' : 's') + ' in this order',
        14, cy + 40, linked === 0 ? C.wood : C.radiant3, 7);
 
@@ -468,7 +468,7 @@ function renderFight() {
 
   frame(10,8,60,14,C.panel,C.ink); text('STAGE '+stage, 40, 11, C.parch, 8, 'center');
 
-  // the queue — who is next and what they will inherit
+  // the queue, who is next and what they will inherit
   text('IN LINE', 10, 286, C.dim, 7);
   for (var i = 0; i < (liveTeam?liveTeam.length:0); i++) {
     var m = liveTeam[i];
@@ -593,7 +593,7 @@ if (typeof window !== 'undefined') {
     setOrder:function(idx){ order = [roster[idx[0]], roster[idx[1]], roster[idx[2]]]; },
     ST:{TITLE:ST_TITLE,ORDER:ST_ORDER,FIGHT:ST_FIGHT,OVER:ST_OVER},
     HO:{NONE:HO_NONE,VENGEANCE:HO_VENGEANCE,MOMENTUM:HO_MOMENTUM,SHELTER:HO_SHELTER},
-    /** Order-swing measurement across many seeds — the probe's actual result. */
+    /** Order-swing measurement across many seeds, the probe's actual result. */
     swing:function(trials){
       var perms=[[0,1,2],[0,2,1],[1,0,2],[1,2,0],[2,0,1],[2,1,0]], out=[];
       for(var p=0;p<perms.length;p++){

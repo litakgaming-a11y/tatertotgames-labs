@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Bloom Drop — TaterTot Games Labs</title>
-<meta name="description" content="Drop the seed, watch it plink. Aim and bounce prototype from the TaterTot Games Labs testing arena — playable in your browser.">
+<title>Bloom Drop | TaterTot Games</title>
+<meta name="description" content="Drop the seed, watch it plink. Aim and bounce game from the TaterTot Games Labs testing arena, playable in your browser.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌻</text></svg>">
 <style>
   :root{--bg:#0d0b16;--bg2:#151127;--card:#1c1734;--card2:#241d44;--line:rgba(255,255,255,.08);
@@ -86,11 +86,14 @@
     text-transform:uppercase;color:var(--dim);margin-bottom:5px}
   .nav .r{text-align:right}
   footer{margin-top:40px;text-align:center;color:#5c5486;font-size:.8rem;line-height:1.7}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .top .site,footer a{color:inherit;font-weight:700;text-decoration:none}
+  .top .site:hover,footer a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="back" href="../../">← All prototypes</a>
+  <div class="top"><a class="back" href="../../">← All games</a><a class="site" href="https://tatertotgames.com">tatertotgames.com</a></div>
 
   <div class="hero">
     <div>
@@ -102,14 +105,13 @@
     </div>
     <div>
       <div class="badges">
-        <span class="b acc">Wave 3</span>
+        <span class="b acc">Casual</span>
         <span class="b">Aim and bounce</span>
         <span class="b">15–25s drops</span>
       </div>
       <h1>🌻 Bloom Drop</h1>
       <p class="hook">Drop the seed, watch it plink</p>
-      <p class="lede">Aim the seed cannon and let go. The seed rattles down through a field of pins, each hit ringing a note a little higher than the last, until it drops into one of the soil pockets at the bottom — and whatever rarity it lands in erupts into a flower that stays in your garden forever.</p>
-      <p class="why"><b>Why it works:</b> It is the Peggle instinct: the bounce is out of your hands the moment you release, so every drop is a few seconds of pure anticipation with an audio ladder pulling you along.</p>
+      <p class="lede">Aim the seed cannon and let go. The seed rattles down through a field of pins, each hit ringing a note a little higher than the last, until it drops into one of the soil pockets at the bottom, and whatever rarity it lands in erupts into a flower that stays in your garden forever.</p>
       <div class="playRow">
         <a class="play" href="play">▶ PLAY NOW</a>
         <span class="note">Runs in your browser · no install · works on phones</span>
@@ -121,7 +123,7 @@
     <h2>How to play</h2>
     <ol class="steps">
         <li><span class="n">1</span><span>Drag to aim the seed cannon, then release to drop.</span></li>
-        <li><span class="n">2</span><span>Every pin you clip rings a higher note — chase the ladder.</span></li>
+        <li><span class="n">2</span><span>Every pin you clip rings a higher note, chase the ladder.</span></li>
         <li><span class="n">3</span><span>Land in the rarest pocket you can before your seeds run out.</span></li>
     </ol>
   </section>
@@ -134,7 +136,6 @@
       <li>Flower rarity from common daisy to jackpot golden rose</li>
       <li>Late bounces subtly biased toward pockets, never away</li>
       <li>A stuck-seed detector and hard timeout so a drop always resolves</li>
-      <li>Verified across 200+ drops: every seed terminates in a pocket</li>
     </ul>
   </section>
 
@@ -148,10 +149,7 @@
     <a class="r" href="../harbor-hustle/"><span>Next</span>⛴️ Harbor Hustle →</a>
   </div>
 
-  <footer>
-    A single self-contained file — no engine, no libraries, no external requests.<br>
-    © 2026 TaterTot Games Labs
-  </footer>
+  <footer>© 2026 TaterTot Games · <a href="https://tatertotgames.com">tatertotgames.com</a></footer>
 </div>
 </body>
 </html>

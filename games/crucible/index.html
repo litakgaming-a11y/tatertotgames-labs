@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Crucible — TaterTot Games Labs</title>
-<meta name="description" content="Is push-your-luck crafting worth more than tapping a flat recipe? A Kinfold economy probe.">
+<title>Crucible | TaterTot Games</title>
+<meta name="description" content="Feed cores into the pot, watch the heat, and bank before it cracks. You never lose what you put in.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔥</text></svg>">
 <style>
   :root{--bg:#0d0b16;--bg2:#151127;--card:#1c1734;--card2:#241d44;--line:rgba(255,255,255,.08);
@@ -75,11 +75,14 @@
   .nav a:hover{border-color:rgba(255,255,255,.2)}
   footer{margin-top:56px;padding-top:22px;border-top:1px solid var(--line);color:var(--dim);
     font-size:.8rem;line-height:1.7;text-align:center}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .top .site,footer a{color:inherit;font-weight:700;text-decoration:none}
+  .top .site:hover,footer a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="back" href="../../">← All prototypes</a><span class="kin">Kinfold Lab</span>
+  <div class="top"><a class="back" href="../../">← All games</a><a class="site" href="https://tatertotgames.com">tatertotgames.com</a></div><span class="kin">Kinfold Lab</span>
 
   <div class="hero">
     <div>
@@ -90,14 +93,13 @@
     </div>
     <div>
       <div class="badges">
-        <span class="b acc">Wave 10</span>
-        <span class="b">Economy probe</span>
-        <span class="b">System probe</span>
+        <span class="b acc">Strategy</span>
+        <span class="b">Push your luck</span>
+        <span class="b">Quick rounds</span>
       </div>
       <h1>🔥 Crucible</h1>
       <p class="hook">Stop before it cracks</p>
-      <p class="lede">Feed cores into the pot one at a time. Each one raises the tier and raises the heat, and the pot tempers the <b>whole batch</b> — every core becomes a charm at whatever tier you reach. Past the line, each core you add might crack it. Bank early and you leave value on the table; push too far and the crack banks the last tier you passed.</p>
-      <p class="why"><b>Why it exists:</b> Kinfold has no energy system by decree, which makes capture charms the one thing the entire free loop bottlenecks on — and they currently come from tapping a recipe. This attaches a toy to the actual scarcity, shaped so there is <b>no downside limb</b>: you cannot lose what you put in, only fail to gain more.</p>
+      <p class="lede">Feed cores into the pot one at a time. Each one raises the tier and raises the heat, and the pot tempers the <b>whole batch</b>, every core becomes a charm at whatever tier you reach. Past the line, each core you add might crack it. Bank early and you leave value on the table; push too far and the crack banks the last tier you passed.</p>
       <div class="playRow">
         <a class="play" href="play">▶ PLAY NOW</a>
         <span class="note">Runs in your browser · no install · works on phones</span>
@@ -115,33 +117,12 @@
     </ol>
   </section>
 
-  <section>
-    <h2>The question, and the measurement</h2>
-    <div class="metaBox">Would a player rather play this than tap the recipe it replaces? The probe simulates 500 shifts of a fixed 40-core budget under three policies and compares them to the flat tier-1 recipe.</div>
-    <table>
-      <tr><th>Measurement</th><th>Result</th></tr>
-      <tr><td>Flat tier-1 recipe (the baseline)</td><td><b>12.00</b></td></tr>
-      <tr><td>Stop-at-the-line policy</td><td><b><b>29.53</b></b></td></tr>
-      <tr><td>Reckless greed policy</td><td><b>21.68</b></td></tr>
-      <tr><td>Does judgement beat both greed and the recipe?</td><td><b>Yes</b></td></tr>
-    </table>
-  </section>
-
-  <section>
-    <h2>What it would cost Kinfold</h2>
-    <div class="warn">Nothing ratified — it is purely additive. But the first build of this probe <b>failed its own EV gate</b> at 10.05 against the recipe's 12.00, because Kinfold prices higher charm tiers to be per-core <i>worse</i> on purpose (“higher tiers are not a better deal, they are insurance”). Under that curve any toy that pushes toward higher tiers is EV-negative by construction. Batching is the fix, and it is the part that would need a decision. The other risk is tonal: this is a second variance system in a game that already has a gacha.</div>
-  </section>
-
   <div class="nav">
     <a href="../handoff/"><span>Previous</span>← 🔁 Handoff</a>
     <a class="r" href="../bonds/"><span>Next</span>🫱 Bonds →</a>
   </div>
 
-  <footer>
-    A single self-contained file — no engine, no libraries, no external requests.<br>
-    Palette and type rules follow Kinfold's locked 40-colour set.<br>
-    © 2026 TaterTot Games Labs
-  </footer>
+  <footer>© 2026 TaterTot Games · <a href="https://tatertotgames.com">tatertotgames.com</a></footer>
 </div>
 </body>
 </html>

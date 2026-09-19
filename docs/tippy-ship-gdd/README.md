@@ -1,4 +1,4 @@
-# ⛵ Tippy Ship — Game Design Document
+# ⛵ Tippy Ship, Game Design Document
 
 **Hybrid-casual mobile game.** Unity 6 LTS · 2D pixel art · iOS + Android · portrait, one-handed.
 
@@ -6,7 +6,7 @@
 
 This is a **build spec**, not a pitch deck. It contains real coefficients, class contracts, a line-referenced physics port from the existing prototype, and an explicit cut list.
 
-Source prototype: [`games/tippy-ship/play.html`](../../games/tippy-ship/play.html) — 2,439 lines, zero dependencies, and the authoritative reference for feel.
+Source prototype: [`games/tippy-ship/play.html`](../../games/tippy-ship/play.html), 2,439 lines, zero dependencies, and the authoritative reference for feel.
 
 ---
 
@@ -29,7 +29,7 @@ Source prototype: [`games/tippy-ship/play.html`](../../games/tippy-ship/play.htm
 | 12 | [Live Ops](12-liveops.md) | Daily Contract, Weekly Regatta, Tide Pass, Remote Config surface |
 | 13 | [Analytics & KPIs](13-analytics-kpi.md) | Event taxonomy, the five questions, soft-launch gates |
 | 14 | [Milestones & Cut List](14-milestones-cutlist.md) | 27-week plan, cut order with blast radius, risk register |
-| 15 | [Lessons From Prior Builds](15-lessons-from-prior-builds.md) | 28 mistakes already made in BlockRise / Gloamdelve / Kinfold / Mogul / One Armed Army / Rent Baron / Street Baron — and what changed here because of them |
+| 15 | [Lessons From Prior Builds](15-lessons-from-prior-builds.md) | 28 mistakes already made in BlockRise / Gloamdelve / Kinfold / Mogul / One Armed Army / Rent Baron / Street Baron, and what changed here because of them |
 
 **Tuning tables:** [physics-constants](tuning/physics-constants.md) · [economy-tables](tuning/economy-tables.md)
 
@@ -61,13 +61,13 @@ PORTS produce TYPED CARGO ──► cargo is spent and RISKED on RUNS
 1. **Idle income is gated by manual skill.** Route Rating comes from your best hand-piloted run; the auto-fleet replays it. Physics can never become optional.
 2. **Quota is the floor, not the challenge.** Every crate past it raises payout on a superlinear curve and raises the list. The player authors the difficulty.
 3. **Cargo is real inventory, not an energy bar.** Your towns produce it; a capsize destroys it. The pacer is the economy.
-4. **Cargo types are physics types.** Which buildings you place decides what you'll be stacking — and barrels roll.
+4. **Cargo types are physics types.** Which buildings you place decides what you'll be stacking, and barrels roll.
 5. **One touch does everything.** Touch locks the trolley, hold pays out the cable, release drops. Drop height is impact impulse; patience is the skill.
-6. **The rewarded continue costs two crates and ends loading.** Stopping cleanly always dominates — proven in [01 §7](01-core-loop.md).
+6. **The rewarded continue costs two crates and ends loading.** Stopping cleanly always dominates, proven in [01 §7](01-core-loop.md).
 7. **Ships are archetypes with tradeoffs, and piloting one takes it off its earning route.** Every session opens with a deployment decision.
 8. **Difficulty never rubber-bands.** A route that terrified you becoming routine *is* the progression.
 9. **One Tension scalar drives every continuous feedback channel**, so the SAVED! moment releases as one body.
-10. **Runs are deterministic input tapes.** They power live map replays, leaderboard validation, ghost races, and auto-generated UA creatives — for ~300 bytes each.
+10. **Runs are deterministic input tapes.** They power live map replays, leaderboard validation, ghost races, and auto-generated UA creatives, for ~300 bytes each.
 
 ## Build order
 

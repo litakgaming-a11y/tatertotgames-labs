@@ -1,5 +1,5 @@
 /**
- * POST /api/collect — anonymous event collector.
+ * POST /api/collect, anonymous event collector.
  *
  * Accepts a small JSON batch from analytics.js and writes validated rows to D1.
  * Everything is best-effort: the client never learns anything about internal
@@ -66,7 +66,7 @@ export async function onRequestPost(context) {
   } catch (err) {
     return badRequest('unreadable_body');
   }
-  // Byte length, not character length — multi-byte payloads must not slip past.
+  // Byte length, not character length, multi-byte payloads must not slip past.
   if (new TextEncoder().encode(raw).length > MAX_BODY_BYTES) {
     return badRequest('payload_too_large');
   }

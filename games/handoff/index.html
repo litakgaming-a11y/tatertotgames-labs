@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Handoff — TaterTot Games Labs</title>
-<meta name="description" content="Is squad order, made explicit and given consequences, a good enough decision to be the whole game? A Kinfold combat probe.">
+<title>Handoff | TaterTot Games</title>
+<meta name="description" content="You never touch the fight. Set the order, and each creature that falls hands something to whoever walks in next.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔁</text></svg>">
 <style>
   :root{--bg:#0d0b16;--bg2:#151127;--card:#1c1734;--card2:#241d44;--line:rgba(255,255,255,.08);
@@ -75,11 +75,14 @@
   .nav a:hover{border-color:rgba(255,255,255,.2)}
   footer{margin-top:56px;padding-top:22px;border-top:1px solid var(--line);color:var(--dim);
     font-size:.8rem;line-height:1.7;text-align:center}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .top .site,footer a{color:inherit;font-weight:700;text-decoration:none}
+  .top .site:hover,footer a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="back" href="../../">← All prototypes</a><span class="kin">Kinfold Lab</span>
+  <div class="top"><a class="back" href="../../">← All games</a><a class="site" href="https://tatertotgames.com">tatertotgames.com</a></div><span class="kin">Kinfold Lab</span>
 
   <div class="hero">
     <div>
@@ -90,14 +93,13 @@
     </div>
     <div>
       <div class="badges">
-        <span class="b acc">Wave 10</span>
-        <span class="b">Combat probe</span>
-        <span class="b">System probe</span>
+        <span class="b acc">Strategy</span>
+        <span class="b">Squad strategy</span>
+        <span class="b">Short battles</span>
       </div>
       <h1>🔁 Handoff</h1>
       <p class="hook">The order is the game</p>
-      <p class="lede">You never touch the fight. You decide the <b>order</b> before it starts — and when one of yours falls, it hands something to whoever walks in next: a charged hit, a speed step, a shield, or nothing at all if the pairing is wrong. Order stops being about who meets the lead and becomes a sequence of three deaths you plan in advance.</p>
-      <p class="why"><b>Why it exists:</b> Kinfold already measured the premise. Its own K-045 found stage 5-1 losing <b>0/10 in one squad order and averaging 64% across all three</b> — ordering is worth more than levels, stars or runes, and the game resolves it on a menu screen. This moves that decision to the front of the fight and gives it a chain to sit in.</p>
+      <p class="lede">You never touch the fight. You decide the <b>order</b> before it starts, and when one of yours falls, it hands something to whoever walks in next: a charged hit, a speed step, a shield, or nothing at all if the pairing is wrong. Order stops being about who meets the lead and becomes a sequence of three deaths you plan in advance.</p>
       <div class="playRow">
         <a class="play" href="play">▶ PLAY NOW</a>
         <span class="note">Runs in your browser · no install · works on phones</span>
@@ -115,33 +117,12 @@
     </ol>
   </section>
 
-  <section>
-    <h2>The question, and the measurement</h2>
-    <div class="metaBox">Does order swing outcomes enough to carry a game, and do handoffs add to that or just decorate it? The probe runs all six orderings across many seeds, then runs the best ordering with handoffs on and off.</div>
-    <table>
-      <tr><th>Measurement</th><th>Result</th></tr>
-      <tr><td>Best ordering</td><td><b>up to <b>24 / 24</b> wins</b></td></tr>
-      <tr><td>Worst ordering, same squad and seeds</td><td><b>0 / 24 wins</b></td></tr>
-      <tr><td>Best order, handoffs ON</td><td><b>32 / 40</b></td></tr>
-      <tr><td>Best order, handoffs OFF</td><td><b>19 / 40</b></td></tr>
-    </table>
-  </section>
-
-  <section>
-    <h2>What it would cost Kinfold</h2>
-    <div class="warn"><b>K-003 survives literally</b> — there is no input during the battle. The real cost is SKIP: a mandatory pre-fight puzzle on every grind re-clear is exactly the friction SKIP exists to remove. A per-stage memory that re-applies your last order must ship <i>with</i> the feature, not after it.</div>
-  </section>
-
   <div class="nav">
     <a href="../tell/"><span>Previous</span>← 🔶 Tell</a>
     <a class="r" href="../crucible/"><span>Next</span>🔥 Crucible →</a>
   </div>
 
-  <footer>
-    A single self-contained file — no engine, no libraries, no external requests.<br>
-    Palette and type rules follow Kinfold's locked 40-colour set.<br>
-    © 2026 TaterTot Games Labs
-  </footer>
+  <footer>© 2026 TaterTot Games · <a href="https://tatertotgames.com">tatertotgames.com</a></footer>
 </div>
 </body>
 </html>

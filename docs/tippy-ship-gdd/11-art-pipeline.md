@@ -1,4 +1,4 @@
-# 11 — Art & Audio Pipeline
+# 11, Art & Audio Pipeline
 
 Pixel art, generated. PixelLab makes everything on screen; Higgsfield makes everything off it; ElevenLabs makes everything you hear.
 
@@ -27,7 +27,7 @@ The hard line: **nothing Higgsfield produces ships inside the game.** Generated 
 | Filtering | Point, always |
 | Rotation | Free (sub-pixel) for physics bodies; snapped for everything else |
 
-540 × 960 is generous for pixel art — chunky enough to read as pixels, dense enough that a 2° hull rotation moves the rail several pixels. That density is what makes the direction viable. See [10-tech-architecture.md §6](10-tech-architecture.md).
+540 × 960 is generous for pixel art, chunky enough to read as pixels, dense enough that a 2° hull rotation moves the rail several pixels. That density is what makes the direction viable. See [10-tech-architecture.md §6](10-tech-architecture.md).
 
 ## 3. Palette architecture
 
@@ -39,7 +39,7 @@ Palette slots (48):
    08-15   water ramp        (8 steps)
    16-19   foam / spray      (4)
    20-27   hull materials    (8)
-   28-35   cargo hues        (8 — one anchor per cargo type + shades)
+   28-35   cargo hues        (8, one anchor per cargo type + shades)
    36-41   town / stone      (6)
    42-45   metal / crane     (4)
    46-47   UI accent, alert  (2)
@@ -51,7 +51,7 @@ Every sprite is authored against the **index**, not the colour. A single 256×1 
 
 ### Colour-blind palettes
 
-Three additional LUTs (protan, deutan, tritan) that only remap slots 28–35 and 46–47 — cargo and alerts. The world palette is untouched, so the game still looks like itself. See [08-ux-ftue.md §7](08-ux-ftue.md).
+Three additional LUTs (protan, deutan, tritan) that only remap slots 28–35 and 46–47, cargo and alerts. The world palette is untouched, so the game still looks like itself. See [08-ux-ftue.md §7](08-ux-ftue.md).
 
 ## 4. Cargo silhouette language
 
@@ -65,7 +65,7 @@ Shape carries the information. Colour reinforces it. A player must read mass fro
 | 🥇 **Bullion** | Small, dark, gold-rimmed, dense | 30 × 26 | "small but heavy" |
 | 🧊 **Glassware** | Pale, translucent, straw-packed | 27 × 22 | "do not stack on this" |
 
-**The Bullion read is the important one.** It must be visibly *small* and visibly *heavy* — a compact dark shape with a gold rim, noticeably denser-looking than a crate twice its size. That visual contradiction is what teaches density without a tutorial.
+**The Bullion read is the important one.** It must be visibly *small* and visibly *heavy*, a compact dark shape with a gold rim, noticeably denser-looking than a crate twice its size. That visual contradiction is what teaches density without a tutorial.
 
 Ice overlay: 4 progressive frost states, additive, drawn over any cargo in region 5.
 
@@ -96,11 +96,11 @@ Four archetypes × five tiers, palette-swapped per region.
 | Industrial port | 3, 4, 6 | Sheds → chimneys → rail spur → docks → works |
 | City | 6, 7, 8 | Terrace → blocks → towers → skyline → lit metropolis |
 
-Authored: **20 silhouettes**. Delivered: 160 visual states via palette LUT. Each carries animated micro-elements on a shared 8-frame loop — smoke, cart wheels, tiny figures, ferry, lamp flicker.
+Authored: **20 silhouettes**. Delivered: 160 visual states via palette LUT. Each carries animated micro-elements on a shared 8-frame loop, smoke, cart wheels, tiny figures, ferry, lamp flicker.
 
-**The tier-up animation is the game's second-most-repeated emotional beat.** Buildings rise in sequence with individual eases, lamps light one by one, the ambient audio gains a layer. Budget real time for this — it is worth more than any single gameplay feature outside the run.
+**The tier-up animation is the game's second-most-repeated emotional beat.** Buildings rise in sequence with individual eases, lamps light one by one, the ambient audio gains a layer. Budget real time for this, it is worth more than any single gameplay feature outside the run.
 
-## 7. Water — procedural, not sprites
+## 7. Water, procedural, not sprites
 
 The water surface is the one thing that must **not** be a sprite, because it is driven by `WaterYAt(x)` which the physics also reads. Any divergence between the drawn water and the simulated water is a correctness bug the player can see.
 
@@ -127,7 +127,7 @@ Foam, spray and splash particles use VFX Graph with pixel-snapped quads so they 
 1. Establish a style anchor: generate the Tugboat first, iterate until it is right.
    Everything else references it. Do not generate broadly before the anchor is locked.
 2. Batch by category (all cargo, all keels, all towns) so style stays consistent
-   within a batch — cross-batch drift is the main failure mode.
+   within a batch, cross-batch drift is the main failure mode.
 3. Author against the palette index, then quantise every output to the 48-slot ramp.
    A quantisation pass is mandatory; generated output will not respect the palette.
 4. Every sprite gets a manual cleanup pass. Generated pixel art is 85% there;
@@ -139,9 +139,9 @@ Foam, spray and splash particles use VFX Graph with pixel-snapped quads so they 
 ### Higgsfield
 
 ```
-Key art     — one hero image per region for the store and season pass
-Screenshots — 6 per store listing, composited over real gameplay captures
-UA video    — see 09-monetization.md §6; combine generated establishing shots
+Key art, one hero image per region for the store and season pass
+Screenshots, 6 per store listing, composited over real gameplay captures
+UA video, see 09-monetization.md §6; combine generated establishing shots
               with real tape-rendered gameplay clips
 ```
 
@@ -150,7 +150,7 @@ Never generate gameplay footage. The real clips harvested from tapes are better,
 ### ElevenLabs
 
 ```
-Music:  compose_music per region — specify BPM, key, instrumentation, mood.
+Music:  compose_music per region, specify BPM, key, instrumentation, mood.
         Request the 4 stems separately at identical BPM and length.
         VERIFY PHASE ALIGNMENT before shipping; drifting stems wander the mix.
 
@@ -170,7 +170,7 @@ Per-region instrumentation brief:
 | Ice Run | Glass harmonica, sparse piano, sub drone | Cold, exposed |
 | Monsoon Straits | Gamelan, rain percussion, cello | Heavy, humid |
 | Nightwatch | Solo cello, distant bell, deep pad | Lonely, watchful |
-| Open Waters | Rotating — reuses region kits | Varies |
+| Open Waters | Rotating, reuses region kits | Varies |
 
 ## 9. Asset budget
 
@@ -190,13 +190,13 @@ Per-region instrumentation brief:
 
 Comfortably inside the 150 MB install target with room for region additions post-launch.
 
-## 10. The art service is a hard dependency — plan for it failing
+## 10. The art service is a hard dependency, plan for it failing
 
-Street Baron gave PixelLab a large share of its art and then lost access: `list_projects` returned 0 projects and no org, and stayed that way. Four bugs went permanently art-blocked, and **the single most important art slot in the game — the gacha pull image — shipped as a blank purple square** ([15-lessons-from-prior-builds.md L21](15-lessons-from-prior-builds.md)).
+Street Baron gave PixelLab a large share of its art and then lost access: `list_projects` returned 0 projects and no org, and stayed that way. Four bugs went permanently art-blocked, and **the single most important art slot in the game, the gacha pull image, shipped as a blank purple square** ([15-lessons-from-prior-builds.md L21](15-lessons-from-prior-builds.md)).
 
 Tippy Ship gives PixelLab *everything on screen*, which is a larger exposure than SB had. Four rules:
 
-1. **Front-load generation, not polish.** Every gameplay-critical sprite — the style anchor, all 5 cargo types, the starter hulls, the crane, core UI — is generated and **committed during M1**, not M5. Polish can trail; existence cannot.
+1. **Front-load generation, not polish.** Every gameplay-critical sprite, the style anchor, all 5 cargo types, the starter hulls, the crane, core UI, is generated and **committed during M1**, not M5. Polish can trail; existence cannot.
 2. **Nothing on screen during a run may depend on future generation.** If it renders in a run, it is in the repo.
 3. **Placeholders are designed placeholders.** A legible grey silhouette at the correct footprint, never a blank coloured square. A designed placeholder ships without embarrassment; a blank square does not.
 4. **Cargo silhouettes are gameplay information** (§4). They are the first assets generated and the last permitted to change.
@@ -213,12 +213,12 @@ Rent Baron ran 384 `SpriteRenderer`s with no atlases, up to one bind each, befor
 | `Atlas_Parallax` | Per-region skies, hills, weather |
 | `Atlas_UI` | Icons, frames, fonts |
 
-**Point-filtered, uncompressed, 4096 max.** Rent Baron's report is explicit that uncompressed is *correct* for point-filtered pixel art — the texture memory is cheap and compression artefacts on hard pixel edges are not. Draw calls end up bounded by atlas pages rather than by object count.
+**Point-filtered, uncompressed, 4096 max.** Rent Baron's report is explicit that uncompressed is *correct* for point-filtered pixel art, the texture memory is cheap and compression artefacts on hard pixel edges are not. Draw calls end up bounded by atlas pages rather than by object count.
 
 ## 12. Style guardrails
 
 1. **Silhouette before detail.** If a sprite is unreadable as a black shape at 50% size, it fails.
-2. **The waterline is sacred.** Nothing may reduce its contrast — not weather, not fog, not vignette, not UI.
+2. **The waterline is sacred.** Nothing may reduce its contrast, not weather, not fog, not vignette, not UI.
 3. **Cargo colour is gameplay data.** Never reskin cargo for a season, an event, or a region.
 4. **Chunky over fine.** When in doubt, fewer, larger pixels. Fine detail vanishes on a 720p phone in sunlight and costs generation iterations.
 5. **One style anchor.** Every asset traces back to the Tugboat. A batch that does not match the anchor gets regenerated, not accepted.

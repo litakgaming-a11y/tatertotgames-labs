@@ -2,13 +2,13 @@
 
 ### ▶ Play now: **https://tatertotgames-labs.pages.dev**
 
-Twenty-seven original **hybrid-casual** game prototypes — playable instantly in the browser, hosted on
+Twenty-seven original **hybrid-casual** game prototypes, playable instantly in the browser, hosted on
 Cloudflare. Each game is one self-contained HTML file: zero dependencies, mobile-first one-hand
 controls, WebAudio-synthesized sound, haptics, particles everywhere, and persistent meta
 progression in localStorage.
 
 Every game has a detail page with a real gameplay screenshot, a play button, its feature list and
-an explanation of how it works — the links below go there.
+an explanation of how it works, the links below go there.
 
 ## The games
 
@@ -22,7 +22,7 @@ an explanation of how it works — the links below go there.
 | 🏗️ **Kaboom Crane** | Rhythm-tap the swing, release to wreck | Demolition contracts + upgrades | [play](https://tatertotgames-labs.pages.dev/games/kaboom-crane/) |
 | ✂️ **Buzzcut Buddies** | ASMR fuzz-trim reveal | Groomed-buddy salon collection | [play](https://tatertotgames-labs.pages.dev/games/buzzcut-buddies/) |
 
-### Wave 3 — ten new mechanic classes
+### Wave 3, ten new mechanic classes
 
 | Game | Hook | Meta | Play |
 |---|---|---|---|
@@ -37,7 +37,7 @@ an explanation of how it works — the links below go there.
 | ⛴️ **Harbor Hustle** | Tap boats to stop and go | Harbor town build-out | [play](https://tatertotgames-labs.pages.dev/games/harbor-hustle/) |
 | 🔦 **Beam Team** | Tap mirrors to reroute the beam | Lighthouse Village | [play](https://tatertotgames-labs.pages.dev/games/beam-team/) |
 
-### Wave 4 — physics-first
+### Wave 4, physics-first
 
 | Game | Hook | Meta | Play |
 |---|---|---|---|
@@ -45,13 +45,13 @@ an explanation of how it works — the links below go there.
 | ⛵ **Tippy Ship** | Load the boat, don't tip it | Shipping route map + hull upgrades | [play](https://tatertotgames-labs.pages.dev/games/tippy-ship/) |
 | ✂️ **Cut Loose** | Snip ropes in the right order | Shelf of curiosities | [play](https://tatertotgames-labs.pages.dev/games/cut-loose/) |
 
-### Wave 5 — deflection combat
+### Wave 5, deflection combat
 
 | Game | Hook | Meta | Play |
 |---|---|---|---|
-| 🛡️ **Return Fire** | No weapon — deflect their ammo back | The Bastion fortress rebuild | [play](https://tatertotgames-labs.pages.dev/games/return-fire/) |
+| 🛡️ **Return Fire** | No weapon, deflect their ammo back | The Bastion fortress rebuild | [play](https://tatertotgames-labs.pages.dev/games/return-fire/) |
 
-### Wave 6 — genre mashups
+### Wave 6, genre mashups
 
 | Game | Hook | Meta | Play |
 |---|---|---|---|
@@ -59,29 +59,29 @@ an explanation of how it works — the links below go there.
 | ⚔️ **Siege Pile** | Knights pile up into their own ladder | Warband roster + conquest map | [play](https://tatertotgames-labs.pages.dev/games/siege-pile/) |
 | 🚁 **Chopper Drop** | The swinging load is the enemy | Forward Base + rescued roster | [play](https://tatertotgames-labs.pages.dev/games/chopper-drop/) |
 
-### Wave 7 — the Glimmerwild (original creature-collection universe)
+### Wave 7, the Glimmerwild (original creature-collection universe)
 
 | Game | Hook | Meta | Play |
 |---|---|---|---|
-| 🥚 **Morphforge** | Feed the egg — you sculpt what hatches | The Menagerie + trait Codex | [play](https://tatertotgames-labs.pages.dev/games/morphforge/) |
+| 🥚 **Morphforge** | Feed the egg, you sculpt what hatches | The Menagerie + trait Codex | [play](https://tatertotgames-labs.pages.dev/games/morphforge/) |
 | 🌩️ **Weatherwright** | Command the arena, not the creature | The Almanac of interactions | [play](https://tatertotgames-labs.pages.dev/games/weatherwright/) |
 | 📸 **Snapcatch** | Catch by framing the perfect instant | The Album of your own photos | [play](https://tatertotgames-labs.pages.dev/games/snapcatch/) |
 
 ## Docs
 
-- [CONCEPTS.md](CONCEPTS.md) — all 27 shipped concepts with hooks, meta design, and projected KPIs
-- [CONCEPTS-WAVE7.md](CONCEPTS-WAVE7.md) — the Glimmerwild: 3 creature-collection briefs (original universe, not Pokémon IP)
-- [CONCEPTS-WAVE6.md](CONCEPTS-WAVE6.md) — 3 genre-mashup briefs (pirate rhythm-artillery, medieval ragdoll siege, military tethered flight)
-- [CONCEPTS-WAVE5.md](CONCEPTS-WAVE5.md) — Return Fire brief (reflection dynamics + momentum transfer)
-- [CONCEPTS-WAVE4.md](CONCEPTS-WAVE4.md) — 3 physics-first build briefs (granular sim, buoyancy, verlet ropes)
-- [CONCEPTS-WAVE3.md](CONCEPTS-WAVE3.md) — 10 build-ready briefs for the next wave (design only,
+- [CONCEPTS.md](CONCEPTS.md), all 27 shipped concepts with hooks, meta design, and projected KPIs
+- [CONCEPTS-WAVE7.md](CONCEPTS-WAVE7.md), the Glimmerwild: 3 creature-collection briefs (original universe, not Pokémon IP)
+- [CONCEPTS-WAVE6.md](CONCEPTS-WAVE6.md), 3 genre-mashup briefs (pirate rhythm-artillery, medieval ragdoll siege, military tethered flight)
+- [CONCEPTS-WAVE5.md](CONCEPTS-WAVE5.md), Return Fire brief (reflection dynamics + momentum transfer)
+- [CONCEPTS-WAVE4.md](CONCEPTS-WAVE4.md), 3 physics-first build briefs (granular sim, buoyancy, verlet ropes)
+- [CONCEPTS-WAVE3.md](CONCEPTS-WAVE3.md), 10 build-ready briefs for the next wave (design only,
   no code), including the platform integration contract and stability rules a coding model must follow
-- [RESEARCH.md](RESEARCH.md) — deep research on top-grossing hybrid-casual games (Color Block Jam,
+- [RESEARCH.md](RESEARCH.md), deep research on top-grossing hybrid-casual games (Color Block Jam,
   Screwdom, Mob Control, Hexa Sort, My Perfect Hotel, …) and market benchmarks
 
 ## Tech constraints (deliberate)
 
-Every game is **one HTML file with zero external requests** — no libraries, no CDN, no image or
+Every game is **one HTML file with zero external requests**, no libraries, no CDN, no image or
 audio files, no web fonts. All art is drawn to canvas; all SFX are synthesized live with WebAudio;
 favicons are inline SVG data URIs. That means instant cold loads on mobile data (46–57 KB per game),
 which is the whole point for a playable-ad / instant-playtest funnel.
@@ -90,9 +90,9 @@ which is the whole point for a playable-ad / instant-playtest funnel.
 
 Each game folder holds two files:
 
-- `games/<slug>/index.html` — the detail page: gameplay screenshot, play button, features,
+- `games/<slug>/index.html`, the detail page: gameplay screenshot, play button, features,
   how-to-play steps and the meta-layer explanation
-- `games/<slug>/play.html` — the game itself, a single self-contained file
+- `games/<slug>/play.html`, the game itself, a single self-contained file
 
 Screenshots in `assets/shots/` are captured from the real games with headless Chrome, driven into
 gameplay by an injected auto-start snippet, so they show actual play rather than title screens.
@@ -116,4 +116,4 @@ npx wrangler pages deploy . --project-name tatertotgames-labs
 
 ---
 
-Prototype playtest builds — © 2026 TaterTot Games Labs.
+Prototype playtest builds, © 2026 TaterTot Games Labs.

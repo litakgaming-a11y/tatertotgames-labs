@@ -1,4 +1,4 @@
-# 04 — Progression
+# 04, Progression
 
 > *Your idle income is a recording of your best run.*
 
@@ -6,7 +6,7 @@
 
 ## 1. Route Rating
 
-Every route the player has ever completed carries a **Route Rating** — a float 0 to 2.5.
+Every route the player has ever completed carries a **Route Rating**, a float 0 to 2.5.
 
 ```
 routeRating = clamp(bestRunScore / route.parScore, 0, 2.5)
@@ -18,7 +18,7 @@ routeRating = clamp(bestRunScore / route.parScore, 0, 2.5)
 |---|---|---|
 | < 0.5 | Barely delivered | Scraped by |
 | 0.5–0.9 | Under par | Serviceable |
-| 1.0 | Par — clean run, modest overload | **Solid** |
+| 1.0 | Par, clean run, modest overload | **Solid** |
 | 1.1–1.5 | Confident overload | Sharp |
 | 1.6–2.0 | Expert | Masterful |
 | 2.1–2.5 | Ceiling | **Legendary** |
@@ -43,16 +43,16 @@ Six interlocking axes. No single one carries the game.
 
 | Region | Port Tiers required |
 |---|---|
-| 1 — Home Coast | 0 |
-| 2 — The Shallows | 12 |
-| 3 — Ferry Lanes | 28 |
-| 4 — Roaring Reach | 45 |
-| 5 — Ice Run | 70 |
-| 6 — Monsoon Straits | 105 |
-| 7 — Nightwatch | 150 |
-| 8 — Open Waters | 210 |
+| 1, Home Coast | 0 |
+| 2, The Shallows | 12 |
+| 3, Ferry Lanes | 28 |
+| 4, Roaring Reach | 45 |
+| 5, Ice Run | 70 |
+| 6, Monsoon Straits | 105 |
+| 7, Nightwatch | 150 |
+| 8, Open Waters | 210 |
 
-## 3. Input tapes — replays as infrastructure
+## 3. Input tapes, replays as infrastructure
 
 Every run records a deterministic input tape. The best tape per route is retained.
 
@@ -82,26 +82,26 @@ A typical run: 9–20 crates × ~3 events = **~300 bytes**. A player with 90 rat
 
 ### The five jobs one tape does
 
-**1 — The map is alive.**
+**1, The map is alive.**
 Tap any route on the world map and the auto-ship visibly replays your best load in miniature, in a small inset. The idle layer becomes *literally* your past skill, on screen, earning. This is the feature that makes the thesis land emotionally rather than as a spreadsheet.
 
-**2 — Anti-cheat.**
-Weekly Regatta submissions carry **the tape only** — the client never states a score. Cloud Code re-simulates the tape against the same deterministic sim and *derives* the result, so there is no claimed value to dispute. See [12-liveops.md §2](12-liveops.md) and [15-lessons-from-prior-builds.md L3](15-lessons-from-prior-builds.md).
+**2, Anti-cheat.**
+Weekly Regatta submissions carry **the tape only**, the client never states a score. Cloud Code re-simulates the tape against the same deterministic sim and *derives* the result, so there is no claimed value to dispute. See [12-liveops.md §2](12-liveops.md) and [15-lessons-from-prior-builds.md L3](15-lessons-from-prior-builds.md).
 
-**3 — Ghost comparison.**
+**3, Ghost comparison.**
 Race your own best on a route, shown as a translucent overlay hull. Also used for "watch the #1 run" in the Regatta.
 
-**4 — UA creative generation.**
-Automatically flag high-drama runs — largest recovered list angle, longest time above `WARN_ANG`, biggest capsize — and export them as 15 s clips. This genre is won on creatives, and you are generating them from real play at zero marginal cost. See [09-monetization.md §6](09-monetization.md).
+**4, UA creative generation.**
+Automatically flag high-drama runs, largest recovered list angle, longest time above `WARN_ANG`, biggest capsize, and export them as 15 s clips. This genre is won on creatives, and you are generating them from real play at zero marginal cost. See [09-monetization.md §6](09-monetization.md).
 
-**5 — Bug reports reproduce.**
+**5, Bug reports reproduce.**
 Any support ticket ships with the tape. A physics bug becomes a unit test.
 
 ### Determinism obligations
 
 Tapes are worthless if the sim drifts. All rules in [02-physics-port.md §10](02-physics-port.md) are hard requirements, enforced by an assembly boundary and a banned-API analyzer.
 
-Tape version is bumped on **any** sim change. Old tapes are retained but marked `stale` — they still display their recorded score and still pay idle income, they simply cannot be re-simulated. Never invalidate a player's Route Rating because of a patch.
+Tape version is bumped on **any** sim change. Old tapes are retained but marked `stale`, they still display their recorded score and still pay idle income, they simply cannot be re-simulated. Never invalidate a player's Route Rating because of a patch.
 
 ## 4. Hull upgrades
 
@@ -116,14 +116,14 @@ Four sim-visible tracks per hull, 5 tiers each, ported and extended from the pro
 
 **Every upgrade must be visible in the simulation and in the art.** A wider beam is a wider sprite. Ballast adds a visible keel weight and lowers the resting waterline by a pixel. Rubber decking changes the deck's colour band. Crane tier changes the winch housing. An upgrade the player cannot see is an upgrade they do not believe in.
 
-Upgrades are **per hull**, not global. This is what makes the archetype roster a real collection rather than a skin selector — a maxed Barge and a stock Clipper are genuinely different tools.
+Upgrades are **per hull**, not global. This is what makes the archetype roster a real collection rather than a skin selector, a maxed Barge and a stock Clipper are genuinely different tools.
 
 ## 5. Mastery curve
 
 Difficulty is authored and never scales. Progression is the changing relationship between a fixed challenge and a growing player.
 
 ```
-  Fogport — authored: quota 5 · swell 6.0 · gusts · Bullion mix
+  Fogport, authored: quota 5 · swell 6.0 · gusts · Bullion mix
   parScore 4,200 · never changes
 
   Week 1   Tug T1        best ×1.8   capsized 4×    rating 0.61
@@ -141,11 +141,11 @@ Three things grew: the hull, the player's read of the sim, and the player's nerv
 The game must make the player's own improvement legible, because self-perceived growth is the retention mechanism:
 
 - **Route line:** `Best ×6.2 · Rating 1.42 · was ×1.8 four weeks ago`
-- **Fleet record:** `Fleet-wide record: ×9.8 — Barge "Dogged" at Kelp Quay`
+- **Fleet record:** `Fleet-wide record: ×9.8, Barge "Dogged" at Kelp Quay`
 - **Personal bests feed a notification** when beaten, with the delta.
 - **Season recap** at the end of each season pass: total delivered, best save, worst capsize, most-improved route.
 
-## 6. Prestige — Found a New Trading Company
+## 6. Prestige, Found a New Trading Company
 
 Unlocks at **250 total Port Tiers**, typically 90–150 hours in.
 
@@ -161,7 +161,7 @@ Unlocks at **250 total Port Tiers**, typically 90–150 hours in.
 prestigeMult = 1 + 0.35 × prestigeRank        // global idle × production
 ```
 
-Plus a **Legacy Hull** per rank — archetypes unavailable any other way, with a distinctive silhouette. Rank 1 grants the *Ironclad*: enormous beam, terrible freeboard, unique to prestige players.
+Plus a **Legacy Hull** per rank, archetypes unavailable any other way, with a distinctive silhouette. Rank 1 grants the *Ironclad*: enormous beam, terrible freeboard, unique to prestige players.
 
 **Route Ratings survive prestige.** This is the critical design choice. The player's skill record is theirs permanently; only their *investment* resets. It also means a prestiged player's idle income restarts strong the moment they re-tier a port, which prevents the post-reset trough that kills prestige systems.
 

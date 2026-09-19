@@ -1,4 +1,4 @@
-/* TaterTot Games Labs analytics — anonymous, batched, fail-silent. No deps.
+/* TaterTot Games Labs analytics, anonymous, batched, fail-silent. No deps.
    Opt out: ?noanalytics=1, or browser Do-Not-Track. window.TTG.track(name,{level,value}) */
 (function () { try {
   var API = '/api/collect', IDLE = 18e5, HB = 3e4, FLUSH = 1e4, CAP = 45;

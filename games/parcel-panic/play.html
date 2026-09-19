@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Parcel Panic — TaterTot Games Labs</title>
+<title>Parcel Panic | TaterTot Games</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%A6%3C/text%3E%3C/svg%3E">
 <style>
   :root{
@@ -20,7 +20,7 @@
     overscroll-behavior:none;
   }
   canvas{position:fixed;inset:0;display:block;touch-action:none}
-  /* safe-area probe — read by JS so the canvas layout respects notches */
+  /* safe-area probe, read by JS so the canvas layout respects notches */
   #safeProbe{
     position:fixed;top:0;left:0;width:0;height:0;visibility:hidden;pointer-events:none;
     padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);
@@ -144,7 +144,7 @@
   </div>
 </div>
 
-<div id="hintTip">Tap a junction to flip the track — match every parcel to its truck! 👆</div>
+<div id="hintTip">Tap a junction to flip the track, match every parcel to its truck! 👆</div>
 
 <div class="screen show" id="titleScreen">
   <h1 id="logo">PARCEL<span class="l2">PANIC</span></h1>
@@ -154,7 +154,7 @@
   <div id="depotLine">🏭 Logistics Empire · 0/10 depots</div>
   <div id="depotBar"><div id="depotFill"></div></div>
   <div id="perkLine"></div>
-  <div id="footerBadge"><a href="../../">🥔 TaterTot Games Labs</a></div>
+  <div id="footerBadge"><a href="https://tatertotgames.com">tatertotgames.com</a></div>
 </div>
 
 <div class="screen" id="winScreen">
@@ -162,7 +162,7 @@
     <h2 class="panelTitle">SHIFT CLEAR!</h2>
     <div id="stars"><span>⭐</span><span>⭐</span><span>⭐</span></div>
     <div id="winCoins">+0 🪙</div>
-    <div id="winStats">—</div>
+    <div id="winStats">-</div>
     <div id="newDepot">🏭 NEW DEPOT!</div>
     <div id="newPerk">⚙️ PERK UNLOCKED</div>
     <button class="btn bigBtn" id="nextBtn">NEXT SHIFT ➜</button>
@@ -172,7 +172,7 @@
 <div class="screen" id="loseScreen">
   <div class="panel">
     <h2 class="panelTitle">SHIFT'S OVER 😤</h2>
-    <p id="loseSub">Too many parcels went to the wrong truck. The depot forgives you — free retry!</p>
+    <p id="loseSub">Too many parcels went to the wrong truck. The depot forgives you, free retry!</p>
     <button class="btn bigBtn retry" id="retryBtn">↻ TRY AGAIN</button>
   </div>
 </div>
@@ -180,7 +180,7 @@
 <script>
 'use strict';
 /* =====================================================================
-   PARCEL PANIC — tap junctions, flip conveyor tracks, route colored
+   PARCEL PANIC, tap junctions, flip conveyor tracks, route colored
    parcels to their matching trucks.   TaterTot Games Labs
    ===================================================================== */
 
@@ -214,7 +214,7 @@ var save = {
     if (raw) {
       var o = JSON.parse(raw);
       if (o && typeof o === 'object') {
-        // schema repair — every field validated + coerced, unknown keys dropped
+        // schema repair, every field validated + coerced, unknown keys dropped
         save.coins = Math.max(0, Math.floor(Number(o.coins)) || 0);
         save.best = clamp(Math.floor(Number(o.best)) || 1, 1, 99999);
         save.level = clamp(Math.floor(Number(o.level)) || 1, 1, 99999);
@@ -223,7 +223,7 @@ var save = {
         save.gold = Math.max(0, Math.floor(Number(o.gold)) || 0);
       }
     }
-  } catch (e) { /* private mode / blocked storage / bad JSON — defaults stand */ }
+  } catch (e) { /* private mode / blocked storage / bad JSON, defaults stand */ }
 })();
 function persist() {
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) { /* no-op */ }
@@ -244,12 +244,12 @@ var DEPOTS = [
 ];
 var COINS_PER_DEPOT = 260;
 function depotCount() { return Math.min(DEPOTS.length, Math.floor(save.coins / COINS_PER_DEPOT)); }
-// Perks are milestones of the empire — no shop UI, the map IS the progression.
+// Perks are milestones of the empire, no shop UI, the map IS the progression.
 var PERKS = [
-  { at: 2, k: 'strike4', t: '💪 4th strike — one more mistake per shift' },
-  { at: 4, k: 'slowramp', t: '🐢 Steady flow — the spawn ramp eases off' },
-  { at: 6, k: 'goldins', t: '🛡️ Gold insurance — shattered gold still half-pays' },
-  { at: 8, k: 'wages', t: '💰 Union wages — +25% on every delivery' }
+  { at: 2, k: 'strike4', t: '💪 4th strike, one more mistake per shift' },
+  { at: 4, k: 'slowramp', t: '🐢 Steady flow, the spawn ramp eases off' },
+  { at: 6, k: 'goldins', t: '🛡️ Gold insurance, shattered gold still half-pays' },
+  { at: 8, k: 'wages', t: '💰 Union wages, +25% on every delivery' }
 ];
 function hasPerk(k) {
   var d = depotCount();
@@ -406,7 +406,7 @@ function readSafe() {
 }
 
 // ---------------------------------------------------------------- level state
-// NOTE: every array/object the loop touches is fully built right here — the rAF
+// NOTE: every array/object the loop touches is fully built right here, the rAF
 // loop starts on the TITLE screen, long before a level exists.
 function emptyLevel() {
   return {
@@ -631,7 +631,7 @@ function layoutLevel() {
   LV.th = clamp(LV.tw * 0.66, 22, 56);
   LV.psize = clamp(Math.min(slotW * 0.38, 26 * S), 12, 28);
   LV.jr = clamp(Math.min(slotW * 0.30, 30 * S), 13, 30);
-  LV.hitR = Math.max(34, LV.jr + 20);   // >=68px tap diameter — junctions are the game
+  LV.hitR = Math.max(34, LV.jr + 20);   // >=68px tap diameter, junctions are the game
   LV.ringR = Math.min(LV.hitR, Math.max(LV.jr + 8, slotW * 0.56));
 
   var truckY = H - botPad - LV.th * 0.5 - 8;
@@ -1332,7 +1332,7 @@ function drawBelts() {
   }
   ctx.stroke();
 
-  // 3) live route glow — THE readability layer
+  // 3) live route glow, THE readability layer
   for (var m = 0; m < edges.length; m++) {
     var e4 = edges[m];
     if (e4.hot <= 0 || !e4.hotCol) continue;
@@ -1400,7 +1400,7 @@ function drawJunctions() {
     var pop = 1 + j.pop * 0.22;
     var ring = LV.ringR;
 
-    // tap ring — advertises the (large) hit target
+    // tap ring, advertises the (large) hit target
     ctx.save();
     ctx.globalAlpha = 0.16 + j.glow * 0.3 + Math.sin(bgT * 5 + i) * 0.03;
     ctx.strokeStyle = j.warn > 0 ? WRONG_COL : '#ffffff';
@@ -1431,7 +1431,7 @@ function drawJunctions() {
     rr(-LV.jr, -LV.jr, LV.jr * 2, LV.jr * 2, LV.jr * 0.42);
     ctx.stroke();
 
-    // the lever — points straight at the live output
+    // the lever, points straight at the live output
     ctx.save();
     ctx.rotate(j.ang);
     var ll = LV.jr * 1.32;
@@ -1605,7 +1605,7 @@ function drawParcel(p) {
   }
   ctx.restore();
 
-  // mismatch alarm ring — the "flip something NOW" signal
+  // mismatch alarm ring, the "flip something NOW" signal
   if (p.wrong) {
     var pl = 0.55 + Math.abs(Math.sin(bgT * 14)) * 0.45;
     ctx.save();

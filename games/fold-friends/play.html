@@ -126,7 +126,7 @@
 <body>
 <canvas id="c"></canvas>
 
-<div id="paperBanner" class="hidden">✨ FOIL PAPER — 2× FAME! ✨</div>
+<div id="paperBanner" class="hidden">✨ FOIL PAPER, 2× FAME! ✨</div>
 
 <!-- TITLE -->
 <div id="titleScreen" class="screen">
@@ -141,7 +141,7 @@
     <button id="muteBtn" class="ghostBtn">🔊 Sound On</button>
   </div>
   <div id="titleBottom">
-    <a id="footerBadge" href="../../">🥔 TaterTot Games Labs</a>
+    <a id="footerBadge" href="https://tatertotgames.com">tatertotgames.com</a>
   </div>
 </div>
 
@@ -355,7 +355,7 @@ function resize(){
       if(cv.width !== cw) cv.width = cw;
       if(cv.height !== ch) cv.height = ch;
       // Canvas is a replaced element: `inset:0` cannot stretch it, so without an
-      // explicit CSS size it lays out at its attribute size (W*DPR) — double or
+      // explicit CSS size it lays out at its attribute size (W*DPR), double or
       // more the viewport on a phone. Pin it to logical CSS pixels.
       cv.style.width = W+'px'; cv.style.height = H+'px';
     }
@@ -724,8 +724,8 @@ function genLevel(lvl){
   animalDef = {sp:spIdx, hue:hueA, hue2:hueB, name:genName(), acc:100, ico:sp.ico, spName:sp.name};
 
   elBanner.classList.toggle('hidden', paperType==='plain');
-  if(paperType==='foil') elBanner.textContent = '✨ FOIL PAPER — 2× FAME! ✨';
-  else if(paperType==='patterned') elBanner.textContent = '🎨 PATTERNED PAPER — hidden colors!';
+  if(paperType==='foil') elBanner.textContent = '✨ FOIL PAPER, 2× FAME! ✨';
+  else if(paperType==='patterned') elBanner.textContent = '🎨 PATTERNED PAPER, hidden colors!';
   elSpeed.classList.toggle('hidden', !speedRound);
   if(twoSheet) addPopup(W/2, H*0.16, '📄📄 TWO-SHEET FRIEND!', '#3d9ae8', 17, 2.4);
 }
@@ -1707,7 +1707,7 @@ function renderParkPanel(){
   var pct = bi>=BIOMES.length-1 ? 100 : clamp(into/12*100, 0, 100);
   elBiomeFill.style.width = pct+'%';
   elBiomeTxt.textContent = bi>=BIOMES.length-1
-    ? 'All biomes unlocked — '+BIOMES[bi].name+' 🎉'
+    ? 'All biomes unlocked, '+BIOMES[bi].name+' 🎉'
     : BIOMES[bi].name+' → '+BIOMES[bi+1].name+' in '+(12-into)+' more friend'+((12-into)===1?'':'s');
   var counts = [], best = [];
   for(var i=0;i<SPECIES.length;i++){ counts.push(0); best.push(0); }
@@ -1725,7 +1725,7 @@ function renderParkPanel(){
       '<div class="spIco">'+(got?SPECIES[s].ico:'❔')+'</div>'+
       '<div class="spInfo"><div class="spName">'+(got?SPECIES[s].name:'???')+'</div>'+
       '<div class="spDesc">'+(got?('best fold '+best[s]+'%'):'not folded yet')+'</div></div>'+
-      '<div class="spCount">'+(got?('×'+counts[s]):'—')+'</div></div>';
+      '<div class="spCount">'+(got?('×'+counts[s]):'-')+'</div></div>';
   }
   elParkRows.innerHTML = html;
 }

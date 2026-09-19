@@ -1,4 +1,4 @@
-# 13 — Analytics & KPIs
+# 13, Analytics & KPIs
 
 Instrument the decisions, not the taps. Every event below exists to answer a specific question.
 
@@ -14,7 +14,7 @@ Instrument the decisions, not the taps. Every event below exists to answer a spe
 | `session_end` | `durationSec`, `runsPlayed`, `screensVisited` | Are sessions the right length? |
 | `offline_collect` | `cargoByType`, `doubled` | Is the ×2 offer converting? |
 
-### The run — the heart of the instrumentation
+### The run, the heart of the instrumentation
 
 | Event | Params | Question |
 |---|---|---|
@@ -65,7 +65,7 @@ Instrument the decisions, not the taps. Every event below exists to answer a spe
 | Event | Params |
 |---|---|
 | `ftue_step` | `stepId`, `elapsedSec`, `skipped` |
-| `ftue_run1_saved_fired` | `peakList` — **did the rigged moment work?** |
+| `ftue_run1_saved_fired` | `peakList`, **did the rigged moment work?** |
 | `ftue_complete` | `totalSec` |
 | `system_unlocked` | `systemId`, `sessionIndex` |
 
@@ -88,24 +88,24 @@ Instrument the decisions, not the taps. Every event below exists to answer a spe
 | `regatta_entered` | `seed`, `attemptIndex` |
 | `regatta_submitted` | `seed`, `score`, `rank`, `percentile` |
 | `regatta_replay_watched` | `seed`, `rankWatched` |
-| `regatta_rejected` | `reason` — **cheat detection signal** |
+| `regatta_rejected` | `reason`, **cheat detection signal** |
 
 ## 2. The five questions that matter
 
 Everything above exists to answer these. If an event does not serve one of them, cut it.
 
-### Q1 — Do people feel the near-miss?
+### Q1, Do people feel the near-miss?
 
 ```
 savedRate = count(saved) / count(warn_entered)
 ftueSavedRate = count(ftue_run1_saved_fired) / count(ftue_step where stepId=run1)
 ```
 
-Targets: `ftueSavedRate` > 0.97 (the rig should essentially always work). `savedRate` in normal play 0.35–0.55 — high enough to be a real part of the game, low enough that it still means something.
+Targets: `ftueSavedRate` > 0.97 (the rig should essentially always work). `savedRate` in normal play 0.35–0.55, high enough to be a real part of the game, low enough that it still means something.
 
 If `savedRate` > 0.7, `WARN_ANG` is too low and the game is crying wolf.
 
-### Q2 — Is greed working?
+### Q2, Is greed working?
 
 ```
 overloadDepth      = mean(overloadCount) by session index
@@ -113,11 +113,11 @@ stopDistribution   = histogram(multiplier at overload_declined)
 pushToCapsizeRate  = count(capsize) / count(run_start)
 ```
 
-Targets: mean overload depth 3–6 crates, rising with player experience. Capsize rate 18–28% — a game where you rarely capsize has no stakes, and a game where you usually capsize is punishing.
+Targets: mean overload depth 3–6 crates, rising with player experience. Capsize rate 18–28%, a game where you rarely capsize has no stakes, and a game where you usually capsize is punishing.
 
 **The critical chart** is the stop distribution. A healthy one is broad and roughly bell-shaped. A spike at exactly the quota means nobody is engaging with greed; a spike at the capsize point means the ad-continue is dominating and §1 rule 1 has failed.
 
-### Q3 — Are people learning the sim?
+### Q3, Are people learning the sim?
 
 ```
 dropHeightTrend = mean(crate_dropped.heightAboveStack) by session index
@@ -126,7 +126,7 @@ listDeltaTrend  = mean(abs(crate_dropped.listDelta)) by session index
 
 Both should **fall** over the first ten sessions. If drop height does not fall, the hold-to-lower mechanic is not being taught and the FTUE run 2 script needs work. This is the clearest single measure of whether the input design succeeded.
 
-### Q4 — Does the idle/skill coupling land?
+### Q4, Does the idle/skill coupling land?
 
 ```
 ratingImprovementRate = count(route_rating_improved) / count(run_complete)
@@ -137,9 +137,9 @@ manualRunsPerSession  = count(run_start) / count(session_start)
 
 Target `idleShareOfIncome` 0.45–0.60. Below 0.4 the idle layer is not carrying its weight; above 0.7 the manual game is becoming optional and Pillar P5 is failing.
 
-`manualRunsPerSession` must stay above 2. If it falls, check whether the fleet-pause opportunity cost is discouraging manual play — that is the A/B test in [12-liveops.md §5](12-liveops.md).
+`manualRunsPerSession` must stay above 2. If it falls, check whether the fleet-pause opportunity cost is discouraging manual play, that is the A/B test in [12-liveops.md §5](12-liveops.md).
 
-### Q5 — Where do people leave?
+### Q5, Where do people leave?
 
 Standard funnels plus a run-level exit analysis:
 

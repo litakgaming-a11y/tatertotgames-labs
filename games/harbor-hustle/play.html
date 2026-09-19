@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Harbor Hustle — TaterTot Games Labs</title>
+<title>Harbor Hustle | TaterTot Games</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9B%B4%EF%B8%8F%3C/text%3E%3C/svg%3E">
 <style>
   :root{
@@ -185,7 +185,7 @@
   <div id="townLine">🏘️ Harbor Town · 0/10 built</div>
   <div id="townBar"><div id="townFill"></div></div>
   <div id="titleBtns"><button class="btn btnSmall" id="shopBtn">⚓ HARBOR OFFICE</button></div>
-  <div id="footerBadge"><a href="../../">🥔 TaterTot Games Labs</a></div>
+  <div id="footerBadge"><a href="https://tatertotgames.com">tatertotgames.com</a></div>
 </div>
 
 <div class="screen" id="winScreen">
@@ -220,7 +220,7 @@
 <script>
 'use strict';
 /* =====================================================================
-   HARBOR HUSTLE — tap a boat to stop it, tap again to go
+   HARBOR HUSTLE, tap a boat to stop it, tap again to go
    TaterTot Games Labs · self-contained, canvas-drawn, WebAudio-synth
    ===================================================================== */
 
@@ -274,7 +274,7 @@ function loadSave() {
   var o = null;
   if (raw) { try { o = JSON.parse(raw); } catch (e) { o = null; } }
   if (!o || typeof o !== 'object') o = {};
-  // schema repair — every field coerced and clamped, unknown shapes discarded
+  // schema repair, every field coerced and clamped, unknown shapes discarded
   save.coins = num(o.coins, 0, 0, 1e9);
   save.earned = num(o.earned, 0, 0, 1e9);
   save.best = num(o.best, 1, 1, 9999);
@@ -338,7 +338,7 @@ var safeProbe = el('safeProbe');
 
 // ---------------------------------------------------------------- audio
 var ac = null, master = null, noiseBuf = null, audioDead = false;
-// A machine with no output device throws on construction — audio must never
+// A machine with no output device throws on construction, audio must never
 // be able to abort a caller (every input handler calls initAudio first).
 function initAudio() {
   if (audioDead) return;
@@ -407,7 +407,7 @@ function sndHorn(up, size) {
   if (up) { tone('sawtooth', base * 0.82, base * 1.16, 0.26, 0.16, 0); tone('square', base * 1.64, base * 2.3, 0.2, 0.05, 0.02); }
   else { tone('sawtooth', base * 1.12, base * 0.78, 0.3, 0.16, 0); tone('square', base * 2.2, base * 1.55, 0.22, 0.05, 0.02); }
 }
-// deep foghorn with a lazy tail — the harbour's ambience
+// deep foghorn with a lazy tail, the harbour's ambience
 function sndFoghorn() {
   tone('sine', 92, 88, 1.5, 0.22, 0);
   tone('sine', 138, 132, 1.4, 0.09, 0.03);
@@ -456,7 +456,7 @@ function sndBuy() {
 // ---------------------------------------------------------------- canvas + layout
 var W = 0, H = 0, DPR = 1, SCL = 1;
 var SAFE = { t: 0, r: 0, b: 0, l: 0 };
-// water rect — every level coordinate is normalized to this, so the harbor
+// water rect, every level coordinate is normalized to this, so the harbor
 // reflows for any aspect ratio (portrait phone first).
 var WAT = { x: 0, y: 0, w: 10, h: 10 };
 var SHORE = { x: 0, y: 0, w: 10, h: 10 };
@@ -492,7 +492,7 @@ function resize() {
   cv.width = Math.round(W * DPR);
   cv.height = Math.round(H * DPR);
   // CRITICAL: a canvas is a replaced element. Without an explicit CSS size it
-  // lays out at its attribute size (W*DPR) — double the viewport on a phone.
+  // lays out at its attribute size (W*DPR), double the viewport on a phone.
   cv.style.width = W + 'px';
   cv.style.height = H + 'px';
   readSafe();
@@ -523,7 +523,7 @@ var NEAR_BAND = 2.8;      // multiple of summed radii that opens an encounter
 var NEAR_PAY_BAND = 1.95; // must get this close for the CLOSE CALL payout
 var HIT_BAND = 0.9;
 var MAX_WAKE = 200;
-var MAX_ACTIVE_CAP = 7;   // genre-classic overwhelm guard — never more than 7
+var MAX_ACTIVE_CAP = 7;   // genre-classic overwhelm guard, never more than 7
 
 // ---------------------------------------------------------------- state
 var state = 'title';      // title | play | win | lose | shop
@@ -550,7 +550,7 @@ function emptyLevel() {
     speedMul: 1, vipChance: 0, typeW: [1, 0, 0],
   };
 }
-// Fully initialized at declaration — the loop runs from boot on the TITLE
+// Fully initialized at declaration, the loop runs from boot on the TITLE
 // screen, long before any level exists.
 var LV = emptyLevel();
 
@@ -631,7 +631,7 @@ function posAt(lane, u, out) {
   var d = clamp(u, 0, 1) * lane.len;
   var i = 1;
   var lo = 1, hi = cum.length - 1;
-  while (lo <= hi) {                      // binary search — no allocation
+  while (lo <= hi) {                      // binary search, no allocation
     var mid = (lo + hi) >> 1;
     if (cum[mid] < d) lo = mid + 1; else { i = mid; hi = mid - 1; }
   }
@@ -651,7 +651,7 @@ function posAt(lane, u, out) {
 function levelCfg(n) {
   var dockCount = clamp(2 + Math.floor((n - 1) / 3), 2, 5);
   var quota = clamp(5 + Math.floor(n * 0.8), 5, 20);
-  // slow, slow ramp — one extra hull every other shift, cap at 7 (never more:
+  // slow, slow ramp, one extra hull every other shift, cap at 7 (never more:
   // the genre's classic failure is an overwhelm cliff)
   var maxActive = clamp(2 + Math.floor((n - 1) / 1.9), 2, MAX_ACTIVE_CAP);
   var spawnGap = clamp(3.2 - n * 0.12, 1.25, 3.2);
@@ -919,7 +919,7 @@ function triggerWin() {
     })(spans[i], i);
   }
   winSubEl.textContent = closeCalls > 0
-    ? closeCalls + ' close call' + (closeCalls === 1 ? '' : 's') + ' — brave captain! 😅'
+    ? closeCalls + ' close call' + (closeCalls === 1 ? '' : 's') + ', brave captain! 😅'
     : (bonks === 0 ? 'Not a scratch on the fleet. ⚓' : 'A few dents, but the quota is in. 🔧');
   if (after > before && after <= BUILDINGS.length) {
     if (window.TTG && window.TTG.track) window.TTG.track('building_built', { level: level, value: after });
@@ -1014,7 +1014,7 @@ function syncHud() {
 // ---------------------------------------------------------------- input
 function handleTap(x, y) {
   if (state !== 'play') return;
-  // Boats MOVE — pick the nearest boat within a generous radius rather than
+  // Boats MOVE, pick the nearest boat within a generous radius rather than
   // exact hit-testing, so a slightly-off thumb still works.
   var best = null, bd = Infinity;
   for (var i = 0; i < LV.boats.length; i++) {
@@ -1209,7 +1209,7 @@ function updateBoats(dt) {
       posAt(b.lane, lookU, _pb);
       if (_pb.y <= by) brBlock = true;
     }
-    // 2. follow-the-leader on a shared lane — rear-ending your own queue would
+    // 2. follow-the-leader on a shared lane, rear-ending your own queue would
     //    be unavoidable, so boats keep station instead
     var follow = false;
     for (var q = 0; q < LV.boats.length; q++) {
@@ -1244,7 +1244,7 @@ function updateBoats(dt) {
     while (da < -Math.PI) da += TAU;
     b.ang += da * Math.min(1, dt * 8);
 
-    // VIP impatience — drains fast when YOU hold it, slowly when it is stuck
+    // VIP impatience, drains fast when YOU hold it, slowly when it is stuck
     // in traffic it cannot control
     if (b.type === 'vip') {
       if (b.hold) b.pat -= dt / vipPatienceSecs();
@@ -1292,7 +1292,7 @@ function checkPairs(dt) {
       var key = a.id < b.id ? (a.id * 100003 + b.id) : (b.id * 100003 + a.id);
       var rec = pairs.get(key);
       if (d < rr * HIT_BAND) {
-        // COLLISION — cartoon bonk, one strike
+        // COLLISION, cartoon bonk, one strike
         var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
         bonkBoat(a, mx, my);
         bonkBoat(b, mx, my, true);
@@ -1311,7 +1311,7 @@ function checkPairs(dt) {
         } else if (d < rec.min) rec.min = d;
         if (!rec.yelled && d < rr * NEAR_PAY_BAND) {
           rec.yelled = true;
-          // both captains yell — comedically
+          // both captains yell, comedically
           yell(a.x, a.y, YELLS_NEAR[Math.floor(Math.random() * YELLS_NEAR.length)], '#ffe9a3');
           yell(b.x, b.y, YELLS_NEAR[Math.floor(Math.random() * YELLS_NEAR.length)], '#ffe9a3');
           scatterGulls((a.x + b.x) / 2, (a.y + b.y) / 2, 1);
@@ -1525,7 +1525,7 @@ function drawTown(sx, sy, sw, sh, night) {
 function drawBuilding(bd, bx, by, bw, bh, i, flick, night) {
   ctx.fillStyle = bd.c;
   if (bd.kind === 'ferris') {
-    // ferris wheel — rotating, lit at dusk
+    // ferris wheel, rotating, lit at dusk
     var cx = bx + bw / 2, cy = by + bh * 0.42, R = Math.min(bw, bh) * 0.44;
     ctx.strokeStyle = 'rgba(255,255,255,0.5)';
     ctx.lineWidth = 2;
@@ -1661,7 +1661,7 @@ function drawDocks() {
     ctx.beginPath(); ctx.arc(d.x - w / 2 + 4 * SCL, WAT.y + h - 10, 3.2 * SCL * pulse, 0, TAU); ctx.fill();
     ctx.beginPath(); ctx.arc(d.x + w / 2 - 4 * SCL, WAT.y + h - 10, 3.2 * SCL * pulse, 0, TAU); ctx.fill();
     ctx.globalAlpha = 1;
-    // crane — animates while loading a docked boat
+    // crane, animates while loading a docked boat
     var craneA = d.craneT >= 0 ? Math.sin(d.craneT * 5.5) * 0.5 : Math.sin(bgT * 0.7 + i) * 0.12;
     var cxp = d.x, cyp = WAT.y - 6;
     ctx.strokeStyle = '#9aa7b8';
@@ -1813,7 +1813,7 @@ function drawBoat(b) {
     ctx.globalAlpha = 1;
   }
 
-  // state ring — HOLD reads instantly
+  // state ring, HOLD reads instantly
   var ringR = b.r * 1.5 + 3;
   if (b.hold) {
     ctx.strokeStyle = 'rgba(255,90,110,' + (0.75 + Math.sin(bgT * 6) * 0.2) + ')';
@@ -1829,7 +1829,7 @@ function drawBoat(b) {
     ctx.fillRect(b.x - 3.4 * SCL, b.y - ringR - 11.4 * SCL + bobY, 6.8 * SCL, 6.8 * SCL);
   } else {
     if (b.wait) {
-      // waiting on the bridge / the boat ahead — amber, clearly not your doing
+      // waiting on the bridge / the boat ahead, amber, clearly not your doing
       ctx.strokeStyle = 'rgba(255,201,60,' + (0.4 + Math.sin(bgT * 5) * 0.16) + ')';
       ctx.lineWidth = 2.4;
       ctx.setLineDash([4, 6]);
@@ -1897,7 +1897,7 @@ function drawBridge() {
       ctx.fillText('BRIDGE CLOSING', (x0 + x1) / 2, y - 30 * SCL);
     }
   } else {
-    // lowered deck — a hard barrier
+    // lowered deck, a hard barrier
     ctx.fillStyle = 'rgba(0,0,0,0.3)';
     rr(x0, y - 7 * SCL + 3, x1 - x0, 15 * SCL, 4); ctx.fill();
     ctx.fillStyle = '#8b96a8';

@@ -1,4 +1,4 @@
-# 05 — Fleet & Ports
+# 05, Fleet & Ports
 
 The tycoon layer. Two systems: which hulls you own and where you send them, and what your towns become.
 
@@ -10,7 +10,7 @@ No hull is strictly best. Each is a distinct *shape* in the simulation, not a sk
 
 | Hull | Beam | Freeboard | Deck len | Keel mass | Roll inertia | `basePrice` | Character |
 |---|---|---|---|---|---|---|---|
-| 🛥️ **Tugboat** | 184 | High | Short | Mid | 2.2 | — (start) | Forgiving, low capacity. The teacher. |
+| 🛥️ **Tugboat** | 184 | High | Short | Mid | 2.2 |, (start) | Forgiving, low capacity. The teacher. |
 | ⛵ **Clipper** | 140 | High | Long | Low | 1.6 | 4,500 | Tippy but enormous deck to spread weight |
 | 🚢 **Barge** | 260 | **Low** | Long | High | 3.4 | 12,000 | Very stable until Bullion sinks the rail under |
 | 🛢️ **Tanker** | 210 | Mid | Mid | High | **4.1** | 38,000 | Huge capacity, brutal roll inertia past 20° |
@@ -27,7 +27,7 @@ No hull is strictly best. Each is a distinct *shape* in the simulation, not a sk
 
 | Stat | Sim meaning | Feels like |
 |---|---|---|
-| **Beam** | `hullHalfW()` — hull box width | How far the centre of buoyancy can travel before the CoM wins |
+| **Beam** | `hullHalfW()`, hull box width | How far the centre of buoyancy can travel before the CoM wins |
 | **Freeboard** | Deck height above resting waterline | How much total mass she takes before the rail goes under |
 | **Deck length** | Usable placement span | How wide you can spread weight to reduce the CoM offset |
 | **Keel mass / roll inertia** | `KEEL_INERTIA_MULT` and righting coefficient | How slowly she rolls, and how hard she snaps back |
@@ -58,9 +58,9 @@ hullSuitability(hull, route) = Σ over route cargo mix:
 
 Bounded 0.6–1.8. The spread is large enough that assignment matters and small enough that a wrong assignment is never catastrophic.
 
-**Suitability applies to idle income only, not to the manual run.** In a manual run the hull's physical stats already do the work — a Hopper is genuinely better at Bullion because it is shaped that way. Applying a second multiplier would be double-counting and would make the sim feel dishonest.
+**Suitability applies to idle income only, not to the manual run.** In a manual run the hull's physical stats already do the work, a Hopper is genuinely better at Bullion because it is shaped that way. Applying a second multiplier would be double-counting and would make the sim feel dishonest.
 
-## 3. Fleet assignment — the deployment decision
+## 3. Fleet assignment, the deployment decision
 
 ```
 🚢 FLEET                                 6 hulls · 9 rated routes
@@ -70,8 +70,8 @@ Bounded 0.6–1.8. The spread is large enough that assignment matters and small 
   Clipper "Wisp"      → Coral–Kelp             🪙   680/hr
       Timber  ★★★  ·  rating 1.08  ·  destTier 2
   Tanker "Ox"         → Gullhaven–Drift Point  🪙 2,110/hr
-  Tugboat "Nub"       → unassigned                    —
-  Cutter "Sprat"      → unassigned                    —
+  Tugboat "Nub"       → unassigned,
+  Cutter "Sprat"      → unassigned,
   Coaster "Meg"       → Storm Reach–Moonquay   🪙 3,400/hr
 
   TOTAL                                        🪙 7,430/hr
@@ -90,9 +90,9 @@ Bounded 0.6–1.8. The spread is large enough that assignment matters and small 
      [ PILOT ANYWAY ]      [ TAKE THE TUG INSTEAD ]
 ```
 
-That prompt is the fleet layer's entire reason to exist. Every session opens with it. The player's best hull is also their best earner, so attempting a hard Bullion contract means pulling the top earner off the line — and the cost is displayed in the currency they care about.
+That prompt is the fleet layer's entire reason to exist. Every session opens with it. The player's best hull is also their best earner, so attempting a hard Bullion contract means pulling the top earner off the line, and the cost is displayed in the currency they care about.
 
-**Why this is not annoying.** The pause is short and the number is small relative to session income. It is a *texture*, not a tax. If soft-launch data shows players avoiding manual runs to protect idle income, the fix is to reduce the pause to the run duration only (excluding menus) — remote-configured — not to remove the mechanic.
+**Why this is not annoying.** The pause is short and the number is small relative to session income. It is a *texture*, not a tax. If soft-launch data shows players avoiding manual runs to protect idle income, the fix is to reduce the pause to the run duration only (excluding menus), remote-configured, not to remove the mechanic.
 
 ## 4. Ports
 
@@ -104,7 +104,7 @@ That prompt is the fleet layer's entire reason to exist. Every session opens wit
 | 2 | 2 | Warehouses, a crane, smoke from chimneys | +120 |
 | 3 | 2 | Stone quay, cargo stacks, moving carts | +240 |
 | 4 | 3 | Lit skyline, gantry cranes, tugs in the harbour | +360 |
-| 5 | 4 | Full port city — trains, ferries, fireworks on tier-up | +480 |
+| 5 | 4 | Full port city, trains, ferries, fireworks on tier-up | +480 |
 
 **The town growing is the reward and the economy at the same time.** Every tier-up plays a 2.5 s celebration: the camera pans to the port on the map, buildings rise, lamps light in sequence, the ambient audio gains a layer (gulls → carts → machinery → city hum). This is the single most-repeated emotional beat outside the run itself and it deserves real production attention.
 
@@ -120,14 +120,14 @@ The player chooses what each slot becomes:
 | 🔮 Glassworks | Glassware | 3 | 5/hr |
 | 🏛️ Mint | Bullion | 4 | 3/hr |
 
-**This is where the economy reaches into the physics.** Build a Cooperage and barrels start showing up in your holds and in your overload hands — and barrels roll. The player is choosing, months in advance, what their runs will feel like.
+**This is where the economy reaches into the physics.** Build a Cooperage and barrels start showing up in your holds and in your overload hands, and barrels roll. The player is choosing, months in advance, what their runs will feel like.
 
 Demolition refunds 40%. Building choice is revisable because it changes gameplay, and a player who did not understand that at tier 2 should not be punished at tier 5.
 
 ### Port screen
 
 ```
-🏘️  SALTBAY — Tier 3                    ⬆ Tier 4: 🪙 12,400
+🏘️  SALTBAY, Tier 3                    ⬆ Tier 4: 🪙 12,400
 
     [ 🪣 Cooperage ]   Barrel  +14/hr
     [ 🏭 Sawmill   ]   Timber   +9/hr
@@ -136,7 +136,7 @@ Demolition refunds 40%. Building choice is revisable because it changes gameplay
     Storage         240 / 400
     Routes from here
       → Fogport     ⭐ 1.42   🚢 Barge "Dogged"    🪙 1,240/hr
-      → Kelp Quay   ⭐ 0.88   — unassigned —            —
+      → Kelp Quay   ⭐ 0.88, unassigned, ,
 ```
 
 Every number on this screen traces back to a run the player piloted. That traceability is the product.

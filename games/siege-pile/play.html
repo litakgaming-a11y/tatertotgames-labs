@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Siege Pile — TaterTot Games Labs</title>
+<title>Siege Pile | TaterTot Games</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%94%3C/text%3E%3C/svg%3E">
 <style>
   :root{
@@ -244,7 +244,7 @@
     <button class="btn btnSmall" id="shopBtn">🛠️ ARMOURY</button>
     <button class="btn btnSmall" id="mapBtn">🗺️ CONQUEST</button>
   </div>
-  <div id="footerBadge"><a href="../../">🥔 TaterTot Games Labs</a></div>
+  <div id="footerBadge"><a href="https://tatertotgames.com">tatertotgames.com</a></div>
 </div>
 
 <div class="screen" id="winScreen">
@@ -264,7 +264,7 @@
 <div class="screen" id="loseScreen">
   <div class="panel">
     <h2 class="panelTitle" id="loseTitle">ASSAULT REPELLED</h2>
-    <p id="loseSub">Out of knights. They are all fine — just very dizzy. The pile stays; try again.</p>
+    <p id="loseSub">Out of knights. They are all fine, just very dizzy. The pile stays; try again.</p>
     <button class="btn bigBtn retry" id="retryBtn">↻ ASSAULT AGAIN</button>
     <button class="btn bigBtn ghost" id="loseShopBtn">🛠️ ARMOURY</button>
   </div>
@@ -293,13 +293,13 @@
 <script>
 'use strict';
 /* =====================================================================
-   SIEGE PILE — your own army becomes the ramp
+   SIEGE PILE, your own army becomes the ramp
    TaterTot Games Labs · self-contained, canvas-drawn, WebAudio-synth
 
    Physics: articulated ragdolls as position-based-dynamics particle
    skeletons (7 nodes / 13 distance constraints) on fixed substeps.
    Settled ragdolls are frozen and rasterised into a heightfield that
-   IS the collision terrain — so the heap of failed throws becomes a
+   IS the collision terrain, so the heap of failed throws becomes a
    solid, climbable ramp, and stops costing simulation time.
    ===================================================================== */
 
@@ -378,7 +378,7 @@ loadSave();
 
 // ---------------------------------------------------------------- meta tables
 var UPGRADES = [
-  { k: 'tension',   icon: '🎯', name: 'Catapult Tension', desc: 'Wind the arm tighter — more launch speed on every fling.',        max: 4, costs: [150, 340, 700, 1200] },
+  { k: 'tension',   icon: '🎯', name: 'Catapult Tension', desc: 'Wind the arm tighter, more launch speed on every fling.',        max: 4, costs: [150, 340, 700, 1200] },
   { k: 'tuck',      icon: '🤸', name: 'Tuck Window',      desc: 'Hold the tuck longer and skip harder off the pile.',              max: 3, costs: [180, 420, 850] },
   { k: 'extra',     icon: '🛡️', name: 'Extra Knight',     desc: 'One more volunteer per assault. They are always keen.',           max: 4, costs: [200, 450, 900, 1500] },
   { k: 'stability', icon: '🧱', name: 'Pile Stability',   desc: 'Knights brace faster and defenders shove less of the heap away.', max: 3, costs: [220, 500, 950] },
@@ -426,7 +426,7 @@ var safeProbe = el('safeProbe');
 
 // ---------------------------------------------------------------- audio
 var ac = null, master = null, noiseBuf = null, audioDead = false;
-// Machines with no output device throw on AudioContext construction — audio
+// Machines with no output device throw on AudioContext construction, audio
 // must never be able to abort a caller, so every path here is guarded.
 function initAudio() {
   if (audioDead) return;
@@ -533,7 +533,7 @@ function sndSettle(n) {
     tone('square', 300 + Math.random() * 420, 260, 0.05, 0.035, i * 0.045);
   }
 }
-// Huzzah chorus — voices swell with pile height / capture size.
+// Huzzah chorus, voices swell with pile height / capture size.
 function sndHuzzah(strength) {
   if (!audioOk()) return;
   var s = clamp(fin(strength, 0.5), 0, 1);
@@ -587,13 +587,13 @@ function resize() {
   try {
     var iw = (typeof window !== 'undefined' && window.innerWidth) || 0;
     var ih = (typeof window !== 'undefined' && window.innerHeight) || 0;
-    if (iw < 2 || ih < 2) return; // 0-size layout pass — keep last good size
+    if (iw < 2 || ih < 2) return; // 0-size layout pass, keep last good size
     DPR = Math.min(2.5, (typeof window !== 'undefined' && window.devicePixelRatio) || 1);
     W = iw; H = ih;
     cv.width = Math.round(W * DPR);
     cv.height = Math.round(H * DPR);
     // CRITICAL: a canvas is a replaced element. Without explicit CSS sizing it
-    // lays out at its attribute size (W*DPR) — double-size on every phone.
+    // lays out at its attribute size (W*DPR), double-size on every phone.
     cv.style.width = W + 'px';
     cv.style.height = H + 'px';
     readSafe();
@@ -635,7 +635,7 @@ var SUB = 1 / 120;        // fixed physics substep
 var MAX_SUB = 4;          // hard cap on substeps per frame
 var C_ITERS = 4;          // constraint relaxation iterations
 var MAX_STEP = 26;        // max positional delta per substep (velocity clamp)
-var AIR_DAMP = 0.9998;    // ~2.4%/s — keeps the aim preview honest
+var AIR_DAMP = 0.9998;    // ~2.4%/s, keeps the aim preview honest
 var VMAX_BASE = 1250;     // catapult muzzle speed
 var LAUNCH_X = -40, LAUNCH_Y = -118;  // catapult cup, world
 
@@ -648,7 +648,7 @@ function envelopeAt(x, v) {
 
 // ---------------------------------------------------------------- heightfield terrain
 // The pile IS the terrain. Frozen ragdolls rasterise into `ph` (height above
-// the base ground), and every active particle collides against that surface —
+// the base ground), and every active particle collides against that surface,
 // which is why a settled heap can never be clipped through.
 var HF_N = 340, HF_BIN = 7, HF_X0 = -300;
 var ph = new Float32Array(HF_N);     // pile height above base (>= 0)
@@ -748,11 +748,11 @@ var POSE_STAND = [
   [0, -70], [0, -48], [0, -26], [-19, -44], [19, -44], [-9, -3], [9, -3]
 ];
 // Brace pose offsets are measured from the SUPPORT SURFACE, so the boot circles
-// (r 8.5) sit exactly on it — a braced knight must never be part-buried.
+// (r 8.5) sit exactly on it, a braced knight must never be part-buried.
 var POSE_BRACE = [
   [1, -69], [0, -51], [0, -31], [-22, -43], [22, -45], [-12, -9], [12, -9]
 ];
-// [a, b, stiffness] — rest length derived from the standing pose.
+// [a, b, stiffness], rest length derived from the standing pose.
 var LINKS = [
   [0, 1, 1.0], [1, 2, 1.0], [2, 5, 0.95], [2, 6, 0.95],
   [1, 3, 0.9], [1, 4, 0.9],
@@ -834,7 +834,7 @@ var lvl = {
 };
 var scene = 'title';                 // 'title' | 'play' | 'win' | 'lose' | 'menu'
 var knights = [];                    // live ragdolls (simulated)
-var frozen = [];                     // braced ragdolls (terrain — drawn, not simulated)
+var frozen = [];                     // braced ragdolls (terrain, drawn, not simulated)
 var arrows = [];
 var helmets = [];
 var dust = [];
@@ -862,7 +862,7 @@ function levelParams(n) {
   o.wallX = Math.round(clamp(470 + n * 21 + r() * 40, 470, 940));
   o.wallW = Math.round(70 + Math.min(38, n * 1.6));
   // Wall height is derived from the ballistic envelope, so a clean shot always
-  // clears it with margin — difficulty comes from the extras, never a cliff.
+  // clears it with margin, difficulty comes from the extras, never a cliff.
   var env = envelopeAt(o.wallX, v);
   var frac = 0.42 + Math.min(0.26, n * 0.013);
   o.wallH = Math.round(clamp(env * frac, 130, 380));
@@ -1113,18 +1113,18 @@ function substep() {
       }
       var e = Math.max(e1, e2, e3, collideInner(p));
       if (e > hitE) hitE = e;
-      // grapplers bite the stone and become a permanent step — unless the
+      // grapplers bite the stone and become a permanent step, unless the
       // defenders have greased that section with boiling oil
       if (e1 > 90 && k.type === 'grappler' && !k.stuck && !lvl.oil &&
           p.x < lvl.wallX + 4 && p.y < -30) {
         k.stuck = true;
       }
-      // hard sanity clamp — nothing may leave the playfield or go non-finite
+      // hard sanity clamp, nothing may leave the playfield or go non-finite
       if (!isFinite(p.x) || !isFinite(p.y)) { p.x = k.anchorX; p.y = -20; p.px = p.x; p.py = p.y; }
       if (p.y > 620) { p.y = 620; p.py = p.y; }
       if (p.x < HF_X0 + 8) { p.x = HF_X0 + 8; }
       if (p.x > HF_X0 + HF_N * HF_BIN - 8) { p.x = HF_X0 + HF_N * HF_BIN - 8; }
-      // hard velocity bound after every correction — PBD position fixes can
+      // hard velocity bound after every correction, PBD position fixes can
       // otherwise smuggle energy in through the implicit velocity.
       var dvx = p.x - p.px, dvy = p.y - p.py;
       var sp2 = Math.sqrt(dvx * dvx + dvy * dvy);
@@ -1142,7 +1142,7 @@ function substep() {
     if (k.state === 'braced') continue;
     clampJoints(k, 0.85);
     // that clamp runs after contact resolution, so re-seat anything it pushed
-    // back into the heap (positional only — no energy is added)
+    // back into the heap (positional only, no energy is added)
     for (j = 0; j < 7; j++) {
       var cp = k.p[j];
       if (inMoat(cp.x)) continue;
@@ -1373,7 +1373,7 @@ function updateKnights(dt) {
     if (k.dizzy > 0) k.dizzy = Math.max(0, k.dizzy - dt);
     if (!knightSane(k)) { knights.splice(i, 1); if (flying === k) flying = null; continue; }
     var c = knightCentre(k);
-    // moat swallows short throws entirely — no pile forms
+    // moat swallows short throws entirely, no pile forms
     if (inMoat(c.x) && c.y > 60) { drownKnight(k); continue; }
     if (c.y > 520 || c.x < HF_X0 + 20 || c.x > HF_X0 + HF_N * HF_BIN - 20) {
       knights.splice(i, 1); if (flying === k) flying = null; continue;
@@ -1419,7 +1419,7 @@ function updateKnights(dt) {
         var p = k.p[j];
         p.x = lerp(k.standFrom[j][0], k.standTo[j][0], e2);
         p.y = lerp(k.standFrom[j][1], base + k.braceOff[j][1], e2);
-        // the brace animation is kinematic, so clamp it to the surface itself —
+        // the brace animation is kinematic, so clamp it to the surface itself,
         // a rising knight must never pass through the heap it is standing on
         if (!k.inside) {
           var spen = (p.y + p.r) - surfAt(p.x);
@@ -1666,7 +1666,7 @@ function levelWon() {
   winTitleEl.textContent = lvl.keep ? 'KEEP TAKEN! 🏰' : 'CASTLE TAKEN!';
   coinAnim.shown = 0; coinAnim.target = coins; coinAnim.t = 0;
   winCoinsEl.textContent = '+0 🪙';
-  winSubEl.textContent = lvl.name + ' falls — ' + used + ' knight' + (used === 1 ? '' : 's') +
+  winSubEl.textContent = lvl.name + ' falls, ' + used + ' knight' + (used === 1 ? '' : 's') +
     ' flung, ' + pileMeters + 'm of pile built.';
   var sp = starsEl.children;
   for (var s = 0; s < sp.length; s++) sp[s].classList.remove('on');
@@ -1681,7 +1681,7 @@ function levelLost() {
   scene = 'lose';
   track('game_over', { level: lvl.n });
   loseTitleEl.textContent = 'ASSAULT REPELLED';
-  loseSubEl.textContent = 'Out of knights at ' + lvl.name + '. Everyone is fine — just very dizzy. ' +
+  loseSubEl.textContent = 'Out of knights at ' + lvl.name + '. Everyone is fine, just very dizzy. ' +
     (pileMeters > 1 ? 'Your ' + pileMeters + 'm pile stays put for the next go.' : 'Aim for the wall top next time.');
   showScreen(loseScreen);
   hud.classList.remove('show');
@@ -1865,7 +1865,7 @@ function updateCam(dt) {
   var tx = cam.tx, ty = cam.ty, ts = cam.ts;
   if (flying && flying.state === 'flight') {
     tx = clamp(flying.p[1].x + 40, cam.tx - 150, lvl.wallX + 150);
-    // short viewports (landscape phones) cannot afford to zoom in — they would
+    // short viewports (landscape phones) cannot afford to zoom in, they would
     // lose the ground line entirely on a lofted shot
     ts = cam.ts * (H >= 560 ? 1.28 : 1.0);
     // never lift so far that the ground and the pile leave the screen
@@ -2083,7 +2083,7 @@ function limb(a, b, wid, col) {
 }
 
 // ---------------------------------------------------------------- draw: world
-// Curated dusk palettes — a free-running hue rotation produced muddy skies.
+// Curated dusk palettes, a free-running hue rotation produced muddy skies.
 var SKIES = [
   { a: '#1b1740', b: '#33285e', c: '#6e4d72', h1: '#22304a', h2: '#2c4057', sun: '#ffe9b0' },
   { a: '#2a1730', b: '#5a2a44', c: '#b2604f', h1: '#33243f', h2: '#45304f', sun: '#ffd9a8' },
@@ -2108,7 +2108,7 @@ function drawSky() {
   ctx.arc(W * 0.76, H * 0.2, Math.min(W, H) * 0.14, 0, TAU);
   ctx.fill();
   ctx.globalAlpha = 1;
-  // drifting clouds (slow parallax) — the sky is tall in portrait, so give it
+  // drifting clouds (slow parallax), the sky is tall in portrait, so give it
   // something to hold
   var px = cam.x * 0.12;
   for (var c = 0; c < 5; c++) {
@@ -2399,7 +2399,7 @@ function drawWall() {
   for (var i = 0; i < 5; i += 2) {
     ctx.fillRect(x0 + i * bw, yTop - Math.max(4, ss(24)), bw, Math.max(4, ss(24)));
   }
-  // inner keep — a real collider on keep levels, a silhouette otherwise
+  // inner keep, a real collider on keep levels, a silhouette otherwise
   var kx, kw, kTop;
   if (lvl.inner) {
     kx = sx(lvl.inner.x0); kw = sx(lvl.inner.x1) - kx; kTop = lvl.inner.top;
@@ -2527,7 +2527,7 @@ function drawCatapult() {
   ctx.lineWidth = Math.max(1, ss(3));
   ctx.beginPath(); ctx.arc(bx - ss(20), by - ss(6), ss(7), 0, TAU); ctx.stroke();
   ctx.beginPath(); ctx.arc(bx + ss(28), by - ss(6), ss(7), 0, TAU); ctx.stroke();
-  // arm — recoils on launch, winds back while aiming
+  // arm, recoils on launch, winds back while aiming
   var wind = aim.active ? aim.power : 0;
   var recoil = flying && flying.age < 0.35 ? (1 - flying.age / 0.35) : 0;
   var armAng = -1.05 + wind * 0.75 - recoil * 1.35;
@@ -2649,7 +2649,7 @@ function render() {
   drawDefenders();
   drawPile();
   var i;
-  // cull off-screen bodies — a big pile is cheap to keep because it neither
+  // cull off-screen bodies, a big pile is cheap to keep because it neither
   // simulates nor draws once it leaves the view
   for (i = 0; i < frozen.length; i++) {
     var fk = frozen[i];
@@ -2708,7 +2708,7 @@ goTitle();
 syncHud(true);
 if (typeof requestAnimationFrame === 'function') requestAnimationFrame(frame);
 
-// test hook — harnesses drive the real loop, never a parallel copy of it
+// test hook, harnesses drive the real loop, never a parallel copy of it
 if (typeof window !== 'undefined') {
   window.__siege = {
     frame: frame, update: update, render: render, resize: resize,

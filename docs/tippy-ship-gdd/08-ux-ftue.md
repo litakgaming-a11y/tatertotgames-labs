@@ -1,4 +1,4 @@
-# 08 — UX & FTUE
+# 08, UX & FTUE
 
 Portrait, one thumb, 540 × 960 logical. Every system arrives one at a time.
 
@@ -70,7 +70,7 @@ Maximum depth from home to a run: **3 taps** (map → route → deploy → sail)
 
 1. **The waterline sits at 62% screen height** (`WATERY = H × 0.62`, ported from the prototype). It is the visual anchor and it never moves.
 2. **Nothing UI may overlap the hull or the waterline.** The bottom panel starts below the hull's maximum roll excursion.
-3. **All interactive elements sit in the bottom 40%** — thumb-reachable one-handed on a 6.7" phone.
+3. **All interactive elements sit in the bottom 40%**, thumb-reachable one-handed on a 6.7" phone.
 4. **The crane occupies the top 25%.** Touch anywhere in the play area, not just on the crane.
 5. Minimum touch target 44 × 44 px.
 
@@ -78,11 +78,11 @@ Maximum depth from home to a run: **3 taps** (map → route → deploy → sail)
 
 Street Baron's `BUGS.md` records a UI pass that closed roughly twenty bugs at once by finding one root cause. All three rules below come from that ([15-lessons-from-prior-builds.md L17–L20](15-lessons-from-prior-builds.md)).
 
-**Lock the reference resolution in week one of M1.** SB's `PanelSettings.referenceResolution` was 360×780 while every mockup was authored on a 540×960 canvas, so all UI rendered **~1.37× oversized** — the single root cause behind most of an entire annotated-screenshot bug batch. Set `ScaleWithScreenSize` @ **540×960**, assert it in a test, and author every mockup on that canvas. A one-line setting that costs weeks when wrong.
+**Lock the reference resolution in week one of M1.** SB's `PanelSettings.referenceResolution` was 360×780 while every mockup was authored on a 540×960 canvas, so all UI rendered **~1.37× oversized**, the single root cause behind most of an entire annotated-screenshot bug batch. Set `ScaleWithScreenSize` @ **540×960**, assert it in a test, and author every mockup on that canvas. A one-line setting that costs weeks when wrong.
 
 **Nav clearance is a token, not a per-panel fix.** SB fixed "panel clipped by the bottom nav" three separate times (B10, B39, B55); the third entry reads *"verify ALL panels clear the nav."* Here there is one `--safe-bottom` token derived from nav height plus the device safe-area inset, every overlay derives its bottom from it, no panel hardcodes a value, and a test enumerates every panel asserting its content rect clears the nav.
 
-**A feedback class can go silently invisible.** SB's `.sb-toast` used `align-self: center` on an absolutely-positioned element, giving it zero width — so *every* toast in the game was invisible over open panels, found only incidentally. This design rests entirely on feedback landing, so a PlayMode smoke test fires one of each class — popup, toast, particle burst, coach mark, inclinometer flash — and asserts non-zero resolved bounds and non-zero opacity.
+**A feedback class can go silently invisible.** SB's `.sb-toast` used `align-self: center` on an absolutely-positioned element, giving it zero width, so *every* toast in the game was invisible over open panels, found only incidentally. This design rests entirely on feedback landing, so a PlayMode smoke test fires one of each class, popup, toast, particle burst, coach mark, inclinometer flash, and asserts non-zero resolved bounds and non-zero opacity.
 
 Also: **UITK scroll views are dead on touch without drag-scroll.** Add it to the shared scroll component once, before building any scrolling screen.
 
@@ -101,7 +101,7 @@ A real ship's clinometer. It is the single most important HUD element and it is 
 - **Bubble position** = `hull.a`, smoothly interpolated, sub-pixel.
 - **Zone bands** are coloured by the actual constants: green to 20°, amber `WARN_ANG` (25°) to 30°, red from 32° toward `CAPSIZE_ANG` (40°).
 - **Numeric readout** to whole degrees, because at low resolution a number beats a shape.
-- **Zones pulse with the Tension Bus** — the amber and red bands breathe as tension rises.
+- **Zones pulse with the Tension Bus**, the amber and red bands breathe as tension rises.
 - Mirrors on the left/right for symmetric roll.
 
 This solves the one genuine risk of the pixel art direction: a 2° change might be a few pixels of hull rotation, but it is an unmissable bubble slide and a changed number.
@@ -110,11 +110,11 @@ This solves the one genuine risk of the pixel art direction: a 2° change might 
 
 A vertical 5-segment bar showing `hull.freeboard / hull.freeboard0`. Distinct from list, because on a Barge you drown before you tip and the player needs a separate instrument for a separate failure mode.
 
-## 3. Session 1 — the scripted FTUE
+## 3. Session 1, the scripted FTUE
 
 **No map. No warehouse. No currency UI. No shop.** Three runs, roughly 90 seconds, core loop only.
 
-### Run 1 — the rigged SAVED!
+### Run 1, the rigged SAVED!
 
 This run is authored, not seeded. The manifest, the crate order, and a single timed gull landing are set so the hull is *guaranteed* to swing past `WARN_ANG` and recover.
 
@@ -138,7 +138,7 @@ This run is authored, not seeded. The manifest, the crate order, and a single ti
 
 The rigging is invisible: the gull is a real game entity doing a real thing, and the physics is genuine. Nothing is faked; the *setup* is chosen. If a player replays run 1 later it behaves identically, which preserves trust.
 
-### Run 2 — teaching the hold
+### Run 2, teaching the hold
 
 ```
   Manifest is Bullion-heavy and the hull is narrow.
@@ -152,7 +152,7 @@ The rigging is invisible: the gull is a real game entity doing a real thing, and
 
 Teaching by contrast, within one run, with the player's own eyes on the inclinometer.
 
-### Run 3 — teaching greed
+### Run 3, teaching greed
 
 ```
   Quota is 4 and easily met.
@@ -164,20 +164,20 @@ Teaching by contrast, within one run, with the player's own eyes on the inclinom
 
 Whether the player banks or capsizes, they have authored the outcome. That is the last thing the tutorial needs to teach.
 
-## 4. Unlock ladder — one system per session
+## 4. Unlock ladder, one system per session
 
 | Session | Unlocks | Framing |
 |---|---|---|
 | 1 | Core loop | Three runs, no UI |
 | 2 | **Warehouse + cargo types** | "Your holds are filling up" |
-| 3 | **Port tiers** — first town lights up | The camera pans, buildings rise |
+| 3 | **Port tiers**, first town lights up | The camera pans, buildings rise |
 | 4 | **Second hull + fleet assignment** | "She'll run that route while you sleep" |
 | 5 | **Daily Contract** | Streak begins |
 | 6 | **Region 2 + building slots** | The map opens west |
 | 7 | **Weekly Regatta** | "Same boat, same sea, everyone" |
 | 10 | **Prestige preview** (locked, visible) | A distant goal made real early |
 
-Each unlock is a **celebration**, not a menu appearing: camera move, sound, a single sentence, one tap to dismiss. Never two unlocks in one session — the player must have a clear answer to "what's new today".
+Each unlock is a **celebration**, not a menu appearing: camera move, sound, a single sentence, one tap to dismiss. Never two unlocks in one session, the player must have a clear answer to "what's new today".
 
 ## 5. The deployment screen
 
@@ -196,7 +196,7 @@ The one screen where the fleet layer earns its keep.
 │      ⚠ pauses 🪙 1,240/hr for ~90 s          │
 │                                              │
 │  ○ 🛥️ Tugboat "Nub"     T2   Bullion ★       │
-│      idle — costs you nothing                │
+│      idle, costs you nothing                │
 │                                              │
 │  ○ ⛵ Clipper "Wisp"    T3   Bullion ★       │
 │      ⚠ pauses 🪙 680/hr                      │
@@ -237,7 +237,7 @@ The opportunity cost is stated in Coins per hour, in the same units the player h
 | Provision | Implementation |
 |---|---|
 | **Colour-blind safe** | Cargo distinguished by silhouette first, colour second. Inclinometer zones use position and a numeric readout, never colour alone. Three CVD palettes (protan/deutan/tritan) in Settings. |
-| **Reduced motion** | Toggle disabling camera dutch, push-in, and all shake. `timeScale` retained — it is information. See [07-juice-audio.md §8](07-juice-audio.md). |
+| **Reduced motion** | Toggle disabling camera dutch, push-in, and all shake. `timeScale` retained, it is information. See [07-juice-audio.md §8](07-juice-audio.md). |
 | **Haptics toggle** | On by default, one tap to disable. |
 | **Assisted Lower** | Auto-descent + single tap release, −8% multiplier. See [01-core-loop.md §2](01-core-loop.md). |
 | **Text scale** | 100% / 125% / 150%, all layouts tested at 150%. |
@@ -255,6 +255,6 @@ The opportunity cost is stated in Coins per hour, in the same units the player h
 
 ## 9. Localisation
 
-All strings externalised from day one. Note that the game is unusually localisation-light — the core loop communicates through physics, not text. Total string count target: **< 400**, which makes adding a language a one-day job.
+All strings externalised from day one. Note that the game is unusually localisation-light, the core loop communicates through physics, not text. Total string count target: **< 400**, which makes adding a language a one-day job.
 
 The exception is port names, which are procedurally assembled from `PORT_A`/`PORT_B`. For non-English locales, ship per-locale word lists rather than translating assembled names.

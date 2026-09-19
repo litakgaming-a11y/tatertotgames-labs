@@ -1,4 +1,4 @@
-# 01 — Core Loop
+# 01, Core Loop
 
 The run is the whole product. Everything else exists to make the next run matter more.
 
@@ -11,13 +11,13 @@ The run is the whole product. Everything else exists to make the next run matter
 | **Brief** | 1.5 s (skippable) | none | Contract card slides in, hull settles at rest draft |
 | **Quota load** | 12–30 s | hold-to-lower each mandated crate | `SAIL` locked, multiplier hidden |
 | **Overload** | 0–40 s | pick a card, hold-to-lower, decide again | `SAIL` live, multiplier climbing |
-| **Wake test** | 3.4 s | none — watch | Ferry passes, `WAKE` displaces the water |
+| **Wake test** | 3.4 s | none, watch | Ferry passes, `WAKE` displaces the water |
 | **Settle** | 1.2 s | none | Hull rights, payout tallies |
 | **Result** | 3–6 s | tap through / rewarded | Coins, Route Rating delta, port growth |
 
 Target total: **45–75 s**. The Brief and Result are the only skippable parts and they must both be skippable by tapping anywhere.
 
-## 2. Input — one continuous touch
+## 2. Input, one continuous touch
 
 This is the single most important interaction in the game. It replaces the prototype's `releaseCrate()` tap.
 
@@ -28,7 +28,7 @@ This is the single most important interaction in the game. It replaces the proto
 
   HOLD         → crate descends at CABLE_SPEED (modified by Crane upgrade)
                → crate swings on the cable with pendulum damping
-               → the hull is already reacting to nothing yet — no load applied
+               → the hull is already reacting to nothing yet, no load applied
 
   DRAG (while holding) → trolley re-positions, cable stays paid out
                → the crate swings; releasing mid-swing imparts lateral velocity
@@ -108,7 +108,7 @@ After quota is met, a **3-card hand** is drawn from the warehouse.
 │  CONTRACT  5× Bullion → Fogport      ✅ 5 / 5   │
 │  LIST 14°   FREEBOARD 62%    ⚓ ×1.00           │
 ├─────────────────────────────────────────────────┤
-│  OVERLOAD — choose one                          │
+│  OVERLOAD, choose one                          │
 │                                                 │
 │   📦 Crate      ×1.20   light · stacks flat     │
 │   🛢️ Barrel     ×1.52   ⚠ rolls                 │
@@ -123,8 +123,8 @@ After quota is met, a **3-card hand** is drawn from the warehouse.
 **Draw rules**
 
 1. Cards are drawn without replacement from warehouse stock, weighted by quantity held.
-2. The hand is guaranteed to contain **at least one card of weight ≤ 1.3** — the player is never forced into a reckless choice.
-3. The hand is guaranteed to contain **at least one card of weight ≥ 1.6** if any such stock exists — the temptation is always present.
+2. The hand is guaranteed to contain **at least one card of weight ≤ 1.3**, the player is never forced into a reckless choice.
+3. The hand is guaranteed to contain **at least one card of weight ≥ 1.6** if any such stock exists, the temptation is always present.
 4. Draw uses the run's seeded RNG so the hand is reproducible from the input tape.
 5. One free reroll per run via rewarded ad. See [09-monetization.md](09-monetization.md).
 
@@ -141,7 +141,7 @@ After quota is met, a **3-card hand** is drawn from the warehouse.
 
 Note the asymmetry: losing *some* cargo is survivable and merely reduces the payout, while capsizing loses *everything*. This is what makes the marginal crate a genuine bet rather than a graded score.
 
-## 6. The near-miss arc — the crown jewel
+## 6. The near-miss arc, the crown jewel
 
 Ported verbatim from the prototype, then amplified by the Tension Bus.
 
@@ -151,7 +151,7 @@ Ported verbatim from the prototype, then amplified by the Tension Bus.
 | Saved | `SAVED_ANG` | 0.28 | ≈ 16° | Recovery latch fires → "SAVED!" |
 | Capsize | `CAPSIZE_ANG` | 0.70 | ≈ 40° | `timeScale → 0.32`, slow-motion capsize |
 
-**The latch.** `savedPending` arms on crossing `WARN_ANG` and only fires on falling back below `SAVED_ANG`. The 9° hysteresis band is deliberate — without it, chop would spam the message and destroy its meaning. **Do not narrow this band.**
+**The latch.** `savedPending` arms on crossing `WARN_ANG` and only fires on falling back below `SAVED_ANG`. The 9° hysteresis band is deliberate, without it, chop would spam the message and destroy its meaning. **Do not narrow this band.**
 
 The `SAVED!` beat is the emotional product. When it fires, every Tension Bus channel releases in the same frame: music swells, low-pass opens, gulls return, camera un-dutches, vignette snaps to teal, a gold particle burst, a 15 ms haptic pop. See [07-juice-audio.md §4](07-juice-audio.md).
 
@@ -211,7 +211,7 @@ WAKE.amp     = 8 + regionWakeBonus                      // authored per region
 WAKE.ph     += dt × 9
 ```
 
-The envelope means the wake builds and subsides — the peak danger is at `sailT ≈ 1.7 s`. A load that was stable at rest can still capsize here, which is why the player's stopping decision must account for a margin they cannot see. That uncertainty is a feature: it is what makes the safe multiplier a *judgement* rather than a calculation.
+The envelope means the wake builds and subsides, the peak danger is at `sailT ≈ 1.7 s`. A load that was stable at rest can still capsize here, which is why the player's stopping decision must account for a margin they cannot see. That uncertainty is a feature: it is what makes the safe multiplier a *judgement* rather than a calculation.
 
 **Critical:** `wakeAll()` must be called on wake start so no welded sleeper misses the event. See [02-physics-port.md §6](02-physics-port.md).
 

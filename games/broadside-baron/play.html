@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Broadside Baron — TaterTot Games Labs</title>
+<title>Broadside Baron | TaterTot Games</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%B4%3C/text%3E%3C/svg%3E">
 <style>
   :root{
@@ -218,11 +218,11 @@
   <h1 id="logo">BROADSIDE<span class="l2">BARON</span></h1>
   <div id="tagline">FIRE AT THE TOP OF THE SWELL</div>
   <div id="tapToPlay">▶ TAP TO SAIL</div>
-  <div id="bestLine">BEST VOYAGE — 0 PORTS</div>
+  <div id="bestLine">BEST VOYAGE, 0 PORTS</div>
   <div id="portLine">🏝️ Your Port · 0/12 built</div>
   <div id="portBar"><div id="portFill"></div></div>
   <div id="titleBtns"><button class="btn btnSmall" id="shopBtn">🛠️ SHIPWRIGHT</button></div>
-  <div id="footerBadge"><a href="../../">🥔 TaterTot Games Labs</a></div>
+  <div id="footerBadge"><a href="https://tatertotgames.com">tatertotgames.com</a></div>
 </div>
 
 <div class="screen" id="mapScreen">
@@ -286,7 +286,7 @@
 <script>
 'use strict';
 /* =====================================================================
-   BROADSIDE BARON — the swell is the metronome
+   BROADSIDE BARON, the swell is the metronome
    TaterTot Games Labs · self-contained, canvas-drawn, WebAudio-synth
    ===================================================================== */
 
@@ -363,9 +363,9 @@ function persist() {
 // ---------------------------------------------------------------- meta defs
 var UPGRADES = [
   { k: 'timbers',  icon: '🪵', name: 'Hull Timbers',   desc: 'Thicker planking. +30 hull on every voyage.',              max: 4, costs: [140, 320, 620, 1100] },
-  { k: 'powder',   icon: '💥', name: 'Powder Quality',  desc: 'Cleaner burn — widens the PERFECT window.',                max: 4, costs: [180, 380, 700, 1250] },
+  { k: 'powder',   icon: '💥', name: 'Powder Quality',  desc: 'Cleaner burn, widens the PERFECT window.',                max: 4, costs: [180, 380, 700, 1250] },
   { k: 'quarters', icon: '🛏️', name: 'Crew Quarters',   desc: 'Begin each voyage with an extra crew card.',               max: 2, costs: [420, 980] },
-  { k: 'spyglass', icon: '🔭', name: 'Spyglass',        desc: 'Spot enemy gunports sooner — more time to swipe.',         max: 3, costs: [160, 360, 720] },
+  { k: 'spyglass', icon: '🔭', name: 'Spyglass',        desc: 'Spot enemy gunports sooner, more time to swipe.',         max: 3, costs: [160, 360, 720] },
 ];
 var SKINS = [
   { n: 'Salt Dog',    hull: '#7a4a24', trim: '#f0d9a8', sail: '#f4ecd8', need: 0 },
@@ -395,10 +395,10 @@ var PORT_STAGES = [
 var EARN_PER_STAGE = 260;
 function builtCount() { return Math.min(PORT_STAGES.length, Math.floor(save.earned / EARN_PER_STAGE)); }
 
-// crew cards — they stack by count
+// crew cards, they stack by count
 var CARDS = [
   { k: 'monkey',  icon: '🐒', n: 'Powder Monkey', d: 'Reload 16% faster. Perfect window a touch tighter.' },
-  { k: 'bosun',   icon: '🧔', n: 'Bosun',         d: 'Calls the roll — noticeably wider PERFECT window.' },
+  { k: 'bosun',   icon: '🧔', n: 'Bosun',         d: 'Calls the roll, noticeably wider PERFECT window.' },
   { k: 'chain',   icon: '⛓️', n: 'Chain Shot',    d: 'Shot shreds masts. Mast hits do far more damage.' },
   { k: 'carp',    icon: '🔨', n: 'Carpenter',     d: 'Patches 18% of your hull after every battle.' },
   { k: 'luck',    icon: '🦑', n: "Kraken's Luck", d: 'Every 5th cannon shot fires doubled.' },
@@ -409,7 +409,7 @@ var CARDS = [
   { k: 'lookout', icon: '👁️', n: 'Lookout',       d: 'Enemy gunports run out earlier. More warning.' },
 ];
 var CURSES = [
-  { k: 'cursed_gold', icon: '💀', n: 'Cursed Doubloons', d: 'Double plunder this voyage — but your hull leaks.' },
+  { k: 'cursed_gold', icon: '💀', n: 'Cursed Doubloons', d: 'Double plunder this voyage, but your hull leaks.' },
   { k: 'jonah',       icon: '🐦‍⬛', n: 'Jonah',           d: 'A wider window, but rougher seas the whole way.' },
 ];
 function cardDef(k) {
@@ -583,7 +583,7 @@ function resize() {
     cv.width = Math.max(1, Math.round(W * DPR));
     cv.height = Math.max(1, Math.round(H * DPR));
     // CRITICAL: a canvas is a replaced element. Without an explicit CSS size it
-    // lays out at its attribute size (W*DPR) — double the viewport on a phone.
+    // lays out at its attribute size (W*DPR), double the viewport on a phone.
     cv.style.width = W + 'px';
     cv.style.height = H + 'px';
     readSafe();
@@ -600,7 +600,7 @@ window.addEventListener('orientationchange', function () { setTimeout(resize, 13
 // ---------------------------------------------------------------- swell model
 // theta drives the roll: rollNorm = sin(theta). The apex (guns up) is exactly
 // theta = PI/2, so the PERFECT window is a fixed angular slice that theta must
-// sweep through every cycle — reachable at EVERY sea state by construction.
+// sweep through every cycle, reachable at EVERY sea state by construction.
 // Rough seas make omega WOBBLE (chop) rather than skip, so the beat becomes
 // irregular but never unhittable.
 var theta = 0, chopPh = 0, chopPh2 = 0;
@@ -659,7 +659,7 @@ var ELEV_MID = 31.5 * D2R, ELEV_SWING = 13.5 * D2R, ELEV_APEX = 45 * D2R;
 function elevFor(r) { return ELEV_MID + clamp(r, -1, 1) * ELEV_SWING; }
 // Muzzle speed that puts an APEX-elevation (45 deg) shot exactly on a target
 // dx across and `up` higher on screen. Off-apex shots reuse this speed with
-// their own (lower) elevation and therefore fall short — which is the game.
+// their own (lower) elevation and therefore fall short, which is the game.
 // Solving h(dx)=up for V at e=45 collapses to V = dx * sqrt(g / (dx - up)).
 function muzzleV(dx, up) {
   var d = Math.max(12, Math.abs(dx));
@@ -760,7 +760,7 @@ function makeShip(kind, side, lv) {
 }
 // The enemy line holds station; only YOU change range. That makes a dodged
 // volley miss by the FULL band delta (0.26 * W ≈ 2.1 hull widths) instead of
-// half of it — the difference between a readable dodge and a coin flip.
+// half of it, the difference between a readable dodge and a coin flip.
 function sepFor(b) { return (b === 0 ? 0.36 : 0.62) * W; }
 function foeAnchorX() { return W * 0.5 + sepFor(1) * 0.5; }
 function playerXFor(b) { return foeAnchorX() - sepFor(b); }
@@ -1326,7 +1326,7 @@ function goTitle() {
   showScreen(titleScreen);
 }
 function syncTitle() {
-  bestLine.textContent = 'BEST VOYAGE — ' + save.bestPorts + ' PORT' + (save.bestPorts === 1 ? '' : 'S');
+  bestLine.textContent = 'BEST VOYAGE, ' + save.bestPorts + ' PORT' + (save.bestPorts === 1 ? '' : 'S');
   var b = builtCount();
   portLine.textContent = '🏝️ Your Port · ' + b + '/' + PORT_STAGES.length + ' built';
   var nextAt = (b + 1) * EARN_PER_STAGE;
@@ -1401,7 +1401,7 @@ function renderShop() {
   var head = document.createElement('div');
   head.className = 'upLvl';
   head.style.marginTop = '14px';
-  head.textContent = 'SHIP COLOURS — UNLOCKED BY VOYAGE MILESTONES';
+  head.textContent = 'SHIP COLOURS, UNLOCKED BY VOYAGE MILESTONES';
   skinListEl.appendChild(head);
   for (var s = 0; s < SKINS.length; s++) {
     (function (sk, idx) {
@@ -1535,7 +1535,7 @@ function seedClouds() {
 // ---------------------------------------------------------------- update
 function update(dt) {
   bgT += dt;
-  // swell phase — bounded, monotonic, never NaN
+  // swell phase, bounded, monotonic, never NaN
   var om = omegaNow();
   if (!isFinite(om)) om = seaOmega;
   theta += om * dt;
@@ -1666,7 +1666,7 @@ function updateBattle(dt) {
     alive++;
     if (f.kind === 'fireship') {
       f.drift += dt;
-      // ~11 seconds of warning before she is alongside — sink her or wear it
+      // ~11 seconds of warning before she is alongside, sink her or wear it
       f.x -= W * 0.032 * dt;
       if (Math.random() < dt * 6) addSmoke(f.x + rnd(-20, 20) * f.scale, shipY(f) - rnd(0, 30) * f.scale, 0.8, 1);
       if (Math.abs(f.x - pShip.x) < 74 * SCL) {
@@ -1885,7 +1885,7 @@ function drawSky() {
 
 function drawSea() {
   var p = skyPal();
-  // far bands (parallax) — subtle, then the playable swell up front
+  // far bands (parallax), subtle, then the playable swell up front
   ctx.save();
   ctx.beginPath(); ctx.rect(0, horizonY, W, H - horizonY); ctx.clip();
   var bands = 3;
@@ -1904,7 +1904,7 @@ function drawSea() {
     ctx.closePath();
     ctx.fill();
   }
-  // THE swell — the playable metronome, drawn from the same function the guns use
+  // THE swell, the playable metronome, drawn from the same function the guns use
   var grad = ctx.createLinearGradient(0, seaY0 - H * 0.06, 0, H);
   grad.addColorStop(0, mixHex(p[2], '#7fd0ee', 0.34));
   grad.addColorStop(0.22, p[2]);
@@ -1916,7 +1916,7 @@ function drawSea() {
   ctx.lineTo(W + 10, H + 10);
   ctx.closePath();
   ctx.fill();
-  // crest highlight — reads the beat at a glance
+  // crest highlight, reads the beat at a glance
   ctx.strokeStyle = 'rgba(255,255,255,0.55)';
   ctx.lineWidth = 2.4 * SCL;
   ctx.beginPath();
@@ -2181,7 +2181,7 @@ function drawShip(s) {
       var py = -6 * sc - d * 9 * sc;
       ctx.fillStyle = '#1a1108';
       ctx.fillRect(px - 3.4 * sc, py - 3.4 * sc, 6.8 * sc, 6.8 * sc);
-      // barrels run OUT while telegraphing — readable incoming volleys
+      // barrels run OUT while telegraphing, readable incoming volleys
       var out = 0;
       if (s.side > 0 && !fogOn) {
         if (s.teleT > 0) out = clamp(1 - s.teleT / teleTime(), 0, 1);
@@ -2453,7 +2453,7 @@ syncHud();
 goTitle();
 requestAnimationFrame(frame);
 
-// exposed for the verification harness only — harmless in the browser
+// exposed for the verification harness only, harmless in the browser
 window.__BB = {
   get state() { return state; },
   get theta() { return theta; },

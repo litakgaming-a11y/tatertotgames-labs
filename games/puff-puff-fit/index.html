@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Puff Puff Fit — TaterTot Games Labs</title>
-<meta name="description" content="Hold to inflate, release before the pop. Risk-vs-greed puzzle prototype from the TaterTot Games Labs testing arena — playable in your browser.">
+<title>Puff Puff Fit | TaterTot Games</title>
+<meta name="description" content="Hold to inflate, release before the pop. Risk-vs-greed puzzle game from the TaterTot Games Labs testing arena, playable in your browser.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎈</text></svg>">
 <style>
   :root{--bg:#0d0b16;--bg2:#151127;--card:#1c1734;--card2:#241d44;--line:rgba(255,255,255,.08);
@@ -86,11 +86,14 @@
     text-transform:uppercase;color:var(--dim);margin-bottom:5px}
   .nav .r{text-align:right}
   footer{margin-top:40px;text-align:center;color:#5c5486;font-size:.8rem;line-height:1.7}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .top .site,footer a{color:inherit;font-weight:700;text-decoration:none}
+  .top .site:hover,footer a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="back" href="../../">← All prototypes</a>
+  <div class="top"><a class="back" href="../../">← All games</a><a class="site" href="https://tatertotgames.com">tatertotgames.com</a></div>
 
   <div class="hero">
     <div>
@@ -102,14 +105,13 @@
     </div>
     <div>
       <div class="badges">
-        <span class="b acc">Wave 1</span>
+        <span class="b acc">Casual</span>
         <span class="b">Risk-vs-greed puzzle</span>
         <span class="b">10–25s rounds</span>
       </div>
       <h1>🎈 Puff Puff Fit</h1>
       <p class="hook">Hold to inflate, release before the pop</p>
-      <p class="lede">A squishy blob sits in a chamber ringed with spikes. Hold anywhere and it inflates; let go and it locks in place. Fill enough of the chamber to clear the round — but every extra millimetre of greed brings the blob closer to a spike, and a pop costs a heart.</p>
-      <p class="why"><b>Why it works:</b> The whole game is one button and one decision: take the safe fill, or push for the perfect. That near-miss tension is the same greed loop that drives the genre's best performers, and failure is instant and comedic rather than punishing.</p>
+      <p class="lede">A squishy blob sits in a chamber ringed with spikes. Hold anywhere and it inflates; let go and it locks in place. Fill enough of the chamber to clear the round, but every extra millimetre of greed brings the blob closer to a spike, and a pop costs a heart.</p>
       <div class="playRow">
         <a class="play" href="play">▶ PLAY NOW</a>
         <span class="note">Runs in your browser · no install · works on phones</span>
@@ -121,7 +123,7 @@
     <h2>How to play</h2>
     <ol class="steps">
         <li><span class="n">1</span><span>Press and hold anywhere to start inflating the blob.</span></li>
-        <li><span class="n">2</span><span>Watch the fill meter and the spikes — the blob's eyes widen as it gets close.</span></li>
+        <li><span class="n">2</span><span>Watch the fill meter and the spikes, the blob's eyes widen as it gets close.</span></li>
         <li><span class="n">3</span><span>Release before you touch a spike. Fill 92%+ for a PERFECT and triple coins.</span></li>
     </ol>
   </section>
@@ -134,7 +136,6 @@
       <li>Procedural chambers with orbiting spike balls from level 3</li>
       <li>Perfect-fill confetti cannons and a coin multiplier</li>
       <li>Seven unlockable blob skins, from Lemon to Galaxy to Ghost</li>
-      <li>Verified winnable: a 200-round sweep across levels 1–50 found zero unwinnable rounds</li>
     </ul>
   </section>
 
@@ -148,10 +149,7 @@
     <a class="r" href="../topple-party/"><span>Next</span>🁢 Topple Party →</a>
   </div>
 
-  <footer>
-    A single self-contained file — no engine, no libraries, no external requests.<br>
-    © 2026 TaterTot Games Labs
-  </footer>
+  <footer>© 2026 TaterTot Games · <a href="https://tatertotgames.com">tatertotgames.com</a></footer>
 </div>
 </body>
 </html>

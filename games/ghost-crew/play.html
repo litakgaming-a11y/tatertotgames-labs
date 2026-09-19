@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Ghost Crew — TaterTot Games Labs</title>
+<title>Ghost Crew | TaterTot Games</title>
 <meta name="theme-color" content="#160c33">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%91%BB%3C/text%3E%3C/svg%3E">
 <script src="/analytics.js" defer></script>
@@ -202,12 +202,12 @@
   </div>
 </div>
 
-<a id="badge" href="../../">🥔 TaterTot Games Labs</a>
+<a id="badge" href="https://tatertotgames.com">tatertotgames.com</a>
 
 <script>
 'use strict';
 /* ==================================================================
-   GHOST CREW — record a run, rewind, cooperate with your past selves
+   GHOST CREW, record a run, rewind, cooperate with your past selves
    Recording model is deliberately dumb: we store the player's
    position + flags per fixed timestep in typed arrays and replay
    them frame-by-frame. No deterministic physics replay anywhere.
@@ -266,7 +266,7 @@ const SKINS = [
    ================================================================== */
 const LEVELS = [
   { name: 'FIRST TAKE', crew: 2, par: 1, plats: [],
-    hint: 'Walk to the door, tap REWIND, then do it again — your ghost waits for you.',
+    hint: 'Walk to the door, tap REWIND, then do it again, your ghost waits for you.',
     g: ['#############',
         '#...........#',
         '#...........#',
@@ -450,7 +450,7 @@ const scTitle = $('titleScreen'), scWin = $('winScreen'), scFail = $('failScreen
 const badge = $('badge'), probe = $('probe');
 
 /* ==================================================================
-   VIEW / CANVAS  (dpr backing store + EXPLICIT css size — a canvas with
+   VIEW / CANVAS  (dpr backing store + EXPLICIT css size, a canvas with
    no css size lays out at its attribute size = 2x the viewport on phones)
    ================================================================== */
 const view = { W: 360, H: 640, dpr: 1, safeTop: 0, safeBot: 0 };
@@ -494,7 +494,7 @@ const tx = t => cam.ox + t * cam.ts;
 const ty = t => cam.oy + t * cam.ts;
 
 /* ==================================================================
-   AUDIO — construction may throw on machines with no device.
+   AUDIO, construction may throw on machines with no device.
    Every sfx no-ops when AC is null.
    ================================================================== */
 let AC = null, master = null, noiseBuf = null, revBuf = null;
@@ -586,7 +586,7 @@ const sfx = {
 };
 
 /* ==================================================================
-   FX POOLS — fully initialised at declaration; update()/render() run
+   FX POOLS, fully initialised at declaration; update()/render() run
    from boot on the TITLE screen, long before any level exists.
    ================================================================== */
 const parts = [];
@@ -627,7 +627,7 @@ function drawFog() {
 }
 
 /* ==================================================================
-   GAME STATE — everything the loop touches exists from boot.
+   GAME STATE, everything the loop touches exists from boot.
    ================================================================== */
 let scene = 'title';                 // title | play | meta
 let phase = 'ready';                 // ready | acting | rewind | celebrate  (scene==='play')
@@ -784,7 +784,7 @@ function resetTake() {
 }
 
 /* ==================================================================
-   PLATFORMS — motion is a pure function of the timeline frame, so a
+   PLATFORMS, motion is a pure function of the timeline frame, so a
    ghost's recorded ride lines up perfectly on every replay.
    ================================================================== */
 function updatePlats(frame) {
@@ -1007,7 +1007,7 @@ function updateGates(dt) {
 }
 
 /* ==================================================================
-   TAKE FLOW — GO / REWIND / CUT
+   TAKE FLOW, GO / REWIND / CUT
    ================================================================== */
 function startTake() {
   if (scene !== 'play' || phase !== 'ready') return;
@@ -1026,7 +1026,7 @@ function autoCut() {
 }
 function doRewind(auto) {
   if (scene !== 'play' || phase !== 'acting') return;
-  if (rec.n < 6) {                     /* nothing worth recording — free reset */
+  if (rec.n < 6) {                     /* nothing worth recording, free reset */
     phase = 'ready'; resetTake(); refreshCtrl(); return;
   }
   if (rewindsLeft <= 0) { doFail(); return; }
@@ -1172,7 +1172,7 @@ function goMeta() {
   $('metaStats').innerHTML = '⭐ ' + ts + ' stars collected';
   const ph = store.photos | 0;
   $('photoNote').innerHTML = ph > 0
-    ? '🖼️ ' + ph + ' crew photo' + (ph === 1 ? '' : 's') + ' on the wall behind you — one per world of 10 levels.'
+    ? '🖼️ ' + ph + ' crew photo' + (ph === 1 ? '' : 's') + ' on the wall behind you, one per world of 10 levels.'
     : '🖼️ The wall is bare. Clear all 10 levels of World 1 for your first crew photo!';
   showScreen(scMeta);
   refreshCtrl();
@@ -1223,7 +1223,7 @@ function buildSkinGrid() {
 }
 
 /* ==================================================================
-   INPUT — pointer events only, plus keyboard for desktop
+   INPUT, pointer events only, plus keyboard for desktop
    ================================================================== */
 const heldPointers = {};      // pointerId -> -1 | 1
 function setZone(z, on) { try { z.classList.toggle('on', !!on); } catch (e) {} }
@@ -1309,7 +1309,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 /* ==================================================================
-   DRAWING — world
+   DRAWING, world
    ================================================================== */
 function roundRect(x, y, w, h, r) {
   const rr = Math.min(r, Math.abs(w) / 2, Math.abs(h) / 2);
@@ -1596,7 +1596,7 @@ function drawGuy(px, py, s, o) {
   ctx.fillStyle = 'rgba(255,255,255,0.62)';
   ctx.beginPath(); ctx.ellipse(0, -s * 0.72, s * 0.5, s * 0.55, 0, 0, TAU); ctx.fill();
 
-  /* arms — high five when cheering */
+  /* arms, high five when cheering */
   ctx.strokeStyle = skin.dark;
   ctx.lineWidth = Math.max(2, s * 0.18);
   ctx.lineCap = 'round';
@@ -1756,7 +1756,7 @@ function updateDrawPops(dt) {
 }
 
 /* ==================================================================
-   VHS REWIND — the showpiece
+   VHS REWIND, the showpiece
    ================================================================== */
 function drawVHS(k, t) {
   const W = view.W, H = view.H, dpr = view.dpr;
@@ -1856,7 +1856,7 @@ function drawPlayScene(dt, t) {
     ctx.globalAlpha = 0.7 + 0.3 * Math.sin(t * 4);
     ctx.lineWidth = 6; ctx.lineJoin = 'round';
     ctx.strokeStyle = 'rgba(10,5,30,0.8)';
-    const msg = ghosts.length === 0 ? 'TAKE 1 — PRESS GO' : ('TAKE ' + (ghosts.length + 1) + ' — ' + ghosts.length + ' GHOST' + (ghosts.length > 1 ? 'S' : '') + ' READY');
+    const msg = ghosts.length === 0 ? 'TAKE 1, PRESS GO' : ('TAKE ' + (ghosts.length + 1) + '-' + ghosts.length + ' GHOST' + (ghosts.length > 1 ? 'S' : '') + ' READY');
     ctx.strokeText(msg, view.W / 2, ty(0) - 22);
     ctx.fillStyle = '#7cf5d0';
     ctx.fillText(msg, view.W / 2, ty(0) - 22);
@@ -1991,7 +1991,7 @@ function drawPhotoCrew(x, y, w, h, world, t) {
 }
 
 /* ==================================================================
-   MAIN LOOP — re-armed in finally so one bad frame can never
+   MAIN LOOP, re-armed in finally so one bad frame can never
    permanently blank the game.
    ================================================================== */
 let last = 0;
@@ -2057,7 +2057,7 @@ function showWinScreen() {
     lv.crew + ' crew at the door<br>' +
     rewindsUsed + ' rewind' + (rewindsUsed === 1 ? '' : 's') + ' · par ' + lv.par;
   $('teamNote').textContent = newPhoto
-    ? '📸 New crew photo unlocked — check the Crew Room!'
+    ? '📸 New crew photo unlocked, check the Crew Room!'
     : (lastStars === 3 ? '👻 Flawless choreography.' : 'Fewer rewinds = more stars.');
   if (newPhoto) sfx.photo();
   showScreen(scWin);

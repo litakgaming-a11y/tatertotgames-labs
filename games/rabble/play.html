@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Rabble — TaterTot Games Labs</title>
+<title>Rabble | TaterTot Games</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%B9%3C/text%3E%3C/svg%3E">
 <style>
   :root{ --ink:#141021; --gold:#f2c14e; --accent:#e0533d; --steel:#a8bdd4; --moss:#6fbf7c; }
@@ -178,7 +178,7 @@
 <script>
 "use strict";
 /* ===========================================================================
-   RABBLE — TaterTot Games Labs
+   RABBLE, TaterTot Games Labs
    You are not an artillery officer. You are in charge of a warband, and the
    only order you can give is "you, get in the catapult".
 
@@ -400,7 +400,7 @@ function resize() {
     W=iw; H=ih;
     cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR);
     // CRITICAL: a canvas is a replaced element. Without explicit CSS sizing it
-    // lays out at its attribute size (W*DPR) — double-size on every phone.
+    // lays out at its attribute size (W*DPR), double-size on every phone.
     cv.style.width=W+'px'; cv.style.height=H+'px';
     if (gl) gl.viewport(0,0,cv.width,cv.height);
   } finally { resizing=false; }
@@ -547,7 +547,7 @@ Unit.prototype.shove = function (ix, iy, iz) {
   for (var i=0;i<7;i++){ var q=this.p[i]; q.px-=ix; q.py-=iy; q.pz-=iz; }
 };
 
-// Simulation clock, advanced by the substep — NOT the rAF timestamp. Walk
+// Simulation clock, advanced by the substep, NOT the rAF timestamp. Walk
 // wobble and milling drift read this. Using the frame timestamp meant the
 // weave froze whenever the loop was driven by anything other than rAF, which
 // left every unit walking at one fixed angle off target forever instead of
@@ -621,7 +621,7 @@ function substep() {
         dx*=diff; dy*=diff; dzz*=diff;
         a.x+=dx; a.y+=dy; a.z+=dzz; b.x-=dx; b.y-=dy; b.z-=dzz;
       }
-      // an upright unit gets a soft spring holding its head above its hips —
+      // an upright unit gets a soft spring holding its head above its hips,
       // enough to stand, nowhere near enough to look competent
       if (U.state===ST_STORM || U.state===ST_MILL || (U.foe && U.state===ST_STORM)) {
         var helm=U.p[0], hip=U.p[2];
@@ -665,7 +665,7 @@ function standUp(U) {
   var c = U.centre();
   if (U.foe) { U.state = ST_STORM; U.still = 0; return; }
   // THE rule: you only storm if you are already on the other side of the wall.
-  // Outside, a unit gets up and mills — it does not brace, does not prop
+  // Outside, a unit gets up and mills, it does not brace, does not prop
   // anyone, does not pile, and never advances.
   if (c.x > castle.inside) {
     U.state = ST_STORM;
@@ -747,7 +747,7 @@ function nearestEnemyOf(U) {
     if (O===U || O.foe===U.foe || O.state===ST_FLY) continue;
     // A GARRISON DEFENDS. Without this the defenders chased the men milling
     // about outside, walked out of their own gate, and left the banner
-    // unguarded — so the fight happened in an empty field instead of the
+    // unguarded, so the fight happened in an empty field instead of the
     // courtyard, and the units you failed to get over the wall were somehow
     // still useful. Anything outside the walls is not their problem.
     if (U.foe && O.centre().x < castle.inside - 1) continue;
@@ -797,7 +797,7 @@ function stepArrows(dt) {
     if (A.life<=0 || A.y < 0 || A.x<GROUND_MINX || A.x>GROUND_MAXX || A.z<GROUND_MINZ || A.z>GROUND_MAXZ) {
       arrows.splice(i,1); continue;
     }
-    // An arrow hits WHOEVER it touches. It does not check sides — that is the
+    // An arrow hits WHOEVER it touches. It does not check sides, that is the
     // whole joke, and it means a well-aimed shot can still take out the man
     // who wandered into the line.
     for (var u=0;u<units.length;u++) {
@@ -1031,7 +1031,7 @@ function spawnGarrison(){
     var K = KINDS[i%3===2 ? 2 : (i%2 ? 1 : 0)];
     // Spread across the courtyard rather than stacked on the banner (stacked,
     // they contested it permanently and a first assault could never break
-    // even) — but strictly CLEAR OF THE WALL. The old range started at 31.5
+    // even), but strictly CLEAR OF THE WALL. The old range started at 31.5
     // and the wall slab spans 29.8-32.2, so defenders spawned inside the
     // masonry, got squeezed out through the outer face, and spent the assault
     // stuck in the field unable to walk home.
@@ -1208,7 +1208,7 @@ function render(){
   }
   // The fight happens in the COURTYARD, which the wall hides from a low camera
   // behind the machine. Once anyone is inside, drift the framing over the wall
-  // and climb — otherwise the player watches an empty field while six of their
+  // and climb, otherwise the player watches an empty field while six of their
   // men are being killed just out of sight.
   var anyInside = 0;
   for (var ai=0; ai<units.length; ai++)
@@ -1256,7 +1256,7 @@ function render(){
         lit?0.98:0.42, lit?0.86:0.42, lit?0.34:0.46);
   }
 
-  // corpses lie where they fell — no piling, no bracing, just litter
+  // corpses lie where they fell, no piling, no bracing, just litter
   for (var cp=0;cp<corpses.length;cp++){
     var C=corpses[cp];
     box(C.x, C.y, C.z, 1.5, 0.34, 0.6, C.foe?0.44:0.52, C.foe?0.34:0.46, C.foe?0.34:0.40);
@@ -1369,7 +1369,7 @@ function frame(ts){
   if (typeof requestAnimationFrame==='function') requestAnimationFrame(frame);
 })();
 
-// test hook — harnesses drive the real loop, never a parallel copy of it
+// test hook, harnesses drive the real loop, never a parallel copy of it
 if (typeof window!=='undefined') {
   window.__rb = {
     frame:frame, update:update, render:render, resize:resize,

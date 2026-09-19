@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Bonds — TaterTot Games Labs</title>
+<title>Bonds | TaterTot Games</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%AB%B1%3C/text%3E%3C/svg%3E">
 <style>
   :root{ --ink:#1a120b; --bg:#2e1f14; --panel:#4a3524; --wood:#6b4e33; --bevel:#94714a;
@@ -38,7 +38,7 @@
 <div class="screen show" id="title">
   <h1>BONDS<span class="sub">SQUAD OR JOB. NEVER BOTH.</span></h1>
   <div class="tag">
-    A Kinfold meta probe. Every Kinmon is either <b>on your squad</b> or <b>working a job</b> —
+    Every Kinmon is either <b>on your squad</b> or <b>working a job</b>,
     the game's own rule, and its central tension.<br><br>
     Jobs pay Essence, and Essence is levels. But a pair only builds a <b>Bond</b> by fighting side
     by side, and a bonded pair learns a move only the two of them can do.<br><br>
@@ -62,20 +62,20 @@
 <script>
 "use strict";
 /* ===========================================================================
-   BONDS — a Kinfold meta probe (TaterTot Games Labs)
+   BONDS, a Kinfold meta probe (TaterTot Games Labs)
 
    Tests one question: is "squad or job, never both" a real decision once
    something is accruing on BOTH sides of it?
 
    K-010 makes assignment exclusive and the GDD calls that the engine of the
-   whole game — but today only one side of the trade accrues. Jobs pay a
+   whole game, but today only one side of the trade accrues. Jobs pay a
    resource; the squad pays experience that the jobs could also have bought.
    BONDS puts a second, non-purchasable currency on the squad side: a pair only
    builds Bond by fighting together, and Bond is the only route to a Duo skill.
 
    Deliberately NOT a stat set. K-007 rejected rune sets, and a Duo that added
-   raw power would be that system by the back door. Duos are sideways — a second
-   hit, a cleanse, a shield — and they are earned by playing rather than
+   raw power would be that system by the back door. Duos are sideways, a second
+   hit, a cleanse, a shield, and they are earned by playing rather than
    acquired, which is the distinction this probe exists to test.
 
    __bo.strategyTest() runs the three degenerate strategies (all-jobs,
@@ -213,7 +213,7 @@ function runDay(){
   if (state !== ST_BASE) return;
   if (squad.length === 0) { msg = 'Send at least one Kinmon.'; return; }
   day++;
-  // jobs pay first — this is the half you gave up battles for
+  // jobs pay first, this is the half you gave up battles for
   var earned = 0;
   for (var i=0;i<roster.length;i++) if (roster[i].job) earned += ESSENCE_PER_JOB;
   essence += earned;
@@ -285,7 +285,7 @@ function simulateFight(){
 
 function finishFight(won, team){
   lastResult = { won: won };
-  // Bond accrues for every PAIR that was fielded together — win or lose (K-018).
+  // Bond accrues for every PAIR that was fielded together, win or lose (K-018).
   var newDuos = [];
   for (var a=0;a<squad.length;a++) for (var b=a+1;b<squad.length;b++){
     var key = pairKey(squad[a], squad[b]);
@@ -318,7 +318,7 @@ function endSeason(){
   document.getElementById('overSub').textContent = duoCount > 0 ? 'the squad remembers' : 'nobody bonded';
   document.getElementById('overNote').innerHTML = duoCount > 0
     ? 'You unlocked <b>' + duoCount + '</b> duo' + (duoCount===1?'':'s') + ' and reached stage <b>' + stage +
-      '</b>. Bond only accrues from fielding — every duo above cost you job Essence you did not earn.'
+      '</b>. Bond only accrues from fielding, every duo above cost you job Essence you did not earn.'
     : 'No duos. You levelled instead, and reached stage <b>' + stage + '</b>. That is the other half of the trade.';
   document.getElementById('over').classList.add('show');
 }
@@ -342,13 +342,13 @@ function stepFight(dt){
     return;
   }
   var e = fightLog[fightIdx++];
-  if (e.duo) { say(e.name + ' is ready — ' + e.blurb + '.'); return; }
+  if (e.duo) { say(e.name + ' is ready, ' + e.blurb + '.'); return; }
   if (e.shield) { say(e.who.sp.name + ' shrugged it off!'); return; }
-  if (e.cover) { say(e.who.sp.name + ' was covered — still standing!'); return; }
+  if (e.cover) { say(e.who.sp.name + ' was covered, still standing!'); return; }
   if (e.faint) { say(e.who.sp.name + ' fainted!'); return; }
   if (e.end) { say(e.won ? 'The wild gives way!' : 'The squad falls back.'); return; }
   shakeT = 0.14; e.dfn.flash = 1;
-  say(e.att.sp.name + (e.extra ? ' strikes again!' : (e.mult>1.2 ? ' — super effective!' : (e.mult<0.9 ? ' — not very effective' : ' attacks!'))));
+  say(e.att.sp.name + (e.extra ? ' strikes again!' : (e.mult>1.2 ? ', super effective!' : (e.mult<0.9 ? ', not very effective' : ' attacks!'))));
   if (!liveEn) return;
   for (var a=0;a<liveEn.length;a++) if (liveEn[a].alive()){ lei=a; break; }
   for (var b=0;b<liveSquad.length;b++) if (liveSquad[b].alive()){ lsi=b; break; }
@@ -429,7 +429,7 @@ function renderBase(){
     text(LEVEL_COST+'e', VW-33, y+22, canLvl?C.verdant3:C.wood, 6, 'center');
   }
 
-  // bond web for the fielded squad — the thing jobs cost you
+  // bond web for the fielded squad, the thing jobs cost you
   var by = 46 + roster.length*46 + 4;
   text('BONDS IN THIS SQUAD', 8, by, C.dim, 7);
   var row = 0;

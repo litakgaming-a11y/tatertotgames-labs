@@ -233,7 +233,7 @@
   <button id="playBtn" class="btn">TAP TO PLAY</button>
   <button id="baseBtn" class="btn secondary">🏕️ FORWARD BASE</button>
   <div id="bestLine">BEST MISSION <b id="titleBest">1</b> &nbsp;&middot;&nbsp; 🔩 <b id="titleSalv">0</b> &nbsp;&middot;&nbsp; 🎖️ <b id="titleSaved">0</b></div>
-  <div id="footerBadge"><a href="../../">TaterTot Games Labs</a></div>
+  <div id="footerBadge"><a href="https://tatertotgames.com">tatertotgames.com</a></div>
 </div>
 
 <div id="base" class="screen hidden">
@@ -270,7 +270,7 @@
 <script>
 'use strict';
 /* ================================================================
-   CHOPPER DROP — TaterTot Games Labs
+   CHOPPER DROP, TaterTot Games Labs
    Flight-lite rescue arcade. The tethered load is the antagonist.
    Single file, zero deps. All art canvas-drawn, all audio synthesized.
    ================================================================ */
@@ -526,7 +526,7 @@ function resize() {
     H = Math.max(1, window.innerHeight || 640);
     cv.width = Math.round(W * DPR);
     cv.height = Math.round(H * DPR);
-    // EXPLICIT CSS pixel sizing — without this the canvas renders at DPR size.
+    // EXPLICIT CSS pixel sizing, without this the canvas renders at DPR size.
     cv.style.width = W + 'px';
     cv.style.height = H + 'px';
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -682,11 +682,11 @@ function missionCfg(m) {
   const t = Math.min(1, (m - 1) / 18);          // difficulty ramp 0..1
   const len = Math.round(convoy ? 2600 + 96 * Math.min(m, 20) : 1900 + 78 * Math.min(m, 20));
   const quota = clamp(2 + Math.floor(m / 3), 2, 5) + (convoy ? 1 : 0);
-  // a convoy escort is already the long-pressure mission — never flood it too
+  // a convoy escort is already the long-pressure mission, never flood it too
   const flood = (m >= 8 && m % 4 === 2 && !convoy) ? 1 : 0;
   return {
     m: m, convoy: convoy, t: t, len: len, quota: quota,
-    // a rising flood and a canyon roof would squeeze the corridor shut — never both
+    // a rising flood and a canyon roof would squeeze the corridor shut, never both
     ceiling: m >= 3 && !flood,
     ceilTight: t,                                // 0..1, how low the canyon roof comes
     wind: m >= 4 ? 26 + 54 * t : 0,
@@ -754,7 +754,7 @@ function genMission(m) {
   let padY = G.gh[clamp(pi, 0, G.nSeg - 1)];
   // on flood maps the LZ sits on a mesa: the water must never swallow the pad
   if (cfg.flood) padY = Math.min(padY, GROUND_Y - 246);
-  // flat pad with SLOPED shoulders — never a sheer cliff to fly into
+  // flat pad with SLOPED shoulders, never a sheer cliff to fly into
   const PAD_FLAT = 4, PAD_RAMP = 7;
   for (let i = pi - PAD_FLAT - PAD_RAMP; i <= pi + PAD_FLAT + PAD_RAMP; i++) {
     if (i < 0 || i >= G.nSeg) continue;
@@ -957,7 +957,7 @@ function physicsStep(h) {
     p.px = p.x; p.py = p.y;
     p.vy += GRAV * h;
     p.vx += G.windCur * p.windK * h;
-    // damping — this is the dial the Cable Damping upgrade turns
+    // damping, this is the dial the Cable Damping upgrade turns
     const dk = U.loadDamp;
     p.vx -= p.vx * dk * h;
     p.vy -= p.vy * dk * h;
@@ -1101,7 +1101,7 @@ function enforceCableBounds() {
   }
 }
 
-// swing energy proxy — used for the damping readout and by the physics soak test
+// swing energy proxy, used for the damping readout and by the physics soak test
 function swingMetric() {
   const p = G.parts[0];
   if (!p) return 0;
@@ -1135,7 +1135,7 @@ function hullHit(n, reason) {
   if (ch.invT > 0) return;
   ch.hull -= n;
   ch.invT = 1.25;
-  G.fireLull = 2.0;          // the guns lose you for a moment after a hit — recovery window
+  G.fireLull = 2.0;          // the guns lose you for a moment after a hit, recovery window
   G.vign = 1;
   G.flash = 0.5;
   shake(11, 0.34);
@@ -1147,7 +1147,7 @@ function hullHit(n, reason) {
     ch.hull = 0;
     ch.down = true;
     ch.downT = 0;
-    G.hint = 'AUTOROTATING — BRACE';
+    G.hint = 'AUTOROTATING, BRACE';
     G.hintT = 3;
     sfxLose();
   }
@@ -1187,7 +1187,7 @@ function startMission(m) {
   G.input.active = false; G.input.id = -1; G.input.moved = 0;
   G.cam.x = ch.x; G.cam.y = ch.y;
   setScreen('playing');          // hides the menus, shows the HUD + winch control
-  G.hint = G.convoy ? 'CONVOY ESCORT — LONG FERRY, CLOCK NEVER STOPS'
+  G.hint = G.convoy ? 'CONVOY ESCORT, LONG FERRY, CLOCK NEVER STOPS'
     : (m === 1 ? 'DRAG TO FLY · TAP TO WINCH · HOOK THEM, FLY THEM HOME' : missionBrief(m));
   G.hintT = m === 1 ? 6 : 4;
   window.TTG?.track('level_start', { level: m });
@@ -1195,11 +1195,11 @@ function startMission(m) {
 
 function missionBrief(m) {
   const c = missionCfg(m);
-  if (c.flood) return 'FLOOD RISING — GET THEM OUT';
-  if (c.night) return 'NIGHT EXTRACTION — SEARCHLIGHT ONLY';
-  if (c.collapse) return 'STRUCTURES UNSTABLE — DO NOT LOITER';
-  if (c.wind > 55) return 'HEAVY CROSSWIND — THE LOAD WILL FIGHT YOU';
-  if (c.ceiling) return 'TIGHT CANYON — MIND THE SWING ARC';
+  if (c.flood) return 'FLOOD RISING, GET THEM OUT';
+  if (c.night) return 'NIGHT EXTRACTION, SEARCHLIGHT ONLY';
+  if (c.collapse) return 'STRUCTURES UNSTABLE, DO NOT LOITER';
+  if (c.wind > 55) return 'HEAVY CROSSWIND, THE LOAD WILL FIGHT YOU';
+  if (c.ceiling) return 'TIGHT CANYON, MIND THE SWING ARC';
   return 'EXTRACT THE QUOTA, THEN LAND ON THE PAD';
 }
 
@@ -1347,14 +1347,14 @@ function updatePickups() {
     vibrate(30);
     popup(G.lzX, G.lzY - 90, '+' + cd.salv + ' 🔩', '#ffd76b');
     spark(G.lzX, G.lzY - 8, 16, '#dcff9a', 140, 'dust');
-    // the ground crew patches you up as they unload — every second body out
+    // the ground crew patches you up as they unload, every second body out
     if (G.delivered % (G.convoy ? 1 : 2) === 0 && G.chopper.hull < G.chopper.hullMax) {
       G.chopper.hull++;
       popup(G.lzX, G.lzY - 122, '+1 HULL PATCHED', '#9ede4b');
       tone(520, 0.14, 'triangle', 0.14); tone(780, 0.18, 'sine', 0.1, { delay: 0.1 });
     }
     if (G.delivered >= G.quota) {
-      G.hint = 'QUOTA CLEAR — SET DOWN ON THE PAD';
+      G.hint = 'QUOTA CLEAR, SET DOWN ON THE PAD';
       G.hintT = 4;
     } else {
       G.hint = (G.quota - G.delivered) + ' MORE TO EXTRACT';
@@ -1437,7 +1437,7 @@ function updateLoadImpacts() {
     const p = G.parts[i];
     if (p.impact > 150) {
       if (p.type === 'drum' && p.impact > 230) {
-        // fuel drum detonates on a hard slam — cargo lost, hull rocked
+        // fuel drum detonates on a hard slam, cargo lost, hull rocked
         spark(p.x, p.y, 34, '#ffb347', 320);
         spark(p.x, p.y, 18, '#ff6a3a', 220);
         sfxBoom(); shake(20, 0.6); G.flash = 1; vibrate([25, 40, 25]);
@@ -1462,7 +1462,7 @@ function updateLoadImpacts() {
 function updateShooters(dt) {
   const ch = G.chopper;
   if (G.fireLull > 0) G.fireLull -= dt;
-  // only the two closest positions engage at once — sustained pressure, not a firing squad
+  // only the two closest positions engage at once, sustained pressure, not a firing squad
   let n1 = -1, n2 = -1, d1 = 1e9, d2 = 1e9;
   for (let i = 0; i < G.shooters.length; i++) {
     const d = Math.abs(ch.x - G.shooters[i].x);
@@ -1481,7 +1481,7 @@ function updateShooters(dt) {
     if (s.t > 0) continue;
     s.t = s.rate * rand(0.8, 1.4);
     s.muzzle = 0.12;
-    // lob a tracer arc that leads the chopper — deliberately sloppy: it is pressure,
+    // lob a tracer arc that leads the chopper, deliberately sloppy: it is pressure,
     // not a sniper. Error grows with range so standing off is genuinely safer.
     const T = clamp(Math.hypot(dx, dy) / 420, 0.4, 1.5);
     // spread is expressed in WORLD UNITS AT THE TARGET (not velocity), so the miss
@@ -1570,11 +1570,11 @@ function updateFuel(dt) {
   if (pct < 0.25 && pct > 0) {
     G.klaxT -= dt;
     if (G.klaxT <= 0) { G.klaxT = pct < 0.12 ? 0.85 : 1.5; sfxKlaxon(); }
-    if (!G.fuelWarn) { G.fuelWarn = 1; G.hint = 'FUEL LOW — GET HOME'; G.hintT = 2.5; }
+    if (!G.fuelWarn) { G.fuelWarn = 1; G.hint = 'FUEL LOW, GET HOME'; G.hintT = 2.5; }
   }
   if (G.fuel <= 0 && !G.chopper.down) {
     G.chopper.down = true; G.chopper.downT = 0;
-    G.hint = 'FUEL STARVED — AUTOROTATING'; G.hintT = 3;
+    G.hint = 'FUEL STARVED, AUTOROTATING'; G.hintT = 3;
     sfxLose();
   }
 }
@@ -2503,11 +2503,11 @@ function showWin() {
 
 function showLose() {
   const tips = [
-    'Fly INTO the swing to kill it — chasing the load is how you damp it.',
+    'Fly INTO the swing to kill it, chasing the load is how you damp it.',
     'Short cable = stiff and controllable. Long cable = reach for the pickup.',
     'A heavy crate steals your climb. Winch it in before you go vertical.',
     'Fuel burns faster the harder you steer. Smooth is cheap.',
-    'Tracer arcs are lobbed — break your line, do not out-run them.',
+    'Tracer arcs are lobbed, break your line, do not out-run them.',
     'Deliberately pendulum the load to swing it over an obstacle.'
   ];
   const left = G.survivors.filter(s => !s.done).length;
@@ -2553,7 +2553,7 @@ function renderBase() {
     }
   } else {
     const list = S.roster.slice().sort((a, b) => b.c - a.c);
-    if (!list.length) html = '<div class="emptyNote">No personnel on the roster yet. Every soul you winch out lands here — and they remember.</div>';
+    if (!list.length) html = '<div class="emptyNote">No personnel on the roster yet. Every soul you winch out lands here, and they remember.</div>';
     for (const r of list) {
       html += '<div class="rosterRow">🎖️ <b>' + r.n + '</b><span class="cnt">' + r.c + ' rescue' + (r.c > 1 ? 's' : '') + '</span></div>';
     }

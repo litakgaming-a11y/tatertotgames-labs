@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Beam Team — TaterTot Games Labs</title>
+<title>Beam Team | TaterTot Games</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🔦%3C/text%3E%3C/svg%3E">
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
@@ -26,11 +26,11 @@
 <body>
 <canvas id="c"></canvas>
 <div id="sa"></div>
-<a id="badge" href="../../">🥔 TaterTot Games Labs</a>
+<a id="badge" href="https://tatertotgames.com">tatertotgames.com</a>
 <script>
 'use strict';
 /* ============================================================
-   BEAM TEAM — tap a mirror, the light bends
+   BEAM TEAM, tap a mirror, the light bends
    Rotate 45° mirrors to route a lighthouse beam through prisms,
    filters and portals until every lantern is lit.
    ============================================================ */
@@ -1623,7 +1623,7 @@ function drawHUD(t) {
 }
 
 /* ============================================================
-   TITLE — Lighthouse Village
+   TITLE, Lighthouse Village
    ============================================================ */
 function drawVillage(t) {
   const W = view.W, H = view.H;
@@ -1668,7 +1668,7 @@ function drawVillage(t) {
     }
   }
 
-  /* cottages — windows light up with village level */
+  /* cottages, windows light up with village level */
   const houses = Math.min(6, 1 + Math.floor(vl / 1.2));
   for (let i = 0; i < houses; i++) {
     const nx = 0.10 + i * 0.135;
@@ -1805,7 +1805,7 @@ function drawTitle(dt, t) {
 
   const pp = 0.72 + 0.28 * Math.sin(titleT * 4);
   ctx.globalAlpha = pp;
-  text(store.lv > 1 ? 'TAP TO PLAY — LEVEL ' + store.lv : 'TAP TO PLAY',
+  text(store.lv > 1 ? 'TAP TO PLAY, LEVEL ' + store.lv : 'TAP TO PLAY',
     W / 2, H * 0.41, clamp(W * 0.048, 17, 27), '#fff0c2', 900, 'center', 'rgba(14,10,28,0.85)');
   ctx.globalAlpha = 1;
 
@@ -1969,7 +1969,7 @@ function drawWin(dt, t) {
 }
 
 /* ============================================================
-   MAIN LOOP  (re-arms in finally — one bad frame can't kill it)
+   MAIN LOOP  (re-arms in finally, one bad frame can't kill it)
    ============================================================ */
 let last = performance.now();
 let elapsed = 0;

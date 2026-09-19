@@ -1,4 +1,4 @@
-# 03 — Economy
+# 03, Economy
 
 Three resources, one closed loop, no energy bar.
 
@@ -20,21 +20,21 @@ The critical property: **cargo is the session pacer**. There is no energy system
 
 ## 2. Resources
 
-### Cargo — physical, typed, consumable
+### Cargo, physical, typed, consumable
 
 | Type | Icon | Sale value | Card weight | Physics identity |
 |---|---|---|---|---|
 | **Crate** | 📦 | 10 | 1.0 | Stable cube, stacks flat, forgiving |
 | **Timber** | 🪵 | 14 | 1.3 | Long plank, bridges gaps, slides |
-| **Barrel** | 🛢️ | 18 | 1.6 | Circle, `mu 0.25` — rolls |
+| **Barrel** | 🛢️ | 18 | 1.6 | Circle, `mu 0.25`, rolls |
 | **Glassware** | 🧊 | 26 | 1.9 | Fragile, must ride on top |
-| **Bullion** | 🥇 | 40 | 2.4 | `dens 1.05` — sinks the rail fast |
+| **Bullion** | 🥇 | 40 | 2.4 | `dens 1.05`, sinks the rail fast |
 
 Sale value and card weight rise together, so the greedier card is always the more valuable card and always the more dangerous one. There is never a dominant choice.
 
 **Warehouse cap** = `200 + 120 × totalPortTiers`, per type. Hitting the cap stops production for that type and shows a nudge to spend or sail. This is the primary re-engagement pressure and it must be surfaced in the offline-return popup.
 
-### Coins 🪙 — the sink
+### Coins 🪙, the sink
 
 Earned only by delivering cargo. Spent on:
 
@@ -48,7 +48,7 @@ Earned only by delivering cargo. Spent on:
 
 Coins are **never** produced idly. Idle produces *cargo*; converting cargo to Coins requires a delivery, which requires either a manual run or an assigned auto-route whose rate was set by a manual run. This is the enforcement mechanism for Pillar P5.
 
-### Gems 💎 — hard currency
+### Gems 💎, hard currency
 
 | Source | Amount |
 |---|---|
@@ -174,23 +174,23 @@ Target: a player at steady state should be able to fund roughly **one meaningful
 | Late | 91–250 | 800k–8M | Mint chains, hull tier 5 |
 | Prestige | 250+ | reset ×1.35 | Legacy hulls |
 
-**Inflation control.** The economy is deliberately superlinear on both sides — production scales with tiers, costs scale at 4.2^tier. The ratio holds because `routeRating` is bounded at 2.5 and `hullSuitability` at 1.8, so idle income cannot compound without the player continuing to play manually and unlock new regions. If soft-launch data shows runaway growth, the first lever is `portTierCost` exponent, remote-configured.
+**Inflation control.** The economy is deliberately superlinear on both sides, production scales with tiers, costs scale at 4.2^tier. The ratio holds because `routeRating` is bounded at 2.5 and `hullSuitability` at 1.8, so idle income cannot compound without the player continuing to play manually and unlock new regions. If soft-launch data shows runaway growth, the first lever is `portTierCost` exponent, remote-configured.
 
 ## 7. The salvage mechanic
 
 On capsize, all cargo aboard is destroyed.
 
 ```
-🎥 SALVAGE — recover 40% of lost cargo, rounded down, by value
+🎥 SALVAGE, recover 40% of lost cargo, rounded down, by value
 ```
 
 Selection is by **highest value first**, so the player recovers the Bullion before the Crates. This makes salvage feel generous and makes the ad worth watching, while still leaving a real loss.
 
-Salvage is offered once per capsize and does not stack with the RIGHT HER! continue — taking the continue means the run did not capsize, so there is nothing to salvage.
+Salvage is offered once per capsize and does not stack with the RIGHT HER! continue, taking the continue means the run did not capsize, so there is nothing to salvage.
 
 ## 8. Anti-frustration rules
 
-1. **Never leave a player cargo-locked.** If total warehouse value falls below the cheapest available contract's requirement, a free "Relief Shipment" grants enough Crates for one run, once per 6 h. Silent, no celebration — it should feel like the harbourmaster quietly helping, not a reward.
+1. **Never leave a player cargo-locked.** If total warehouse value falls below the cheapest available contract's requirement, a free "Relief Shipment" grants enough Crates for one run, once per 6 h. Silent, no celebration, it should feel like the harbourmaster quietly helping, not a reward.
 2. **Never fail a contract for cargo the player owns.** The contract UI must grey out and explain shortfalls before the run starts, never during.
 3. **Never destroy cargo outside a run.** Warehouse contents are inviolable.
 4. **Cap consecutive capsizes.** After 3 consecutive capsizes on the same route, quietly show a contextual tip about drop height or centre of gravity. Do not reduce difficulty.

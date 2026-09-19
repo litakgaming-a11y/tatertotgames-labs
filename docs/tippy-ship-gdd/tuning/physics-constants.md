@@ -1,4 +1,4 @@
-# Tuning — Physics Constants
+# Tuning, Physics Constants
 
 Every value traceable to [`games/tippy-ship/play.html`](../../../games/tippy-ship/play.html). Line references are to that file.
 
@@ -10,14 +10,14 @@ Every value traceable to [`games/tippy-ship/play.html`](../../../games/tippy-shi
 |---|---|---|---|
 | `G` | 1300 | 528 | Gravity, world u/s² |
 | `RHO` | 1.0 | 529 | Water density. Hull at 0.34 floats at ~34% draft |
-| `PH` | 1/150 | 530 | Fixed substep. **Do not change** — all tuning assumes it |
+| `PH` | 1/150 | 530 | Fixed substep. **Do not change**, all tuning assumes it |
 | `VEL_ITERS` | 8 | 531 | Prototype solver; Box2D equivalent |
 | `POS_ITERS` | 2 → 3 | 531 | Box2D default of 3 is fine |
 | `SLOP` | 0.6 | 532 | Contact penetration slop |
 | `POS_PCT` | 0.4 | 532 | Positional correction factor |
 | `MAX_V` | 1900 | 533 | Linear velocity clamp |
 | `MAX_VA` | 9 | 533 | Angular velocity clamp |
-| `TERMINAL_FALL` | 640 | 911 | Cargo terminal fall speed — keeps landings thunky |
+| `TERMINAL_FALL` | 640 | 911 | Cargo terminal fall speed, keeps landings thunky |
 
 ## Roll thresholds
 
@@ -31,7 +31,7 @@ Every value traceable to [`games/tippy-ship/play.html`](../../../games/tippy-shi
 
 | Time scales | Value | Source |
 |---|---|---|
-| Normal | 1.0 | — |
+| Normal | 1.0 |, |
 | Warning | 0.55 | 1404 |
 | Capsize | 0.32 | 1256 |
 | Release ramp | 0.25 s ease-out | new |

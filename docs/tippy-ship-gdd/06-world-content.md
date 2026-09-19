@@ -1,4 +1,4 @@
-# 06 — World & Content
+# 06, World & Content
 
 Eight regions. Roughly 90 authored ports. Then endless water.
 
@@ -10,20 +10,20 @@ Each region is three things at once: a **visual identity**, a **mechanic reveal*
 
 | # | Region | Ports | Gate (Port Tiers) | New mechanic | Palette |
 |---|---|---|---|---|---|
-| 1 | **Home Coast** | 14 | 0 | — teaching | Warm dawn, teal water |
-| 2 | **The Shallows** | 12 | 12 | **Tide swing** — waterline drifts mid-run | Pale turquoise, sandbars |
-| 3 | **Ferry Lanes** | 12 | 28 | **Wake tests** — scheduled and unscheduled | Grey-blue, industrial |
+| 1 | **Home Coast** | 14 | 0 |, teaching | Warm dawn, teal water |
+| 2 | **The Shallows** | 12 | 12 | **Tide swing**, waterline drifts mid-run | Pale turquoise, sandbars |
+| 3 | **Ferry Lanes** | 12 | 28 | **Wake tests**, scheduled and unscheduled | Grey-blue, industrial |
 | 4 | **Roaring Reach** | 12 | 45 | **Sustained wind heel** | Slate, whitecaps |
-| 5 | **Ice Run** | 11 | 70 | **Icing** — spray adds mass to top crates | Cold white-blue |
-| 6 | **Monsoon Straits** | 11 | 105 | **Squalls** — rain slicks the deck | Green-grey, heavy rain |
-| 7 | **Nightwatch** | 10 | 150 | **Fog & lantern** — restricted visibility | Deep indigo, lamp pools |
+| 5 | **Ice Run** | 11 | 70 | **Icing**, spray adds mass to top crates | Cold white-blue |
+| 6 | **Monsoon Straits** | 11 | 105 | **Squalls**, rain slicks the deck | Green-grey, heavy rain |
+| 7 | **Nightwatch** | 10 | 150 | **Fog & lantern**, restricted visibility | Deep indigo, lamp pools |
 | 8 | **Open Waters** | ∞ | 210 | procedural, all mechanics | Rotates |
 
 Total authored: **82 ports**, plus infinite procedural.
 
 ## 2. Region mechanics in detail
 
-### R2 — Tide swing
+### R2, Tide swing
 
 The mean waterline drifts over the run on a slow sine.
 
@@ -38,12 +38,12 @@ A load that was safely above the rail at t=10 s can have the rail underwater at 
 
 Telegraph: a tide gauge post at the quayside with a visibly rising/falling marker, plus the water sound gaining a low swell layer.
 
-### R3 — Wake tests
+### R3, Wake tests
 
 The prototype's ferry, promoted. Two variants:
 
-- **Scheduled** — a horn sounds 2.5 s before the ferry appears. Skill test: finish loading or brace.
-- **Unscheduled** — no horn. Appears during the load phase. Pure hazard.
+- **Scheduled**, a horn sounds 2.5 s before the ferry appears. Skill test: finish loading or brace.
+- **Unscheduled**, no horn. Appears during the load phase. Pure hazard.
 
 ```
 WAKE.amp = 8 + region.wakeBonus        // 8 .. 18
@@ -51,7 +51,7 @@ WAKE.env = sin(π × clamp(t / 3.4, 0, 1))
 WAKE.ph += dt × 9
 ```
 
-### R4 — Sustained wind heel
+### R4, Sustained wind heel
 
 Prototype gusts, extended with a constant background heel.
 
@@ -65,7 +65,7 @@ The base heel means the hull *never sits level*. Every load must be deliberately
 
 Telegraph: flags, spray direction, a wind arrow at screen edge, and a rising band-passed noise 0.9 s before a gust.
 
-### R5 — Icing
+### R5, Icing
 
 Freezing spray accumulates on exposed cargo.
 
@@ -79,9 +79,9 @@ every ICE_TICK (2.0 s):
 
 Mass grows **at the top of the stack**, which is exactly where it hurts. Raises the centre of mass over time and converts a stable load into an unstable one purely by waiting. The clock becomes an enemy for the first time in the game.
 
-Counterplay: the **Icebreaker** hull is immune, and a Glassware crate on top acts as an ice shield for what is under it — turning the game's most fragile cargo into a deliberate tactical choice.
+Counterplay: the **Icebreaker** hull is immune, and a Glassware crate on top acts as an ice shield for what is under it, turning the game's most fragile cargo into a deliberate tactical choice.
 
-### R6 — Squalls
+### R6, Squalls
 
 ```
 during squall (4–7 s, telegraphed by darkening sky and rain onset):
@@ -91,7 +91,7 @@ during squall (4–7 s, telegraphed by darkening sky and rain onset):
 
 Cargo slides. The Rubber Deck upgrade goes from a nice-to-have to essential, which retroactively makes an earlier purchase feel prescient.
 
-### R7 — Fog & lantern
+### R7, Fog & lantern
 
 Global visibility is reduced to a lamp-lit pool around the crane and hull. The far parallax is fully obscured; the horizon reference the player has been using to judge list angle **disappears**.
 
@@ -99,7 +99,7 @@ This is the region where the bubble inclinometer stops being a convenience and b
 
 Counterplay: a **Lamp** hull upgrade (cosmetic tier track, cheap) widens the lit radius.
 
-### R8 — Open Waters
+### R8, Open Waters
 
 Procedural, endless, leaderboard-attached.
 
@@ -165,7 +165,7 @@ Difficulty is authored per port, never scaled to player power. These are the onl
 | Quota | 3–12 | Baseline load before greed begins |
 | Swell `a1` | 3.0–9.5 | Continuous roll perturbation |
 | Chop `a2` | 1.5–4.3 | High-frequency noise; averaged by the 7-sample fit |
-| Cargo mix | — | Bullion-heavy = low freeboard; Barrel-heavy = chaos |
+| Cargo mix |, | Bullion-heavy = low freeboard; Barrel-heavy = chaos |
 | Tide amp | 0–9 | Freeboard drains over time |
 | Wind base | 0–45 | Permanent asymmetry |
 | Gust peak | 0–160 | Discrete shocks |
@@ -214,10 +214,10 @@ A new region post-launch costs roughly: 1 palette, 1 parallax set, 1 ambient set
 
 ## 7. Cut candidates
 
-If the schedule bites, cut in this order — see [14-milestones-cutlist.md](14-milestones-cutlist.md):
+If the schedule bites, cut in this order, see [14-milestones-cutlist.md](14-milestones-cutlist.md):
 
-1. **Region 7 (Nightwatch)** — the fog mechanic is the most expensive rendering work for the fewest ports.
-2. **Region 6 (Monsoon)** — squalls are a single friction multiplier; the weather VFX is the cost.
-3. **Open Waters procgen** — ship without the endless tail; it only matters to players 200 hours in.
+1. **Region 7 (Nightwatch)**, the fog mechanic is the most expensive rendering work for the fewest ports.
+2. **Region 6 (Monsoon)**, squalls are a single friction multiplier; the weather VFX is the cost.
+3. **Open Waters procgen**, ship without the endless tail; it only matters to players 200 hours in.
 
 Never cut: regions 1–3. Those carry D1 through D7.

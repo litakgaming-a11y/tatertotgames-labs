@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Snapcatch — TaterTot Games Labs</title>
+<title>Snapcatch | TaterTot Games</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E📸%3C/text%3E%3C/svg%3E">
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
@@ -158,7 +158,7 @@
     <div class="chip" id="cMute" style="pointer-events:auto;cursor:pointer">🔊</div>
   </div>
   <div class="row">
-    <div class="chip" id="contract">—</div>
+    <div class="chip" id="contract">-</div>
   </div>
   <div class="row" style="gap:6px">
     <div id="filmDots"></div>
@@ -175,16 +175,16 @@
 </div>
 
 <div id="card"><canvas id="pc" width="260" height="196"></canvas>
-  <div id="cardCap">—<span>—</span></div><div id="cardStamp">A</div></div>
+  <div id="cardCap">-<span>-</span></div><div id="cardStamp">A</div></div>
 
 <div id="toast"></div>
 <div id="screen"></div>
-<a id="badge" href="../../">🥔 TaterTot Games Labs</a>
+<a id="badge" href="https://tatertotgames.com">tatertotgames.com</a>
 
 <script>
 'use strict';
 /* ================================================================
-   SNAPCATCH — catch the instant, not the creature
+   SNAPCATCH, catch the instant, not the creature
    TaterTot Games Labs · Wave 7 · The Glimmerwild
    ================================================================ */
 
@@ -204,7 +204,7 @@ const PERFECT_AT = 92;           /* S grade */
 const GRACE_HALF = 0.50;         /* seconds beyond the perfect band before timing = 0 */
 /* The habitable box for a Glim's BASE position. Chosen so that base + the
    biggest pose offset (arc 210 up, arc 160 down, dash 150 sideways) can never
-   put a PEAK outside the world rect — which is exactly what min zoom shows.
+   put a PEAK outside the world rect, which is exactly what min zoom shows.
    That is the reachability guarantee: no peak can happen where you can't look. */
 const BX_MIN = 170, BX_MAX = WORLD_W - 170;   /* 170 .. 1230 */
 const BY_MIN = 225, BY_MAX = 452;
@@ -354,7 +354,7 @@ function sanePhoto(p) {
     sp, bh, t: num(p.t, 0), bx: num(p.bx, WORLD_W / 2), by: num(p.by, GROUND_Y - 60),
     cx: num(p.cx, WORLD_W / 2), cy: num(p.cy, WORLD_H / 2), cz: Math.max(1, num(p.cz, 1)),
     fov: Math.max(1, num(p.fov, WORLD_W)), idle: !!p.idle,
-    title: typeof p.title === 'string' ? p.title.slice(0, 60) : (SPECIES[sp].name + ' — ' + SPECIES[sp].bh[bh].name),
+    title: typeof p.title === 'string' ? p.title.slice(0, 60) : (SPECIES[sp].name + '-' + SPECIES[sp].bh[bh].name),
     ar: Math.max(0.2, num(p.ar, 0.6)), biome: clamp(p.biome | 0, 0, BIOMES.length - 1),
     weather: (typeof p.weather === 'string' && WEATHERS.indexOf(p.weather) >= 0) ? p.weather : 'clear',
     night: !!p.night, flash: !!p.flash, seed: num(p.seed, 1) | 0, face: num(p.face, 1) >= 0 ? 1 : -1,
@@ -705,7 +705,7 @@ function makeContract(exp) {
   const kind = irnd(0, 2);
   if (kind === 0) {
     const b = sp.bh[sp.bh.length - 1];
-    return { text: sp.name + ' — ' + b.name, sp: sp.idx, bh: b.idx, min: 40, comp: null, reward: 90 };
+    return { text: sp.name + '-' + b.name, sp: sp.idx, bh: b.idx, min: 40, comp: null, reward: 90 };
   }
   if (kind === 1) {
     const need = exp.biome === 1 ? 'Reflection' : (exp.weather === 'storm' ? 'Lightning back-light' : 'Silhouette');
@@ -785,7 +785,7 @@ function updateGlims(e, dt) {
       g.bx += g.fleeVX * dt; g.by += g.fleeVY * dt;
       g.fleeVY += 40 * dt;
       if (g.t > 1.5) {
-        /* comes back somewhere else — never permanently lost */
+        /* comes back somewhere else, never permanently lost */
         g.bx = clamp(g.homeX + rnd(-220, 220), BX_MIN, BX_MAX);
         g.by = clamp(g.homeY + rnd(-50, 50), BY_MIN, BY_MAX);
         g.homeX = g.bx; g.homeY = g.by;
@@ -825,7 +825,7 @@ function updateGlims(e, dt) {
           g.face = dx >= 0 ? 1 : -1;
         }
       }
-      /* keep every base position inside the habitable box — this is what
+      /* keep every base position inside the habitable box, this is what
          guarantees no peak can land outside the world rect */
       g.bx = clamp(g.bx, BX_MIN, BX_MAX); g.by = clamp(g.by, BY_MIN, BY_MAX);
       g.homeX = clamp(g.homeX, BX_MIN + 28, BX_MAX - 28);
@@ -909,7 +909,7 @@ function alertGlim(e) {
 }
 
 /* ================================================================
-   RENDERING — one world renderer, shared by the live view AND the
+   RENDERING, one world renderer, shared by the live view AND the
    album (so a saved photo re-renders identically from parameters).
    ================================================================ */
 function rr(g2, x, y, w, h, r) {
@@ -1388,7 +1388,7 @@ function renderWorld(g2, C) {
 }
 
 /* ================================================================
-   JUICE — particles, toast, shake, bullet time
+   JUICE, particles, toast, shake, bullet time
    ================================================================ */
 const parts = [];
 function addParts(n, fn) { for (let i = 0; i < n && parts.length < 320; i++) parts.push(fn(i)); }
@@ -1789,10 +1789,10 @@ function fireShutter() {
     seed: g.seed | 0, lightning: exp.lightning, idle: idle,
     oth: inp.others.slice(0, 3).map(o => [o.sp, Math.round(o.x), Math.round(o.y)]),
     g: res.total, lt: res.letter, fr: res.framing, ti: res.timing, ra: res.rarity, cb: res.bonuses,
-    cap: idle ? 'Resting — ' + sp.name
+    cap: idle ? 'Resting, ' + sp.name
       : (res.total >= 80 ? pick(CAPTIONS_HI) : res.total >= 50 ? pick(CAPTIONS_MID) : pick(CAPTIONS_LOW))
   };
-  photo.title = idle ? sp.name + ' at rest' : sp.name + ' — ' + bh.name;
+  photo.title = idle ? sp.name + ' at rest' : sp.name + '-' + bh.name;
 
   const caught = res.total >= CATCH_AT && !idle;
   let lum = Math.round(res.total * 1.15 + bh.rar * 9 + (caught ? 25 : 0));
@@ -1866,7 +1866,7 @@ function albumCount() { let n = 0; for (const k in store.album) n++; return n; }
 function albumTotal() { let n = 0; for (const s of SPECIES) n += s.bh.length; return n; }
 
 /* ================================================================
-   PHOTO RE-RENDER — a saved photo is only parameters; this rebuilds
+   PHOTO RE-RENDER, a saved photo is only parameters; this rebuilds
    the exact frame from them, at any canvas size.
    ================================================================ */
 function photoItems(ph) {
@@ -1962,7 +1962,7 @@ function updateHUD() {
     q('cLum').innerHTML = '<b>' + exp.lumens + '</b> ✦';
     const c = exp.contract;
     const cc = q('contract');
-    cc.textContent = (exp.contractDone ? '✅ ' : '📜 ') + (c ? c.text : '—') + (c && !exp.contractDone ? ' (+' + c.reward + ')' : '');
+    cc.textContent = (exp.contractDone ? '✅ ' : '📜 ') + (c ? c.text : '-') + (c && !exp.contractDone ? ' (+' + c.reward + ')' : '');
     cc.className = 'chip' + (exp.contractDone ? ' done' : '');
     let dots = '';
     for (let i = 0; i < exp.filmMax; i++) dots += '<div class="fd' + (i < exp.filmMax - exp.film ? ' used' : '') + '"></div>';
@@ -2016,7 +2016,7 @@ function titleScreen() {
     '• <b>Drag</b> to pan · <b>pinch</b> or <b>tap-hold</b> to zoom · tap a Glim (or its <b>!</b> marker) to swing onto it.<br>' +
     '• Glims <b>telegraph</b>: a closing ring means the peak is coming. The frame glows gold on the perfect instant.<br>' +
     '• <b>Tap the shutter</b> at the peak. You are graded on Framing, Timing, Rarity and Composition.<br>' +
-    '• A great photo befriends the Glim. A poor one just spooks it — <b>you can never fail</b>, only shoot worse.<br>' +
+    '• A great photo befriends the Glim. A poor one just spooks it, <b>you can never fail</b>, only shoot worse.<br>' +
     '• Drop a <b>lure</b> to provoke a Glim\'s rarest behaviour and set your shot up.</div></div>'
   );
 }
@@ -2084,7 +2084,7 @@ function speciesScreen(spId) {
         'border:1px dashed rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;' +
         'font-size:22px;flex:none">?</div>' +
         '<div class="meta"><b>' + esc(b.name) + '</b><i>' + ['common', 'uncommon', 'rare', 'legendary'][clamp(b.rar, 1, 4) - 1] +
-        ' behaviour — not yet photographed</i></div>';
+        ' behaviour, not yet photographed</i></div>';
     }
     g += '</div>';
   }
@@ -2123,7 +2123,7 @@ function upgradeScreen() {
     if (u.id === 'shutter') cur = '±' + (0.13 * shutterMulFor(l)).toFixed(2) + 's window';
     if (u.id === 'zoom') cur = zoomMulFor(l).toFixed(2) + '× fill';
     g += '<div class="upRow"><div class="ui">' + u.ic + '</div><div class="ut"><b>' + u.name + '</b>' +
-      '<i>' + u.desc + ' — now: ' + cur + '</i><div class="pips">' + pips + '</div></div>' +
+      '<i>' + u.desc + ', now: ' + cur + '</i><div class="pips">' + pips + '</div></div>' +
       '<button class="buy" data-act="buy" data-up="' + u.id + '"' +
       (maxed || store.lumens < cost ? ' disabled' : '') + '>' +
       (maxed ? 'MAX' : cost + ' ✦') + '</button></div>';
@@ -2280,7 +2280,7 @@ bind('bSubj', () => {
 })();
 
 /* ================================================================
-   MAIN LOOP — re-arms in `finally`, 3-error console cap
+   MAIN LOOP, re-arms in `finally`, 3-error console cap
    ================================================================ */
 let last = performance.now();
 let elapsed = 0;
@@ -2343,7 +2343,7 @@ function frameBody(now) {
       const py = projY(cam.y, cam.z, view.s1, view.H, g.by);
       if (px > 0 && px < view.W && py > 0 && py < view.H) {
         spookGlim(g, px < view.W / 2 ? -1 : 1);
-        toast('too fast — it bolted', '#ffb3b3');
+        toast('too fast, it bolted', '#ffb3b3');
       }
     }
   }
@@ -2392,7 +2392,7 @@ function frameBody(now) {
 }
 
 /* ================================================================
-   TEST HOOKS (harness only — harmless in production)
+   TEST HOOKS (harness only, harmless in production)
    ================================================================ */
 window.__SNAP = {
   SPECIES, BIOMES, UPGRADES, gradeShot, poseAt, subjectAt, renderPhotoTo, sanePhoto,

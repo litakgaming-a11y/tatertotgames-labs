@@ -1,4 +1,4 @@
--- TaterTot Games Labs — privacy-friendly analytics schema (Cloudflare D1 / SQLite)
+-- TaterTot Games Labs, privacy-friendly analytics schema (Cloudflare D1 / SQLite)
 --
 -- Privacy model:
 --   visitor_hash : SHA-256(ip + user-agent + UTC date + server salt), truncated.
@@ -75,7 +75,7 @@ FROM events
 WHERE cohort_id IS NOT NULL
 GROUP BY game, cohort_id;
 
--- Distinct (game, cohort_id, day) activity grid — joined against the view above
+-- Distinct (game, cohort_id, day) activity grid, joined against the view above
 -- to answer "did this cohort member come back on day N?".
 DROP VIEW IF EXISTS v_cohort_active_days;
 CREATE VIEW v_cohort_active_days AS

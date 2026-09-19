@@ -1,5 +1,5 @@
 /**
- * GET /api/stats — aggregate-only KPI dashboard.
+ * GET /api/stats, aggregate-only KPI dashboard.
  *
  * Query params:
  *   ?days=30   window for the volume metrics (1..90, default 30)
@@ -80,7 +80,7 @@ export async function onRequestGet({ request, env }) {
          GROUP BY a.game, a.day ORDER BY a.day DESC, a.game ASC`
       ).bind(since, ...gb),
 
-      // 3. retention denominators — cohort members old enough to be measurable
+      // 3. retention denominators, cohort members old enough to be measurable
       env.DB.prepare(
         `WITH first_seen AS (
            SELECT game, cohort_id, MIN(day) AS first_day
@@ -95,7 +95,7 @@ export async function onRequestGet({ request, env }) {
          GROUP BY game`
       ).bind(today, today, today, ...gb),
 
-      // 4. retention numerators — cohort members seen again on exactly D+N
+      // 4. retention numerators, cohort members seen again on exactly D+N
       env.DB.prepare(
         `WITH first_seen AS (
            SELECT game, cohort_id, MIN(day) AS first_day
@@ -147,7 +147,7 @@ export async function onRequestGet({ request, env }) {
          FROM events WHERE day >= ? ${gf} GROUP BY game`
       ).bind(since, ...gb),
 
-      // 8. level funnel — reached vs completed vs failed, per level
+      // 8. level funnel, reached vs completed vs failed, per level
       env.DB.prepare(
         `SELECT game, level,
                 COUNT(DISTINCT CASE WHEN event = 'level_start'    THEN COALESCE(cohort_id, visitor_hash) END) AS players_reached,

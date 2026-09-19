@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Crucible — TaterTot Games Labs</title>
+<title>Crucible | TaterTot Games</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%A5%3C/text%3E%3C/svg%3E">
 <style>
   :root{ --ink:#1a120b; --bg:#2e1f14; --panel:#4a3524; --wood:#6b4e33; --bevel:#94714a;
@@ -38,12 +38,12 @@
 <div class="screen show" id="title">
   <h1>CRUCIBLE<span class="sub">STOP BEFORE IT CRACKS</span></h1>
   <div class="tag">
-    A Kinfold economy probe. Capture charms are the game's real scarcity — and today they come from
+    Capture charms are the game's real scarcity, and today they come from
     tapping a recipe.<br><br>
     Here you <b>feed cores in one at a time</b>. The pot tempers the whole batch: every core becomes a
-    charm at whatever tier you reach, so a hotter pot is worth more per core — and past the line,
+    charm at whatever tier you reach, so a hotter pot is worth more per core, and past the line,
     every core you add might crack it.<br><br>
-    <b>You can never lose what you put in</b> — a crack banks the batch at the last tier you passed.
+    <b>You can never lose what you put in</b>, a crack banks the batch at the last tier you passed.
     The only thing at stake is how much you leave on the table.
   </div>
   <button class="go" id="startBtn" type="button">LIGHT IT</button>
@@ -64,12 +64,12 @@
 <script>
 "use strict";
 /* ===========================================================================
-   CRUCIBLE — a Kinfold economy probe (TaterTot Games Labs)
+   CRUCIBLE, a Kinfold economy probe (TaterTot Games Labs)
 
    Tests one question: is push-your-luck crafting EV-positive enough that a
    player would rather play it than tap a flat recipe?
 
-   Kinfold's K-004 is explicit — there is no energy, and the scarcity is capture
+   Kinfold's K-004 is explicit, there is no energy, and the scarcity is capture
    items. That makes the Workshop the one building the whole free loop bottlenecks
    on, and it is currently a menu. This probe attaches a toy to it.
 
@@ -102,7 +102,7 @@ RNG.prototype.next = function () {
 
 // ---------------------------------------------------------------- model
 // Kinfold ships 3 charm tiers (CaptureTierRate 0.30/0.50/0.75). The probe adds
-// two more so the push has somewhere to go — if the toy is adopted, tiers 4-5
+// two more so the push has somewhere to go, if the toy is adopted, tiers 4-5
 // are the part that needs a K-decision, not the toy.
 var TIERS = [
   { n:'CRUDE',    rate:0.30, cores:1 },
@@ -111,7 +111,7 @@ var TIERS = [
   { n:'RADIANT',  rate:0.88, cores:5 },
   { n:'PERFECT',  rate:0.95, cores:8 }
 ];
-var SAFE_HEAT = 62;            // the shimmer line — below this a feed can never crack
+var SAFE_HEAT = 62;            // the shimmer line, below this a feed can never crack
 var HEAT_PER  = 17;            // heat added per core (plus a little noise)
 var CRACK_K   = 0.021;         // crack chance per point of heat over the line
 
@@ -126,8 +126,8 @@ function tierOfCores(fed) {
  *
  * The pot tempers a BATCH: every core you committed becomes a charm at whatever
  * tier the pot reached. This is the fix for a real collision the EV gate caught.
- * Kinfold's WorkshopEngine prices higher tiers to be per-core WORSE on purpose —
- * "higher tiers are not a better deal, they are insurance" — so value per core
+ * Kinfold's WorkshopEngine prices higher tiers to be per-core WORSE on purpose,
+ * "higher tiers are not a better deal, they are insurance", so value per core
  * halves as tiers rise (0.030 -> 0.020 -> 0.0125). Under that curve a toy that
  * pushes toward higher tiers is EV-NEGATIVE by construction, and the first
  * version measured 10.05 against a flat recipe's 12.00: a tax dressed as a
@@ -136,14 +136,14 @@ function tierOfCores(fed) {
  * insurance pricing untouched.
  */
 function valueOfBatch(cores, t) { return t < 0 ? 0 : cores * TIERS[t].rate; }
-/** Cores that were committed when tier t was last reached — what a crack banks. */
+/** Cores that were committed when tier t was last reached, what a crack banks. */
 function coresAtTier(t) { return t < 0 ? 0 : TIERS[t].cores; }
 
 // ---------------------------------------------------------------- state
 var ST_TITLE=0, ST_PLAY=1, ST_OVER=2;
 var state = ST_TITLE;
 
-var CORE_BUDGET = 40;          // a shift's worth of Cores — the fixed thing you spend
+var CORE_BUDGET = 40;          // a shift's worth of Cores, the fixed thing you spend
 var coresLeft = 0, fed = 0, heat = 0, banked = 0, madeCount = 0, cracks = 0, best = 0;
 var rng = new RNG(1);
 var cracking = 0, banking = 0, shakeT = 0, glow = 0;
@@ -181,8 +181,8 @@ function feed() {
     if (kept >= 0) {
       var keptCores = coresAtTier(kept);
       banked += valueOfBatch(keptCores, kept); madeCount += keptCores;
-      say('CRACKED — kept ' + keptCores + ' ' + TIERS[kept].n + ' charms.');
-    } else say('CRACKED — nothing had set yet.');
+      say('CRACKED, kept ' + keptCores + ' ' + TIERS[kept].n + ' charms.');
+    } else say('CRACKED, nothing had set yet.');
     resetPot();
     return;
   }
@@ -222,7 +222,7 @@ function endRun() {
   document.getElementById('overSub').textContent = v > flat ? 'you beat the recipe' : 'the recipe beat you';
   document.getElementById('overNote').innerHTML =
     'Tapping the flat tier-1 recipe with the same ' + CORE_BUDGET + ' cores is worth <b>' +
-    flat.toFixed(2) + '</b>. You made <b>' + v.toFixed(2) + '</b> — ' +
+    flat.toFixed(2) + '</b>. You made <b>' + v.toFixed(2) + '</b>-' +
     (pct >= 0 ? '<b>+' + pct + '%</b>.' : '<b>' + pct + '%</b>.');
   document.getElementById('over').classList.add('show');
 }
@@ -245,7 +245,7 @@ function resize(){
     if(iw<2||ih<2) return;
     DPR=Math.min(2, window.devicePixelRatio||1);
     W=iw; H=ih; cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR);
-    // CRITICAL: pin the CSS size — a bare canvas lays out at its attribute size.
+    // CRITICAL: pin the CSS size, a bare canvas lays out at its attribute size.
     cv.style.width=W+'px'; cv.style.height=H+'px';
     if(ctx) ctx.imageSmoothingEnabled=false;
     scale = Math.min(cv.width / VW, cv.height / VH);   // fit, not integer-only

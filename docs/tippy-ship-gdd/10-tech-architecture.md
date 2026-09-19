@@ -1,4 +1,4 @@
-# 10 — Technical Architecture
+# 10, Technical Architecture
 
 Unity 6 LTS · 2D URP · full UGS at launch · deterministic sim behind an assembly wall.
 
@@ -117,7 +117,7 @@ Beyond the banned-API analyzer:
 | CI parity test on every sim commit | Catches drift the day it happens |
 | Tape version bump on any sim change | Old tapes marked stale, never invalidated |
 
-**Cross-platform float determinism.** Box2D on ARM vs x86 can differ in the last bits. This is a *display* concern, not a validation one, because the server derives the authoritative score from the tape and the client adopts it — see [15-lessons-from-prior-builds.md L3](15-lessons-from-prior-builds.md). Mitigations, in order:
+**Cross-platform float determinism.** Box2D on ARM vs x86 can differ in the last bits. This is a *display* concern, not a validation one, because the server derives the authoritative score from the tape and the client adopts it, see [15-lessons-from-prior-builds.md L3](15-lessons-from-prior-builds.md). Mitigations, in order:
 
 1. `Unity.Mathematics` with `[BurstCompile(FloatMode = FloatMode.Strict)]` on the sim hot path.
 2. The client's local score is provisional and visually replaced by the server's on response.
@@ -164,7 +164,7 @@ Kinfold's re-simulation feature broke for months with a green determinism test, 
 }
 ```
 
-### Version discipline — read it, reject newer, migrate older
+### Version discipline, read it, reject newer, migrate older
 
 Gloamdelve wrote a save version field and **never read it**, with a comment promising it was "available for migrations". The consequence: renaming a key silently loaded that field empty and re-saved it empty, and an older client reading a newer cloud mirror truncated it and **wrote it back down** ([15-lessons-from-prior-builds.md L5](15-lessons-from-prior-builds.md)). On a 200-hour idle account that is the worst bug this project can ship.
 
@@ -188,9 +188,9 @@ Gloamdelve wrote three enums as `(int)`; inserting a member mid-enum rehydrates 
 
 ### Identity before id-minting
 
-Gloamdelve minted ids as `local:1`, `local:2` before sign-in resolved; they collided across accounts in a shared pool and the game's headline hook silently corrupted on first cloud sync ([15-lessons-from-prior-builds.md L4](15-lessons-from-prior-builds.md)). Nothing identity-scoped here — tape ids, hull names, Regatta entries — is minted before UGS sign-in resolves. Offline fallback is a **persisted per-install GUID**, never a literal. On first successful sync, assert no id carries the fallback prefix.
+Gloamdelve minted ids as `local:1`, `local:2` before sign-in resolved; they collided across accounts in a shared pool and the game's headline hook silently corrupted on first cloud sync ([15-lessons-from-prior-builds.md L4](15-lessons-from-prior-builds.md)). Nothing identity-scoped here, tape ids, hull names, Regatta entries, is minted before UGS sign-in resolves. Offline fallback is a **persisted per-install GUID**, never a literal. On first successful sync, assert no id carries the fallback prefix.
 
-### Schema repair — port the prototype's discipline
+### Schema repair, port the prototype's discipline
 
 `play.html:285` coerces and clamps every field on load and discards unknown shapes. **Keep this.** It is why the prototype never corrupts. Every field on load:
 
@@ -202,7 +202,7 @@ Never trust the deserialiser. Never trust the cloud. Never trust yesterday's bui
 
 ### Cloud Save conflict policy
 
-Last-write-wins is wrong for an idle game — a player who plays on two devices loses progress. Policy:
+Last-write-wins is wrong for an idle game, a player who plays on two devices loses progress. Policy:
 
 ```
 on conflict:
@@ -214,7 +214,7 @@ on conflict:
 
 Route ratings merge by max because they represent skill records, and losing one is the most painful possible bug in this design.
 
-## 5. UGS integration — full stack at launch
+## 5. UGS integration, full stack at launch
 
 | Service | Use |
 |---|---|
@@ -224,7 +224,7 @@ Route ratings merge by max because they represent skill records, and losing one 
 | **Analytics** | Event taxonomy per [13-analytics-kpi.md](13-analytics-kpi.md) |
 | **Leaderboards** | Weekly Regatta, per-seed |
 | **Cloud Code** | Tape validation, Regatta submission, daily/season state |
-| **Economy** | **NOT USED** — see below |
+| **Economy** | **NOT USED**, see below |
 | **LevelPlay** | Ad mediation |
 | **IAP** | Unity IAP with server receipt validation |
 
@@ -237,7 +237,7 @@ Anti-cheat posture: this is a single-player idle game with one competitive surfa
 ### Cloud Code functions
 
 ```
-validateRegattaSubmission(tape)          // NO claimed score — see L3
+validateRegattaSubmission(tape)          // NO claimed score, see L3
     → verify tape is well-formed and matches the week's seed
     → re-simulate headless, DERIVE the score
     → reject with reason code on malformed/wrong-seed/divergent
@@ -257,23 +257,23 @@ claimSeasonReward(tier)
 
 ### Launch-scope risk
 
-Full UGS at launch is the largest engineering item in the plan and it front-loads the hardest work — Cloud Code tape validation in particular requires the sim to compile and run headless, which is the assembly wall's first real test.
+Full UGS at launch is the largest engineering item in the plan and it front-loads the hardest work, Cloud Code tape validation in particular requires the sim to compile and run headless, which is the assembly wall's first real test.
 
 **The Weekly Regatta is committed v1.0 scope** and is on the never-cut list. That commitment is only safe because the feature and its validation are separable:
 
 | Layer | Cost | v1.0 posture |
 |---|---|---|
 | Leaderboard write + read | Low | Ships |
-| Deterministic seed distribution | Trivial — one integer per week | Ships |
+| Deterministic seed distribution | Trivial, one integer per week | Ships |
 | Tape capture and retention | Already built for map replays | Ships |
 | Replay viewing | Low | Ships |
-| **Per-submission headless re-sim** | **High** | Degradable — see below |
+| **Per-submission headless re-sim** | **High** | Degradable, see below |
 
 **Mitigation, in order:**
 
 1. Build the headless sim and parity harness in **M0**, not M4. If it works in week 3, everything downstream is safe.
 2. Prove the leaderboard write path plus a real end-to-end re-sim in the **M3 spike**, four weeks before it is needed rather than during the milestone that needs it.
-3. If M4 still overruns, degrade validation to the **ceiling heuristic** — simulate the week's seed once offline to establish a plausible maximum, reject submissions above it, flag the top percentile for review, reject malformed tapes. One headless run per week instead of per-submission infrastructure.
+3. If M4 still overruns, degrade validation to the **ceiling heuristic**, simulate the week's seed once offline to establish a plausible maximum, reject submissions above it, flag the top percentile for review, reject malformed tapes. One headless run per week instead of per-submission infrastructure.
 4. Because every tape is retained regardless, exact re-simulation in v1.1 runs retroactively over the archive and retro-corrects the boards.
 
 Full detail in [14-milestones-cutlist.md §2.1](14-milestones-cutlist.md). The general pattern: **degrade the expensive component, never the committed feature.**
@@ -286,9 +286,9 @@ Full detail in [14-milestones-cutlist.md §2.1](14-milestones-cutlist.md). The g
 | Reference resolution | 540 × 960 |
 | Filter mode | Point (no filter) on all sprites |
 | Compression | Crunch off for pixel art; RGBA32 for small atlases |
-| Pixel Perfect Camera | **Off** — see below |
+| Pixel Perfect Camera | **Off**, see below |
 | Sorting | Explicit sorting layers: BG, Town, Water, Hull, Cargo, Crane, FX, UI |
-| `raycastTarget` | **Off by default** — see below |
+| `raycastTarget` | **Off by default**, see below |
 
 ### Three Unity gotchas already paid for by sibling projects
 
@@ -296,7 +296,7 @@ Full detail in [14-milestones-cutlist.md §2.1](14-milestones-cutlist.md). The g
 
 **`Shader.Find("Standard")` renders solid pink under URP, with no error or warning.** Mogul hit it project-wide ([L15](15-lessons-from-prior-builds.md)). Any runtime-created material must resolve a URP shader, and a startup assertion fails loudly on a null or non-URP result rather than shipping pink.
 
-**Two renderers sharing a sorting layer *and* order draw in an unstable sequence.** Street Baron had a background fill and a room sprite both at order −16; the flat box intermittently painted over the art, presenting as "the background sometimes doesn't load" ([L16](15-lessons-from-prior-builds.md)). No two renderers may share a layer and an order — checked by an editor validation pass. The waterline especially must never be occluded; it is Pillar P1.
+**Two renderers sharing a sorting layer *and* order draw in an unstable sequence.** Street Baron had a background fill and a room sprite both at order −16; the flat box intermittently painted over the art, presenting as "the background sometimes doesn't load" ([L16](15-lessons-from-prior-builds.md)). No two renderers may share a layer and an order, checked by an editor validation pass. The waterline especially must never be occluded; it is Pillar P1.
 
 ### Sub-pixel rotation
 
@@ -306,7 +306,7 @@ Unity's Pixel Perfect Camera snaps positions to the pixel grid, which would stai
 - **Hull, cargo, crane, cable** render with free rotation and sub-pixel position into that target. Point filtering keeps the pixel *texel size* consistent; only the rotation is smooth.
 - **Backgrounds, towns, UI** are snapped to the grid so they stay rock-solid.
 
-The result reads as pixel art with honest continuous motion — the same technique used by modern pixel games with physics. Verify on a 720p device: the hull must rotate smoothly and the town must not shimmer.
+The result reads as pixel art with honest continuous motion, the same technique used by modern pixel games with physics. Verify on a 720p device: the hull must rotate smoothly and the town must not shimmer.
 
 ## 7. Content pipeline
 
@@ -328,15 +328,15 @@ Palette swapping is done in a shader with a 256×1 palette LUT per region, so on
 ```
 on every push:
     dotnet format / Unity code analysis
-    TippyShip.Tests — unit tests
-    PARITY HARNESS — seeds 4471, 9102, 31337 vs golden CSV   ← BLOCKING
+    TippyShip.Tests, unit tests
+    PARITY HARNESS, seeds 4471, 9102, 31337 vs golden CSV   ← BLOCKING
       · replays from SERIALISED TAPE BYTES, not memory       ← see §3
       · Tape_FieldCoverage reflection test                   ← see §3
-    FirstArcSim  — per-MINUTE, first 45 min, no gap > 40 s   ← see below
-    LongArcSim   — per-day, 500 player-days, no runaway
-    INVARIANTS   — the six economic invariants below         ← BLOCKING
-    audio import check — no clip > 5 s set to DecompressOnLoad
-    headless sim build — must compile without UnityEngine.Input
+    FirstArcSim, per-MINUTE, first 45 min, no gap > 40 s   ← see below
+    LongArcSim, per-day, 500 player-days, no runaway
+    INVARIANTS, the six economic invariants below         ← BLOCKING
+    audio import check, no clip > 5 s set to DecompressOnLoad
+    headless sim build, must compile without UnityEngine.Input
 
 on tag:
     Android AAB + iOS archive
@@ -348,20 +348,20 @@ The parity harness and the invariant suite failing are **build blockers**. Every
 
 ### Two economy sims, because one granularity cannot answer both questions
 
-Street Baron shipped the *same* first-session pacing bug twice, because its harness was day-level and the lull was minute-level — its own log says so ([15-lessons-from-prior-builds.md L7](15-lessons-from-prior-builds.md)). A 500-day sim would miss it here too.
+Street Baron shipped the *same* first-session pacing bug twice, because its harness was day-level and the lull was minute-level, its own log says so ([15-lessons-from-prior-builds.md L7](15-lessons-from-prior-builds.md)). A 500-day sim would miss it here too.
 
 | Harness | Granularity | Horizon | Question |
 |---|---|---|---|
 | `FirstArcSim` | **per-minute** | first 45 min | Is there ever a gap with nothing to do? |
 | `LongArcSim` | per-day | 500 days | Does the economy run away or stall? |
 
-`FirstArcSim` asserts **no idle gap longer than 40 s** — no moment where the player has no cargo, no runnable contract, and no affordable purchase.
+`FirstArcSim` asserts **no idle gap longer than 40 s**, no moment where the player has no cargo, no runnable contract, and no affordable purchase.
 
 Both write timestamped reports to a committed `sim_reports/` directory, as Rent Baron and Street Baron both do, so a balance change's effect is a diff rather than a memory.
 
 ### Harnesses call the real engines
 
-Kinfold's balance harness kept its own copy of the evolution rules and therefore validated the copy ([L8](15-lessons-from-prior-builds.md)). Neither sim nor the parity harness may reimplement a formula — they call `EconomyService`, `IdleService` and `RunSimulation` directly. A duplicated coefficient in test code is a review blocker.
+Kinfold's balance harness kept its own copy of the evolution rules and therefore validated the copy ([L8](15-lessons-from-prior-builds.md)). Neither sim nor the parity harness may reimplement a formula, they call `EconomyService`, `IdleService` and `RunSimulation` directly. A duplicated coefficient in test code is a review blocker.
 
 ### Assert invariants, not values
 
@@ -370,13 +370,13 @@ Rent Baron rewrote its economy tests to assert orderings rather than numbers, be
 | Invariant | Protects |
 |---|---|
 | `mult(n) > mult(n−2)` for all n | The ad-continue dominance proof, [01-core-loop.md §7](01-core-loop.md). If this breaks, greed is dead |
-| `idleCoinsPerHour ≤ bestManualRunRate` | Pillar P5 — idle never out-earns hand-piloting |
+| `idleCoinsPerHour ≤ bestManualRunRate` | Pillar P5, idle never out-earns hand-piloting |
 | `0 ≤ routeRating ≤ 2.5` | Bounds the compounding loop |
 | `0.6 ≤ hullSuitability ≤ 1.8` | Bounds assignment power |
 | cargo sale value strictly increases with card weight | No dominant overload card |
 | every region reachable at its gate on achievable income | No progression walls |
 
-### `tools/TippySim` — the balance model outside Unity
+### `tools/TippySim`, the balance model outside Unity
 
 Kinfold runs its whole balance model under plain .NET **in three seconds**, and its audit is explicit that engine-free Core is what makes that possible ([L10](15-lessons-from-prior-builds.md)). The assembly wall in §1 already permits it; this makes it required. A three-second balance loop and a three-minute one produce different amounts of balancing.
 

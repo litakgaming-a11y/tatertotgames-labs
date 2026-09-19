@@ -120,7 +120,7 @@
     <div class="statRow">⚡ <span id="voltCount">0</span> <span class="dim" id="nextB"></span></div>
     <button id="playBtn">⚡ TAP TO PLAY</button>
     <button id="shopBtn">🛠️ UPGRADES</button>
-    <a id="badge" href="../../">TaterTot Games Labs</a>
+    <a id="badge" href="https://tatertotgames.com">tatertotgames.com</a>
   </div>
 
   <div id="hud" class="screen">
@@ -610,7 +610,7 @@ function lightBuildingFX(idx, quiet) {
   nl.textContent = (nl.textContent ? nl.textContent + '  ·  ' : '') + '💡 ' + B[idx].n;
 }
 function goHome() {
-  // Volt Rush has no fail state — a run ends when the player returns to the
+  // Volt Rush has no fail state, a run ends when the player returns to the
   // title. No `level` is sent so this never counts as a funnel drop-off.
   window.TTG?.track('game_over', { value: waveNum });
   state = 'title';

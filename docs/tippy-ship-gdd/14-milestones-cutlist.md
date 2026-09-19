@@ -1,4 +1,4 @@
-# 14 — Milestones, Cut List & Risks
+# 14, Milestones, Cut List & Risks
 
 Solo/small-team plan with AI-assisted asset generation. Durations assume one full-time developer.
 
@@ -6,7 +6,7 @@ Solo/small-team plan with AI-assisted asset generation. Durations assume one ful
 
 ## 1. Milestones
 
-### M0 — Feel Parity (3 weeks) · **the gate that de-risks everything**
+### M0, Feel Parity (3 weeks) · **the gate that de-risks everything**
 
 Nothing else starts until this passes.
 
@@ -21,27 +21,27 @@ Nothing else starts until this passes.
 
 **This milestone is the whole project's risk.** If the port does not reproduce the feel, everything downstream is built on sand. Doing it first, with an automated check, means you find out in week 3 instead of month 5.
 
-#### Owner-blocked checklist — opened in M0, not at build audit
+#### Owner-blocked checklist, opened in M0, not at build audit
 
 Rent Baron reached a submittable tree and *then* discovered six blockers that no amount of engineering could clear ([15-lessons-from-prior-builds.md L22](15-lessons-from-prior-builds.md)). None of these are development work, and every one can stop a submission, so they go in flight in week one and are reviewed at every milestone boundary:
 
 - [ ] Apple Developer + Google Play accounts, app records created
-- [ ] Keystore generated, **backed up off-machine**, passwords recorded in a password manager (L23 — keystore passwords are not serialised and must be re-entered per build)
+- [ ] Keystore generated, **backed up off-machine**, passwords recorded in a password manager (L23, keystore passwords are not serialised and must be re-entered per build)
 - [ ] Privacy policy, terms and support pages **hosted at live URLs**
 - [ ] LevelPlay / mediation app ids for both platforms
 - [ ] UGS project linked; Cloud Save and Leaderboards enabled on the dashboard
 - [ ] Store IAP products created, matching the SKU table in [09-monetization.md §4](09-monetization.md)
-- [ ] **Store keys for server-side receipt validation** (L25 — without them, `VerifyReceipt` accepts any well-shaped receipt; a test asserts an unsigned receipt is rejected)
+- [ ] **Store keys for server-side receipt validation** (L25, without them, `VerifyReceipt` accepts any well-shaped receipt; a test asserts an unsigned receipt is rejected)
 - [ ] Physical device-floor handset acquired
 - [ ] Push / APNs / Firebase projects created
 
 #### Project logs, from day one
 
-Adopt the convention every mature project in this group converged on ([L27](15-lessons-from-prior-builds.md)): `DECISIONS.md` (`T-001…`) for *why*, `PATCH.md` (`P-001…`) for *what broke and how the fix was verified*, `AUDIT.md` for *the shape of the system now*. Commits cite the id — `fix(P-014): …`. Take the next free id **by script, never by eye** ([L28](15-lessons-from-prior-builds.md)); Kinfold carries a permanent renumbering table because four ids came to name two things each.
+Adopt the convention every mature project in this group converged on ([L27](15-lessons-from-prior-builds.md)): `DECISIONS.md` (`T-001…`) for *why*, `PATCH.md` (`P-001…`) for *what broke and how the fix was verified*, `AUDIT.md` for *the shape of the system now*. Commits cite the id, `fix(P-014): …`. Take the next free id **by script, never by eye** ([L28](15-lessons-from-prior-builds.md)); Kinfold carries a permanent renumbering table because four ids came to name two things each.
 
-It also proves the headless sim, which is what Cloud Code tape validation needs — so the largest launch-scope risk in [10-tech-architecture.md §5](10-tech-architecture.md) is retired early.
+It also proves the headless sim, which is what Cloud Code tape validation needs, so the largest launch-scope risk in [10-tech-architecture.md §5](10-tech-architecture.md) is retired early.
 
-### M1 — Vertical Slice (4 weeks)
+### M1, Vertical Slice (4 weeks)
 
 One playable route, end to end, at shipping quality.
 
@@ -55,7 +55,7 @@ One playable route, end to end, at shipping quality.
 
 **Exit criterion:** ten external playtesters complete a run, and at least eight of them experience a `SAVED!` unprompted and comment on it.
 
-### M2 — Core Loop (5 weeks)
+### M2, Core Loop (5 weeks)
 
 - Tape recording and playback; ghost overlay
 - Warehouse, typed cargo economy, all five types
@@ -67,7 +67,7 @@ One playable route, end to end, at shipping quality.
 
 **Exit criterion:** a fresh player plays five sessions across three days without guidance and reaches Region 2.
 
-### M3 — Meta & Content (7 weeks)
+### M3, Meta & Content (7 weeks)
 
 - Regions 2–5, ~50 ports authored
 - Full hull roster (10 non-prestige), all upgrade tracks with visible art
@@ -76,11 +76,11 @@ One playable route, end to end, at shipping quality.
 - Full art pass: PixelLab batches, palette LUTs, all towns
 - Full audio: ElevenLabs SFX library, 5 region stem sets
 - Settings, accessibility, localisation scaffolding
-- **Regatta infrastructure spike (1 wk)** — leaderboard write path plus the headless re-sim harness proven end to end on a real submitted tape
+- **Regatta infrastructure spike (1 wk)**, leaderboard write path plus the headless re-sim harness proven end to end on a real submitted tape
 
 The spike is deliberately pulled forward out of M4. The Weekly Regatta is committed v1.0 scope, so its riskiest dependency must be proven while there is still schedule ahead of it rather than four weeks before soft launch. M0 already delivers the headless sim; this spike proves it can be driven from Cloud Code.
 
-### M4 — Services & Live Ops (4 weeks)
+### M4, Services & Live Ops (4 weeks)
 
 - Full UGS: Auth, Cloud Save with conflict merge, Remote Config, Analytics, Leaderboards, Cloud Code
 - Cloud Code tape validation productionised on the M3 spike
@@ -90,7 +90,7 @@ The spike is deliberately pulled forward out of M4. The Weekly Regatta is commit
 - Push notifications
 - Full event instrumentation
 
-### M5 — Polish & Soft Launch (4 weeks)
+### M5, Polish & Soft Launch (4 weeks)
 
 - Regions 6–7, remaining ports
 - Open Waters procgen
@@ -99,7 +99,7 @@ The spike is deliberately pulled forward out of M4. The Weekly Regatta is commit
 - Store listings, Higgsfield key art and screenshots
 - Soft launch: PH, ID, BR
 
-### M6 — Tune & Scale (6+ weeks)
+### M6, Tune & Scale (6+ weeks)
 
 - Remote Config balance passes on live data
 - A/B tests in the priority order from [12-liveops.md §5](12-liveops.md)
@@ -131,7 +131,7 @@ If the schedule requires cuts 1–5, soft launch moves in at ~18 weeks with the 
 
 ### 2.1 Graceful degradation of Regatta validation
 
-The Regatta is committed to v1.0. Its *validation* is not — and that separation is what makes the commitment safe.
+The Regatta is committed to v1.0. Its *validation* is not, and that separation is what makes the commitment safe.
 
 | | v1.0 (if cut 5 is taken) | v1.1 |
 |---|---|---|
@@ -141,9 +141,9 @@ The Regatta is committed to v1.0. Its *validation* is not — and that separatio
 | Validation | **Ceiling + outlier heuristic** | Per-submission headless re-sim |
 | Cloud Code cost | One offline run per week | Per submission |
 
-**The ceiling heuristic.** Because every player sails the identical seed, you can simulate that seed once, offline, before the week opens — an automated agent playing near-optimally establishes a plausible maximum. Any submission above it is rejected outright; submissions in the top percentile are flagged for manual review; malformed or absent tapes are rejected. This costs one headless run per week instead of per-submission infrastructure, and it catches the crude cheating that actually happens on a week-one leaderboard.
+**The ceiling heuristic.** Because every player sails the identical seed, you can simulate that seed once, offline, before the week opens, an automated agent playing near-optimally establishes a plausible maximum. Any submission above it is rejected outright; submissions in the top percentile are flagged for manual review; malformed or absent tapes are rejected. This costs one headless run per week instead of per-submission infrastructure, and it catches the crude cheating that actually happens on a week-one leaderboard.
 
-Because every tape is **retained regardless**, v1.1's exact re-simulation can be run retroactively over the archive and boards retro-corrected. Nothing is lost by deferring it — only precision is, and only temporarily.
+Because every tape is **retained regardless**, v1.1's exact re-simulation can be run retroactively over the archive and boards retro-corrected. Nothing is lost by deferring it, only precision is, and only temporarily.
 
 This is the pattern to reach for whenever a committed feature has an expensive component: degrade the component, never the feature.
 
@@ -153,8 +153,8 @@ This is the pattern to reach for whenever a committed feature has an expensive c
 |---|---|---|---|---|
 | R1 | **Physics port loses the feel** | Medium | **Fatal** | M0 parity harness, blocking in CI, before any other work |
 | R2 | `Rigidbody2D.inertia` silently reverting to auto | High | Severe | Explicit assertion in `Awake`; first item checked on any parity failure |
-| R3 | Cross-platform float drift makes the client's local score differ from the server's | Medium | **Low** — downgraded | Since the server derives the score and the client adopts it (L3), drift is a display concern, not a validation one. Burst strict float mode keeps the gap small; fixed-point fallback for buoyancy only if it ever becomes visible |
-| R4 | Full UGS at launch overruns M4 | **High** | Severe | Headless sim proven in M0; Regatta write path proven by the M3 spike. The Regatta no longer slips — cut #5 degrades its *validation* to the ceiling heuristic (§2.1) while the feature ships |
+| R3 | Cross-platform float drift makes the client's local score differ from the server's | Medium | **Low**, downgraded | Since the server derives the score and the client adopts it (L3), drift is a display concern, not a validation one. Burst strict float mode keeps the gap small; fixed-point fallback for buoyancy only if it ever becomes visible |
+| R4 | Full UGS at launch overruns M4 | **High** | Severe | Headless sim proven in M0; Regatta write path proven by the M3 spike. The Regatta no longer slips, cut #5 degrades its *validation* to the ceiling heuristic (§2.1) while the feature ships |
 | R4b | **Regatta ships with weak anti-cheat and the board is visibly gamed** | Medium | Moderate | Ceiling heuristic rejects the crude cases; every tape is retained so v1.1 re-simulates retroactively and retro-corrects. Watch `regatta_rejected` rate and top-percentile score distribution weekly |
 | R5 | Ad-continue flattens the greed decision | Medium | Severe | Cost structure in [01-core-loop.md §7](01-core-loop.md) makes clean stopping dominant; A/B test #3 validates empirically; stop-distribution chart is the tripwire |
 | R6 | Pixel art hides fine list angles | Low | Severe | 540×960, sub-pixel physics rotation, bubble inclinometer. Verify on a 720p device in M1 |
@@ -185,7 +185,7 @@ A feature is done when all of these are true:
 7. Its strings are externalised.
 8. If it serialises anything, a test round-trips it **through the wire format**, not in memory ([L1](15-lessons-from-prior-builds.md)).
 
-Note that every clause is machine-checkable or device-observable. Rent Baron's build audit opens by stating it checked the code and project settings "not against `PROGRESS.md`'s claims" ([L26](15-lessons-from-prior-builds.md)) — a milestone is exited by a green suite and a device, never by a document asserting completion.
+Note that every clause is machine-checkable or device-observable. Rent Baron's build audit opens by stating it checked the code and project settings "not against `PROGRESS.md`'s claims" ([L26](15-lessons-from-prior-builds.md)), a milestone is exited by a green suite and a device, never by a document asserting completion.
 
 ## 5. What to build first, concretely
 

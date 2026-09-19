@@ -171,7 +171,7 @@
   <button id="shedBtn" class="btn secondary">🌱 SEED SHED</button>
   <div id="bestLine">BEST LEVEL <b>1</b> &nbsp;&middot;&nbsp; 🌸 <b>0</b></div>
   <div id="gardenLine">your garden: 0 flowers</div>
-  <div id="footerBadge"><a href="../../">TaterTot Games Labs</a></div>
+  <div id="footerBadge"><a href="https://tatertotgames.com">tatertotgames.com</a></div>
 </div>
 
 <div id="shed" class="screen hidden">
@@ -202,7 +202,7 @@
 <script>
 'use strict';
 /* ================================================================
-   BLOOM DROP — TaterTot Games Labs
+   BLOOM DROP, TaterTot Games Labs
    Drop the seed, watch it plink. Pachinko bloom garden.
    Single file, zero deps.
    ================================================================ */
@@ -406,7 +406,7 @@ const cv = document.getElementById('c');
 const ctx = cv.getContext('2d');
 let W = 360, H = 640, DPR = 1;
 
-// vertical layout — fully initialised so the boot frame is safe
+// vertical layout, fully initialised so the boot frame is safe
 const L = {
   cannonY: 100, pinTop: 190, pinBot: 470,
   pocketTop: 480, pocketH: 56,
@@ -609,7 +609,7 @@ function genLevel(level) {
   G.seedsMax = U.seeds;
   G.seedsLeft = U.seeds;
   // Target is priced off the BASE seed count (5) and the field height, so every
-  // extra-seed upgrade genuinely makes a patch easier — and small screens (fewer
+  // extra-seed upgrade genuinely makes a patch easier, and small screens (fewer
   // pin rows, so fewer plinks banked per drop) get a proportionally softer goal.
   G.target = Math.round((36 + level * 4.4) * (0.72 + L.rows * 0.031));
 
@@ -802,7 +802,7 @@ function trySplit(s, p) {
   burst(p.x, p.y, 14, ['#b6ffc9', '#ffffff', '#8ff08a'], 240, 0.6, 4);
 }
 
-// pick a pocket to gently bias toward — always TOWARD a pocket, never away
+// pick a pocket to gently bias toward, always TOWARD a pocket, never away
 function chooseBias(s) {
   const pw = G.pocketW > 0 ? G.pocketW : W;
   const here = pocketCenterNear(s.x);
@@ -858,7 +858,7 @@ function stepSeed(s, h) {
     let d = Math.sqrt(d2);
     if (d < 0.0001) { dx = 0; dy = -1; d = 1; }
     const nx = dx / d, ny = dy / d;
-    // positional correction — always push the seed clear of the pin
+    // positional correction, always push the seed clear of the pin
     s.x = p.x + nx * (rr + 0.5);
     s.y = p.y + ny * (rr + 0.5);
     const vn = s.vx * nx + s.vy * ny;

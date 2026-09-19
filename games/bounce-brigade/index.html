@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Bounce Brigade — TaterTot Games Labs</title>
-<meta name="description" content="Drop a trampoline, launch a rescue. Placement physics prototype from the TaterTot Games Labs testing arena — playable in your browser.">
+<title>Bounce Brigade | TaterTot Games</title>
+<meta name="description" content="Drop a trampoline, launch a rescue. Placement physics game from the TaterTot Games Labs testing arena, playable in your browser.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤸</text></svg>">
 <style>
   :root{--bg:#0d0b16;--bg2:#151127;--card:#1c1734;--card2:#241d44;--line:rgba(255,255,255,.08);
@@ -86,11 +86,14 @@
     text-transform:uppercase;color:var(--dim);margin-bottom:5px}
   .nav .r{text-align:right}
   footer{margin-top:40px;text-align:center;color:#5c5486;font-size:.8rem;line-height:1.7}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .top .site,footer a{color:inherit;font-weight:700;text-decoration:none}
+  .top .site:hover,footer a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="back" href="../../">← All prototypes</a>
+  <div class="top"><a class="back" href="../../">← All games</a><a class="site" href="https://tatertotgames.com">tatertotgames.com</a></div>
 
   <div class="hero">
     <div>
@@ -102,14 +105,13 @@
     </div>
     <div>
       <div class="badges">
-        <span class="b acc">Wave 3</span>
+        <span class="b acc">Arcade</span>
         <span class="b">Placement physics</span>
         <span class="b">20–30s calls</span>
       </div>
       <h1>🤸 Bounce Brigade</h1>
       <p class="hook">Drop a trampoline, launch a rescue</p>
       <p class="lede">Citizens are leaping from a smoking building at their own pace, and you are the fire brigade. Drag to place trampolines anywhere along their fall, tilting each one toward your drag direction, and chain the bounces across rooftops and awnings into the ambulance net.</p>
-      <p class="why"><b>Why it works:</b> Placement is free and instant, so the loop is pure experimentation: reposition, watch the arc, adjust. Bounce response is fully deterministic — only the spawn timing varies — so a plan that works keeps working.</p>
       <div class="playRow">
         <a class="play" href="play">▶ PLAY NOW</a>
         <span class="note">Runs in your browser · no install · works on phones</span>
@@ -121,7 +123,7 @@
     <h2>How to play</h2>
     <ol class="steps">
         <li><span class="n">1</span><span>Drag to place a trampoline; the drag direction sets its angle.</span></li>
-        <li><span class="n">2</span><span>Jumpers bounce automatically — chain them across the skyline.</span></li>
+        <li><span class="n">2</span><span>Jumpers bounce automatically, chain them across the skyline.</span></li>
         <li><span class="n">3</span><span>Deliver enough citizens to the net before you run out of hearts.</span></li>
     </ol>
   </section>
@@ -134,7 +136,7 @@
       <li>Style points for flips mid-arc</li>
       <li>Wind gusts, moving nets and bonus hoops</li>
       <li>Cats, which are considerably floatier than people</li>
-      <li>Comedic misses — a dropped jumper lands in a bush</li>
+      <li>Comedic misses, a dropped jumper lands in a bush</li>
     </ul>
   </section>
 
@@ -148,10 +150,7 @@
     <a class="r" href="../parcel-panic/"><span>Next</span>📦 Parcel Panic →</a>
   </div>
 
-  <footer>
-    A single self-contained file — no engine, no libraries, no external requests.<br>
-    © 2026 TaterTot Games Labs
-  </footer>
+  <footer>© 2026 TaterTot Games · <a href="https://tatertotgames.com">tatertotgames.com</a></footer>
 </div>
 </body>
 </html>

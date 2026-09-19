@@ -133,7 +133,7 @@
     <div class="statRow">🧲 <span class="dim">best zone</span> <span id="tBest">1</span></div>
     <button id="playBtn">🧲 TAP TO PLAY</button>
     <button id="labBtn">🔬 THE LAB</button>
-    <a id="badge" href="../../">TaterTot Games Labs</a>
+    <a id="badge" href="https://tatertotgames.com">tatertotgames.com</a>
   </div>
 
   <div id="hud" class="screen">
@@ -278,7 +278,7 @@ let W = 0, H = 0, DPR = 1;
 let scale = 1, ox = 0, oy = 0;
 let inset = { t: 0, b: 0, l: 0, r: 0 };
 let bgGrad = null;
-let stars = [];              // background starfield (screen space) — initialized empty, safe from frame 0
+let stars = [];              // background starfield (screen space), initialized empty, safe from frame 0
 let resizing = false;
 
 const sx = wx => ox + wx * scale;
@@ -397,7 +397,7 @@ function noiseHit(dur, vol, filterType, freq, t0, sweepTo) {
     s.start(t); s.stop(t + dur + 0.02);
   } catch (e) {}
 }
-// The signature "chunk" — polarity flip.
+// The signature "chunk", polarity flip.
 function sfxFlip(toRed) {
   if (!AC) return;
   const base = toRed ? 150 : 240;

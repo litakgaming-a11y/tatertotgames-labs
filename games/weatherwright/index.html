@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Weatherwright — TaterTot Games Labs</title>
-<meta name="description" content="Command the arena, not the creature. Environmental battler prototype from the TaterTot Games Labs testing arena — playable in your browser.">
+<title>Weatherwright | TaterTot Games</title>
+<meta name="description" content="Command the arena, not the creature. Environmental battler game from the TaterTot Games Labs testing arena, playable in your browser.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌩️</text></svg>">
 <style>
   :root{--bg:#0d0b16;--bg2:#151127;--card:#1c1734;--card2:#241d44;--line:rgba(255,255,255,.08);
@@ -86,11 +86,14 @@
     text-transform:uppercase;color:var(--dim);margin-bottom:5px}
   .nav .r{text-align:right}
   footer{margin-top:40px;text-align:center;color:#5c5486;font-size:.8rem;line-height:1.7}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .top .site,footer a{color:inherit;font-weight:700;text-decoration:none}
+  .top .site:hover,footer a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="back" href="../../">← All prototypes</a>
+  <div class="top"><a class="back" href="../../">← All games</a><a class="site" href="https://tatertotgames.com">tatertotgames.com</a></div>
 
   <div class="hero">
     <div>
@@ -102,14 +105,13 @@
     </div>
     <div>
       <div class="badges">
-        <span class="b acc">Wave 7</span>
+        <span class="b acc">Strategy</span>
         <span class="b">Environmental battler</span>
         <span class="b">45–75s duels</span>
       </div>
       <h1>🌩️ Weatherwright</h1>
       <p class="hook">Command the arena, not the creature</p>
       <p class="lede">Two Glims meet in an arena and fight on their own instincts. You never give them an order. Your entire arsenal is the weather: tap runes to call rain, sun, gale, quake, fog, nightfall or bloom, paid for from a Sky Meter that refills slowly enough to make every call a decision.</p>
-      <p class="why"><b>Why it works:</b> Taking the commands away is what makes it interesting. Conditions stack and interact — rain over a Spark duel turns the field conductive and lightning starts chaining — so mastery is learning the interaction table rather than memorising a damage chart. And because your Glim's stance visibly changes with the weather, reading your own creature becomes half the skill.</p>
       <div class="playRow">
         <a class="play" href="play">▶ PLAY NOW</a>
         <span class="note">Runs in your browser · no install · works on phones</span>
@@ -120,7 +122,7 @@
   <section>
     <h2>How to play</h2>
     <ol class="steps">
-        <li><span class="n">1</span><span>Tap a weather rune to change the arena — each one costs Sky Meter.</span></li>
+        <li><span class="n">1</span><span>Tap a weather rune to change the arena, each one costs Sky Meter.</span></li>
         <li><span class="n">2</span><span>Stack conditions: rain plus spark makes the field conductive.</span></li>
         <li><span class="n">3</span><span>Drag a rune onto the field instead to place a localised patch of weather.</span></li>
     </ol>
@@ -132,7 +134,7 @@
       <li>Your Glim auto-battles on instinct; weather is your only input</li>
       <li>Conditions stack into interactions, and Gale counters Fog outright</li>
       <li>Visible stance and attack changes as conditions shift</li>
-      <li>A rival Wright calls weather back at you — a duel of conditions</li>
+      <li>A rival Wright calls weather back at you, a duel of conditions</li>
       <li>Localised weather zones by dragging a rune onto the arena</li>
       <li>Stormcaller bosses whose weather fights yours in real time</li>
     </ul>
@@ -148,10 +150,7 @@
     <a class="r" href="../snapcatch/"><span>Next</span>📸 Snapcatch →</a>
   </div>
 
-  <footer>
-    A single self-contained file — no engine, no libraries, no external requests.<br>
-    © 2026 TaterTot Games Labs
-  </footer>
+  <footer>© 2026 TaterTot Games · <a href="https://tatertotgames.com">tatertotgames.com</a></footer>
 </div>
 </body>
 </html>

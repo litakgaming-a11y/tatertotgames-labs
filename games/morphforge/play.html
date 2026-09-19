@@ -158,7 +158,7 @@
     </div>
     <div class="btnRow" style="margin-top:6px">
       <button id="muteBtn" class="ghostBtn">🔊 SOUND</button>
-      <a class="footBadge" href="../../">TaterTot Games Labs</a>
+      <a class="footBadge" href="https://tatertotgames.com">tatertotgames.com</a>
     </div>
   </div>
 </div>
@@ -235,7 +235,7 @@
 <script>
 "use strict";
 /* ============================================================
-   MORPHFORGE — the Glimmerwild forge
+   MORPHFORGE, the Glimmerwild forge
    Original universe. Seven essences, procedurally grown Glims.
    ============================================================ */
 
@@ -372,7 +372,7 @@ function resize(){
     cv.width = Math.round(W * DPR);
     cv.height = Math.round(H * DPR);
     // A canvas is a replaced element: without explicit CSS sizing it lays out at its
-    // ATTRIBUTE size (W*DPR) — i.e. double the viewport on any retina phone.
+    // ATTRIBUTE size (W*DPR), i.e. double the viewport on any retina phone.
     cv.style.width = W + 'px';
     cv.style.height = H + 'px';
   }catch(e){
@@ -497,13 +497,13 @@ function setMuted(m){
 /* ============================================================
    MORPHOLOGY GENERATOR
    The whole point of the game. Rules:
-     * DETERMINISTIC — makeGlim(b) with the same blend always returns
+     * DETERMINISTIC, makeGlim(b) with the same blend always returns
        the same parameters. There is no RNG anywhere in this function.
-     * LEGIBLE — every continuous parameter is a smooth (Lipschitz)
+     * LEGIBLE, every continuous parameter is a smooth (Lipschitz)
        function of the blend vector, so neighbouring blends produce
        visibly related creatures. Discrete parameters (limb counts) are
        roundings of smooth values, so they step by at most one.
-     * SAFE — every parameter is clamped; no blend can produce a
+     * SAFE, every parameter is clamped; no blend can produce a
        degenerate, invisible or broken body.
    ============================================================ */
 function normBlend(b){
@@ -535,7 +535,7 @@ function paletteOf(v){
   }
   return c;
 }
-/* Deterministic name from the blend — quantized so tiny drift keeps the name. */
+/* Deterministic name from the blend, quantized so tiny drift keeps the name. */
 var SYL_A = ['Em','Ti','Ver','Sto','Spa','Glo','Ga','Mor','Kel','Bru','Nim','Sol'];
 var SYL_B = ['bo','ra','shi','lo','vi','ku','mel','ta','no','zi','fa','pu'];
 var SYL_C = ['nk','x','lle','m','sh','p','nd','th','v','ff','ss','k'];
@@ -719,7 +719,7 @@ function storedFromGlim(g){
 }
 
 /* ============================================================
-   GLIM RENDERER — every body drawn procedurally, no sprites.
+   GLIM RENDERER, every body drawn procedurally, no sprites.
    ============================================================ */
 function ell(c, x, y, rx, ry, rot){
   rx = Math.max(0.5, rx); ry = Math.max(0.5, ry);
@@ -1068,7 +1068,7 @@ function drawCrest(c, g, x, y, hr, t, alpha){
   c.rotate(tilt*0.4);
   var wave = Math.sin(t*2.6)*0.12;
   switch(g.crest){
-    case 0: // Ember — flame crest
+    case 0: // Ember, flame crest
       for(var i=-1;i<=1;i++){
         var h = cs*(1 - Math.abs(i)*0.32);
         c.beginPath();
@@ -1080,7 +1080,7 @@ function drawCrest(c, g, x, y, hr, t, alpha){
         c.fill();
       }
       break;
-    case 1: // Tide — swept dorsal fin
+    case 1: // Tide, swept dorsal fin
       c.beginPath();
       c.moveTo(-cs*0.55, 0);
       c.quadraticCurveTo(-cs*0.1, -cs*1.15, cs*0.62, -cs*0.24 + wave*cs*0.4);
@@ -1089,7 +1089,7 @@ function drawCrest(c, g, x, y, hr, t, alpha){
       c.fillStyle = rgbStr(mixRGB(col,[220,250,255],0.28), 0.85); c.fill();
       c.strokeStyle = rgbStr(darkenRGB(col,0.35), 0.6); c.lineWidth = Math.max(1, cs*0.06); c.stroke();
       break;
-    case 2: // Verdant — leaf sprout
+    case 2: // Verdant, leaf sprout
       c.beginPath(); c.moveTo(0,0); c.quadraticCurveTo(cs*0.05, -cs*0.55, 0, -cs*0.85);
       c.strokeStyle = rgbStr(darkenRGB(col,0.25),0.95); c.lineWidth = Math.max(1.4, cs*0.10); c.stroke();
       for(var lf=-1; lf<=1; lf+=2){
@@ -1101,7 +1101,7 @@ function drawCrest(c, g, x, y, hr, t, alpha){
         c.fillStyle = rgbStr(mixRGB(col,[230,255,210],0.22), 0.95); c.fill();
       }
       break;
-    case 3: // Stone — angular slabs
+    case 3: // Stone, angular slabs
       for(var sl=-1; sl<=1; sl++){
         var sh = cs*(0.85 - Math.abs(sl)*0.28);
         c.beginPath();
@@ -1113,7 +1113,7 @@ function drawCrest(c, g, x, y, hr, t, alpha){
         c.fillStyle = rgbStr(mixRGB(col,[90,74,58], 0.25 + 0.1*sl), 0.96); c.fill();
       }
       break;
-    case 4: // Spark — bolt antennae
+    case 4: // Spark, bolt antennae
       for(var bo=-1; bo<=1; bo+=2){
         c.beginPath();
         c.moveTo(bo*cs*0.16, 0);
@@ -1127,7 +1127,7 @@ function drawCrest(c, g, x, y, hr, t, alpha){
         c.fill();
       }
       break;
-    case 5: // Gloom — crescent veil
+    case 5: // Gloom, crescent veil
       c.beginPath();
       c.arc(0, -cs*0.36, cs*0.62, Math.PI*1.08, Math.PI*1.92);
       c.strokeStyle = rgbStr(mixRGB(col,[230,215,255],0.2), 0.92);
@@ -1135,7 +1135,7 @@ function drawCrest(c, g, x, y, hr, t, alpha){
       fillEll(c, 0, -cs*0.36, cs*0.20, cs*0.20, 0, rgbStr([245,235,255], 0.55 + 0.2*Math.sin(t*2.2)));
       c.fill();
       break;
-    default: // Gale — swept plume
+    default: // Gale, swept plume
       for(var pl=0; pl<3; pl++){
         var pf = (pl-1);
         c.beginPath();
@@ -1152,7 +1152,7 @@ function drawCrest(c, g, x, y, hr, t, alpha){
 }
 
 /* ============================================================
-   THE FORGE — shell, stress, cracks, kneading
+   THE FORGE, shell, stress, cracks, kneading
    ============================================================ */
 function upStressMul(){ return 1 / (1 + upLvl(0)*0.095); }
 function upPourRate(){ return 1 + upLvl(1)*0.06; }
@@ -1337,7 +1337,7 @@ function computeHatch(f, forceEarly){
 }
 
 /* ============================================================
-   GAME STATE — everything the loop touches is live from boot
+   GAME STATE, everything the loop touches is live from boot
    ============================================================ */
 var state = 'title';
 var T = 0, timeScale = 1, shake = 0, errCount = 0;
@@ -1411,7 +1411,7 @@ function startForge(){
   if(elBar) elBar.classList.remove('hidden');
   if(elLvl) elLvl.textContent = 'FORGE ' + forge.level;
   if(elDust) elDust.textContent = '✨ ' + save.dust;
-  hintText = forge.relic ? 'Relic shell — already cracked. Knead early!' : 'Drag an essence onto the egg';
+  hintText = forge.relic ? 'Relic shell, already cracked. Knead early!' : 'Drag an essence onto the egg';
   if(elHint) elHint.textContent = hintText;
   track('level_start', {level: forge.level});
 }
@@ -1764,10 +1764,10 @@ function updateForge(dt){
   if(elHint){
     var want = hintText;
     if(f.total <= 0) want = 'Drag an essence onto the egg';
-    else if(radiantWindow(f)) want = 'RADIANT WINDOW — hatch now, or dare one more drop';
-    else if(f.stress > 0.80) want = 'Stress is high — TAP to knead';
-    else if(f.cracks.length > 0) want = 'Cracked ' + f.cracks.length + '/' + f.maxCracks + ' — knead, then pour';
-    else if(f.resonance > 0.4) want = 'Resonance ' + Math.round(f.resonance*100) + '% — keep alternating!';
+    else if(radiantWindow(f)) want = 'RADIANT WINDOW, hatch now, or dare one more drop';
+    else if(f.stress > 0.80) want = 'Stress is high, TAP to knead';
+    else if(f.cracks.length > 0) want = 'Cracked ' + f.cracks.length + '/' + f.maxCracks + ', knead, then pour';
+    else if(f.resonance > 0.4) want = 'Resonance ' + Math.round(f.resonance*100) + '%, keep alternating!';
     else if(f.total > 0) want = 'Alternate essences in rhythm for resonance';
     if(want !== elHint.textContent) elHint.textContent = want;
   }
@@ -1909,7 +1909,7 @@ function eggPathLocal(x, y, r, pulse){
 function renderForgeScene(){
   var f = forge, L = layout();
   var v = normBlend(f.amounts);
-  // background — shifts with the forge level and with what's in the shell
+  // background, shifts with the forge level and with what's in the shell
   var hue = bgGradient(f.level);
   var g = ctx.createLinearGradient(0,0,0,H);
   g.addColorStop(0, 'hsl(' + ((hue+250)%360) + ',42%,16%)');
@@ -2231,7 +2231,7 @@ function drawResultGlim(L){
 }
 
 /* ============================================================
-   MAIN LOOP — re-arms in finally, capped error log
+   MAIN LOOP, re-arms in finally, capped error log
    ============================================================ */
 var lastFrame = (typeof performance !== 'undefined' && performance.now) ? performance.now() : 0;
 function frame(now){

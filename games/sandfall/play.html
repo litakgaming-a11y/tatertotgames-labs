@@ -137,7 +137,7 @@
     <button id="muteBtn" class="ghostBtn">🔊 Sound On</button>
   </div>
   <div id="titleBottom">
-    <a id="footerBadge" href="../../">🥔 TaterTot Games Labs</a>
+    <a id="footerBadge" href="https://tatertotgames.com">tatertotgames.com</a>
   </div>
 </div>
 
@@ -189,7 +189,7 @@
 
 <script>
 'use strict';
-/* ================= Sandfall — granular simulation ================= */
+/* ================= Sandfall, granular simulation ================= */
 (function(){
 
 /* ---------- constants ---------- */
@@ -262,7 +262,7 @@ function resize(){
     W = w; H = h;
     cv.width = Math.round(W*DPR); cv.height = Math.round(H*DPR);
     // Canvas is a replaced element: without an explicit CSS size it lays out at its
-    // attribute size (W*DPR) — double the viewport on phones. Pin it to CSS px.
+    // attribute size (W*DPR), double the viewport on phones. Pin it to CSS px.
     cv.style.width = W+'px'; cv.style.height = H+'px';
     ctx.imageSmoothingEnabled = false;
     if(state!=='play') initSim();   // during play keep the grid; render stretches
@@ -519,7 +519,7 @@ function stepCell(x, y){
     applyFans(x, y+1, below, heavy);
     return;
   }
-  // blocked below — erode drawn shelf underneath
+  // blocked below, erode drawn shelf underneath
   if(bv===SHELF && rnd01() < (heavy?0.036:0.014)) erodeShelf(below, x, y+1);
   // diagonal slip (requires side AND below-side clear: no leaking through 2px shelves)
   var d = rnd01()<0.5 ? 1 : -1;

@@ -127,7 +127,7 @@
 <body>
 <canvas id="c"></canvas>
 
-<div id="vipBanner" class="hidden">⭐ VIP CLIENT — 2× COINS! ⭐</div>
+<div id="vipBanner" class="hidden">⭐ VIP CLIENT, 2× COINS! ⭐</div>
 
 <!-- TITLE -->
 <div id="titleScreen" class="screen">
@@ -142,7 +142,7 @@
     <button id="muteBtn" class="ghostBtn">🔊 Sound On</button>
   </div>
   <div id="titleBottom">
-    <a id="footerBadge" href="../../">🥔 TaterTot Games Labs</a>
+    <a id="footerBadge" href="https://tatertotgames.com">tatertotgames.com</a>
   </div>
 </div>
 
@@ -1404,7 +1404,7 @@ cv.addEventListener('pointerup', endStroke);
 cv.addEventListener('pointercancel', endStroke);
 addEventListener('blur', endStroke);
 // Phones background the tab constantly (calls, app switching, screen lock). `blur` is
-// unreliable there, so end the stroke — which also silences the clipper hum — and
+// unreliable there, so end the stroke, which also silences the clipper hum, and
 // resume the AudioContext on return, since it stays suspended otherwise.
 document.addEventListener('visibilitychange', function(){
   if (document.hidden) endStroke(); else initAudio();

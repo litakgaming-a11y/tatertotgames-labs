@@ -145,7 +145,7 @@
       <button class="subBtn" id="shopBtn">🛠️ BARGE</button>
       <button class="subBtn" id="albumBtn">📔 ALBUM</button>
     </div>
-    <a id="badge" href="../../">TaterTot Games Labs</a>
+    <a id="badge" href="https://tatertotgames.com">tatertotgames.com</a>
   </div>
 
   <div id="hud" class="screen">
@@ -385,7 +385,7 @@ function buildRipples() {
 
 /* ============================= sprite atlas ============================= */
 // One offscreen radial-gradient sprite per palette colour, drawn ONCE. Every
-// particle is a cheap blit of these — no per-particle shadowBlur, no gradients.
+// particle is a cheap blit of these, no per-particle shadowBlur, no gradients.
 const SPR = 48;
 let atlas = null;
 function buildAtlas() {
@@ -491,7 +491,7 @@ function sfxDud() {
   tone(146, 0.34, 'square', 0.10, t + 0.06, 62);
   noiseHit(0.3, 0.10, 'lowpass', 500, t, 160);
 }
-// Crowd "ooooh" — filtered noise swell, louder and brighter with the combo.
+// Crowd "ooooh", filtered noise swell, louder and brighter with the combo.
 function sfxCheer(level) {
   if (!AC || !master || !noiseBuf) return;
   try {
@@ -554,7 +554,7 @@ function vibrate(p) { try { if (userGestured && navigator.vibrate) navigator.vib
 
 /* ============================= particle pool ============================= */
 // Fixed-size, preallocated, never grows. allocP() returns -1 when the pool is
-// exhausted and every emitter simply drops the request — the hard cap on live
+// exhausted and every emitter simply drops the request, the hard cap on live
 // particles is therefore structural, not a hope.
 const MAX_P = 1400;
 const Px = new Float32Array(MAX_P), Py = new Float32Array(MAX_P);
@@ -598,7 +598,7 @@ function emitBloom(x, y, type, power, c1, c2) {
   const spd = (96 + 132 * power) * uScale * up;
   spawnP(x, y, 0, 0, 0.30, 26 * power * uScale * up, 0, K_FLASH, 0, 0);
   switch (type) {
-    case 1: { // Willow — long, heavy, drooping golden trails
+    case 1: { // Willow, long, heavy, drooping golden trails
       for (let i = 0; i < n0; i++) {
         const a = rand(0, TAU), s = spd * rand(0.35, 0.72);
         spawnP(x, y, Math.cos(a) * s, Math.sin(a) * s - spd * 0.22,
@@ -610,7 +610,7 @@ function emitBloom(x, y, type, power, c1, c2) {
       }
       break;
     }
-    case 2: { // Ring — a clean halo
+    case 2: { // Ring, a clean halo
       const n = Math.max(14, n0);
       for (let i = 0; i < n; i++) {
         const a = (i / n) * TAU + rand(-0.03, 0.03), s = spd * rand(0.93, 1.05);
@@ -623,7 +623,7 @@ function emitBloom(x, y, type, power, c1, c2) {
       }
       break;
     }
-    case 3: { // Chrysanthemum — dense glitter that crackles
+    case 3: { // Chrysanthemum, dense glitter that crackles
       const n = Math.round(n0 * 1.25);
       for (let i = 0; i < n; i++) {
         const a = rand(0, TAU), s = spd * rand(0.2, 1.05);
@@ -636,7 +636,7 @@ function emitBloom(x, y, type, power, c1, c2) {
       }
       break;
     }
-    case 4: { // Heart — shaped bloom
+    case 4: { // Heart, shaped bloom
       const n = Math.max(20, n0);
       for (let i = 0; i < n; i++) {
         const t = (i / n) * TAU;
@@ -652,7 +652,7 @@ function emitBloom(x, y, type, power, c1, c2) {
       }
       break;
     }
-    case 5: { // Dragon — crackling comet spokes
+    case 5: { // Dragon, crackling comet spokes
       const spokes = 7, per = Math.max(2, Math.round(n0 / spokes));
       const base = rand(0, TAU);
       for (let k = 0; k < spokes; k++) {
@@ -669,7 +669,7 @@ function emitBloom(x, y, type, power, c1, c2) {
       }
       break;
     }
-    default: { // Peony — outer shell, inner shell, glitter dust
+    default: { // Peony, outer shell, inner shell, glitter dust
       for (let i = 0; i < n0; i++) {
         const a = rand(0, TAU), s = spd * rand(0.62, 1.0);
         spawnP(x, y, Math.cos(a) * s, Math.sin(a) * s, rand(1.0, 1.7),
@@ -931,7 +931,7 @@ function scheduleLaunch() {
       o.ringSpd = rand(0.9, 2.0);
     }
     if (night >= 6 && Math.random() < 0.32) o.shrink = true;
-    if (night >= 5 && Math.random() < 0.15) o.kind = 1;               // dud — do NOT tap
+    if (night >= 5 && Math.random() < 0.15) o.kind = 1;               // dud, do NOT tap
     else if (night >= 7 && Math.random() < 0.17) o.kind = 2;          // split
     o.vx = rand(-10, 10) + wind * 46;
     setTimeout_(i * rand(0.16, 0.34), () => { if (state === 'playing') launchRocket(o); });
@@ -1123,7 +1123,7 @@ function renderAlbum() {
     try { drawSnapshot(c.getContext('2d'), c.width, c.height, rec); } catch (e) {}
   });
 }
-// Re-paints a stored finale from its recipe — no image data in localStorage.
+// Re-paints a stored finale from its recipe, no image data in localStorage.
 function drawSnapshot(g, w, h, rec) {
   if (!g) return;
   const rng = mulberry32((rec.seed | 0) || 1);
@@ -1177,7 +1177,7 @@ function handleTap() {
     if (phase !== 'launching' && phase !== 'finale' && phase !== 'settling') return;
     const r = pickTarget();
     if (!r) {
-      // Tapping into empty sky costs the combo — spam must not beat timing.
+      // Tapping into empty sky costs the combo, spam must not beat timing.
       if (combo > 0) {
         combo = 0;
         updateCombo();
@@ -1465,7 +1465,7 @@ function drawRings() {
     const inner = r.spd * w2.pw;
     cx.save();
     cx.globalAlpha = fade;
-    if (r.kind === 1) { // dud — hard NO
+    if (r.kind === 1) { // dud, hard NO
       cx.strokeStyle = 'rgba(255,86,86,0.85)';
       cx.lineWidth = 2.5;
       cx.setLineDash([7, 7]);
@@ -1561,7 +1561,7 @@ function drawParticles() {
   cx.globalAlpha = 1;
   cx.globalCompositeOperation = prevOp;
 }
-// Mirror the whole sky band into the bay in a handful of wobbling strips —
+// Mirror the whole sky band into the bay in a handful of wobbling strips,
 // one flip transform, ~12 blits, and every bloom reflects for free.
 function drawReflection() {
   const waterH = H - horizonY;
@@ -1700,7 +1700,7 @@ function render() {
 /* ============================= main loop ============================= */
 let lastT = 0, frameErrs = 0;
 function frame(t) {
-  // Re-arm in `finally` — one bad frame must never permanently blank the show.
+  // Re-arm in `finally`, one bad frame must never permanently blank the show.
   try {
     const now = (typeof t === 'number' && isFinite(t)) ? t : 0;
     if (!lastT) lastT = now;

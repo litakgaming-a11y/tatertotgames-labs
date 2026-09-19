@@ -173,7 +173,7 @@
   <button id="btnPlay" class="bigBtn">PLAY<small id="playLvl">LEVEL 1</small></button>
   <button id="btnShopOpen" class="midBtn">🛍 SHOP<span class="coinChip" id="titleCoins">🪙 0</span></button>
   <div id="titleSpacer"></div>
-  <a class="badge" href="../../">TaterTot Games Labs</a>
+  <a class="badge" href="https://tatertotgames.com">tatertotgames.com</a>
 </div>
 
 <div id="scrShop" class="screen hidden">
@@ -240,7 +240,7 @@ function loadSave(){
         if (d.skins.indexOf(d.skin) < 0) d.skin = 'classic';
       }
     }
-  } catch (e) { /* corrupted save — start fresh */ }
+  } catch (e) { /* corrupted save, start fresh */ }
   return d;
 }
 var save = loadSave();
@@ -396,8 +396,8 @@ var capacity = 1, target = 0.6, requiredR = 50, perfectR = 60, Rins = 100;
 
 var NV = 14;
 var blob = { x: 0, y: 0, r: 20, r0: 20, verts: [], sq: 1, sqv: 0, danger: 0, dangX: 0, dangY: -1 };
-// Seed the wobble springs up front: update() runs every frame from boot — including
-// on the title screen — long before genRound() first populates them.
+// Seed the wobble springs up front: update() runs every frame from boot, including
+// on the title screen, long before genRound() first populates them.
 for (var iv = 0; iv < NV; iv++) blob.verts.push({ o: 0, v: 0 });
 var blinkT = 0, blinkV = 0;
 
@@ -1141,7 +1141,7 @@ function drawHint(){
   ctx.textAlign = 'center';
   ctx.fillStyle = '#ffffff';
   ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 6;
-  ctx.fillText('HOLD to inflate — release to lock!', W / 2, cham.y + cham.h + 40);
+  ctx.fillText('HOLD to inflate, release to lock!', W / 2, cham.y + cham.h + 40);
   ctx.restore();
 }
 function drawTitleBlob(){

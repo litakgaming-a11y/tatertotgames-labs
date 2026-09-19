@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Topple Party — TaterTot Games Labs</title>
+<title>Topple Party | TaterTot Games</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%89%3C/text%3E%3C/svg%3E">
 <style>
   :root{
@@ -161,7 +161,7 @@
   <div id="bestLine">BEST LEVEL 1</div>
   <div id="townLine">🏙️ Topple Town · 0/10 built</div>
   <div id="townBar"><div id="townFill"></div></div>
-  <div id="footerBadge"><a href="../../">🥔 TaterTot Games Labs</a></div>
+  <div id="footerBadge"><a href="https://tatertotgames.com">tatertotgames.com</a></div>
 </div>
 
 <div class="screen" id="winScreen">
@@ -177,7 +177,7 @@
 <div class="screen" id="loseScreen">
   <div class="panel">
     <h2 class="panelTitle">CHAIN FIZZLED 💨</h2>
-    <p id="loseSub">Your dominoes are back up. Tweak the chain and try again — free retry!</p>
+    <p id="loseSub">Your dominoes are back up. Tweak the chain and try again, free retry!</p>
     <button class="btn bigBtn retry" id="retryBtn">↻ TRY AGAIN</button>
   </div>
 </div>
@@ -185,7 +185,7 @@
 <script>
 'use strict';
 /* =====================================================================
-   TOPPLE PARTY — draw-a-domino-chain puzzle · TaterTot Games Labs
+   TOPPLE PARTY, draw-a-domino-chain puzzle · TaterTot Games Labs
    ===================================================================== */
 
 // ---------------------------------------------------------------- utils
@@ -610,7 +610,7 @@ function totalDominoes() {
 }
 
 function placeDomino(x, y, ux, uy) {
-  if (inObstacle(x, y)) return; // blocked over walls — leaves a chain-breaking gap
+  if (inObstacle(x, y)) return; // blocked over walls, leaves a chain-breaking gap
   if (LV.budgetLeft <= 0) {
     if (noBudgetToldFor !== LV.strokes.length) {
       noBudgetToldFor = LV.strokes.length;
@@ -753,7 +753,7 @@ function explodeTarget(t) {
   vibrate(combo > 1 ? [30, 40, 60] : 45);
   idleT = 0;
   if (slowmoT > 0.25) slowmoT = 0.25;
-  // the blast kicks over nearby standing dominoes — chains keep partying
+  // the blast kicks over nearby standing dominoes, chains keep partying
   for (const s of LV.strokes) {
     for (const o of s.doms) {
       if (o.state !== 0) continue;

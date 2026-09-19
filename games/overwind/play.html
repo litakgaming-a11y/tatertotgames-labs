@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Overwind — TaterTot Games Labs</title>
+<title>Overwind | TaterTot Games</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%99%3C/text%3E%3C/svg%3E">
 <style>
   :root{
@@ -61,7 +61,7 @@
   .pill{position:absolute;background:rgba(12,9,22,.62);border:1px solid rgba(255,255,255,.14);
     border-radius:999px;padding:7px 14px;color:#fff;font-weight:900;font-size:13.5px;letter-spacing:.03em;
     backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);white-space:nowrap}
-  /* two columns, three rows — a centred pill collided with the left one as
+  /* two columns, three rows, a centred pill collided with the left one as
      soon as the quota reached double digits on a narrow phone */
   #levelPill{left:10px;top:calc(8px + env(safe-area-inset-top));color:var(--gold)}
   #ammoPill{right:10px;top:calc(8px + env(safe-area-inset-top))}
@@ -153,9 +153,9 @@
   <div class="howBox">
     <h4>How it works</h4>
     <p><b>Hold anywhere</b> to wind the windlass. <b>Drag while holding</b> to swing the turntable and set the arc.</p>
-    <p><b>Let go</b> to fire. More tension throws further — and widens the ellipse of where it might actually land.</p>
+    <p><b>Let go</b> to fire. More tension throws further, and widens the ellipse of where it might actually land.</p>
     <p>Wind into the <b>red</b> and the rope snaps. The arm flails, the crew scatter, and your lad is dumped at your own feet.</p>
-    <p>Lads who fall short <b>pile up</b>. The pile is solid ground — and it is how the next one gets over.</p>
+    <p>Lads who fall short <b>pile up</b>. The pile is solid ground, and it is how the next one gets over.</p>
   </div>
 </div>
 
@@ -175,7 +175,7 @@
 <script>
 "use strict";
 /* ===========================================================================
-   OVERWIND — TaterTot Games Labs
+   OVERWIND, TaterTot Games Labs
    The catapult is not an aiming widget. It is a machine: a simulated rig that
    winds, strains, recoils, sinks into soft ground and snaps its own rope. All
    spread is emergent from the machine's real state, never a random number
@@ -184,7 +184,7 @@
    Built to the CATAPULT-3D concept's M1 cut: the machine, the cone of doubt,
    single vs multi-body payloads, and three emplacements.
 
-   Everything is instanced unit cubes in one draw call — terrain columns,
+   Everything is instanced unit cubes in one draw call, terrain columns,
    castle, machine, ragdolls. No libraries, no external requests.
    =========================================================================== */
 
@@ -231,7 +231,7 @@ function m4perspective(o, fovy, aspect, near, far) {
 function m4lookAt(o, ex, ey, ez, cx, cy, cz) {
   var zx=ex-cx, zy=ey-cy, zz=ez-cz;
   var zl=Math.hypot(zx,zy,zz)||1; zx/=zl; zy/=zl; zz/=zl;
-  // x = up X z, with up = (0,1,0) — degenerates when looking straight down
+  // x = up X z, with up = (0,1,0), degenerates when looking straight down
   var xx = zz, xy = 0, xz = -zx;
   var xl=Math.hypot(xx,xy,xz); if (xl < 1e-6) { xx=1; xy=0; xz=0; xl=1; }
   xx/=xl; xy/=xl; xz/=xl;
@@ -443,13 +443,13 @@ function resize() {
   try {
     var iw = (typeof window !== 'undefined' && window.innerWidth) || 0;
     var ih = (typeof window !== 'undefined' && window.innerHeight) || 0;
-    if (iw < 2 || ih < 2) return;                     // 0-size layout pass — keep last good size
+    if (iw < 2 || ih < 2) return;                     // 0-size layout pass, keep last good size
     DPR = Math.min(2, (typeof window !== 'undefined' && window.devicePixelRatio) || 1);
     W = iw; H = ih;
     cv.width = Math.round(W * DPR);
     cv.height = Math.round(H * DPR);
     // CRITICAL: a canvas is a replaced element. Without explicit CSS sizing it
-    // lays out at its attribute size (W*DPR) — double-size on every phone.
+    // lays out at its attribute size (W*DPR), double-size on every phone.
     cv.style.width = W + 'px';
     cv.style.height = H + 'px';
     if (gl) gl.viewport(0, 0, cv.width, cv.height);
@@ -516,10 +516,10 @@ var sfx = {
 // The pile IS the terrain. Frozen lads rasterise into a 2D grid of heights and
 // every live particle collides against that surface, so a settled heap can
 // never be clipped through. Angle-of-repose relaxation slumps spikes into
-// climbable ramps — which is what makes a failed shot productive.
+// climbable ramps, which is what makes a failed shot productive.
 var GX0 = -14, GZ0 = -26, GBIN = 1.5, GNX = 52, GNZ = 36;
 // ~28 degrees, and deliberately SHALLOW. A steeper heap is taller, which looks
-// like progress, but a 47-degree face at the foot of the wall is not a ramp —
+// like progress, but a 47-degree face at the foot of the wall is not a ramp,
 // it is a second wall, and lads smack into it and stop. The pile only earns its
 // name as a ladder if a body can run up it, so the slope is tuned for
 // rideability and the height is whatever that leaves.
@@ -595,7 +595,7 @@ function stampSphere(cx, cy, cz, r) {
 // Angle-of-repose relaxation, four in-place sweeps per pass. Sweeping (rather
 // than double-buffering) lets material cascade the full width of the pile in a
 // single sweep; the four directions cancel each other's bias. The epsilon
-// deadband is what makes it terminate at all — without it the overhang shrinks
+// deadband is what makes it terminate at all, without it the overhang shrinks
 // toward the repose step forever and the grid never stops being dirty.
 var exc = new Float32Array(8);
 function relaxPile(passes) {
@@ -769,7 +769,7 @@ function substep() {
       q = L.p[j];
       var vx = (q.x - q.px) * AIR, vy = (q.y - q.py) * AIR, vz = (q.z - q.pz) * AIR;
       // wind is an ACCELERATION in world units/s^2. This is added to a
-      // displacement-per-substep, so the conversion is a*SUB^2 — an earlier
+      // displacement-per-substep, so the conversion is a*SUB^2, an earlier
       // stray *60 made the crosswind five times heavier than gravity and blew
       // every lad into the far corner of the map, where the whole pile lived.
       vx += wind.x * SUB * SUB; vz += wind.z * SUB * SUB;
@@ -802,7 +802,7 @@ function substep() {
 function collideLad(L) {
   for (var j = 0; j < 7; j++) {
     var q = L.p[j];
-    // world bounds — a lad that leaves the field is simply gone
+    // world bounds, a lad that leaves the field is simply gone
     if (q.x < GX0 + 0.5) q.x = GX0 + 0.5;
     if (q.x > GX0 + GNX * GBIN - 0.5) q.x = GX0 + GNX * GBIN - 0.5;
     if (q.z < GZ0 + 0.5) q.z = GZ0 + 0.5;
@@ -821,7 +821,7 @@ function collideLad(L) {
         // A heap of lads is springy meat, not a sandbag. Bare ground absorbs;
         // the PILE gives back, and keeps horizontal speed, so a sloped heap
         // deflects the next lad up and onward instead of swallowing him. This
-        // is the whole premise — without it the pile is scenery.
+        // is the whole premise, without it the pile is scenery.
         // Restitution must stay LOW or the pile never grows: a bouncy heap
         // throws every later lad off instead of letting him settle on top, and
         // since the heightfield takes a max, a lad who lands beside the mound
@@ -839,7 +839,7 @@ function collideLad(L) {
       q.px = q.x - vx; q.py = q.y - vy; q.pz = q.z - vz;
     }
 
-    // castle blocks — push out along the smallest penetration axis
+    // castle blocks, push out along the smallest penetration axis
     for (var b = 0; b < castle.blocks.length; b++) {
       var B = castle.blocks[b];
       var hx = B.sx * 0.5 + q.r, hy = B.sy * 0.5 + q.r, hz = B.sz * 0.5 + q.r;
@@ -858,10 +858,10 @@ function collideLad(L) {
 
 function freezeLad(L, idx) {
   var c = L.centre();
-  // rasterise the whole body into the terrain — this is what makes the heap solid
+  // rasterise the whole body into the terrain, this is what makes the heap solid
   for (var j = 0; j < 7; j++) stampSphere(L.p[j].x, L.p[j].y, L.p[j].z, L.p[j].r * 4.2);
   // Bulk is deliberately exaggerated. Seven bodies lying flat are physically a
-  // ~1.4m heap, which is scenery next to a 4.6m wall — and a pile that cannot
+  // ~1.4m heap, which is scenery next to a 4.6m wall, and a pile that cannot
   // change an outcome is not a premise, it is decoration. Stamping each lad
   // fatter than he really is buys a heap that reaches roughly half wall height
   // by the time you have spent your short shots on it.
@@ -900,7 +900,7 @@ function rigReset(level, seed) {
 function muzzleSpeed() {
   return 17.5 + rig.tension * 17.5;
 }
-// the honest spread radius the ellipse draws — every term is machine state
+// the honest spread radius the ellipse draws, every term is machine state
 function spreadRadius() {
   var g = GROUNDS[rig.ground];
   // Quadratic in tension so a gentle shot is nearly precise and a wound-up one
@@ -922,7 +922,7 @@ function launchVector() {
   return { vx: Math.cos(yaw) * Math.cos(el) * sp, vy: Math.sin(el) * sp, vz: Math.sin(yaw) * Math.cos(el) * sp, yaw: yaw, el: el, sp: sp };
 }
 
-// Ballistic prediction that mirrors substep() EXACTLY — same fixed 1/120 step,
+// Ballistic prediction that mirrors substep() EXACTLY, same fixed 1/120 step,
 // same air damping, same wind term, same launch offset. An earlier version
 // integrated a drag-free point at 1/60 and predicted 40.6 where the lad
 // actually reached 25.4: the ellipse was lying by fifteen metres. The concept
@@ -1214,7 +1214,7 @@ function update(dt) {
       var L = lads[i];
       if (L.counted) continue;
       var c = L.centre();
-      // Over means past the far face OR standing on the battlement — a lad who
+      // Over means past the far face OR standing on the battlement, a lad who
       // rode the pile up and ended up on top has plainly made it, and requiring
       // him to also topple off the inside made the pile assist feel worthless.
       // Height is what separates that from a lad merely heaped against the
@@ -1263,7 +1263,7 @@ function render() {
     if (c.x > bestX) { bestX = c.x; focus = c; }
   }
   var yaw = rig.yaw;
-  // With nothing in the air, frame the whole battlefield — the machine, the
+  // With nothing in the air, frame the whole battlefield, the machine, the
   // heap and the wall in one shot. Looking at the wall alone left most of the
   // screen as empty sky.
   var wantTx = focus ? focus.x : (rig.x + castle.wallX) * 0.5 + 3;
@@ -1343,7 +1343,7 @@ function render() {
   boxRot(rx - 1.0 * cyaw, ry + 1.75, rz - 1.0 * syaw, 0.34, 3.5, 0.34, rig.yaw, 0.30, 0.30, 0.22, 0.14);
   boxRot(rx + 1.0 * cyaw, ry + 1.75, rz + 1.0 * syaw, 0.34, 3.5, 0.34, rig.yaw, -0.30, 0.30, 0.22, 0.14);
   boxRot(rx, ry + 3.15, rz, 0.4, 0.34, 2.9, rig.yaw, 0, 0.26, 0.19, 0.12);
-  // The throwing arm — its angle IS the machine's state, not an animation.
+  // The throwing arm, its angle IS the machine's state, not an animation.
   // Length is bounded by the pivot height: a 5.4m arm on a 2.9m pivot swung its
   // tip two metres underground every time the crew wound it back.
   var aLen = 3.6, aPivot = 3.4;
@@ -1363,7 +1363,7 @@ function render() {
   var wz2 = rz - Math.sin(rig.yaw) * Math.cos(rig.armAngle) * 1.35;
   var wy2 = ry + aPivot - Math.sin(rig.armAngle) * 1.35;
   box(wx2, wy2, wz2, 1.15, 1.15, 1.15, 0.20, 0.20, 0.24);
-  // the crew — three lads who are nearby when it goes wrong
+  // the crew, three lads who are nearby when it goes wrong
   var crewPan = rig.broken > 0 ? Math.sin(now * 0.03) * 0.9 : 0;
   for (var c2 = 0; c2 < 3; c2++) {
     var cz2 = rz - 2.6 + c2 * 2.6;
@@ -1461,7 +1461,7 @@ function frame(ts) {
   if (typeof requestAnimationFrame === 'function') requestAnimationFrame(frame);
 })();
 
-// test hook — harnesses drive the real loop, never a parallel copy of it
+// test hook, harnesses drive the real loop, never a parallel copy of it
 if (typeof window !== 'undefined') {
   window.__ow = {
     frame: frame, update: update, render: render, resize: resize,

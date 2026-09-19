@@ -1,4 +1,4 @@
-# Hybrid-Casual Deep Research — TaterTot Games Labs
+# Hybrid-Casual Deep Research, TaterTot Games Labs
 
 **Research date:** 2026-08-15
 **Scope:** Top-grossing viral hybrid-casual games on Google Play (2024–2026), plus market benchmarks, trends, and a distilled success formula.
@@ -41,7 +41,7 @@ Puzzle sub-genres (block jam, screw/nuts-and-bolts, sort) staged a "great puzzle
 
 ## 2. Game-by-Game Deep Dive
 
-### 2.1 Color Block Jam (Rollic / Gybe Games) — the category king
+### 2.1 Color Block Jam (Rollic / Gybe Games), the category king
 
 | Attribute | Detail |
 |---|---|
@@ -50,7 +50,7 @@ Puzzle sub-genres (block jam, screw/nuts-and-bolts, sort) staged a "great puzzle
 | Downloads (est.) | ~54M by mid-2025 (AppMagic) |
 | Core mechanic | Drag colored blocks across a grid into matching-colored "doors"/exits to clear the board. Order and direction matter; obstacles (fixed blocks, bombs, ropes, iced doors) layer in complexity |
 | Meta-layer | Level-based progression with escalating difficulty spikes, timed levels, event calendar, leaderboards, Royal-Match-style live events, collections |
-| Monetization mix | Heavily IAP-led for a hybrid title (extra moves / time, fail-level offers, piggy-bank style bundles, ad-removal), plus rewarded + interstitial ads. IAP share of revenue estimated well above 60% (unusual — closer to casual-puzzle economics) |
+| Monetization mix | Heavily IAP-led for a hybrid title (extra moves / time, fail-level offers, piggy-bank style bundles, ad-removal), plus rewarded + interstitial ads. IAP share of revenue estimated well above 60% (unusual, closer to casual-puzzle economics) |
 | Why it went viral | "Impossible level" content loop on TikTok (levels 41, 88, 433 etc. became discover-page topics); satisfying drag-and-snap feel; near-miss fail states that drive both sharing and spend; Rollic ran the official account as a community hub, not just UA |
 
 **Takeaway:** Color Block Jam proved a hyper-casual-feeling puzzle can monetize like Royal Match if difficulty design and fail-offers are tuned aggressively.
@@ -67,7 +67,7 @@ Puzzle sub-genres (block jam, screw/nuts-and-bolts, sort) staged a "great puzzle
 | Monetization mix | Balanced hybrid: rewarded ads for boosters/extra slots + IAP for booster bundles, extra collector slots, and fail-continue offers. Roughly IAP-majority at scale (est. 55–65% IAP) |
 | Why it went viral | Rode the screw-puzzle wave with best-in-class production polish; extremely low CPI creatives (oddly-satisfying unscrewing ASMR); "one wrong screw ruins everything" fail moments are natively shareable; Vietnamese cost base allowed massive UA volume |
 
-**Takeaway:** Screwdom is the flagship of Vietnam's hybrid-casual surge — fast-follow a proven sub-genre, out-polish and out-UA the incumbent.
+**Takeaway:** Screwdom is the flagship of Vietnam's hybrid-casual surge, fast-follow a proven sub-genre, out-polish and out-UA the incumbent.
 
 ### 2.3 Screw Jam (Rollic Games)
 
@@ -78,7 +78,7 @@ Puzzle sub-genres (block jam, screw/nuts-and-bolts, sort) staged a "great puzzle
 | Downloads (est.) | 6M+ by late 2024 (modest installs, high monetization per install) |
 | Core mechanic | Unscrew bolts from stacked planks; planks fall away when freed; screws must be sorted into matching colored trays with limited slots (Lo-fi 3D physics + sort constraint) |
 | Meta-layer | Level progression, boosters, timed challenges, events; lighter meta than Color Block Jam |
-| Monetization mix | Notably IAP-forward for the sub-genre (~60% IAP / 40% ads at peak per the $150K/$80K split) — driven by tight slot pressure and fail-continue offers |
+| Monetization mix | Notably IAP-forward for the sub-genre (~60% IAP / 40% ads at peak per the $150K/$80K split), driven by tight slot pressure and fail-continue offers |
 | Why it went viral | First big Western scale-up of the screw genre; "satisfying + stressful" combo; strong playable ads (the mechanic demos itself in 5 seconds) |
 
 **Takeaway:** Screw Jam validated the screw sub-genre for Rollic, and its economics ($2.30+ revenue per download) foreshadowed Color Block Jam's IAP-heavy design.
@@ -89,9 +89,9 @@ Puzzle sub-genres (block jam, screw/nuts-and-bolts, sort) staged a "great puzzle
 |---|---|
 | Launch | 2024 (scaled Q4'24–2025) |
 | Revenue (est.) | Q1'25: ~$17.7M (3x Q4'24); Q2'25: ~$22.3M; ~$300K/day by Mar'25 (6x Nov'24); Homa's "$130M success" per industry coverage |
-| Downloads (est.) | 5M in first month with Sensor Tower-assisted UA; ~300K/day at peak; note Q2'25 shows only 3.4M installs vs $22.3M revenue — extremely high $/install (~$6.50), the most IAP-skewed title on the list |
-| Core mechanic | Hole.io-style: move a black hole to swallow objects smaller than you, grow, swallow bigger things — but converted from sandbox/arena to **level-based** goals |
-| Meta-layer | The heaviest meta in the cohort: Royal-Match-style event calendar (sky race, teams, streaks, collections), progression chains — an "IAP-driven monster" per Gamigion |
+| Downloads (est.) | 5M in first month with Sensor Tower-assisted UA; ~300K/day at peak; note Q2'25 shows only 3.4M installs vs $22.3M revenue, extremely high $/install (~$6.50), the most IAP-skewed title on the list |
+| Core mechanic | Hole.io-style: move a black hole to swallow objects smaller than you, grow, swallow bigger things, but converted from sandbox/arena to **level-based** goals |
+| Meta-layer | The heaviest meta in the cohort: Royal-Match-style event calendar (sky race, teams, streaks, collections), progression chains, an "IAP-driven monster" per Gamigion |
 | Monetization mix | IAP-majority (est. 65–75% IAP): level-fail offers, event passes, booster economies; ads fill the rest |
 | Why it went viral | Universally understood "eat everything" power fantasy (proven by Hole.io's ~half-billion installs); instantly readable ad creatives; fail-forward level design creates "one more try" |
 
@@ -102,12 +102,12 @@ Puzzle sub-genres (block jam, screw/nuts-and-bolts, sort) staged a "great puzzle
 | Attribute | Detail |
 |---|---|
 | Launch | 2022 |
-| Revenue (est.) | $20M+ in first scale year; $100K+/day from IAP alone at peak; ~$8.2M IAP in Q2'25 — a durable multi-year earner |
+| Revenue (est.) | $20M+ in first scale year; $100K+/day from IAP alone at peak; ~$8.2M IAP in Q2'25, a durable multi-year earner |
 | Downloads (est.) | ~19.7M in a 12-month period; 4.9M in Q2'25 alone; lifetime well past 50M (est.) |
 | Core mechanic | Async auto-racing: your champ runs/climbs/flies/swims by itself; you train stats between races and pick equipment. Races are 30–60s spectacles |
 | Meta-layer | Deep for the genre: multi-discipline training loops, gear/equipment collection and upgrades, async PvP tournaments, clubs, seasonal liveops (This Week in LiveOps tracks it as a reference case) |
 | Monetization mix | Genuinely hybrid: rewarded ads woven into training loop + IAP (gear, currency, passes). Madbox's only meaningful-IAP title per Naavik |
-| Why it went viral | "Idle race manager" removes execution skill — everyone can compete; visible champ customization creates identity/shareability; tournament brackets create appointment gameplay |
+| Why it went viral | "Idle race manager" removes execution skill, everyone can compete; visible champ customization creates identity/shareability; tournament brackets create appointment gameplay |
 
 **Takeaway:** Pocket Champs shows hybrid-casual isn't only puzzle: an async-competition meta can carry a hyper-casual-simple core for 4+ years.
 
@@ -115,7 +115,7 @@ Puzzle sub-genres (block jam, screw/nuts-and-bolts, sort) staged a "great puzzle
 
 | Attribute | Detail |
 |---|---|
-| Launch | 2021 (as hyper-casual; converted to hybrid — Voodoo's first such transformation) |
+| Launch | 2021 (as hyper-casual; converted to hybrid, Voodoo's first such transformation) |
 | Revenue (est.) | Lifetime ~$77.5M; 2024: ~$24.4M (best year); 2025: ~$22M; part of Voodoo's "0 to $250M hybrid-casual revenue in 3 years" story |
 | Downloads (est.) | 302M+ lifetime installs; DAU 3.5M+, MAU 20–26M (Udonis 2026) |
 | Core mechanic | Aim a cannon, fire runners through multiplier gates (x2, x8...), overwhelm the enemy base with a bigger mob. The "gate math" ad creative is iconic |
@@ -130,25 +130,25 @@ Puzzle sub-genres (block jam, screw/nuts-and-bolts, sort) staged a "great puzzle
 | Attribute | Detail |
 |---|---|
 | Launch | July 2023 (Android), Nov 2023 (iOS) |
-| Revenue (est.) | $50M+ lifetime (AppstoreSpy est.); ~$0.80 revenue per download; recent run-rate ~$700K/month; only ~$2M lifetime IAP — the rest is ads |
+| Revenue (est.) | $50M+ lifetime (AppstoreSpy est.); ~$0.80 revenue per download; recent run-rate ~$700K/month; only ~$2M lifetime IAP, the rest is ads |
 | Downloads (est.) | 63M+ lifetime; ~300K/month recently |
 | Core mechanic | Place stacks of colored hex tiles onto a hex board; adjacent same-color stacks merge and collapse with cascading chain reactions (the "cascade" is the dopamine engine) |
-| Meta-layer | Level progression, boosters, decoration/collection layers, events — lighter than the IAP monsters above |
-| Monetization mix | **Ad-dominated (est. 90%+ ads)** — the counter-example in this cohort. Interstitial cadence + rewarded boosters; IAP is minor |
+| Meta-layer | Level progression, boosters, decoration/collection layers, events, lighter than the IAP monsters above |
+| Monetization mix | **Ad-dominated (est. 90%+ ads)**, the counter-example in this cohort. Interstitial cadence + rewarded boosters; IAP is minor |
 | Why it went viral | Hypnotic cascade physics = perfect short-form video; "oddly satisfying" ASMR positioning; ultra-low CPI; broad 35+ female casual audience overlap with tile-match |
-| Note | Widely cloned — Hexa Sort-likes were a top trending mechanic of 2024–2025 |
+| Note | Widely cloned, Hexa Sort-likes were a top trending mechanic of 2024–2025 |
 
-**Takeaway:** Hexa Sort proves the ad-LTV path still works at $50M+ scale if the core loop generates enough sessions/day — but its revenue-per-download (~$0.80) vs All in Hole (~$6.50/install in Q2'25) shows why the industry pivoted to IAP-led hybrids.
+**Takeaway:** Hexa Sort proves the ad-LTV path still works at $50M+ scale if the core loop generates enough sessions/day, but its revenue-per-download (~$0.80) vs All in Hole (~$6.50/install in Q2'25) shows why the industry pivoted to IAP-led hybrids.
 
 ### 2.8 Wood Nuts & Bolts Puzzle (ABI Game Studio / ABI Global LTD, Vietnam)
 
 | Attribute | Detail |
 |---|---|
 | Launch | November 2023 |
-| Downloads (est.) | 10M+ within ~5 months; **93.2M downloads in 2024 alone** — #17 most-downloaded mobile game of 2024 (AppMagic via mobilegamer.biz); lifetime 150M+ (est.) |
-| Revenue (est.) | Not separately disclosed; download-monster profile with ad-led revenue (est. 80%+ ads). Tens of millions lifetime gross (est.) — far lower $/install than Screwdom |
+| Downloads (est.) | 10M+ within ~5 months; **93.2M downloads in 2024 alone**, #17 most-downloaded mobile game of 2024 (AppMagic via mobilegamer.biz); lifetime 150M+ (est.) |
+| Revenue (est.) | Not separately disclosed; download-monster profile with ad-led revenue (est. 80%+ ads). Tens of millions lifetime gross (est.), far lower $/install than Screwdom |
 | Core mechanic | Unscrew nuts from bolts to free wooden planks/parts; gravity/physics puzzle; 300+ handcrafted levels, cosmetic skins |
-| Meta-layer | Light: level chains, skins, daily challenges — closer to classic hyper-casual with retention garnish |
+| Meta-layer | Light: level chains, skins, daily challenges, closer to classic hyper-casual with retention garnish |
 | Monetization mix | Ads-first (interstitial + rewarded), light IAP (skins, ad removal, boosters) |
 | Why it went viral | Rode the same screw wave at massive UA volume with rock-bottom CPI; YouTube selected it for a US-market trial release (YouTube Playables push); "fix-it/DIY satisfaction" fantasy resonates with older male demo underserved by match-3 |
 
@@ -163,8 +163,8 @@ Puzzle sub-genres (block jam, screw/nuts-and-bolts, sort) staged a "great puzzle
 | Revenue (est.) | ~$900K/month combined recently (~$500K Android + ~$400K iOS); ~$3.5M IAP in Q2'25; lifetime in the $50–80M range (est.) |
 | Core mechanic | One-finger RTS-lite: drag from your towers to enemy/neutral towers; units stream automatically; numbers-vs-numbers conquest in 20–40s levels |
 | Meta-layer | Unit skins/upgrades, level campaign, events, PvP-flavored modes |
-| Monetization mix | Balanced hybrid — rewarded ads + interstitials + IAP (skins, upgrades, no-ads). Est. ~50/50 |
-| Why it went viral | "Anyone can read the battlefield in 2 seconds" — pure legibility; near-win losses to slightly bigger numbers drive replay; creatives write themselves |
+| Monetization mix | Balanced hybrid, rewarded ads + interstitials + IAP (skins, upgrades, no-ads). Est. ~50/50 |
+| Why it went viral | "Anyone can read the battlefield in 2 seconds", pure legibility; near-win losses to slightly bigger numbers drive replay; creatives write themselves |
 
 **Takeaway:** A 2021-era hybrid still shipping 3.5M installs/month in 2025 shows the long tail available when a core loop is genuinely evergreen.
 
@@ -174,10 +174,10 @@ Puzzle sub-genres (block jam, screw/nuts-and-bolts, sort) staged a "great puzzle
 |---|---|
 | Launch | 2022 |
 | Downloads (est.) | Became **the most-downloaded game in the world** (monthly charts, 2023); 50M → 70M → ~133M lifetime by late 2025; still ~1M/month |
-| Revenue (est.) | $100M+ lifetime gross per coverage; IAP portion $10M+; **several million $/month from ads at peak** — ad-led hybrid; recent ~$300K/month est. (Sensor Tower, tail phase) |
+| Revenue (est.) | $100M+ lifetime gross per coverage; IAP portion $10M+; **several million $/month from ads at peak**, ad-led hybrid; recent ~$300K/month est. (Sensor Tower, tail phase) |
 | Core mechanic | Arcade-idle hotel management: run around collecting cash, checking in guests, cleaning rooms; hire staff to automate; expand and prestige to bigger hotels |
 | Meta-layer | Hotel-by-hotel prestige progression, staff/automation upgrades, decoration unlocks, seasonal hotels/events; SayGames runs it as a liveops flagship (funded a $30M hybrid-casual studio investment program off its success) |
-| Monetization mix | Ads-majority (est. 70–85% ads: heavy rewarded placement — 2x cash, instant upgrades) + IAP (automation, bundles, ad removal) |
+| Monetization mix | Ads-majority (est. 70–85% ads: heavy rewarded placement, 2x cash, instant upgrades) + IAP (automation, bundles, ad removal) |
 | Why it went viral | ASMR cleaning/tidying content exploded on TikTok ("hotel ASMR"); the "overwhelmed worker → automated empire" fantasy; constant visible progress = perfect background-watch content |
 
 **Takeaway:** My Perfect Hotel is the arcade-idle blueprint: ad-heavy but retention-deep, proving "chore-core ASMR" is a viral genre of its own.
@@ -190,8 +190,8 @@ Puzzle sub-genres (block jam, screw/nuts-and-bolts, sort) staged a "great puzzle
 
 | Dimension | Hyper-Casual (2017–2021) | Hybrid-Casual (2022–2026) |
 |---|---|---|
-| Core loop | 10–30s, one mechanic, infinite/score-based | Same simple, instantly-legible mechanic — but **level-based** |
-| Role of the mechanic | The whole game | The **ad hook / CPI weapon** — it exists to make marketing cheap |
+| Core loop | 10–30s, one mechanic, infinite/score-based | Same simple, instantly-legible mechanic, but **level-based** |
+| Role of the mechanic | The whole game | The **ad hook / CPI weapon**, it exists to make marketing cheap |
 | Meta | None (maybe skins) | The **retention & monetization layer**: progression, collections, events, passes, teams |
 | Session/day model | 1–3 short sessions, churn by D7 | Multiple sessions, appointment mechanics, D30+ tails |
 | Monetization | 90–100% ads | Blended: 40–60% IAP typical, rising over a title's life |
@@ -199,9 +199,9 @@ Puzzle sub-genres (block jam, screw/nuts-and-bolts, sort) staged a "great puzzle
 | KPI north star | CPI vs D0–D3 ad-LTV | D7 retention → D30/D90 blended LTV vs CPI |
 | Team model | 2-week prototypes, kill fast | Prototype fast, then **operate for years** (liveops team) |
 
-**The model in one sentence:** *The hyper-casual mechanic is the ad — it buys users cheaply because anyone understands it in 3 seconds; the meta-layer is the business — it keeps them for months and gives them reasons to pay.*
+**The model in one sentence:** *The hyper-casual mechanic is the ad, it buys users cheaply because anyone understands it in 3 seconds; the meta-layer is the business, it keeps them for months and gives them reasons to pay.*
 
-The conversion math: Hexa Sort (ads-led) earns ~$0.80/download; All in Hole (meta-led) earned ~$6.50/install in Q2'25. Same acquisition playbook, ~8x the extraction — that gap is the entire hybrid-casual thesis.
+The conversion math: Hexa Sort (ads-led) earns ~$0.80/download; All in Hole (meta-led) earned ~$6.50/install in Q2'25. Same acquisition playbook, ~8x the extraction, that gap is the entire hybrid-casual thesis.
 
 ---
 
@@ -236,8 +236,8 @@ Estimates compiled from Tap Nation, AppSamurai, Admiral Media, Gamigion/Lancaric
 1. **Puzzle takeover & sub-genre swarming.** Block-jam, screw/nuts-bolts, and sort mechanics captured >50% of top-10 hybrid revenue. Winning move is fast-follow + out-execute (Screwdom vs Screw Jam), not pure invention. 200+ new entrants in 7 months means sub-genre windows close in ~2 quarters.
 2. **IAP-ification / "Royal Match-ification."** Event calendars, sky races, teams, streaks, piggy banks, and battle passes are being transplanted wholesale from casual puzzle into hybrid titles (All in Hole, Color Block Jam). IAP share of segment revenue rises every quarter (+88–100% YoY IAP growth).
 3. **Liveops as the product.** Templatized, personalized liveops (PocketGamer.biz 2026): dynamic difficulty, per-segment offers, AI-assisted event scheduling. Hybrid titles now ship with a 12-month liveops roadmap, not a launch plan.
-4. **Web / instant / platform play.** YouTube Playables trials (Wood Nuts & Bolts was selected for a US trial), TikTok instant games, web-shop D2C stores (avoiding the 30% store cut) — direct-to-consumer monetization is a named 2026 trend.
-5. **AI-generated content in production.** ~52% of developers use generative AI (2026 surveys) for creatives (biggest lever — UA creative volume), level generation, LTV/churn prediction, and playable-ad variants. Casual/hybrid is where AI tooling lands best because scope is small.
+4. **Web / instant / platform play.** YouTube Playables trials (Wood Nuts & Bolts was selected for a US trial), TikTok instant games, web-shop D2C stores (avoiding the 30% store cut), direct-to-consumer monetization is a named 2026 trend.
+5. **AI-generated content in production.** ~52% of developers use generative AI (2026 surveys) for creatives (biggest lever, UA creative volume), level generation, LTV/churn prediction, and playable-ad variants. Casual/hybrid is where AI tooling lands best because scope is small.
 6. **Cross-platform & cross-progression.** Cloud saves, iOS+Android+web parity becoming standard; Netflix Games / app-store alternatives opening distribution.
 7. **Vietnam & Türkiye as production superpowers.** Vietnamese studios (~40% of global downloads; iKame, ABI) own volume; Turkish studios (Rollic ecosystem, Gybe) own IAP design. Cost asymmetry vs Western studios is structural.
 8. **Geographic expansion.** LATAM and MENA called out as 2026 growth regions as T1 CPIs inflate.
@@ -246,81 +246,81 @@ Estimates compiled from Tap Nation, AppSamurai, Admiral Media, Gamigion/Lancaric
 
 ---
 
-## 6. The Success Formula — 10 Actionable Design Rules
+## 6. The Success Formula, 10 Actionable Design Rules
 
 1. **The mechanic must be legible in 3 seconds of silent video.** If a cold viewer can't predict "what happens next" from one screenshot of gameplay, CPI will kill you. (Gate-math, hole-eats-things, unscrew-the-bolt all pass this test.)
 2. **Core loop of 10–30 seconds, sessions of 6–15 minutes.** Levels, not endless runs. Each level is a complete dopamine arc: goal → tension → cascade/payoff.
 3. **One-hand, one-finger, portrait.** Drag or tap only. No tutorials longer than one gesture. Every top-10 title in Q2'25 is playable with a thumb on a bus.
 4. **Juice is not optional.** Cascades, screen shake, haptics, ASMR sound design, chunky snap-into-place feedback. Hexa Sort's entire $50M is cascade juice; My Perfect Hotel's virality is cleaning ASMR.
-5. **Fail-forward, and make failure profitable.** Near-miss fail states (one block left, one screw slot short) must feel like *your* mistake and be instantly retryable — then sell the continue. Fail-level offers are the #1 IAP driver in the segment.
+5. **Fail-forward, and make failure profitable.** Near-miss fail states (one block left, one screw slot short) must feel like *your* mistake and be instantly retryable, then sell the continue. Fail-level offers are the #1 IAP driver in the segment.
 6. **Difficulty spikes are content.** Hand-tuned "impossible levels" (Color Block Jam level 88/433) generate organic TikTok walkthrough content and spend simultaneously. Ship a difficulty curve with deliberate walls.
 7. **Bolt the meta on top, never into, the core.** Progression (collections, upgrades, decor, prestige), events (weekly race, streaks, teams), and passes must be skippable by newcomers. The core stays hyper-casual-pure; the meta compounds for D30+ players.
 8. **Design for 50:50 IAP:Ads at launch, drift toward IAP.** Rewarded ads = boosters/2x-cash for non-payers (target 30%+ DAU engagement); IAP = fail-continues, passes, starter packs, ad-removal. Instrument both from day one.
 9. **Gate the greenlight on D1 ≥ 30%, D7 ≥ 15%, CPI ≤ $1.50 (Android T1 blended).** Prototype → 2-week CPI test → retention soft launch → only then build the liveops meta. Kill anything under threshold; the segment's winners all cleared these bars before scaling.
 10. **Plan liveops for 12+ months before global launch.** Event calendar, collab/IP slots, seasonal skins, new obstacle types every 2–4 weeks. The 2025 winners are operated like live services, and 4-year-old titles (Mob Control, Tower War, My Perfect Hotel) still chart because of it.
 
-**Bonus rule — the fast-follow window:** when a sub-genre breaks out (screw, block-jam, sort), you have roughly one to two quarters to ship a better-produced, deeper-meta version before the market saturates (200+ entrants in H1'25). Speed of execution beats originality of concept in this segment.
+**Bonus rule, the fast-follow window:** when a sub-genre breaks out (screw, block-jam, sort), you have roughly one to two quarters to ship a better-produced, deeper-meta version before the market saturates (200+ entrants in H1'25). Speed of execution beats originality of concept in this segment.
 
 ---
 
 ## 7. Sources
 
 ### App-intelligence & market reports
-- AppMagic — Top 10 Hybridcasual Games Q1 2025: https://appmagic.rocks/blog/hybridcasual-q1-2025/?hl=en
-- GameDev Reports — AppMagic Top-10 Hybrid-Casual Games Q2'25: https://gamedevreports.substack.com/p/appmagic-top-10-hybrid-casual-games
-- GameDev Reports — AppMagic Mobile Casual Games H1'25: https://gamedevreports.substack.com/p/appmagic-mobile-casual-games-in-h125
-- Mobidictum — AppMagic Monetization Report 2025: https://mobidictum.com/appmagic-monetization-report-2025/
-- Lancaric — 2025 Hybridcasual Market Overview: https://lancaric.substack.com/p/2025-hybridcasual-market-overview
-- Gamigion — 2025 Hybridcasual Market Overview with Real Data: https://www.gamigion.com/2025-hybridcasual-market-overview-with-real-data/
-- Mobilegamer.biz — Top mobile game downloads of 2024: https://mobilegamer.biz/the-top-mobile-game-downloads-of-2024/
-- Naavik — The Evolution of Hybridcasual: https://naavik.co/deep-dives/evolution-of-hybridcasual-deepdive/
-- Naavik — How Niche Subgenres are Reshaping the Mobile Puzzle Market: https://naavik.co/digest/how-niche-subgenres-are-reshaping-the-mobile-puzzle-market/
-- Gamesforum/InvestGame — Hypercasual Marketing & Monetization Report: https://investgame.net/wp-content/uploads/2025/07/Gamesforum-Intelligence-Hypercasual-Gaming-Report.pdf
+- AppMagic, Top 10 Hybridcasual Games Q1 2025: https://appmagic.rocks/blog/hybridcasual-q1-2025/?hl=en
+- GameDev Reports, AppMagic Top-10 Hybrid-Casual Games Q2'25: https://gamedevreports.substack.com/p/appmagic-top-10-hybrid-casual-games
+- GameDev Reports, AppMagic Mobile Casual Games H1'25: https://gamedevreports.substack.com/p/appmagic-mobile-casual-games-in-h125
+- Mobidictum, AppMagic Monetization Report 2025: https://mobidictum.com/appmagic-monetization-report-2025/
+- Lancaric, 2025 Hybridcasual Market Overview: https://lancaric.substack.com/p/2025-hybridcasual-market-overview
+- Gamigion, 2025 Hybridcasual Market Overview with Real Data: https://www.gamigion.com/2025-hybridcasual-market-overview-with-real-data/
+- Mobilegamer.biz, Top mobile game downloads of 2024: https://mobilegamer.biz/the-top-mobile-game-downloads-of-2024/
+- Naavik, The Evolution of Hybridcasual: https://naavik.co/deep-dives/evolution-of-hybridcasual-deepdive/
+- Naavik, How Niche Subgenres are Reshaping the Mobile Puzzle Market: https://naavik.co/digest/how-niche-subgenres-are-reshaping-the-mobile-puzzle-market/
+- Gamesforum/InvestGame, Hypercasual Marketing & Monetization Report: https://investgame.net/wp-content/uploads/2025/07/Gamesforum-Intelligence-Hypercasual-Gaming-Report.pdf
 
 ### Per-game
-- Gamigion — Color Block Jam, New Leader of Block Puzzle: https://www.gamigion.com/color-block-jam-the-new-leader-of-block-puzzle-games/
-- AppMagic — Color Block Jam data: https://appmagic.rocks/iphone/color-block-jam/6504332779/?hl=en
-- Medium (E. Küskü) — Color Block Jam: Evolution of Puzzle Genre: https://medium.com/@elifecekusku/color-block-jam-evolution-of-puzzle-genre-e51c517d8a21
-- Sensor Tower — Screwdom 3D hits $10M Android IAP in 7 months: https://app.sensortower.com/news-feed/ikames-screwdom-3d-hits-10m-all-time-iap-revenue-on-android-in-seven-months/68806eb373367948bb4a1c08
-- Lancaric — iKame case study (Hanoi to global charts): https://lancaric.substack.com/p/ikame-case-study-scaling-from-hanoi
-- Gamigion — Screwdom: Top Grossing in Screw Puzzle Genre: https://www.gamigion.com/screwdom-top-grossing-game-in-screw-puzzle-genre/
-- Two & a Half Gamers — Screw Jam: $250K/day: https://www.gamigion.com/screw-jam-success-story-how-to-reach-250k-day-revenue/
-- Statista — Top-grossing Rollic Games apps 2024: https://www.statista.com/statistics/1481465/top-grossing-rollic-games-apps/
-- Gamigion — Game Deconstruction: Screw Jam by Rollic: https://www.gamigion.com/game-deconstruction-screw-jam-by-rollic/
-- Gamigion — All in Hole scaled to $300K/day: https://www.gamigion.com/all-in-hole-by-homa-scaled-to-300k-a-day/
-- Gamigion — All in Hole vs Hole.io: https://www.gamigion.com/hole/
-- Sensor Tower — Homa Games customer story (5M downloads in month 1): https://sensortower.com/customer-stories/homa-games
-- Gamigion — Moon Active & Supersonic chasing Homa's $130M: https://www.gamigion.com/moon-active-and-supersonic-chasing-after-homas-130m-success/
-- Ted Glim — Pocket Champs: From Hypercasual to Hybridcasual (PDF): https://tedglim.github.io/documents/Pocket%20_Champs.pdf
-- This Week in LiveOps — Pocket Champs: https://thisweekinliveops.substack.com/p/this-week-in-liveops-3-pocket-champs
-- Udonis — Mob Control Stats (2026): https://www.blog.udonis.co/mobile-marketing/mobile-games/mob-control
-- MAF — Mob Control: Anatomy of a Hybrid-Casual Hit: https://maf.ad/en/blog/mob-control-analysis-hybrid-casual/
-- Deconstructor of Fun — Voodoo's Secret Sauce ($250M in 3 years): https://www.deconstructoroffun.com/blog/2024/6/3/voodoos-secret-sauce-from-0-to-250m-hybridcasual-revenue-in-3-years
-- TikTok for Business — Voodoo Mob Control case study: https://ads.tiktok.com/business/en-US/inspiration/voodoo-mob-control
-- MAF — Hexa Sort: Star of Hybrid-Casual: https://maf.ad/en/blog/hexa-sort-hybrid-casual/
-- AppstoreSpy — Hexa Sort revenue/download stats: https://appstorespy.com/android-google-play/com.gamebrain.hexasort-trends-revenue-statistics-downloads-ratings
-- AppMagic — Wood Nuts & Bolts Puzzle: https://appmagic.rocks/google-play/wood-nuts-and-bolts-puzzle/com.wood.nut.and.bolts.puzzle
-- VnExpress — Vietnamese games ~40% of global downloads: https://e.vnexpress.net/news/news/vietnamese-games-account-for-nearly-40-of-global-downloads-4926856.html
-- ABI Games — Wood Nuts & Bolts selected by YouTube (US trial): https://abigames.com.vn/%F0%9D%90%96%F0%9D%90%A8%F0%9D%90%A8%F0%9D%90%9D-%F0%9D%90%8D%F0%9D%90%AE%F0%9D%90%AD%F0%9D%90%AC-%F0%9D%90%81%F0%9D%90%A8%F0%9D%90%A5%F0%9D%90%AD%F0%9D%90%AC-%F0%9D%90%8F%F0%9D%90%AE%F0%9D%90%B3/
-- Sensor Tower — Tower War (Google Play US): https://app.sensortower.com/overview/games.vaveda.militaryoverturn?country=US
-- Sensor Tower — Tower War (iOS US): https://app.sensortower.com/ios/us/saygames-ltd/app/tower-war-tactical-conquest/1579356887
-- SayGames — My Perfect Hotel most downloaded game in the world: https://blog.say.games/posts/my-perfect-hotel-saygames-latest-hybrid-casual-hit-becomes-the-most-downloaded-game-in-the-world
-- VentureBeat — SayGames hits 4B downloads, My Perfect Hotel #1: https://venturebeat.com/games/saygames-hits-4b-downloads-hits-no-1-mobile-hit-with-my-perfect-hotel/
-- Udonis — My Perfect Hotel deconstruction: https://www.blog.udonis.co/mobile-marketing/mobile-games/my-perfect-hotel
-- ARP Brothers — My Perfect Hotel arcade-idle deconstruction: https://arpubrothers.com/blog/my-perfect-hotel-arcade-idle-deconstruction/
-- Inven Global — SayGames' $30M hybrid-casual investment: https://www.invenglobal.com/articles/19092/saygames-to-invest-30m-in-hybrid-casual-studios-following-my-perfect-hotel-success
+- Gamigion, Color Block Jam, New Leader of Block Puzzle: https://www.gamigion.com/color-block-jam-the-new-leader-of-block-puzzle-games/
+- AppMagic, Color Block Jam data: https://appmagic.rocks/iphone/color-block-jam/6504332779/?hl=en
+- Medium (E. Küskü), Color Block Jam: Evolution of Puzzle Genre: https://medium.com/@elifecekusku/color-block-jam-evolution-of-puzzle-genre-e51c517d8a21
+- Sensor Tower, Screwdom 3D hits $10M Android IAP in 7 months: https://app.sensortower.com/news-feed/ikames-screwdom-3d-hits-10m-all-time-iap-revenue-on-android-in-seven-months/68806eb373367948bb4a1c08
+- Lancaric, iKame case study (Hanoi to global charts): https://lancaric.substack.com/p/ikame-case-study-scaling-from-hanoi
+- Gamigion, Screwdom: Top Grossing in Screw Puzzle Genre: https://www.gamigion.com/screwdom-top-grossing-game-in-screw-puzzle-genre/
+- Two & a Half Gamers, Screw Jam: $250K/day: https://www.gamigion.com/screw-jam-success-story-how-to-reach-250k-day-revenue/
+- Statista, Top-grossing Rollic Games apps 2024: https://www.statista.com/statistics/1481465/top-grossing-rollic-games-apps/
+- Gamigion, Game Deconstruction: Screw Jam by Rollic: https://www.gamigion.com/game-deconstruction-screw-jam-by-rollic/
+- Gamigion, All in Hole scaled to $300K/day: https://www.gamigion.com/all-in-hole-by-homa-scaled-to-300k-a-day/
+- Gamigion, All in Hole vs Hole.io: https://www.gamigion.com/hole/
+- Sensor Tower, Homa Games customer story (5M downloads in month 1): https://sensortower.com/customer-stories/homa-games
+- Gamigion, Moon Active & Supersonic chasing Homa's $130M: https://www.gamigion.com/moon-active-and-supersonic-chasing-after-homas-130m-success/
+- Ted Glim, Pocket Champs: From Hypercasual to Hybridcasual (PDF): https://tedglim.github.io/documents/Pocket%20_Champs.pdf
+- This Week in LiveOps, Pocket Champs: https://thisweekinliveops.substack.com/p/this-week-in-liveops-3-pocket-champs
+- Udonis, Mob Control Stats (2026): https://www.blog.udonis.co/mobile-marketing/mobile-games/mob-control
+- MAF, Mob Control: Anatomy of a Hybrid-Casual Hit: https://maf.ad/en/blog/mob-control-analysis-hybrid-casual/
+- Deconstructor of Fun, Voodoo's Secret Sauce ($250M in 3 years): https://www.deconstructoroffun.com/blog/2024/6/3/voodoos-secret-sauce-from-0-to-250m-hybridcasual-revenue-in-3-years
+- TikTok for Business, Voodoo Mob Control case study: https://ads.tiktok.com/business/en-US/inspiration/voodoo-mob-control
+- MAF, Hexa Sort: Star of Hybrid-Casual: https://maf.ad/en/blog/hexa-sort-hybrid-casual/
+- AppstoreSpy, Hexa Sort revenue/download stats: https://appstorespy.com/android-google-play/com.gamebrain.hexasort-trends-revenue-statistics-downloads-ratings
+- AppMagic, Wood Nuts & Bolts Puzzle: https://appmagic.rocks/google-play/wood-nuts-and-bolts-puzzle/com.wood.nut.and.bolts.puzzle
+- VnExpress, Vietnamese games ~40% of global downloads: https://e.vnexpress.net/news/news/vietnamese-games-account-for-nearly-40-of-global-downloads-4926856.html
+- ABI Games, Wood Nuts & Bolts selected by YouTube (US trial): https://abigames.com.vn/%F0%9D%90%96%F0%9D%90%A8%F0%9D%90%A8%F0%9D%90%9D-%F0%9D%90%8D%F0%9D%90%AE%F0%9D%90%AD%F0%9D%90%AC-%F0%9D%90%81%F0%9D%90%A8%F0%9D%90%A5%F0%9D%90%AD%F0%9D%90%AC-%F0%9D%90%8F%F0%9D%90%AE%F0%9D%90%B3/
+- Sensor Tower, Tower War (Google Play US): https://app.sensortower.com/overview/games.vaveda.militaryoverturn?country=US
+- Sensor Tower, Tower War (iOS US): https://app.sensortower.com/ios/us/saygames-ltd/app/tower-war-tactical-conquest/1579356887
+- SayGames, My Perfect Hotel most downloaded game in the world: https://blog.say.games/posts/my-perfect-hotel-saygames-latest-hybrid-casual-hit-becomes-the-most-downloaded-game-in-the-world
+- VentureBeat, SayGames hits 4B downloads, My Perfect Hotel #1: https://venturebeat.com/games/saygames-hits-4b-downloads-hits-no-1-mobile-hit-with-my-perfect-hotel/
+- Udonis, My Perfect Hotel deconstruction: https://www.blog.udonis.co/mobile-marketing/mobile-games/my-perfect-hotel
+- ARP Brothers, My Perfect Hotel arcade-idle deconstruction: https://arpubrothers.com/blog/my-perfect-hotel-arcade-idle-deconstruction/
+- Inven Global, SayGames' $30M hybrid-casual investment: https://www.invenglobal.com/articles/19092/saygames-to-invest-30m-in-hybrid-casual-studios-following-my-perfect-hotel-success
 
 ### Benchmarks & trends
-- Tap Nation — KPIs That Matter in Hybrid Casual: https://www.tap-nation.io/blog/kpis-that-matter-metrics-to-track-in-hybrid-casual-games/
-- AppSamurai — Hybrid-Casual UA Playbook (June 2025): https://appsamurai.com/blog/hybrid-casual-games-ua-playbook-how-to-acquire-and-retain-users/
-- Admiral Media — Mobile Game Marketing Benchmarks 2025: https://admiral.media/mobile-game-marketing-benchmarks/
-- Liftoff — 2025 Casual Gaming Apps Report: https://liftoff.ai/2025-casual-gaming-apps-report/
-- Game Growth Advisor — Hybrid Casual 2026 design/monetization: https://gamegrowthadvisor.com/blog/2026-04-16-hybrid-casual-game-design-strategy-2026/
-- AppFollow — Mobile Gaming Trends 2026: https://appfollow.io/blog/mobile-gaming-trends-2026
-- PocketGamer.biz — 2026 live ops trends: https://www.pocketgamer.biz/2026-live-ops-trends-templatisation-personalisation-and-ai/
-- Cinevva — Casual Games Trends in 2026: https://app.cinevva.com/guides/casual-games-trends-2026
-- Gamesforum — 2026 Predictions for Mobile Games: https://www.globalgamesforum.com/news/predictions-for-mobile-games-in-2026
-- MAF — Top Mobile Games of 2025: https://maf.ad/en/blog/top-mobile-games-2025/
+- Tap Nation, KPIs That Matter in Hybrid Casual: https://www.tap-nation.io/blog/kpis-that-matter-metrics-to-track-in-hybrid-casual-games/
+- AppSamurai, Hybrid-Casual UA Playbook (June 2025): https://appsamurai.com/blog/hybrid-casual-games-ua-playbook-how-to-acquire-and-retain-users/
+- Admiral Media, Mobile Game Marketing Benchmarks 2025: https://admiral.media/mobile-game-marketing-benchmarks/
+- Liftoff, 2025 Casual Gaming Apps Report: https://liftoff.ai/2025-casual-gaming-apps-report/
+- Game Growth Advisor, Hybrid Casual 2026 design/monetization: https://gamegrowthadvisor.com/blog/2026-04-16-hybrid-casual-game-design-strategy-2026/
+- AppFollow, Mobile Gaming Trends 2026: https://appfollow.io/blog/mobile-gaming-trends-2026
+- PocketGamer.biz, 2026 live ops trends: https://www.pocketgamer.biz/2026-live-ops-trends-templatisation-personalisation-and-ai/
+- Cinevva, Casual Games Trends in 2026: https://app.cinevva.com/guides/casual-games-trends-2026
+- Gamesforum, 2026 Predictions for Mobile Games: https://www.globalgamesforum.com/news/predictions-for-mobile-games-in-2026
+- MAF, Top Mobile Games of 2025: https://maf.ad/en/blog/top-mobile-games-2025/
 
 ---
 
@@ -330,88 +330,88 @@ Estimates compiled from Tap Nation, AppSamurai, Admiral Media, Gamigion/Lancaric
 
 ## Deep dive: emerging hook genres (2025–2026)
 
-**Addendum date:** 2026-08-16. Same caveats as above: third-party estimates, directional only. This section drills into four hook families that sit *underneath* the sub-genre chart battles of Section 5 — the raw sensory/psychological triggers that make creatives cheap and cores sticky.
+**Addendum date:** 2026-08-16. Same caveats as above: third-party estimates, directional only. This section drills into four hook families that sit *underneath* the sub-genre chart battles of Section 5, the raw sensory/psychological triggers that make creatives cheap and cores sticky.
 
 ### 8.1 ASMR / cleaning / grooming / reveal mechanics
 
-The "satisfying reveal" family — power-washing, mowing, slicing, shaving, deep-cleaning — is the most durable creative hook in casual UA, and supply keeps growing: Apptopia tracked the number of ASMR-themed mobile games increasing for **13 consecutive quarters**.
+The "satisfying reveal" family, power-washing, mowing, slicing, shaving, deep-cleaning, is the most durable creative hook in casual UA, and supply keeps growing: Apptopia tracked the number of ASMR-themed mobile games increasing for **13 consecutive quarters**.
 
 | Game | Publisher | Signal |
 |---|---|---|
-| ASMR Slicing | Crazy Labs | **100M+ installs lifetime; 36.5M installs in May 2020 alone — the most-downloaded game in the world that month** (Sensor Tower via PocketGamer.biz) |
+| ASMR Slicing | Crazy Labs | **100M+ installs lifetime; 36.5M installs in May 2020 alone, the most-downloaded game in the world that month** (Sensor Tower via PocketGamer.biz) |
 | Deep Clean Inc. 3D | Alictus (→ SciPlay/Zynga) | 40M+ downloads; flagship of the portfolio that got Alictus (300M+ total downloads) acquired in an all-cash deal valued up to **$300M** |
-| DIY Makeup / Hair Dye | Crazy Labs | 65M / 55M downloads — grooming-reveal as a repeatable template inside CrazyLabs' 7B-download machine |
+| DIY Makeup / Hair Dye | Crazy Labs | 65M / 55M downloads, grooming-reveal as a repeatable template inside CrazyLabs' 7B-download machine |
 | Stone Grass: Mowing Simulator | Freeplay | Current mowing standard-bearer (7.5M+ downloads on iOS alone per store data; heavily cloned "mow-and-sell" arcade-idle loop à la My Perfect Hotel) |
 | My Perfect Hotel (Section 2.10) | SayGames | Proof that "chore-core ASMR" scales to 133M downloads / $100M+ when a meta is attached |
 
 **Why the creatives over-perform (CTR up, CPI down):**
-- The chaos→order arc "releases micro-doses of dopamine in the viewer": a filthy surface wiped clean in one stroke is a complete, pre-verbal story in under 3 seconds — it passes Rule #1 of Section 6 better than any other hook (MegaDigital TikTok analysis).
+- The chaos→order arc "releases micro-doses of dopamine in the viewer": a filthy surface wiped clean in one stroke is a complete, pre-verbal story in under 3 seconds, it passes Rule #1 of Section 6 better than any other hook (MegaDigital TikTok analysis).
 - Reveal mechanics *demo themselves*: the ad is literally gameplay, so IPM holds up and creative production is nearly free. Casual games already post the highest CTRs in mobile (9.4% Android / 8.8% iOS, Liftoff/Singular 2025); satisfying loops are the top-performing concept class within them.
 - 2025 twist: long-form ASMR and AI-generated ASMR hooks are now used to *pre-qualify* higher-LTV users rather than only minimize CPI (AppAgent playable-ads review).
 
-**Retention & monetization character:** raw reveal cores retain like hyper-casual (strong D1, weak D30) — ASMR Slicing and Deep Clean Inc. monetized ads-first and faded without metas. The fix is the Section 2.10 pattern: keep the reveal as the moment-to-moment verb, wrap it in an arcade-idle economy (hire staff / sell clippings / upgrade tools), monetize via rewarded 2x-cash + tool-upgrade IAP. Crazy Labs attributed ASMR Slicing's success to obsessive material/sound polish — in this family, juice *is* the product.
+**Retention & monetization character:** raw reveal cores retain like hyper-casual (strong D1, weak D30), ASMR Slicing and Deep Clean Inc. monetized ads-first and faded without metas. The fix is the Section 2.10 pattern: keep the reveal as the moment-to-moment verb, wrap it in an arcade-idle economy (hire staff / sell clippings / upgrade tools), monetize via rewarded 2x-cash + tool-upgrade IAP. Crazy Labs attributed ASMR Slicing's success to obsessive material/sound polish, in this family, juice *is* the product.
 
 ### 8.2 Destruction / demolition mechanics
 
-Destruction is the mirror image of cleaning: order→chaos instead of chaos→order, same instant legibility. Examples: Wrecking Ball – Demolition! (swing a ball into weak points, watch physics collapse), Dozer Demolish: City Tear Down (run a demolition company — note the built-in upgrade meta), Ragdoll Destruction Simulator and the broader Teardown-like clone wave. Data caveat: no destruction title currently charts at Screwdom scale, so this is a *creative-layer* opportunity more than a proven revenue genre.
+Destruction is the mirror image of cleaning: order→chaos instead of chaos→order, same instant legibility. Examples: Wrecking Ball – Demolition! (swing a ball into weak points, watch physics collapse), Dozer Demolish: City Tear Down (run a demolition company, note the built-in upgrade meta), Ragdoll Destruction Simulator and the broader Teardown-like clone wave. Data caveat: no destruction title currently charts at Screwdom scale, so this is a *creative-layer* opportunity more than a proven revenue genre.
 
 **Why destruction payoffs work in paid UA:**
-- The collapse moment is a guaranteed spectacle frame for the 3-second hook; structural weak-point targeting reads instantly ("hit the base") — same legibility class as Mob Control's gate math.
+- The collapse moment is a guaranteed spectacle frame for the 3-second hook; structural weak-point targeting reads instantly ("hit the base"), same legibility class as Mob Control's gate math.
 - Failure/near-failure arcs outperform success arcs in creatives: "Pure Failure" endings drove **+65% IPM** vs pure-success in casual, and fail-to-success arcs **+78% IPM at ~40% less spend** in hyper-casual (ROASPIG creative-testing data). A wrecking ball that *almost* topples a tower is a better ad than one that does.
 - Destruction pairs naturally with the fail-forward economics of Section 6 Rule #5: an incomplete demolition (one wall standing) is a sellable continue.
 
-**Risk:** destruction cores are session-shallow (sandbox chaos lacks goal tension). The fix is level-based demolition with a resource meta — exactly the hyper→hybrid conversion of Section 3.
+**Risk:** destruction cores are session-shallow (sandbox chaos lacks goal tension). The fix is level-based demolition with a resource meta, exactly the hyper→hybrid conversion of Section 3.
 
 ### 8.3 Timing / rhythm micro-skill hooks
 
 One-tap timing is the oldest micro-skill loop that still converts:
 
-- **Pop the Lock** (Simple Machine, 2015): tap when the line crosses the tick; **30M+ downloads** across App Store/Google Play, #1 on the US App Store within a week of launch, and later physical Dave & Buster's arcade cabinets — rare proof the loop converts even at $1/credit.
+- **Pop the Lock** (Simple Machine, 2015): tap when the line crosses the tick; **30M+ downloads** across App Store/Google Play, #1 on the US App Store within a week of launch, and later physical Dave & Buster's arcade cabinets, rare proof the loop converts even at $1/credit.
 - Modern descendants: perfect-timing meters in idle/merge games (tap-in-the-green-zone bonus bars), swing/release pendulum timing, and "resonance" loops where consecutive perfect taps build multipliers.
 
-**The psychology is measurable.** Near-misses activate the ventral striatum — the same dopamine-driven reward circuitry as genuine wins (Clark et al. 2009, University of Cambridge); gambling research shows amplified striatal response to near-miss outcomes and that near-misses "invigorate" continued play even when players report the experience as frustrating (Nature Neuropsychopharmacology). Rat models confirm dopamine agonists enhance the near-miss effect. For design, a timing window tuned so failures cluster *just* outside it manufactures near-misses on demand — driving the "one more try" reflex, higher session counts, and retryable 5–15s loops that fit the 4–8 sessions/day benchmark of Section 4.
+**The psychology is measurable.** Near-misses activate the ventral striatum, the same dopamine-driven reward circuitry as genuine wins (Clark et al. 2009, University of Cambridge); gambling research shows amplified striatal response to near-miss outcomes and that near-misses "invigorate" continued play even when players report the experience as frustrating (Nature Neuropsychopharmacology). Rat models confirm dopamine agonists enhance the near-miss effect. For design, a timing window tuned so failures cluster *just* outside it manufactures near-misses on demand, driving the "one more try" reflex, higher session counts, and retryable 5–15s loops that fit the 4–8 sessions/day benchmark of Section 4.
 
-**Design note:** timing hooks are the cheapest way to add *skill expression* to an otherwise automatic core (cf. Pocket Champs, which removed execution skill entirely — the opposite bet). A single well-tuned timing meter converts passive watching into authored tension, and every miss is a legitimate fail-forward monetization point.
+**Design note:** timing hooks are the cheapest way to add *skill expression* to an otherwise automatic core (cf. Pocket Champs, which removed execution skill entirely, the opposite bet). A single well-tuned timing meter converts passive watching into authored tension, and every miss is a legitimate fail-forward monetization point.
 
 ### 8.4 Collection / nurture metas as retention engines
 
 Collection is the meta-layer that most reliably converts hyper-casual D1 into D30:
 
-- **My Perfect Hotel** entered its liveops phase with the **Barbie Dream Hotel** event (collectible Barbie/Ken character skins, running until March 2027) — SayGames explicitly frames third-party-IP *collectible* content as an audience-retention strategy for longtime users, layered onto the Section 2.10 base game.
+- **My Perfect Hotel** entered its liveops phase with the **Barbie Dream Hotel** event (collectible Barbie/Ken character skins, running until March 2027), SayGames explicitly frames third-party-IP *collectible* content as an audience-retention strategy for longtime users, layered onto the Section 2.10 base game.
 - **Pocket Champs** (Section 2.5) is the cohort's native example: gear/champ collection plus visible customization sustains a 4-year-old title.
-- Nurture variants (care for a creature, not just collect it) print downloads: My Talking Angela 2 did **85M installs in 2024** (#21 globally) on a pure care/grooming loop — and nurture targets the same broad casual demo as the reveal genre.
+- Nurture variants (care for a creature, not just collect it) print downloads: My Talking Angela 2 did **85M installs in 2024** (#21 globally) on a pure care/grooming loop, and nurture targets the same broad casual demo as the reveal genre.
 - Udonis' My Perfect Hotel teardown credits multi-tiered progression ("each milestone is a gateway to new gameplay") as the backbone of retention; Naavik's hybrid-casual thesis (Section 3) generalizes it: collections give non-payers a reason to return and payers a reason to spend.
 
-**Pattern:** cute-creature collection is the lowest-friction meta to bolt onto a sensory core because it never touches the core verb — it converts each level-complete into a gacha-lite "who did I unlock?" beat, feeding both the event calendar and IAP (skins, egg/incubator timers, collection-completion bundles).
+**Pattern:** cute-creature collection is the lowest-friction meta to bolt onto a sensory core because it never touches the core verb, it converts each level-complete into a gacha-lite "who did I unlock?" beat, feeding both the event calendar and IAP (skins, egg/incubator timers, collection-completion bundles).
 
 ### 8.5 Implications for TaterTot Labs
 
-- **Kaboom Crane = destruction payoff × timing micro-skill — the two hooks compound.** The swing-timing meter manufactures near-misses (ventral-striatum loop, 8.3); the collapse is the ad (8.2). Every failed swing that clips a corner of the building is both a retry trigger and a fail-forward offer slot.
+- **Kaboom Crane = destruction payoff × timing micro-skill, the two hooks compound.** The swing-timing meter manufactures near-misses (ventral-striatum loop, 8.3); the collapse is the ad (8.2). Every failed swing that clips a corner of the building is both a retry trigger and a fail-forward offer slot.
 - **Tune Kaboom Crane creatives to fail:** lead UA testing with almost-collapse and pure-failure endings (+65–78% IPM evidence, 8.2), not perfect demolitions; keep one readable "weak point" in frame 1.
-- **Kaboom Crane needs level goals + an upgrade meta from day one** (crane parts, ball weights, contract/company progression à la Dozer Demolish) — sandbox destruction is a retention trap; clear the Section 4 gates (D1 ≥30%, D7 ≥15%) before scaling.
-- **Buzzcut Buddies sits on the strongest evidence base in this addendum:** grooming-reveal cores are proven at 55–100M installs (Hair Dye, ASMR Slicing), and fuzz-trimming is a fresh surface for the same chaos→order arc. Invest disproportionately in trim feel — blade sound, fuzz physics, haptics — because juice is the product (8.1).
+- **Kaboom Crane needs level goals + an upgrade meta from day one** (crane parts, ball weights, contract/company progression à la Dozer Demolish), sandbox destruction is a retention trap; clear the Section 4 gates (D1 ≥30%, D7 ≥15%) before scaling.
+- **Buzzcut Buddies sits on the strongest evidence base in this addendum:** grooming-reveal cores are proven at 55–100M installs (Hair Dye, ASMR Slicing), and fuzz-trimming is a fresh surface for the same chaos→order arc. Invest disproportionately in trim feel, blade sound, fuzz physics, haptics, because juice is the product (8.1).
 - **Buzzcut Buddies' creature-collection salon meta is exactly the 8.4 pattern:** each trim reveals/unlocks a collectible creature (the reveal *is* the gacha moment), salon expansion supplies the arcade-idle economy (My Perfect Hotel blueprint), and creature sets feed a 12-month event calendar (Rule #10) with IP-collab slots later.
-- **Shared kill criteria:** both prototypes must clear CPI ≤ $1.50 (Android T1) on mechanic-only creatives in a 2-week test — these hook families exist precisely because they make that bar beatable; if the raw verb can't hit it, no meta will save it.
+- **Shared kill criteria:** both prototypes must clear CPI ≤ $1.50 (Android T1) on mechanic-only creatives in a 2-week test, these hook families exist precisely because they make that bar beatable; if the raw verb can't hit it, no meta will save it.
 
 ### 8.6 Addendum sources
 
-- Apptopia — ASMR games up 13 consecutive quarters: https://apptopia.com/en/insights/asmr-mobile-games-increase-13-consecutive-quarters/
-- PocketGamer.biz — Crazy Labs on why ASMR Slicing succeeded: https://www.pocketgamer.biz/pgc-digital-crazy-labs-explains-why-asmr-slicing-is-successful-after-launch/
-- PocketGamer.biz — ASMR Slicing most downloads May 2020 (36.5M): https://www.pocketgamer.biz/asmr-slicing-most-downloads-may-2020/
-- Mobidictum — CrazyLabs 5B downloads (DIY Makeup 65M, Hair Dye 55M): https://mobidictum.com/crazylabs-hits-5-billion-downloads/
-- Mobile Marketing Reads — SciPlay acquires Alictus (up to $300M): https://mobilemarketingreads.com/sciplay-acquires-alictus-in-all-cash-deal/
-- Google Play — Deep Clean Inc. 3D: https://play.google.com/store/apps/details?id=com.smo.deepcleaninc3d
-- App Store — Stone Grass: Lawn Mower Game: https://apps.apple.com/us/app/stone-grass-lawn-mower-game/id1606739002
-- MegaDigital — TikTok visual hooks for puzzle/satisfying games: https://megadigital.ai/en/blog/tiktok-ads-for-puzzle-games/
-- AppAgent — State of Playable Ads 2025: https://appagent.com/blog/the-state-of-playable-ads-in-2025-mid-year-strategic-review/
-- GameDev Reports — Liftoff & Singular Casual Games 2025 (CTR benchmarks): https://gamedevreports.substack.com/p/liftoff-and-singular-casual-games
-- Lancaric — Creative Trends June 2025 ("copy-paste is the new default"): https://lancaric.substack.com/p/creative-trends-june-2025
-- ROASPIG — creative testing / failure-arc IPM lifts: https://roaspig.com/blog/creative-testing-gaming-apps/
-- Nature Neuropsychopharmacology — Amplified striatal responses to near-misses: https://www.nature.com/articles/npp201643
-- Nature Neuropsychopharmacology — Dopamine & near-miss effect in rats: https://www.nature.com/articles/npp2010230
-- Wikipedia — Near-miss effect (Clark et al. 2009 summary): https://en.wikipedia.org/wiki/Near-miss_effect
-- Rohil Aniruth — Pop the Lock (30M+ downloads, D&B cabinets): https://rohilaniruth.com/pop-the-lock
-- AppBrain — Pop the Lock (10M+ Google Play): https://www.appbrain.com/app/pop-the-lock/com.sm.popTheLock
-- SayGames — Barbie IP integration in My Perfect Hotel (GamesBeat interview): https://blog.say.games/posts/why-saygames-teamed-up-with-barbie-for-my-perfect-hotels-first-third-party-ip-integration--exclusive-interview-with-gamesbeat
-- Udonis — My Perfect Hotel deconstruction (progression backbone): https://www.blog.udonis.co/mobile-marketing/mobile-games/my-perfect-hotel
-- Mobilegamer.biz — Top downloads 2024 (My Talking Angela 2, 85M): https://mobilegamer.biz/the-top-mobile-game-downloads-of-2024/
+- Apptopia, ASMR games up 13 consecutive quarters: https://apptopia.com/en/insights/asmr-mobile-games-increase-13-consecutive-quarters/
+- PocketGamer.biz, Crazy Labs on why ASMR Slicing succeeded: https://www.pocketgamer.biz/pgc-digital-crazy-labs-explains-why-asmr-slicing-is-successful-after-launch/
+- PocketGamer.biz, ASMR Slicing most downloads May 2020 (36.5M): https://www.pocketgamer.biz/asmr-slicing-most-downloads-may-2020/
+- Mobidictum, CrazyLabs 5B downloads (DIY Makeup 65M, Hair Dye 55M): https://mobidictum.com/crazylabs-hits-5-billion-downloads/
+- Mobile Marketing Reads, SciPlay acquires Alictus (up to $300M): https://mobilemarketingreads.com/sciplay-acquires-alictus-in-all-cash-deal/
+- Google Play, Deep Clean Inc. 3D: https://play.google.com/store/apps/details?id=com.smo.deepcleaninc3d
+- App Store, Stone Grass: Lawn Mower Game: https://apps.apple.com/us/app/stone-grass-lawn-mower-game/id1606739002
+- MegaDigital, TikTok visual hooks for puzzle/satisfying games: https://megadigital.ai/en/blog/tiktok-ads-for-puzzle-games/
+- AppAgent, State of Playable Ads 2025: https://appagent.com/blog/the-state-of-playable-ads-in-2025-mid-year-strategic-review/
+- GameDev Reports, Liftoff & Singular Casual Games 2025 (CTR benchmarks): https://gamedevreports.substack.com/p/liftoff-and-singular-casual-games
+- Lancaric, Creative Trends June 2025 ("copy-paste is the new default"): https://lancaric.substack.com/p/creative-trends-june-2025
+- ROASPIG, creative testing / failure-arc IPM lifts: https://roaspig.com/blog/creative-testing-gaming-apps/
+- Nature Neuropsychopharmacology, Amplified striatal responses to near-misses: https://www.nature.com/articles/npp201643
+- Nature Neuropsychopharmacology, Dopamine & near-miss effect in rats: https://www.nature.com/articles/npp2010230
+- Wikipedia, Near-miss effect (Clark et al. 2009 summary): https://en.wikipedia.org/wiki/Near-miss_effect
+- Rohil Aniruth, Pop the Lock (30M+ downloads, D&B cabinets): https://rohilaniruth.com/pop-the-lock
+- AppBrain, Pop the Lock (10M+ Google Play): https://www.appbrain.com/app/pop-the-lock/com.sm.popTheLock
+- SayGames, Barbie IP integration in My Perfect Hotel (GamesBeat interview): https://blog.say.games/posts/why-saygames-teamed-up-with-barbie-for-my-perfect-hotels-first-third-party-ip-integration--exclusive-interview-with-gamesbeat
+- Udonis, My Perfect Hotel deconstruction (progression backbone): https://www.blog.udonis.co/mobile-marketing/mobile-games/my-perfect-hotel
+- Mobilegamer.biz, Top downloads 2024 (My Talking Angela 2, 85M): https://mobilegamer.biz/the-top-mobile-game-downloads-of-2024/

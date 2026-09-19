@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Kaboom Crane — TaterTot Games Labs</title>
+<title>Kaboom Crane | TaterTot Games</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%97%EF%B8%8F%3C/text%3E%3C/svg%3E">
 <script src="/analytics.js" defer></script>
 <style>
@@ -201,7 +201,7 @@
   <div id="tapToPlay">TAP TO PLAY</div>
   <div id="bestLine"></div>
   <button id="titleUpgBtn">🛠️ UPGRADES</button>
-  <div id="footerBadge"><a href="../../">🥔 TaterTot Games Labs</a></div>
+  <div id="footerBadge"><a href="https://tatertotgames.com">tatertotgames.com</a></div>
 </div>
 
 <!-- WIN -->
@@ -223,7 +223,7 @@
     <div id="failPct">0%</div>
     <div id="nearMissLine"></div>
     <div class="panelSub" id="failGoalLine"></div>
-    <button class="btn btnBig" id="retryBtn">🔄 RETRY — FREE</button>
+    <button class="btn btnBig" id="retryBtn">🔄 RETRY, FREE</button>
     <button class="btn btnAlt" id="failUpgBtn">🛠️ UPGRADES</button>
   </div>
 </div>
@@ -471,7 +471,7 @@ let cam={zoom:1,zx:0,zy:0};
 let errCount=0;
 let coinPillRect=null;
 
-// pendulum + ball — fully initialized (loop runs from boot on title)
+// pendulum + ball, fully initialized (loop runs from boot on title)
 let pend={px:0,py:0,L:200,theta:0.4,omega:0,lagTheta:0.4,amp:0};
 let ball={mode:'idle',x:0,y:0,vx:0,vy:0,r:16,restT:0,hitThisThrow:false,squash:0};
 // level
@@ -1018,7 +1018,7 @@ function doFail(){
   releaseBtn.classList.remove('show');
   const p=pct();
   $('failPct').textContent=p+'%';
-  $('failGoalLine').textContent='Needed '+level.target+'% — earned 🪙 '+level.coinsEarned;
+  $('failGoalLine').textContent='Needed '+level.target+'%, earned 🪙 '+level.coinsEarned;
   $('nearMissLine').textContent=(p>=level.target-8)?('NEAR MISS '+p+'%! SO close!'):'';
   failScreen.classList.add('show');
   updateHUD();
@@ -1116,7 +1116,7 @@ $('titleUpgBtn').addEventListener('click',e=>{ e.stopPropagation(); ensureAudio(
 releaseBtn.addEventListener('pointerdown',e=>{ e.preventDefault(); e.stopPropagation(); ensureAudio(); releaseBall(); });
 muteBtn.addEventListener('click',e=>{ e.stopPropagation(); ensureAudio(); setMuted(!save.muted); });
 // Phones suspend the AudioContext when the tab is backgrounded (calls, app switching,
-// screen lock) and it stays suspended on return — the game would come back silent.
+// screen lock) and it stays suspended on return, the game would come back silent.
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden) ensureAudio(); });
 $('nextBtn').addEventListener('click',()=>{ winScreen.classList.remove('show'); goPlay(save.contract); });
 $('winUpgBtn').addEventListener('click',()=>goUpg('winback'));

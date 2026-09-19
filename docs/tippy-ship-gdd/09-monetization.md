@@ -1,4 +1,4 @@
-# 09 — Monetization
+# 09, Monetization
 
 Ad-led hybrid. Rewarded video drives volume, IAP drives depth.
 
@@ -6,7 +6,7 @@ Ad-led hybrid. Rewarded video drives volume, IAP drives depth.
 
 ## 1. Governing rules
 
-1. **No ad ever reverses a run outcome without cost.** The RIGHT HER! continue sheds two crates and closes loading — see [01-core-loop.md §7](01-core-loop.md) for the dominance proof that stopping cleanly always beats it.
+1. **No ad ever reverses a run outcome without cost.** The RIGHT HER! continue sheds two crates and closes loading, see [01-core-loop.md §7](01-core-loop.md) for the dominance proof that stopping cleanly always beats it.
 2. **No interstitial between a capsize and a retry.** That gap is where rage-quit lives. Interstitials fire only on map and menu transitions.
 3. **Gems never buy cargo and never buy a run outcome.** Money must not bypass the skill faucet.
 4. **First ad impression no earlier than session 2.**
@@ -30,11 +30,11 @@ Target 4–7 rewarded views per DAU. At a $12 eCPM in tier-1 markets, 5.4 views 
 
 ### Placement design notes
 
-**R3 — RIGHT HER!** is the highest-engagement placement and the most dangerous. Its 4 s window runs during the slow-motion capsize, so the player watches their ship falling over while deciding. The urgency is real and diegetic rather than manufactured. The cost structure (§1) is what keeps it honest.
+**R3, RIGHT HER!** is the highest-engagement placement and the most dangerous. Its 4 s window runs during the slow-motion capsize, so the player watches their ship falling over while deciding. The urgency is real and diegetic rather than manufactured. The cost structure (§1) is what keeps it honest.
 
-**R1 — ×2 Offline** is the return-trigger reinforcement. It must appear *after* the collection animation, never before — the player should feel the base reward first, then be offered more.
+**R1, ×2 Offline** is the return-trigger reinforcement. It must appear *after* the collection animation, never before, the player should feel the base reward first, then be offered more.
 
-**R7 — Free Ship Trial** is a merchandising placement disguised as a reward. A player who runs a Hopper once and feels how it eats Bullion is dramatically more likely to buy it. Show the Coin price on the result screen of the trial run.
+**R7, Free Ship Trial** is a merchandising placement disguised as a reward. A player who runs a Hopper once and feels how it eats Bullion is dramatically more likely to buy it. Show the Coin price on the result screen of the trial run.
 
 ### Frequency caps
 
@@ -66,11 +66,11 @@ Suppressed entirely for Remove Ads purchasers and for the first 3 sessions.
 |---|---|---|---|
 | **Harbourmaster** | $6.99 | Remove Ads + permanent ×2 idle + offline cap 12 h | **Anchor.** The single most important SKU |
 | Starter Pack | $4.99 | 400 gems + Clipper + 5k Coins, first 72 h only | Conversion opener |
-| Gems — Handful | $1.99 | 250 | |
-| Gems — Crate | $4.99 | 700 (+12%) | |
-| Gems — Hold | $9.99 | 1,600 (+28%) | |
-| Gems — Cargo Ship | $24.99 | 4,500 (+44%) | |
-| Gems — Fleet | $49.99 | 10,000 (+60%) | Whale tier |
+| Gems, Handful | $1.99 | 250 | |
+| Gems, Crate | $4.99 | 700 (+12%) | |
+| Gems, Hold | $9.99 | 1,600 (+28%) | |
+| Gems, Cargo Ship | $24.99 | 4,500 (+44%) | |
+| Gems, Fleet | $49.99 | 10,000 (+60%) | Whale tier |
 | Tide Pass | $9.99 | Season premium track | Recurring, per region season |
 | Hopper Bundle | $12.99 | Hopper hull + 2 tiers + 800 gems | Merchandising |
 | Icebreaker Bundle | $19.99 | Icebreaker + 3 tiers + 1,500 gems | Region 5 tie-in |
@@ -100,7 +100,7 @@ Assumptions at 100k DAU, blended tier-1/tier-3:
 | IAP ARPDAU | $0.033 |
 | **Blended ARPDAU** | **$0.097** |
 
-Against a target CPI of $0.85 and D30 of 6%, payback lands around day 42 — acceptable for hybrid-casual but not comfortable. **The lever that matters most is D7**, because it moves both ad volume and IAP conversion. Every design decision in this spec that looks like it costs monetization (no ad-continue without cost, no gems-for-cargo) is protecting D7.
+Against a target CPI of $0.85 and D30 of 6%, payback lands around day 42, acceptable for hybrid-casual but not comfortable. **The lever that matters most is D7**, because it moves both ad volume and IAP conversion. Every design decision in this spec that looks like it costs monetization (no ad-continue without cost, no gems-for-cargo) is protecting D7.
 
 ## 6. UA creative strategy
 
@@ -122,10 +122,10 @@ Clips are rendered from the deterministic tape at high quality offline, with the
 
 ### Creative concepts
 
-1. **"One more crate."** — Multiplier climbing, list rising, the hand hovering. Cut at the decision. High-intent, tests the core hook directly.
-2. **"SAVED!"** — Pure near-miss. Slow-motion, heartbeat, recovery, release. Sound-on winner.
-3. **"Don't do it."** — A catastrophe clip played straight, comedy timing. Broad-appeal, low-intent, cheap installs.
-4. **Playable ad** — The existing web build is *already* a playable ad. Strip it to run 1, wire the CTA. This is a near-zero-cost, high-performing asset that most competitors cannot produce.
+1. **"One more crate."**, Multiplier climbing, list rising, the hand hovering. Cut at the decision. High-intent, tests the core hook directly.
+2. **"SAVED!"**, Pure near-miss. Slow-motion, heartbeat, recovery, release. Sound-on winner.
+3. **"Don't do it."**, A catastrophe clip played straight, comedy timing. Broad-appeal, low-intent, cheap installs.
+4. **Playable ad**, The existing web build is *already* a playable ad. Strip it to run 1, wire the CTA. This is a near-zero-cost, high-performing asset that most competitors cannot produce.
 
 The web prototype at [`games/tippy-ship/play.html`](../../games/tippy-ship/play.html) being a single zero-dependency file is a genuine UA advantage. Ship it as the playable.
 
@@ -135,7 +135,7 @@ The web prototype at [`games/tippy-ship/play.html`](../../games/tippy-ship/play.
 - No loot boxes, no randomised paid rewards, no gacha.
 - No "your fleet is starving" style loss-framing push notifications.
 - Push notifications are opt-in, capped at 1/day, and only fire for: warehouse full, streak expiring, season ending, Regatta results.
-- Ad-continue window is 4 s and declining is a large, clearly-labelled button — never a small ✕.
+- Ad-continue window is 4 s and declining is a large, clearly-labelled button, never a small ✕.
 - Full purchase history and a restore-purchases path on every store.
 
 These are not just ethics; they are D30 protection. Every dark pattern in this genre trades week-one revenue for month-two churn, and this game's whole economic case rests on long accounts.
