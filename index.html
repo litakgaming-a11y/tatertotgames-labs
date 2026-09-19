@@ -96,16 +96,16 @@
     text-underline-offset:3px;margin-top:4px}
   .brief:hover{text-decoration:underline}
 
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(186px,1fr));gap:36px 20px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:36px 22px}
 
   .tile{display:flex;flex-direction:column;gap:5px;text-decoration:none;color:var(--ink)}
-  .shot{display:block;aspect-ratio:9/16;max-width:100%;border-radius:12px;overflow:hidden;background:var(--surface);
+  .shot{display:block;aspect-ratio:16/9;max-width:100%;border-radius:12px;overflow:hidden;background:var(--surface);
     outline:1px solid var(--line);outline-offset:-1px;margin-bottom:10px;
     transition:transform .25s cubic-bezier(.2,.7,.3,1)}
-  .shot img{width:100%;height:100%;object-fit:cover;object-position:top}
-  .tile:hover .shot{transform:translateY(-4px) rotate(-.6deg)}
+  .shot img{width:100%;height:100%;object-fit:cover}
+  .tile:hover .shot{transform:translateY(-4px) rotate(-.4deg)}
   .tile:active .shot{transform:translateY(-1px) scale(.985)!important;transition-duration:.08s}
-  .tile:nth-child(even):hover .shot{transform:translateY(-4px) rotate(.6deg)}
+  .tile:nth-child(even):hover .shot{transform:translateY(-4px) rotate(.4deg)}
   @media (prefers-reduced-motion:reduce){.shot{transition:none}.tile:hover .shot{transform:none!important}}
   .hook{font-size:.92rem;font-weight:550;line-height:1.3;color:var(--ink);text-wrap:balance}
   .name{font-family:var(--display);font-size:1.28rem;font-weight:750;font-stretch:88%;line-height:1.1;letter-spacing:-.005em}
@@ -145,9 +145,9 @@
   }
   @media (max-width:560px){
     .ledger{grid-template-columns:auto auto}
-    .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 12px}
+    .grid{grid-template-columns:minmax(0,1fr);gap:30px}
     .name{font-size:1.08rem}
-    .desc{font-size:.8rem;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+    .desc{font-size:.88rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
     .tag{display:none}
     .shot{border-radius:9px;margin-bottom:6px}
   }
@@ -177,56 +177,56 @@
     </header>
     <div class="grid">
       <a class="tile" href="games/kaboom-crane/">
-        <span class="shot"><img src="assets/shots/thumb/kaboom-crane.webp" width="360" height="640" alt="Kaboom Crane gameplay" loading="eager" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/kaboom-crane.webp" width="720" height="405" alt="Kaboom Crane title art" loading="eager" decoding="async"></span>
         <span class="name">Kaboom Crane</span>
         <span class="hook">Tap the rhythm, wreck the block</span>
         <span class="desc">Push the ball like a playground swing, perfect-timed taps build monster amplitude, then release and level it.</span>
         <span class="foot"><span class="tag">Rhythm timing · demolition</span><span class="go">Play <span aria-hidden="true">&rarr;</span></span></span>
       </a>
       <a class="tile" href="games/bounce-brigade/">
-        <span class="shot"><img src="assets/shots/thumb/bounce-brigade.webp" width="360" height="640" alt="Bounce Brigade gameplay" loading="eager" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/bounce-brigade.webp" width="720" height="405" alt="Bounce Brigade title art" loading="eager" decoding="async"></span>
         <span class="name">Bounce Brigade</span>
         <span class="hook">Place the trampolines</span>
         <span class="desc">Citizens leap from a smoking building. Bounce them across rooftops into the net, style points for flips.</span>
         <span class="foot"><span class="tag">Placement physics · rescue</span><span class="go">Play <span aria-hidden="true">&rarr;</span></span></span>
       </a>
       <a class="tile" href="games/slingshot-salvage/">
-        <span class="shot"><img src="assets/shots/thumb/slingshot-salvage.webp" width="360" height="640" alt="Slingshot Salvage gameplay" loading="eager" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/slingshot-salvage.webp" width="720" height="405" alt="Slingshot Salvage title art" loading="eager" decoding="async"></span>
         <span class="name">Slingshot Salvage</span>
         <span class="hook">One-drag gravity slingshot</span>
         <span class="desc">Fling your pod through planetary gravity wells, hoover up space junk, and bank scrap for garage upgrades.</span>
         <span class="foot"><span class="tag">Physics aim · 4 upgrade tracks</span><span class="go">Play <span aria-hidden="true">&rarr;</span></span></span>
       </a>
       <a class="tile" href="games/freeze-frame/">
-        <span class="shot"><img src="assets/shots/thumb/freeze-frame.webp" width="360" height="640" alt="Freeze Frame! gameplay" loading="eager" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/freeze-frame.webp" width="720" height="405" alt="Freeze Frame! title art" loading="eager" decoding="async"></span>
         <span class="name">Freeze Frame!</span>
         <span class="hook">Tap to freeze</span>
         <span class="desc">Flash-freeze water gaps so waddling critters cross before the ice shatters. Every rescue joins your snow village.</span>
         <span class="foot"><span class="tag">Timing juggle · village grows</span><span class="go">Play <span aria-hidden="true">&rarr;</span></span></span>
       </a>
       <a class="tile" href="games/volt-rush/">
-        <span class="shot"><img src="assets/shots/thumb/volt-rush.webp" width="360" height="640" alt="Volt Rush gameplay" loading="eager" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/volt-rush.webp" width="720" height="405" alt="Volt Rush title art" loading="eager" decoding="async"></span>
         <span class="name">Volt Rush</span>
         <span class="hook">Drag to catch lightning</span>
         <span class="desc">Slide the rod cart under telegraphed strikes, chain combos to x8, then feed a city that earns while you're away.</span>
         <span class="foot"><span class="tag">Reflex arcade · idle city</span><span class="go">Play <span aria-hidden="true">&rarr;</span></span></span>
       </a>
       <a class="tile" href="games/flip-force/">
-        <span class="shot"><img src="assets/shots/thumb/flip-force.webp" width="360" height="640" alt="Flip Force gameplay" loading="eager" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/flip-force.webp" width="720" height="405" alt="Flip Force title art" loading="eager" decoding="async"></span>
         <span class="name">Flip Force</span>
         <span class="hook">One tap flips your polarity</span>
         <span class="desc">Thread a drifting orb through attract and repel fields. Tap to swap poles and every force reverses under you.</span>
         <span class="foot"><span class="tag">State-toggle steering</span><span class="go">Play <span aria-hidden="true">&rarr;</span></span></span>
       </a>
       <a class="tile" href="games/ping-pilot/">
-        <span class="shot"><img src="assets/shots/thumb/ping-pilot.webp" width="360" height="640" alt="Ping Pilot gameplay" loading="eager" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/ping-pilot.webp" width="720" height="405" alt="Ping Pilot title art" loading="eager" decoding="async"></span>
         <span class="name">Ping Pilot</span>
         <span class="hook">Sonar-ping the dark</span>
         <span class="desc">The cave is pitch black and your ping paints it for two seconds, but the anglerfish hunts your pings.</span>
         <span class="foot"><span class="tag">Information reveal · risk</span><span class="go">Play <span aria-hidden="true">&rarr;</span></span></span>
       </a>
       <a class="tile" href="games/sky-bloom/">
-        <span class="shot"><img src="assets/shots/thumb/sky-bloom.webp" width="360" height="640" alt="Sky Bloom gameplay" loading="eager" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/sky-bloom.webp" width="720" height="405" alt="Sky Bloom title art" loading="eager" decoding="async"></span>
         <span class="name">Sky Bloom</span>
         <span class="hook">Burst at the perfect altitude</span>
         <span class="desc">Time each tap inside the target ring to fill the night with blooms. Chain perfects and the whole sky escalates.</span>
@@ -243,56 +243,56 @@
     </header>
     <div class="grid">
       <a class="tile" href="games/topple-party/">
-        <span class="shot"><img src="assets/shots/thumb/topple-party.webp" width="360" height="640" alt="Topple Party gameplay" loading="lazy" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/topple-party.webp" width="720" height="405" alt="Topple Party title art" loading="lazy" decoding="async"></span>
         <span class="name">Topple Party</span>
         <span class="hook">Draw the chain</span>
         <span class="desc">Sketch domino runs with your finger, hit GO, and watch the cascade clack its way into every target in slow-mo.</span>
         <span class="foot"><span class="tag">Chain reaction · build Topple Town</span><span class="go">Play <span aria-hidden="true">&rarr;</span></span></span>
       </a>
       <a class="tile" href="games/harbor-hustle/">
-        <span class="shot"><img src="assets/shots/thumb/harbor-hustle.webp" width="360" height="640" alt="Harbor Hustle gameplay" loading="lazy" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/harbor-hustle.webp" width="720" height="405" alt="Harbor Hustle title art" loading="lazy" decoding="async"></span>
         <span class="name">Harbor Hustle</span>
         <span class="hook">Tap to stop, tap to go</span>
         <span class="desc">Six boats, one brain, zero collisions. Thread ferries and darting jet-skis, near-misses pay a close-call bonus.</span>
         <span class="foot"><span class="tag">Traffic control · harbour town</span><span class="go">Play <span aria-hidden="true">&rarr;</span></span></span>
       </a>
       <a class="tile" href="games/sandfall/">
-        <span class="shot"><img src="assets/shots/thumb/sandfall.webp" width="360" height="640" alt="Sandfall gameplay" loading="lazy" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/sandfall.webp" width="720" height="405" alt="Sandfall title art" loading="lazy" decoding="async"></span>
         <span class="name">Sandfall</span>
         <span class="hook">Draw a ledge, the sand obeys</span>
         <span class="desc">Real falling-sand physics: route pouring streams into matching jars with eroding shelves you draw, and keep the colors from mixing.</span>
         <span class="foot"><span class="tag">Granular sim · terrarium shelf</span><span class="go">Play <span aria-hidden="true">&rarr;</span></span></span>
       </a>
       <a class="tile" href="games/tippy-ship/">
-        <span class="shot"><img src="assets/shots/thumb/tippy-ship.webp" width="360" height="640" alt="Tippy Ship gameplay" loading="lazy" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/tippy-ship.webp" width="720" height="405" alt="Tippy Ship title art" loading="lazy" decoding="async"></span>
         <span class="name">Tippy Ship</span>
         <span class="hook">Load the boat, don't tip it</span>
         <span class="desc">Drop crates from a swinging crane onto a hull that genuinely floats, every box makes it sit lower, list further, and creak louder.</span>
         <span class="foot"><span class="tag">Buoyancy stacking · route map</span><span class="go">Play <span aria-hidden="true">&rarr;</span></span></span>
       </a>
       <a class="tile" href="games/cut-loose/">
-        <span class="shot"><img src="assets/shots/thumb/cut-loose.webp" width="360" height="640" alt="Cut Loose gameplay" loading="lazy" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/cut-loose.webp" width="720" height="405" alt="Cut Loose title art" loading="lazy" decoding="async"></span>
         <span class="name">Cut Loose</span>
         <span class="hook">One snip, physics does the rest</span>
         <span class="desc">Packages hang in webs of taut rope. Cut the right one at the swing's apex and physics delivers it, cut the wrong one first and enjoy the show.</span>
         <span class="foot"><span class="tag">Verlet ropes · curiosity shelf</span><span class="go">Play <span aria-hidden="true">&rarr;</span></span></span>
       </a>
       <a class="tile" href="games/parcel-panic/">
-        <span class="shot"><img src="assets/shots/thumb/parcel-panic.webp" width="360" height="640" alt="Parcel Panic gameplay" loading="lazy" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/parcel-panic.webp" width="720" height="405" alt="Parcel Panic title art" loading="lazy" decoding="async"></span>
         <span class="name">Parcel Panic</span>
         <span class="hook">Tap the junction, flip the track</span>
         <span class="desc">Colored parcels stream toward forked junctions. One tap each routes them home, gold ones shatter if rushed.</span>
         <span class="foot"><span class="tag">Flow routing · logistics empire</span><span class="go">Play <span aria-hidden="true">&rarr;</span></span></span>
       </a>
       <a class="tile" href="games/ghost-crew/">
-        <span class="shot"><img src="assets/shots/thumb/ghost-crew.webp" width="360" height="640" alt="Ghost Crew gameplay" loading="lazy" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/ghost-crew.webp" width="720" height="405" alt="Ghost Crew title art" loading="lazy" decoding="async"></span>
         <span class="name">Ghost Crew</span>
         <span class="hook">Team up with your past self</span>
         <span class="desc">Run, then rewind, your last take replays as a ghost holding the plate while the new you walks through.</span>
         <span class="foot"><span class="tag">Record &amp; replay · co-op solo</span><span class="go">Play <span aria-hidden="true">&rarr;</span></span></span>
       </a>
       <a class="tile" href="games/beam-team/">
-        <span class="shot"><img src="assets/shots/thumb/beam-team.webp" width="360" height="640" alt="Beam Team gameplay" loading="lazy" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/beam-team.webp" width="720" height="405" alt="Beam Team title art" loading="lazy" decoding="async"></span>
         <span class="name">Beam Team</span>
         <span class="hook">Tap a mirror, the light bends</span>
         <span class="desc">One golden beam snakes through the dark. Rotate mirrors to reroute it live until every lantern blooms into colour.</span>
@@ -309,56 +309,56 @@
     </header>
     <div class="grid">
       <a class="tile" href="games/siege-pile/">
-        <span class="shot"><img src="assets/shots/thumb/siege-pile.webp" width="360" height="640" alt="Siege Pile gameplay" loading="lazy" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/siege-pile.webp" width="720" height="405" alt="Siege Pile title art" loading="lazy" decoding="async"></span>
         <span class="name">Siege Pile</span>
         <span class="hook">The pile becomes the ladder</span>
         <span class="desc">Fling ragdoll knights at the wall. The ones that fall short heap up, stand, and brace, turning your failures into the ramp the next wave climbs.</span>
         <span class="foot"><span class="tag">Ragdoll siege · emergent terrain</span><span class="go">Play <span aria-hidden="true">&rarr;</span></span></span>
       </a>
       <a class="tile" href="games/weatherwright/">
-        <span class="shot"><img src="assets/shots/thumb/weatherwright.webp" width="360" height="640" alt="Weatherwright gameplay" loading="lazy" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/weatherwright.webp" width="720" height="405" alt="Weatherwright title art" loading="lazy" decoding="async"></span>
         <span class="name">Weatherwright</span>
         <span class="hook">Command the arena, not the creature</span>
         <span class="desc">Your Glim fights on instinct. Your only move is the weather, call rain onto a Spark duel and the whole field turns conductive.</span>
         <span class="foot"><span class="tag">Environmental battler · Almanac</span><span class="go">Play <span aria-hidden="true">&rarr;</span></span></span>
       </a>
       <a class="tile" href="games/overwind/">
-        <span class="shot"><img src="assets/shots/thumb/overwind.webp" width="360" height="640" alt="Overwind gameplay" loading="lazy" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/overwind.webp" width="720" height="405" alt="Overwind title art" loading="lazy" decoding="async"></span>
         <span class="name">Overwind</span>
         <span class="hook">The machine is the mistake</span>
         <span class="desc">No power slider, a real machine. Wind the rope, watch the frame strain, and let go before it snaps. The lads who fall short heap up at the wall and become the ramp for the next one.</span>
         <span class="foot"><span class="tag">Simulated siege engine · 3D</span><span class="go">Play <span aria-hidden="true">&rarr;</span></span></span>
       </a>
       <a class="tile" href="games/rabble/">
-        <span class="shot"><img src="assets/shots/thumb/rabble.webp" width="360" height="640" alt="Rabble gameplay" loading="lazy" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/rabble.webp" width="720" height="405" alt="Rabble title art" loading="lazy" decoding="async"></span>
         <span class="name">Rabble</span>
         <span class="hook">You lead them. Loosely.</span>
         <span class="desc">Drag your warband into the catapult one at a time. Land inside and they storm the banner; land short and they mill about outside forever. Your archers keep shooting your own men.</span>
         <span class="foot"><span class="tag">Warband siege · friendly fire</span><span class="go">Play <span aria-hidden="true">&rarr;</span></span></span>
       </a>
       <a class="tile" href="games/tell/">
-        <span class="shot"><img src="assets/shots/thumb/tell.webp" width="360" height="640" alt="Tell gameplay" loading="lazy" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/tell.webp" width="720" height="405" alt="Tell title art" loading="lazy" decoding="async"></span>
         <span class="name">Tell</span>
         <span class="hook">Read the wind-up</span>
         <span class="desc">Every enemy attack telegraphs its element. Tap the one that beats it and your Kinmon interposes, never tapping plays exactly as it does today.</span>
         <span class="foot"><span class="tag">Combat probe · optional parry</span><span class="go">Play <span aria-hidden="true">&rarr;</span></span></span>
       </a>
       <a class="tile" href="games/handoff/">
-        <span class="shot"><img src="assets/shots/thumb/handoff.webp" width="360" height="640" alt="Handoff gameplay" loading="lazy" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/handoff.webp" width="720" height="405" alt="Handoff title art" loading="lazy" decoding="async"></span>
         <span class="name">Handoff</span>
         <span class="hook">The order is the game</span>
         <span class="desc">You never touch the fight. You set the order, and each Kinmon that falls hands something to whoever walks in next.</span>
         <span class="foot"><span class="tag">Combat probe · order chain</span><span class="go">Play <span aria-hidden="true">&rarr;</span></span></span>
       </a>
       <a class="tile" href="games/crucible/">
-        <span class="shot"><img src="assets/shots/thumb/crucible.webp" width="360" height="640" alt="Crucible gameplay" loading="lazy" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/crucible.webp" width="720" height="405" alt="Crucible title art" loading="lazy" decoding="async"></span>
         <span class="name">Crucible</span>
         <span class="hook">Stop before it cracks</span>
         <span class="desc">Feed cores, watch the heat, bank before the pot cracks. You can never lose what you put in, only leave value on the table.</span>
         <span class="foot"><span class="tag">Economy probe · push your luck</span><span class="go">Play <span aria-hidden="true">&rarr;</span></span></span>
       </a>
       <a class="tile" href="games/bonds/">
-        <span class="shot"><img src="assets/shots/thumb/bonds.webp" width="360" height="640" alt="Bonds gameplay" loading="lazy" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/bonds.webp" width="720" height="405" alt="Bonds title art" loading="lazy" decoding="async"></span>
         <span class="name">Bonds</span>
         <span class="hook">Squad or job. Never both.</span>
         <span class="desc">Jobs pay levels. Fighting side by side pays Bond, and a bonded pair learns a move only the two of them can do. You cannot buy either with the other.</span>
@@ -375,42 +375,42 @@
     </header>
     <div class="grid">
       <a class="tile" href="games/puff-puff-fit/">
-        <span class="shot"><img src="assets/shots/thumb/puff-puff-fit.webp" width="360" height="640" alt="Puff Puff Fit gameplay" loading="lazy" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/puff-puff-fit.webp" width="720" height="405" alt="Puff Puff Fit title art" loading="lazy" decoding="async"></span>
         <span class="name">Puff Puff Fit</span>
         <span class="hook">Hold to inflate</span>
         <span class="desc">Inflate a squishy blob to fill the chamber, and release before it kisses a spike. Perfect fills rain confetti.</span>
         <span class="foot"><span class="tag">Risk-vs-greed timing · skin shop</span><span class="go">Play <span aria-hidden="true">&rarr;</span></span></span>
       </a>
       <a class="tile" href="games/buzzcut-buddies/">
-        <span class="shot"><img src="assets/shots/thumb/buzzcut-buddies.webp" width="360" height="640" alt="Buzzcut Buddies gameplay" loading="lazy" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/buzzcut-buddies.webp" width="720" height="405" alt="Buzzcut Buddies title art" loading="lazy" decoding="async"></span>
         <span class="name">Buzzcut Buddies</span>
         <span class="hook">ASMR trim &amp; reveal</span>
         <span class="desc">Buzz away mountains of fuzz to reveal the cutie underneath, mind the mohawk requests, fill your salon.</span>
         <span class="foot"><span class="tag">Zen reveal · creature collection</span><span class="go">Play <span aria-hidden="true">&rarr;</span></span></span>
       </a>
       <a class="tile" href="games/fold-friends/">
-        <span class="shot"><img src="assets/shots/thumb/fold-friends.webp" width="360" height="640" alt="Fold Friends gameplay" loading="lazy" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/fold-friends.webp" width="720" height="405" alt="Fold Friends title art" loading="lazy" decoding="async"></span>
         <span class="name">Fold Friends</span>
         <span class="hook">Swipe to fold, it comes alive</span>
         <span class="desc">Crisp swipes crease paper into a crane. It blinks, flaps and waddles off to a park that grows with every fold.</span>
         <span class="foot"><span class="tag">Gesture craft · zen collection</span><span class="go">Play <span aria-hidden="true">&rarr;</span></span></span>
       </a>
       <a class="tile" href="games/bloom-drop/">
-        <span class="shot"><img src="assets/shots/thumb/bloom-drop.webp" width="360" height="640" alt="Bloom Drop gameplay" loading="lazy" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/bloom-drop.webp" width="720" height="405" alt="Bloom Drop title art" loading="lazy" decoding="async"></span>
         <span class="name">Bloom Drop</span>
         <span class="hook">Drop the seed, watch it plink</span>
         <span class="desc">Seeds rattle down a pin field with escalating dings, and wherever they land a flower erupts, forever.</span>
         <span class="foot"><span class="tag">Aim &amp; bounce · persistent garden</span><span class="go">Play <span aria-hidden="true">&rarr;</span></span></span>
       </a>
       <a class="tile" href="games/morphforge/">
-        <span class="shot"><img src="assets/shots/thumb/morphforge.webp" width="360" height="640" alt="Morphforge gameplay" loading="lazy" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/morphforge.webp" width="720" height="405" alt="Morphforge title art" loading="lazy" decoding="async"></span>
         <span class="name">Morphforge</span>
         <span class="hook">Feed it, you shape what hatches</span>
         <span class="desc">Pour essence into a Glim egg and its body grows from your blend. Push the shell to its cracking point for a Radiant, and never hatch the same creature twice.</span>
         <span class="foot"><span class="tag">Procedural evolution · Menagerie</span><span class="go">Play <span aria-hidden="true">&rarr;</span></span></span>
       </a>
       <a class="tile" href="games/snapcatch/">
-        <span class="shot"><img src="assets/shots/thumb/snapcatch.webp" width="360" height="640" alt="Snapcatch gameplay" loading="lazy" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/snapcatch.webp" width="720" height="405" alt="Snapcatch title art" loading="lazy" decoding="async"></span>
         <span class="name">Snapcatch</span>
         <span class="hook">Catch the instant, not the creature</span>
         <span class="desc">No ball, no dice roll. Frame a Glim at the peak of a leap and the quality of your photograph is the catch, and the Album keeps every shot you took.</span>
@@ -427,21 +427,21 @@
     </header>
     <div class="grid">
       <a class="tile" href="games/return-fire/">
-        <span class="shot"><img src="assets/shots/thumb/return-fire.webp" width="360" height="640" alt="Return Fire gameplay" loading="lazy" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/return-fire.webp" width="720" height="405" alt="Return Fire title art" loading="lazy" decoding="async"></span>
         <span class="name">Return Fire</span>
         <span class="hook">No weapon, send it back</span>
         <span class="desc">A war game where you never fire a shot. Swing your shield to deflect incoming rounds, your swipe speed rides along, and the machine army destroys itself with its own ammunition.</span>
         <span class="foot"><span class="tag">Reflection physics · Bastion rebuild</span><span class="go">Play <span aria-hidden="true">&rarr;</span></span></span>
       </a>
       <a class="tile" href="games/broadside-baron/">
-        <span class="shot"><img src="assets/shots/thumb/broadside-baron.webp" width="360" height="640" alt="Broadside Baron gameplay" loading="lazy" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/broadside-baron.webp" width="720" height="405" alt="Broadside Baron title art" loading="lazy" decoding="async"></span>
         <span class="name">Broadside Baron</span>
         <span class="hook">Fire at the top of the swell</span>
         <span class="desc">The sea rolls your hull and the roll aims your guns, so the metronome is something you watch, not a timing bar. Nail the crest and the whole broadside lands as one roar.</span>
         <span class="foot"><span class="tag">Rhythm gunnery · roguelite voyage</span><span class="go">Play <span aria-hidden="true">&rarr;</span></span></span>
       </a>
       <a class="tile" href="games/chopper-drop/">
-        <span class="shot"><img src="assets/shots/thumb/chopper-drop.webp" width="360" height="640" alt="Chopper Drop gameplay" loading="lazy" decoding="async"></span>
+        <span class="shot"><img src="assets/art/card/chopper-drop.webp" width="720" height="405" alt="Chopper Drop title art" loading="lazy" decoding="async"></span>
         <span class="name">Chopper Drop</span>
         <span class="hook">The load swings. Fly anyway.</span>
         <span class="desc">One finger flies the chopper; the squad member on your winch cable is a real pendulum that fights every turn. Damp the swing, or use it to sling a load over the ridge.</span>
