@@ -59,13 +59,28 @@ It plays every test bundle in headless Chrome, resizes it mid-game through 9:16,
 
 Results go to `dist/qa/report.json`, with screenshots in `dist/qa/`.
 
-Draft thumbnails:
+Listing art, made with Codex from each game's real gameplay screenshot:
 
 ```bash
-node playables/thumbs.mjs
+python playables/art.py key
 ```
 
-This captures `dist/submission/<slug>/thumb-16x9.png`, `thumb-1x1.png` and `thumb-5x7.png` at 2×.
+```bash
+python playables/art.py square
+```
+
+```bash
+python playables/art.py tall
+```
+
+```bash
+python playables/art.py titled
+```
+
+These produce the following in `dist/submission/<slug>/`:
+
+- `key-art-16x9.png`, `thumb-1x1.png` and `thumb-5x7.png`: clean images with no text, for the YouTube listing.
+- `title-art-16x9.png`: the same art with a colourful title logo. It's for the website only, because YouTube thumbnails can't carry logos.
 
 ## 3. What the build changes
 
@@ -151,8 +166,9 @@ Publisher and developer are both "TaterTot Games".
 
 Each listing also needs:
 
-- **Thumbnails at 1:1, 5:7 and 16:9.** `thumbs.mjs` makes drafts. Pick frames showing play,
-  with no logo, wordmark or open menu.
+- **Thumbnails at 1:1, 5:7 and 16:9.** They're ready for all 33 games: `thumb-1x1.png`,
+  `thumb-5x7.png` and `key-art-16x9.png` in `dist/submission/<slug>/`. None has text or a logo.
+  Don't upload `title-art-16x9.png` to YouTube.
 - **A 16:9 preview video.** Record real play in the dev bundle at 1920×1080: serve the repo,
   open `http://localhost:8791/dist/playables-dev/<slug>/` in a 16:9 window, and capture 15–30
   seconds of the core loop (OBS, or the Xbox Game Bar with Win+Alt+R).
