@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-24T14:00:00Z",
+  "title": "Design System: Clockwork Sky",
+  "extensions": {
+    "colorMeta": {
+      "night-ink": { "role": "neutral", "displayName": "Night Ink", "canonical": "#0c1322", "tonalRamp": ["#05080f", "#090e1b", "#0c1322", "#111b31", "#1a2744", "#2a3a5e", "#4a5b80", "#8391ad"] },
+      "deck": { "role": "neutral", "displayName": "Deck", "canonical": "#0a1020", "tonalRamp": ["#04070e", "#070c18", "#0a1020", "#0e1729", "#16213a", "#243250", "#3f4f70", "#7a87a3"] },
+      "engraving": { "role": "neutral", "displayName": "Engraving Cream", "canonical": "#e2d6ba", "tonalRamp": ["#3b3526", "#5c5440", "#7f7763", "#9e9580", "#b8ad93", "#cfc3a6", "#e2d6ba", "#f3ecdc"] },
+      "brass": { "role": "primary", "displayName": "Brass", "canonical": "#d8a94e", "tonalRamp": ["#3d2d0e", "#5e4516", "#7f5e1f", "#a8812f", "#c49540", "#d8a94e", "#f0c874", "#f8e2b0"] },
+      "vermilion": { "role": "secondary", "displayName": "Vermilion", "canonical": "#e2573c", "tonalRamp": ["#3f140c", "#621f12", "#8a2c19", "#b23c22", "#d04b30", "#e2573c", "#f08a6e", "#f8c3b4"] },
+      "verdigris": { "role": "tertiary", "displayName": "Verdigris", "canonical": "#74b8a8", "tonalRamp": ["#15302a", "#214a40", "#2f6558", "#428272", "#5a9e8e", "#74b8a8", "#9fd3c6", "#d2ece5"] }
+    },
+    "typographyMeta": {
+      "plate": { "displayName": "Plate", "purpose": "The game title only, in wide-tracked roman capitals." },
+      "readout": { "displayName": "Readout", "purpose": "The light total in the sky's top-left corner." },
+      "label": { "displayName": "Label", "purpose": "Tabs, sub-lines, notes and track captions." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "rule-out", "value": "0.3s linear draw, 0.8s fade", "purpose": "A line-up ruled from the star to the limb." },
+      { "name": "knob-turn", "value": "0.25s cubic-bezier(.2, .8, .2, 1)", "purpose": "The gear knob's notch moving to a new gear." },
+      { "name": "press", "value": "0.12s ease-out background and color", "purpose": "A plate inverting to brass when pressed." }
+    ],
+    "breakpoints": [
+      { "name": "landscape", "value": "width > 1.05 * height" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Plate Button",
+      "kind": "button",
+      "refersTo": "button-plate",
+      "description": "The default control: a brass-edged plate that inverts when pressed and is hatched when unaffordable.",
+      "html": "<button class=\"ds-plate\">Polish<b>15.0K</b></button> <button class=\"ds-plate\" disabled>Polish<b>7.73M</b></button>",
+      "css": ".ds-plate { min-height: 44px; padding: 4px 14px; border: 1px solid #d8a94e; border-radius: 2px; background: #0a1020; color: #ece3cc; font: 12px Georgia, serif; letter-spacing: .06em; display: inline-flex; flex-direction: column; align-items: center; transition: background-color .12s ease-out, color .12s ease-out; cursor: pointer; } .ds-plate b { font-weight: normal; font-size: 15px; font-variant-numeric: tabular-nums; } .ds-plate:hover:not(:disabled) { background: rgba(216,169,78,.12); } .ds-plate:active:not(:disabled) { background: #d8a94e; color: #0a1020; } .ds-plate:focus-visible { outline: 1px solid #f0c874; outline-offset: 3px; } .ds-plate:disabled { border-color: rgba(226,214,186,.22); color: #7f7763; background: repeating-linear-gradient(135deg, rgba(226,214,186,.10) 0 1px, transparent 1px 5px); cursor: default; }"
+    },
+    {
+      "name": "Primary Plate",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Solid brass, once per screen: Wind the sky, Collect.",
+      "html": "<button class=\"ds-primary\">Wind the sky</button>",
+      "css": ".ds-primary { min-height: 50px; padding: 0 28px; border: 0; border-radius: 2px; background: #d8a94e; color: #0a1020; font: 16px Georgia, serif; letter-spacing: .08em; cursor: pointer; } .ds-primary:active { background: #f0c874; } .ds-primary:focus-visible { outline: 1px solid #f0c874; outline-offset: 3px; }"
+    },
+    {
+      "name": "Deck Tabs",
+      "kind": "nav",
+      "refersTo": "tab",
+      "description": "Four equal tabs; the active one carries a brass rule, a brass dot marks news.",
+      "html": "<nav class=\"ds-tabs\"><button class=\"on\">Planets</button><button>Gears</button><button>Star chart<i></i></button><button>Logbook</button></nav>",
+      "css": ".ds-tabs { display: grid; grid-template-columns: repeat(4, 1fr); background: #0a1020; border-bottom: 1px solid rgba(226,214,186,.1); } .ds-tabs button { min-height: 42px; border: 0; background: none; color: #b8ad93; font: 13px Georgia, serif; letter-spacing: .06em; position: relative; cursor: pointer; } .ds-tabs button.on { color: #ece3cc; } .ds-tabs button.on::after { content: ''; position: absolute; left: 22%; right: 22%; bottom: 0; height: 2px; background: #d8a94e; } .ds-tabs i { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #d8a94e; margin-left: 5px; vertical-align: 2px; } .ds-tabs button:focus-visible { outline: 1px solid #f0c874; outline-offset: -3px; }"
+    },
+    {
+      "name": "Gear Dial",
+      "kind": "custom",
+      "refersTo": "gear-knob",
+      "description": "Chevrons around a toothed knob showing the ring's gear as p:q.",
+      "html": "<div class=\"ds-dial\"><button aria-label=\"Faster\"><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M14.5 6l-6 6 6 6\"/></svg></button><span class=\"ds-knob\">3:2</span><button aria-label=\"Slower\"><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M9.5 6l6 6-6 6\"/></svg></button></div>",
+      "css": ".ds-dial { display: inline-flex; align-items: center; gap: 2px; background: #0a1020; padding: 6px; } .ds-dial button { width: 40px; height: 44px; border: 0; background: none; color: #d8a94e; display: grid; place-items: center; cursor: pointer; } .ds-dial button:active { color: #f0c874; } .ds-knob { width: 44px; height: 44px; border-radius: 50%; border: 1px solid #d8a94e; outline: 3px dotted rgba(216,169,78,.55); outline-offset: -5px; background: #0e1729; color: #ece3cc; display: grid; place-items: center; font: 12px Georgia, serif; }"
+    },
+    {
+      "name": "Logbook Seal",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "An observation: double brass seal once logged, hatched before.",
+      "html": "<div class=\"ds-obs\"><span class=\"ds-seal\">4</span><div><h4>Four in a line</h4><p>Four planets on four gears, one line.</p><em>Star 2</em></div></div>",
+      "css": ".ds-obs { display: grid; grid-template-columns: 34px 1fr; gap: 8px; padding: 10px; border: 1px solid rgba(226,214,186,.14); border-radius: 2px; background: #0a1020; color: #ece3cc; font-family: Georgia, serif; max-width: 220px; } .ds-seal { width: 32px; height: 32px; border-radius: 50%; border: 3px double #d8a94e; color: #f0c874; display: grid; place-items: center; font-size: 11px; } .ds-obs h4 { font-weight: normal; font-size: 13.5px; margin: 0; } .ds-obs p { font-size: 11.5px; color: #b8ad93; margin: 2px 0 0; } .ds-obs em { font-style: normal; font-size: 11px; color: #d8a94e; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Working Instrument",
+    "overview": "Clockwork Sky is a brass orrery drawn in fine engraving lines on a night-ink ground. Every control is a part of the mechanism: a winding key, a mainspring gauge, gear dials, a forecast track. Motion comes only from the machine turning.",
+    "keyCharacteristics": ["Engraved cream lines at low alpha", "One brass accent for everything mechanical", "Vermilion only for big line-ups", "Hand-tinted planets with hatch shading", "Roman plate lettering with wide tracking", "2px corners, circles for bodies"],
+    "rules": [
+      { "name": "One brass", "body": "Brass is the only accent for controls; a new control never brings a new color.", "section": "colors" },
+      { "name": "Vermilion is earned", "body": "Vermilion appears only for line-ups of four or more and an overloaded spring.", "section": "colors" },
+      { "name": "Press inverts, poor is hatched", "body": "Pressed plates invert to brass; unaffordable controls wear the engraving hatch.", "section": "elevation" }
+    ],
+    "dos": ["Draw sky elements as lines or flat tints with hatch shading", "Tie motion to the mechanism", "Show state through the control itself"],
+    "donts": ["No glows or drop shadows on controls", "No second accent color", "No glyph or emoji icons", "The system serif is a constraint, not an ideal"]
+  }
+}

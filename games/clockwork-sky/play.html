@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Clockwork Sky | TaterTot Games</title>
+<meta name="theme-color" content="#0c1322">
+<link rel="icon" href="data:,">
+<script src="/analytics.js" defer></script>
+<style>
+  :root {
+    --ink: #0c1322; --ink2: #111b31; --deck: #0a1020; --deck2: #0e1729;
+    --line: 226, 214, 186; --text: #ece3cc; --dim: #b8ad93; --faint: #7f7763;
+    --brass: #d8a94e; --brass-hi: #f0c874; --verd: #74b8a8; --verm: #e2573c;
+    --hatch: repeating-linear-gradient(135deg, rgba(var(--line), .10) 0 1px, transparent 1px 5px);
+    --serif: Georgia, "Palatino Linotype", "Book Antiqua", Palatino, "Iowan Old Style", serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--ink); touch-action: none; overscroll-behavior: none; position: fixed; inset: 0; }
+  body { font-family: var(--serif); color: var(--text); font-size: 14px; line-height: 1.4; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  ::selection { background: var(--brass); color: var(--deck); }
+  canvas#sky { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  button { font-family: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  button:focus-visible, a:focus-visible { outline: 1px solid var(--brass-hi); outline-offset: 3px; }
+  .num { font-variant-numeric: tabular-nums lining-nums; }
+
+  /* brass plate buttons: pressing inverts, unaffordable is hatched */
+  .btn { min-height: 44px; padding: 0 16px; border: 1px solid var(--brass); border-radius: 2px; color: var(--text);
+    letter-spacing: .05em; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    transition: background-color .12s ease-out, color .12s ease-out; }
+  .btn:hover:not(:disabled) { background: rgba(216, 169, 78, .12); }
+  .btn:active:not(:disabled) { background: var(--brass); color: var(--deck); }
+  .btn:disabled { border-color: rgba(var(--line), .22); color: var(--faint); background: var(--hatch); cursor: default; }
+  .btn.solid { background: var(--brass); color: var(--deck); font-size: 16px; min-height: 50px; padding: 0 28px; letter-spacing: .08em; }
+  .btn.solid:active { background: var(--brass-hi); }
+
+  /* ---------- HUD over the sky ---------- */
+  #hud { position: fixed; display: none; pointer-events: none; }
+  #hud .big { font-size: 26px; line-height: 1.05; letter-spacing: .01em; }
+  #hud .big small { font-size: 13px; color: var(--dim); letter-spacing: .08em; margin-left: 6px; }
+  #hud .rate { font-size: 13px; color: var(--dim); margin-top: 2px; }
+  #hud .ice { font-size: 13px; color: var(--verd); margin-top: 2px; }
+  #hud .boost { font-size: 13px; color: var(--brass-hi); margin-top: 2px; }
+  #hint { position: fixed; display: none; pointer-events: none; text-align: center; font-style: italic; color: var(--dim);
+    font-size: 13px; padding: 0 16px; transition: opacity .4s ease-out; }
+  #muteBtn { position: fixed; width: 44px; height: 44px; display: none; align-items: center; justify-content: center;
+    border: 1px solid rgba(var(--line), .28); border-radius: 2px; z-index: 5; color: var(--text); }
+  #muteBtn svg { width: 22px; height: 22px; }
+  #muteBtn:active { background: var(--brass); color: var(--deck); }
+
+  /* ---------- the instrument deck ---------- */
+  #deck { position: fixed; display: none; flex-direction: column; background: var(--deck); z-index: 3; }
+  body.port #deck { left: 0; right: 0; bottom: 0; border-top: 1px solid rgba(216, 169, 78, .5); }
+  body.land #deck { top: 0; right: 0; bottom: 0; border-left: 1px solid rgba(216, 169, 78, .5); }
+  #trackWrap { flex: 0 0 auto; padding: 8px 14px 4px; border-bottom: 1px solid rgba(var(--line), .1); }
+  #track { width: 100%; height: 58px; display: block; }
+  #tabs { flex: 0 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid rgba(var(--line), .1); }
+  .tab { min-height: 42px; font-size: 13px; letter-spacing: .06em; color: var(--dim); position: relative; padding: 0 4px; }
+  .tab.on { color: var(--text); }
+  .tab.on::after { content: ""; position: absolute; left: 22%; right: 22%; bottom: 0; height: 2px; background: var(--brass); }
+  .tab:active { color: var(--brass-hi); }
+  .tab .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--brass); margin-left: 5px; vertical-align: 2px; }
+  #body { flex: 1 1 auto; overflow-y: auto; overscroll-behavior: contain; padding: 4px 0 18px; touch-action: pan-y; }
+  .scroll::-webkit-scrollbar { width: 6px; }
+  .scroll::-webkit-scrollbar-thumb { background: rgba(216, 169, 78, .35); border-radius: 3px; }
+  .scroll { scrollbar-width: thin; scrollbar-color: rgba(216, 169, 78, .35) transparent; }
+
+  .bar { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px 4px; color: var(--dim); font-size: 12px; letter-spacing: .06em; }
+  .amt { display: inline-flex; border: 1px solid rgba(var(--line), .22); border-radius: 2px; }
+  .amt button { min-height: 32px; min-width: 44px; font-size: 12px; color: var(--dim); letter-spacing: .04em; }
+  .amt button.on { background: rgba(216, 169, 78, .16); color: var(--text); }
+
+  .row { display: grid; grid-template-columns: 30px 1fr auto; gap: 12px; align-items: center; padding: 10px 14px; }
+  .row + .row { border-top: 1px solid rgba(var(--line), .07); }
+  .sw { width: 26px; height: 26px; border-radius: 50%; background: var(--t); position: relative; overflow: hidden;
+    box-shadow: inset 0 0 0 1px rgba(236, 227, 204, .75); }
+  .sw::after { content: ""; position: absolute; inset: 0 0 0 50%; background: repeating-linear-gradient(90deg, rgba(10, 14, 26, .55) 0 1px, transparent 1px 3px); }
+  .nm { font-size: 15px; letter-spacing: .02em; }
+  .nm .lv { font-size: 12px; color: var(--dim); margin-left: 6px; letter-spacing: .04em; }
+  .sub { font-size: 12.5px; color: var(--dim); }
+  .sub b { color: var(--text); font-weight: normal; }
+  .mo { display: flex; align-items: center; gap: 8px; margin-top: 3px; min-height: 22px; }
+  .pips { display: inline-flex; gap: 4px; }
+  .pips i { width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--verd); display: block; }
+  .pips i.on { background: var(--verd); }
+  .moon { font-size: 12px; color: var(--verd); border-bottom: 1px solid rgba(116, 184, 168, .5); min-height: 24px; padding: 0 2px; }
+  .moon:disabled { color: var(--faint); border-color: transparent; cursor: default; }
+  .buy { flex-direction: column; gap: 0; min-width: 92px; padding: 4px 12px; line-height: 1.15; }
+  .buy .bl { font-size: 12px; letter-spacing: .06em; }
+  .buy .bc { font-size: 15px; }
+  .locked .nm { color: var(--dim); }
+  .locked .sw { background: var(--hatch); box-shadow: inset 0 0 0 1px rgba(var(--line), .3); }
+  .locked .sw::after { display: none; }
+
+  .sect { padding: 14px 14px 6px; }
+  .sect + .sect { border-top: 1px solid rgba(var(--line), .1); }
+  .sect h3 { font-weight: normal; font-size: 15px; letter-spacing: .04em; margin-bottom: 4px; }
+  .sect p { color: var(--dim); font-size: 12.5px; max-width: 60ch; }
+  .sect .act { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; }
+  .sect .act .note { font-size: 12.5px; color: var(--dim); }
+  .drive { display: grid; grid-template-columns: 112px 1fr; gap: 14px; align-items: center; }
+  #gauge { width: 112px; height: 66px; display: block; }
+
+  .grow { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; padding: 8px 14px; }
+  .grow + .grow { border-top: 1px solid rgba(var(--line), .07); }
+  .dial { display: inline-flex; align-items: center; gap: 2px; }
+  .dial button { width: 40px; height: 44px; color: var(--brass); display: grid; place-items: center; }
+  .dial button:disabled { color: var(--faint); cursor: default; }
+  .dial button:active:not(:disabled) { color: var(--brass-hi); }
+  .knob { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--brass); position: relative; display: grid; place-items: center;
+    font-size: 12px; letter-spacing: .02em; background: var(--deck2); outline: 3px dotted rgba(216, 169, 78, .55); outline-offset: -5px; }
+  .knob::before { content: ""; position: absolute; left: 50%; top: 1px; width: 2px; height: 7px; margin-left: -1px; background: var(--brass-hi);
+    transform-origin: 1px 21px; transform: rotate(var(--r, 0deg)); transition: transform .25s cubic-bezier(.2, .8, .2, 1); }
+  .cab { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; padding: 8px 14px; }
+
+  /* ---------- screens (title, chart, logbook, away) ---------- */
+  .screen { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 10;
+    background: rgba(5, 9, 18, .74); padding: 16px; }
+  .screen.show { display: flex; }
+  .panel { width: min(600px, 100%); max-height: 100%; overflow-y: auto; overscroll-behavior: contain; background: var(--deck);
+    border: 1px solid rgba(216, 169, 78, .45); border-radius: 2px; padding: 20px 20px 22px; touch-action: pan-y; }
+  .phead { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .phead h2 { font-weight: normal; font-size: 22px; letter-spacing: .08em; }
+  .lede { color: var(--dim); font-size: 13.5px; max-width: 62ch; }
+
+  #title { background: linear-gradient(180deg, rgba(5, 9, 18, .86) 0%, rgba(5, 9, 18, .55) 30%, rgba(5, 9, 18, 0) 48%, rgba(5, 9, 18, 0) 68%, rgba(5, 9, 18, .8) 100%); flex-direction: column; justify-content: space-between; padding: max(9vh, 28px) 16px 18px; text-align: center; }
+  #title .mark { font-weight: normal; font-size: clamp(30px, min(9vw, 12vh), 76px); letter-spacing: .16em; line-height: 1.02; text-indent: .16em;
+    color: var(--text); text-shadow: 0 2px 18px rgba(5, 9, 18, .9); }
+  #title .rule { width: min(360px, 70vw); height: 1px; margin: 16px auto 14px; background: linear-gradient(90deg, transparent, var(--brass), transparent); }
+  #title .tag { color: var(--dim); font-size: clamp(14px, 3.6vw, 17px); font-style: italic; text-shadow: 0 1px 10px rgba(5, 9, 18, .95); }
+  #title .go { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  #title .stat { color: var(--dim); font-size: 13px; text-shadow: 0 1px 8px rgba(5, 9, 18, .95); }
+  #badge { color: var(--dim); font-size: 13px; letter-spacing: .06em; text-decoration: none; border-bottom: 1px solid rgba(216, 169, 78, .5); padding: 6px 2px 2px; }
+
+  #map { position: relative; width: 100%; aspect-ratio: 100 / 72; margin: 12px 0 8px; border: 1px solid rgba(var(--line), .12);
+    background: #0d1628; overflow: hidden; }
+  #mapLines { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .node { position: absolute; width: 36px; height: 36px; margin: -18px 0 0 -18px; border-radius: 50%; display: grid; place-items: center; }
+  .node i { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(var(--line), .45); background: var(--deck); display: block; transition: transform .2s ease-out; }
+  .node.open i { border-color: var(--brass); }
+  .node.lit i { background: var(--brass-hi); border-color: var(--brass-hi); box-shadow: 0 0 0 3px var(--deck), 0 0 0 4px rgba(240, 200, 116, .7); }
+  .node.sel i { transform: scale(1.45); }
+  .cname { position: absolute; font-size: 11px; letter-spacing: .14em; color: var(--faint); pointer-events: none; text-transform: uppercase; }
+  #nodeInfo { min-height: 96px; padding: 12px 0 4px; border-top: 1px solid rgba(var(--line), .1); }
+  #nodeInfo h3 { font-weight: normal; font-size: 16px; }
+  #nodeInfo p { color: var(--dim); font-size: 13px; margin: 2px 0 10px; }
+  .stars { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+  .stars button { min-height: 40px; padding: 0 12px; border: 1px solid rgba(var(--line), .25); border-radius: 2px; font-size: 13px; color: var(--dim); }
+  .stars button.on { border-color: var(--brass); color: var(--text); background: rgba(216, 169, 78, .12); }
+  .stars button:disabled { background: var(--hatch); color: var(--faint); cursor: default; }
+  #starText { color: var(--dim); font-size: 13px; min-height: 36px; }
+  .collapse { margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(var(--line), .12); }
+  .collapse h3 { font-weight: normal; font-size: 17px; letter-spacing: .04em; }
+  .collapse .act { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+
+  #logGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 14px; }
+  .obs { border: 1px solid rgba(var(--line), .14); border-radius: 2px; padding: 10px 10px 9px; display: grid; grid-template-columns: 34px 1fr; gap: 8px; align-items: start; }
+  .seal { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; letter-spacing: .02em;
+    border: 1px solid rgba(var(--line), .25); color: var(--faint); background: var(--hatch); }
+  .obs.got .seal { border: 3px double var(--brass); color: var(--brass-hi); background: none; }
+  .obs h4 { font-weight: normal; font-size: 13.5px; line-height: 1.25; }
+  .obs p { font-size: 11.5px; color: var(--dim); margin-top: 2px; }
+  .obs .when { font-size: 11px; color: var(--brass); margin-top: 3px; letter-spacing: .04em; }
+  .obs:not(.got) h4 { color: var(--dim); }
+
+  #away .panel { width: min(420px, 100%); text-align: center; }
+  #away .gain { font-size: 34px; margin: 10px 0 4px; }
+  #away .act { margin-top: 18px; display: flex; justify-content: center; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body class="port">
+<canvas id="sky"></canvas>
+
+<div id="hud">
+  <div class="big num"><span id="hLight">0</span><small>light</small></div>
+  <div class="rate num" id="hRate">0 a second</div>
+  <div class="ice num" id="hIce"></div>
+  <div class="boost num" id="hBoost"></div>
+</div>
+<div id="hint"></div>
+<button id="muteBtn" aria-label="Sound on or off">
+  <svg id="icoOn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6"/><path d="M18 6.5a7.8 7.8 0 0 1 0 11"/></svg>
+  <svg id="icoOff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" style="display:none"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
+</button>
+
+<div id="deck">
+  <div id="trackWrap"><canvas id="track" aria-label="Upcoming line-ups"></canvas></div>
+  <nav id="tabs">
+    <button class="tab on" data-tab="planets">Planets</button>
+    <button class="tab" data-tab="gears">Gears</button>
+    <button class="tab" id="chartBtn">Star chart</button>
+    <button class="tab" id="logBtn">Logbook</button>
+  </nav>
+  <div id="body" class="scroll"></div>
+</div>
+
+<div id="title" class="screen show">
+  <div>
+    <h1 class="mark">Clockwork<br>Sky</h1>
+    <div class="rule"></div>
+    <p class="tag">Wind the sky. Line up the planets.</p>
+  </div>
+  <div class="go">
+    <button class="btn solid" id="playBtn">Wind the sky</button>
+    <div class="stat num" id="titleStat"></div>
+    <a id="badge" href="https://tatertotgames.com">tatertotgames.com</a>
+  </div>
+</div>
+
+<div id="chart" class="screen">
+  <div class="panel scroll">
+    <div class="phead"><h2>Star chart</h2><button class="btn" id="chartBack">Back</button></div>
+    <p class="lede num" id="chartLede"></p>
+    <div id="map"><canvas id="mapLines"></canvas></div>
+    <div id="nodeInfo"></div>
+    <div class="collapse">
+      <h3>Collapse the star</h3>
+      <p class="lede num" id="colText"></p>
+      <div class="stars" id="starPick"></div>
+      <p id="starText"></p>
+      <div class="act"><button class="btn" id="colBtn">Collapse</button><button class="btn" id="colYes" style="display:none">Yes, let it go out</button></div>
+    </div>
+  </div>
+</div>
+
+<div id="log" class="screen">
+  <div class="panel scroll">
+    <div class="phead"><h2>Logbook</h2><button class="btn" id="logBack">Back</button></div>
+    <p class="lede num" id="logLede"></p>
+    <div id="logGrid"></div>
+  </div>
+</div>
+
+<div id="away" class="screen">
+  <div class="panel">
+    <h2 style="font-weight:normal;font-size:20px;letter-spacing:.06em">While you were away</h2>
+    <p class="lede num" id="awayTime" style="margin:6px auto 0"></p>
+    <div class="gain num" id="awayGain"></div>
+    <p class="lede" id="awayNote" style="margin:0 auto"></p>
+    <div class="act"><button class="btn solid" id="awayBtn">Collect</button></div>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const TAU = Math.PI * 2;
+const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+const wrap = a => ((a % TAU) + TAU) % TAU;
+
+/* ============================== data ============================== */
+const RINGS = [
+  { n: 'Cinder', r: 0.25,  size: 0.034, base: 1,     cost: 5,     unlock: 0,     gear: 2, tint: '#c8674a' },
+  { n: 'Brine',  r: 0.375, size: 0.040, base: 8,     cost: 60,    unlock: 60,    gear: 4, tint: '#4f9c9a' },
+  { n: 'Ochre',  r: 0.5,   size: 0.048, base: 70,    cost: 800,   unlock: 1500,  gear: 5, tint: '#c99a45' },
+  { n: 'Frost',  r: 0.62,  size: 0.042, base: 650,   cost: 11000, unlock: 3e4,   gear: 6, tint: '#8fb5d6' },
+  { n: 'Heath',  r: 0.74,  size: 0.052, base: 7000,  cost: 1.5e5, unlock: 6e5,   gear: 7, tint: '#9d86b8' },
+  { n: 'Umbra',  r: 0.855, size: 0.046, base: 80000, cost: 2.2e6, unlock: 1.2e7, gear: 8, tint: '#8a9a5e' },
+];
+const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+// A gear p:q turns its ring once every p/q beats of the drive.
+const GEARS = [
+  { p: 1, q: 2, cost: 5e7 }, { p: 2, q: 3, cost: 4e5 }, { p: 1, q: 1, cost: 0 }, { p: 3, q: 2, cost: 1500 },
+  { p: 2, q: 1, cost: 0 }, { p: 3, q: 1, cost: 0 }, { p: 4, q: 1, cost: 0 }, { p: 6, q: 1, cost: 0 },
+  { p: 8, q: 1, cost: 0 }, { p: 12, q: 1, cost: 2.5e4 },
+];
+const gearVal = g => GEARS[g].p / GEARS[g].q;
+const gearLabel = g => GEARS[g].p + ':' + GEARS[g].q;
+const BASE_GEARS = [2, 4, 5, 6, 7, 8];
+// A line-up pays each planet in it this many beats' worth of its light, by how many gears lined up.
+const CONJ = [0, 0, 0.3, 1, 2.5, 6, 15, 35];
+const KWORD = ['', '', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven'];
+const STARS = {
+  yellow: { n: 'Yellow star', beat: 1,   val: 1,   cap: 1,   tol: 0, conj: 1,   t: 'Steady and bright. The star every sky starts with.' },
+  red:    { n: 'Red giant',   beat: 1.4, val: 2.4, cap: 1,   tol: 2, conj: 1,   t: 'Big and slow. Planets turn slower but pay much more, and they line up from further apart.', need: 'cr1' },
+  blue:   { n: 'Blue giant',  beat: 0.7, val: 1.3, cap: 0.8, tol: 0, conj: 1,   t: 'Hot and quick. Everything turns faster, but the mainspring is weaker.', need: 'cr2' },
+  binary: { n: 'Binary star', beat: 1,   val: 1.5, cap: 1,   tol: 0, conj: 1,   t: 'A second star circles the first. When it lines up with planets, it counts as one more.', need: 'cr3', twin: true },
+  pulsar: { n: 'Pulsar',      beat: 1,   val: 1.6, cap: 1,   tol: 0, conj: 1,   t: 'A beam sweeps the sky. Line-ups inside the beam pay three times, and comets come twice as often.', need: 'cr4', beam: true },
+  dark:   { n: 'Dark star',   beat: 1,   val: 3,   cap: 1,   tol: 0, conj: 2.5, t: 'The inner ring is gone. Every other planet pays three times, and line-ups hit much harder.', need: 'cr5', dark: true },
+};
+const STAR_ORDER = ['yellow', 'red', 'blue', 'binary', 'pulsar', 'dark'];
+const CONSTS = {
+  lyra: { n: 'The Lyre', x: 17, y: 5 }, anvil: { n: 'The Anvil', x: 74, y: 5 },
+  heron: { n: 'The Heron', x: 17, y: 95 }, lantern: { n: 'The Lantern', x: 77, y: 95 }, crown: { n: 'The Crown', x: 50, y: 88 },
+};
+const TREE = [
+  { id: 'ly1', c: 'lyra', n: 'Wider eyepiece', t: 'Planets count as lined up from a little further apart.', cost: 2, x: 10, y: 18 },
+  { id: 'ly2', c: 'lyra', n: 'Chord', t: 'Every line-up pays half as much again.', cost: 4, x: 22, y: 14 },
+  { id: 'ly3', c: 'lyra', n: 'Steady hand', t: 'You can zero the sky every 40 seconds instead of every 2 minutes.', cost: 4, x: 28, y: 30 },
+  { id: 'ly4', c: 'lyra', n: 'Resonance', t: 'A line-up within 8 seconds of the last one pays 25% more, stacking up to double.', cost: 10, x: 16, y: 40 },
+  { id: 'ly5', c: 'lyra', n: 'Grand chord', t: 'Line-ups of five or more pay three times.', cost: 20, x: 24, y: 54 },
+  { id: 'an1', c: 'anvil', n: 'Stronger spring', t: 'The mainspring carries one more unit of load.', cost: 2, x: 66, y: 16 },
+  { id: 'an2', c: 'anvil', n: 'Oiled teeth', t: 'Polishing planets costs 12% less.', cost: 3, x: 78, y: 12 },
+  { id: 'an3', c: 'anvil', n: 'Spare key', t: 'The winding key holds 8 more seconds, and each tap winds half as much again.', cost: 3, x: 90, y: 20 },
+  { id: 'an4', c: 'anvil', n: 'Self-winding', t: 'The clockwork winds itself a little, even when you do not.', cost: 8, x: 84, y: 34 },
+  { id: 'an5', c: 'anvil', n: 'Governor', t: 'An overloaded drive slows down far less.', cost: 14, x: 72, y: 40 },
+  { id: 'he1', c: 'heron', n: 'Comet lure', t: 'Comets come 40% more often.', cost: 2, x: 8, y: 70 },
+  { id: 'he2', c: 'heron', n: 'Deep ice', t: 'Comets carry twice as much ice.', cost: 4, x: 18, y: 64 },
+  { id: 'he3', c: 'heron', n: 'Long tail', t: 'A caught comet doubles your light for 45 seconds instead of 20.', cost: 5, x: 28, y: 72 },
+  { id: 'he4', c: 'heron', n: 'Comet net', t: 'Comets you miss are caught anyway.', cost: 10, x: 36, y: 84 },
+  { id: 'la1', c: 'lantern', n: 'Night watch', t: 'The sky keeps turning for up to 16 hours while you are away.', cost: 2, x: 64, y: 70 },
+  { id: 'la2', c: 'lantern', n: 'Clear skies', t: 'Time away pays full speed instead of half.', cost: 6, x: 74, y: 64 },
+  { id: 'la3', c: 'lantern', n: 'Head start', t: 'Each new star starts with two planets and 1,000 light.', cost: 4, x: 84, y: 72 },
+  { id: 'la4', c: 'lantern', n: 'Keepsakes', t: 'Moons stay with their planets when a star collapses.', cost: 12, x: 92, y: 84 },
+  { id: 'cr1', c: 'crown', n: 'Red giant', t: 'Lets you light a red giant as your next star.', cost: 3, x: 50, y: 18 },
+  { id: 'cr2', c: 'crown', n: 'Blue giant', t: 'Lets you light a blue giant as your next star.', cost: 6, x: 44, y: 32 },
+  { id: 'cr3', c: 'crown', n: 'Binary star', t: 'Lets you light a binary star as your next star.', cost: 10, x: 56, y: 44 },
+  { id: 'cr4', c: 'crown', n: 'Pulsar', t: 'Lets you light a pulsar as your next star.', cost: 16, x: 46, y: 58 },
+  { id: 'cr5', c: 'crown', n: 'Dark star', t: 'Lets you light a dark star as your next star.', cost: 28, x: 52, y: 74 },
+];
+const TREE_BY = {}; TREE.forEach(t => { TREE_BY[t.id] = t; });
+const OBS = [
+  { id: 'orbit', n: 'First turn', t: 'A planet came all the way round.' },
+  { id: 'c2', n: 'Two in a line', t: 'Two planets lined up with the star.' },
+  { id: 'c3', n: 'Three in a line', t: 'Three planets on three gears, one line.' },
+  { id: 'c4', n: 'Four in a line', t: 'Four planets on four gears, one line.' },
+  { id: 'c5', n: 'Five in a line', t: 'Five planets on five gears, one line.' },
+  { id: 'c6', n: 'The whole sky', t: 'Six planets on six gears, all in one line.' },
+  { id: 'c7', n: 'Seven in a line', t: 'Six planets and a second star in one line.' },
+  { id: 'comet', n: 'Comet catcher', t: 'Caught a comet as it crossed the sky.' },
+  { id: 'comet25', n: 'Comet season', t: 'Caught 25 comets.' },
+  { id: 'moons', n: 'Full moons', t: 'Three moons around one planet.' },
+  { id: 'strain', n: 'Pushed too hard', t: 'Asked more of the mainspring than it could give.' },
+  { id: 'zero', n: 'Back to noon', t: 'Zeroed the sky.' },
+  { id: 'gear', n: 'New teeth', t: 'Bought a new gear.' },
+  { id: 'chain', n: 'Chain', t: 'Three line-ups inside ten seconds.' },
+  { id: 'c100', n: 'A hundred line-ups', t: 'Watched a hundred line-ups.' },
+  { id: 'l6', n: 'A million light', t: 'Made a million light in total.' },
+  { id: 'l9', n: 'A billion light', t: 'Made a billion light in total.' },
+  { id: 'l12', n: 'A trillion light', t: 'Made a trillion light in total.' },
+  { id: 'collapse', n: 'First collapse', t: 'Let a star go out and lit a new one.' },
+  { id: 's_red', n: 'Red giant', t: 'Lit a red giant.' },
+  { id: 's_blue', n: 'Blue giant', t: 'Lit a blue giant.' },
+  { id: 's_binary', n: 'Binary star', t: 'Lit a binary star.' },
+  { id: 's_pulsar', n: 'Pulsar', t: 'Lit a pulsar.' },
+  { id: 's_dark', n: 'Dark star', t: 'Lit a dark star.' },
+];
+const COLLAPSE_AT = 1e7;
+
+/* ============================== save ============================== */
+const KEY = 'ttg_clockworksky';
+function freshRings() {
+  return RINGS.map((r, i) => ({ own: i === 0, lvl: i === 0 ? 1 : 0, gear: r.gear, moons: 0 }));
+}
+function fresh() {
+  return {
+    v: 1, light: 0, runLight: 0, lifeLight: 0, ice: 0, aether: 0, aetherLife: 0, collapses: 0,
+    rings: freshRings(), gears: BASE_GEARS.slice(), spring: 0, bank: 0, wind: 0,
+    tree: {}, star: 'yellow', log: {}, st: { conj: 0, comets: 0, maxK: 0 },
+    ph: [0, 0, 0, 0, 0, 0], twin: 0, beam: 0, simT: 0, zeroT: 0, zeroReady: 0,
+    hints: 0, lastSeen: Date.now(), muted: false, started: false,
+  };
+}
+function loadSave() {
+  let s = null;
+  try { s = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { s = null; }
+  const f = fresh();
+  if (!s || typeof s !== 'object') return f;
+  const o = Object.assign(f, s);
+  if (!Array.isArray(o.rings) || o.rings.length !== RINGS.length) o.rings = freshRings();
+  o.rings = o.rings.map((r, i) => ({ own: !!r.own, lvl: Math.max(0, r.lvl | 0), gear: clamp(r.gear | 0, 0, GEARS.length - 1), moons: clamp(r.moons | 0, 0, 3) }));
+  if (!Array.isArray(o.gears)) o.gears = BASE_GEARS.slice();
+  o.gears = o.gears.filter(g => g >= 0 && g < GEARS.length);
+  if (!Array.isArray(o.ph) || o.ph.length !== RINGS.length) o.ph = [0, 0, 0, 0, 0, 0];
+  o.ph = o.ph.map(a => (isFinite(a) ? wrap(+a) : 0));
+  if (!STARS[o.star]) o.star = 'yellow';
+  ['light', 'runLight', 'lifeLight', 'ice', 'aether', 'aetherLife', 'simT', 'zeroT', 'zeroReady', 'twin', 'beam', 'wind'].forEach(k => { if (!isFinite(o[k]) || o[k] < 0) o[k] = 0; });
+  if (!o.tree || typeof o.tree !== 'object') o.tree = {};
+  if (!o.log || typeof o.log !== 'object') o.log = {};
+  if (!o.st || typeof o.st !== 'object') o.st = { conj: 0, comets: 0, maxK: 0 };
+  if (typeof o.lastSeen !== 'number' || !isFinite(o.lastSeen)) o.lastSeen = Date.now();
+  o.muted = !!o.muted;
+  return o;
+}
+let S = loadSave();
+let saveTimer = 0;
+function persist() {
+  S.lastSeen = Date.now();
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* storage full or blocked */ }
+}
+
+/* ============================== rules ============================== */
+const has = id => !!S.tree[id];
+const star = () => STARS[S.star] || STARS.yellow;
+const ringActive = i => S.rings[i].own && !(i === 0 && star().dark);
+const tolerance = () => (5 + (has('ly1') ? 1.5 : 0) + star().tol) * Math.PI / 180;
+const beatSec = () => 3 * star().beat;
+const capacity = () => (2.6 + 0.5 * S.spring + (has('an1') ? 1 : 0)) * star().cap;
+const mass = i => 1 + 0.02 * S.rings[i].lvl + 0.25 * S.rings[i].moons;
+function load() {
+  let l = 0;
+  for (let i = 0; i < RINGS.length; i++) if (ringActive(i)) l += mass(i) / gearVal(S.rings[i].gear);
+  return l;
+}
+function driveFactor() {
+  const c = capacity(), l = load();
+  if (l <= c) return 1;
+  return has('an5') ? Math.sqrt(c / l) : c / l;
+}
+const bankMax = () => 6 + 4 * S.bank + (has('an3') ? 8 : 0);
+const windPerTap = () => 0.5 * (has('an3') ? 1.5 : 1);
+let cometBoost = 0;
+const speed = () => driveFactor() * (S.wind > 0 ? 2 : 1);
+const period = i => beatSec() * gearVal(S.rings[i].gear);
+const obsCount = () => Object.keys(S.log).length;
+function globalMult() {
+  return (1 + 0.04 * S.aetherLife) * (1 + 0.03 * obsCount()) * star().val * (cometBoost > 0 ? 2 : 1);
+}
+function milestone(l) {
+  let m = 1;
+  for (const t of [25, 50, 100, 150, 200, 250, 300, 400]) if (l >= t) m *= 2;
+  return m;
+}
+function value(i, gm) {
+  const r = S.rings[i];
+  if (!ringActive(i)) return 0;
+  return RINGS[i].base * r.lvl * milestone(r.lvl) * Math.pow(1.5, r.moons) * (gm === undefined ? globalMult() : gm);
+}
+function upCost(i, lvl) { return RINGS[i].cost * Math.pow(1.17, lvl - 1) * (has('an2') ? 0.88 : 1); }
+function buyInfo(i) {
+  const r = S.rings[i];
+  if (buyAmt === 1) return { n: 1, cost: upCost(i, r.lvl) };
+  let n = 0, cost = 0;
+  const cap = buyAmt === 10 ? 10 : 1000;
+  while (n < cap) {
+    const c = upCost(i, r.lvl + n);
+    if (buyAmt === 0 && cost + c > S.light && n > 0) break;
+    cost += c; n++;
+    if (buyAmt === 0 && cost > S.light) break;
+  }
+  return { n, cost };
+}
+const moonCost = (i, m) => Math.ceil([2, 5, 12][m] * (1 + 0.5 * i));
+const springCost = () => 100 * Math.pow(2.4, S.spring);
+const bankCost = () => 250 * Math.pow(8, S.bank);
+const zeroCooldown = () => (has('ly3') ? 40 : 120);
+function conjMult(k) {
+  let m = CONJ[Math.min(k, CONJ.length - 1)] * star().conj;
+  if (has('ly2')) m *= 1.5;
+  if (has('ly5') && k >= 5) m *= 3;
+  return m;
+}
+const aetherGain = () => Math.floor(Math.sqrt(S.runLight / 1e6));
+const offFrac = () => (has('la2') ? 1 : 0.5);
+const offCap = () => (has('la1') ? 16 : 8) * 3600;
+function nextLocked() {
+  for (let i = 0; i < RINGS.length; i++) {
+    if (i === 0 && star().dark) continue;
+    if (!S.rings[i].own) return i;
+  }
+  return -1;
+}
+function incomeOrbits() {
+  let s = 0; const gm = globalMult(), sp = speed();
+  for (let i = 0; i < RINGS.length; i++) if (ringActive(i)) s += value(i, gm) / period(i) * sp;
+  return s;
+}
+
+/* ============================== conjunctions ============================== */
+// Points: {i, a, g}. A conjunction counts planets on distinct gears within the tolerance.
+function bestCluster(pts, tol) {
+  let best = null, bestK = 0, bestN = 0;
+  for (let x = 0; x < pts.length; x++) {
+    const p = pts[x], mem = [], gs = [];
+    for (let y = 0; y < pts.length; y++) {
+      const q = pts[y];
+      if (wrap(q.a - p.a) <= tol) { mem.push(q.i); if (gs.indexOf(q.g) < 0) gs.push(q.g); }
+    }
+    if (gs.length > bestK || (gs.length === bestK && mem.length > bestN)) { best = mem; bestK = gs.length; bestN = mem.length; }
+  }
+  return { mem: best || [], k: bestK };
+}
+function kAmong(pts, members, tol) {
+  const sub = pts.filter(p => members.indexOf(p.i) >= 0);
+  return sub.length ? bestCluster(sub, tol).k : 0;
+}
+function newDet() { return { open: false, peak: null, peakK: 0, t0: 0, block: null }; }
+// Advance a detector one step; calls fire(members, k) when a line-up finishes.
+function detect(det, t, pts, tol, fire) {
+  if (det.block && kAmong(pts, det.block, tol) < 2) det.block = null;
+  const c = bestCluster(pts, tol);
+  if (det.open) {
+    if (c.k > det.peakK && c.mem.some(m => det.peak.indexOf(m) >= 0)) { det.peak = c.mem; det.peakK = c.k; }
+    // pay out the moment the line starts to break, while every planet in it is still on it
+    if (kAmong(pts, det.peak, tol) < det.peakK || t - det.t0 > 1.2) {
+      fire(det.peak, det.peakK);
+      det.block = det.peak; det.open = false; det.peak = null; det.peakK = 0;
+    }
+    return;
+  }
+  if (c.k >= 2) {
+    if (det.block && c.mem.every(m => det.block.indexOf(m) >= 0)) return;
+    det.open = true; det.peak = c.mem; det.peakK = c.k; det.t0 = t;
+  }
+}
+function points(ang, twinA) {
+  const pts = [];
+  for (let i = 0; i < RINGS.length; i++) if (ringActive(i)) pts.push({ i, a: ang[i], g: S.rings[i].gear });
+  if (star().twin) pts.push({ i: 6, a: twinA, g: 99 });
+  return pts;
+}
+const TWIN_BEATS = 12, BEAM_BEATS = 2;
+function beamHits(a, beamA) { const d = Math.abs(((a - beamA + Math.PI) % TAU + TAU) % TAU - Math.PI); return d < 0.35 || Math.abs(d - Math.PI) < 0.35; }
+
+let det = newDet();
+let forecast = [], fcAt = -1e9, fcDirty = true, fcBonusRate = 0;
+function runForecast() {
+  const ang = S.ph.slice(); let twin = S.twin, beam = S.beam;
+  const d = { open: det.open, peak: det.peak ? det.peak.slice() : null, peakK: det.peakK, t0: det.t0 - S.simT, block: det.block ? det.block.slice() : null };
+  const tol = tolerance(), bs = beatSec(), H = 150, dt = 1 / 30;
+  const per = []; for (let i = 0; i < RINGS.length; i++) per[i] = ringActive(i) ? period(i) : 0;
+  const out = []; const gm = globalMult() / (cometBoost > 0 ? 2 : 1);
+  let bonus = 0;
+  for (let t = dt; t <= H; t += dt) {
+    for (let i = 0; i < RINGS.length; i++) if (per[i]) ang[i] = wrap(ang[i] + TAU * dt / per[i]);
+    twin = wrap(twin + TAU * dt / (bs * TWIN_BEATS));
+    beam = wrap(beam + TAU * dt / (bs * BEAM_BEATS));
+    detect(d, t, points(ang, twin), tol, (mem, k) => {
+      let v = 0; for (const m of mem) if (m < 6) v += value(m, gm) / gearVal(S.rings[m].gear);
+      let mult = conjMult(k);
+      if (star().beam) { let a = 0; mem.forEach(m => { a += m < 6 ? ang[m] : twin; }); if (beamHits(a / mem.length, beam)) mult *= 3; }
+      out.push({ t: S.simT + t, k }); bonus += v * mult;
+    });
+  }
+  forecast = out; fcBonusRate = bonus / H; fcAt = S.simT; fcDirty = false;
+}
+
+/* ============================== audio ============================== */
+let AC = null, master = null;
+function audio() {
+  if (AC) return AC;
+  try {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    master = AC.createGain(); master.gain.value = S.muted ? 0 : 0.8; master.connect(AC.destination);
+  } catch (e) { AC = null; }
+  return AC;
+}
+let chimeBudget = 0;
+function tone(f, dur, vol, type, delay) {
+  if (!AC || S.muted || AC.state !== 'running') return;
+  const t = AC.currentTime + (delay || 0);
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.type = type || 'sine'; o.frequency.value = f;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + 0.02);
+}
+const SCALE = [261.6, 293.7, 329.6, 392, 440, 523.3, 587.3, 659.3, 784, 880];
+function sfxTick() { tone(1800 + Math.random() * 300, 0.03, 0.035, 'square'); }
+function sfxChime(i) {
+  if (chimeBudget > 5) return; chimeBudget++;
+  const f = SCALE[5 - i] || 330; tone(f, 0.9, 0.05); tone(f * 2.76, 0.4, 0.012);
+}
+function sfxConj(k) {
+  for (let n = 0; n < k; n++) { const f = SCALE[n * 2 % SCALE.length] * (n > 4 ? 2 : 1); tone(f, 1.6, 0.06, 'sine', n * 0.07); tone(f * 2.01, 0.9, 0.012, 'sine', n * 0.07); }
+  if (k >= 4) tone(65.4, 2.4, 0.12, 'sine');
+}
+function sfxBuy() { tone(620, 0.08, 0.05, 'triangle'); tone(930, 0.12, 0.03, 'triangle', 0.04); }
+function sfxComet() {
+  if (!AC || S.muted || AC.state !== 'running') return;
+  const t = AC.currentTime, len = 0.7, buf = AC.createBuffer(1, AC.sampleRate * len, AC.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+  const s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain();
+  f.type = 'bandpass'; f.Q.value = 4; f.frequency.setValueAtTime(2400, t); f.frequency.exponentialRampToValueAtTime(500, t + len);
+  g.gain.value = 0.12; s.buffer = buf; s.connect(f); f.connect(g); g.connect(master); s.start(t);
+  tone(1320, 0.5, 0.04, 'sine', 0.05); tone(1760, 0.6, 0.03, 'sine', 0.12);
+}
+function setMuted(m, keep) {
+  S.muted = m;
+  if (master) master.gain.value = m ? 0 : 0.8;
+  $('icoOn').style.display = m ? 'none' : ''; $('icoOff').style.display = m ? '' : 'none';
+  if (!keep) persist();
+}
+
+/* ============================== layout ============================== */
+const cv = $('sky'), cx = cv.getContext('2d');
+let W = 0, H = 0, DPR = 1, land = false, deckW = 0, deckH = 0;
+const sky = { x: 0, y: 0, w: 0, h: 0, cx: 0, cy: 0, R: 100 };
+let layer = null, layerDirty = true;
+function layout() {
+  W = Math.max(1, window.innerWidth); H = Math.max(1, window.innerHeight);
+  DPR = clamp(window.devicePixelRatio || 1, 1, 2.5);
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  land = W > H * 1.05;
+  document.body.className = land ? 'land' : 'port';
+  const deck = $('deck');
+  if (!started) { deckW = 0; deckH = 0; sky.x = 0; sky.y = 0; sky.w = W; sky.h = H; }
+  else if (land) { deckW = Math.round(clamp(W * 0.36, 300, 420)); deckH = H; deck.style.width = deckW + 'px'; deck.style.height = ''; sky.x = 0; sky.y = 0; sky.w = W - deckW; sky.h = H; }
+  else { deckH = Math.round(clamp(H * 0.44, 250, 400)); deckW = W; deck.style.height = deckH + 'px'; deck.style.width = ''; sky.x = 0; sky.y = 0; sky.w = W; sky.h = H - deckH; }
+  const top = 64, bot = 34;
+  sky.cx = sky.x + sky.w / 2;
+  // leave room outside the limb for its hour numerals
+  sky.R = Math.max(40, Math.min((sky.w / 2 - 10) / 1.07, (sky.h - top - bot) / 2 / 1.07));
+  sky.cy = sky.y + top + (sky.h - top - bot) / 2;
+  const hud = $('hud'); hud.style.left = (sky.x + 16) + 'px'; hud.style.top = (sky.y + 12) + 'px';
+  const mb = $('muteBtn'); mb.style.left = (sky.x + sky.w - 56) + 'px'; mb.style.top = (sky.y + 10) + 'px';
+  const hint = $('hint'); hint.style.left = sky.x + 'px'; hint.style.width = sky.w + 'px'; hint.style.top = (sky.y + sky.h - 24) + 'px';
+  sizeTrack(); layerDirty = true; drawMapLines();
+}
+function sizeTrack() {
+  const tc = $('track'), r = tc.getBoundingClientRect();
+  tc.width = Math.max(1, Math.round(r.width * DPR)); tc.height = Math.max(1, Math.round(r.height * DPR));
+}
+
+/* ============================== static layer ============================== */
+function rand(seed) { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
+function buildLayer() {
+  if (!layer) layer = document.createElement('canvas');
+  layer.width = cv.width; layer.height = cv.height;
+  const g = layer.getContext('2d');
+  g.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const grd = g.createRadialGradient(sky.cx, sky.cy, sky.R * 0.2, sky.cx, sky.cy, Math.max(W, H));
+  grd.addColorStop(0, '#15213b'); grd.addColorStop(0.55, '#0e1629'); grd.addColorStop(1, '#090e1b');
+  g.fillStyle = grd; g.fillRect(0, 0, W, H);
+  const R = rand(9127), n = Math.round(W * H / 2600);
+  for (let i = 0; i < n; i++) {
+    const x = R() * W, y = R() * H, s = R();
+    g.fillStyle = 'rgba(236,227,204,' + (0.12 + s * 0.5).toFixed(2) + ')';
+    g.fillRect(x, y, s > 0.93 ? 1.6 : 1, s > 0.93 ? 1.6 : 1);
+  }
+  const { cx: X, cy: Y, R: Rr } = sky;
+  // the limb: a graduated brass ring like an astrolabe's edge
+  g.strokeStyle = 'rgba(216,169,78,.75)'; g.lineWidth = 1.2;
+  g.beginPath(); g.arc(X, Y, Rr, 0, TAU); g.stroke();
+  g.strokeStyle = 'rgba(216,169,78,.4)'; g.lineWidth = 1;
+  g.beginPath(); g.arc(X, Y, Rr * 0.955, 0, TAU); g.stroke();
+  for (let d = 0; d < 360; d += 5) {
+    const a = d * Math.PI / 180 - Math.PI / 2, long = d % 30 === 0, r0 = Rr * (long ? 0.94 : 0.965);
+    g.strokeStyle = long ? 'rgba(216,169,78,.8)' : 'rgba(226,214,186,.35)';
+    g.beginPath(); g.moveTo(X + Math.cos(a) * r0, Y + Math.sin(a) * r0); g.lineTo(X + Math.cos(a) * Rr, Y + Math.sin(a) * Rr); g.stroke();
+  }
+  if (Rr > 150) {
+    g.fillStyle = 'rgba(216,169,78,.8)'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.font = Math.round(clamp(Rr * 0.045, 9, 14)) + 'px Georgia, serif';
+    for (let h = 0; h < 12; h++) {
+      const a = h * TAU / 12 - Math.PI / 2, rr = Rr * 1.045;
+      g.fillText(ROMAN[(h + 11) % 12], X + Math.cos(a) * rr, Y + Math.sin(a) * rr);
+    }
+  }
+  // the rings
+  for (let i = 0; i < RINGS.length; i++) {
+    const rr = Rr * RINGS[i].r, gone = i === 0 && star().dark;
+    if (gone) continue;
+    g.strokeStyle = S.rings[i].own ? 'rgba(226,214,186,.34)' : 'rgba(226,214,186,.12)';
+    g.setLineDash(S.rings[i].own ? [] : [2, 5]); g.lineWidth = 1;
+    g.beginPath(); g.arc(X, Y, rr, 0, TAU); g.stroke();
+  }
+  g.setLineDash([]);
+  layerDirty = false;
+}
+
+/* ============================== effects ============================== */
+const floats = [], lines = [], ripples = [], sparks = [];
+function floatText(x, y, text, color, size, life) { floats.push({ x, y, text, color, size: size || 12, t: 0, life: life || 1.1 }); }
+let comet = null, cometNext = 25;
+function cometInterval() { return (40 + Math.random() * 35) * (has('he1') ? 0.6 : 1) * (star().beam ? 0.5 : 1); }
+function spawnComet() {
+  const side = Math.random() < 0.5 ? -1 : 1;
+  const y0 = sky.y + sky.h * (0.15 + Math.random() * 0.3), y1 = sky.y + sky.h * (0.45 + Math.random() * 0.4);
+  const x0 = side < 0 ? sky.x - 40 : sky.x + sky.w + 40, x1 = side < 0 ? sky.x + sky.w + 40 : sky.x - 40;
+  comet = { x0, y0, x1, y1, t: 0, dur: 7.5, x: x0, y: y0, dx: 0, dy: 0 };
+}
+function catchComet(auto) {
+  const ice = (1 + Math.floor(Math.log10(Math.max(10, S.lifeLight)) / 3)) * (has('he2') ? 2 : 1);
+  S.ice += ice; S.st.comets++;
+  cometBoost = has('he3') ? 45 : 20;
+  floatText(comet.x, comet.y - 14, '+' + ice + ' ice', '#74b8a8', 14, 1.6);
+  for (let n = 0; n < 16; n++) sparks.push({ x: comet.x, y: comet.y, vx: (Math.random() - 0.5) * 160, vy: (Math.random() - 0.5) * 160, t: 0 });
+  if (!auto) sfxComet();
+  observe('comet'); if (S.st.comets >= 25) observe('comet25');
+  comet = null; fcDirty = true;
+}
+
+/* ============================== simulation ============================== */
+let autoAcc = 0, lastConj = [], resonance = 0, lastConjT = -99, strainSeen = false;
+function orbit(i) {
+  const v = value(i);
+  S.light += v; S.runLight += v; S.lifeLight += v;
+  const a = S.ph[i], rr = sky.R * RINGS[i].r;
+  floatText(sky.cx + Math.sin(a) * rr, sky.cy - Math.cos(a) * rr - 12, '+' + fmt(v), 'rgba(236,227,204,.9)', 11, 0.9);
+  sfxChime(i);
+  observe('orbit');
+}
+function fireConj(mem, k) {
+  let v = 0; for (const m of mem) if (m < 6) v += value(m) / gearVal(S.rings[m].gear);
+  let mult = conjMult(k);
+  let ax = 0, ay = 0;
+  mem.forEach(m => { const a = m < 6 ? S.ph[m] : S.twin; ax += Math.sin(a); ay += Math.cos(a); });
+  const ang = Math.atan2(ax, ay);
+  let beamed = false;
+  if (star().beam && beamHits(wrap(ang), S.beam)) { mult *= 3; beamed = true; }
+  const tt = S.simT;
+  if (has('ly4') && tt - lastConjT < 8 * speed()) resonance = Math.min(4, resonance + 1); else resonance = 0;
+  if (has('ly4')) mult *= 1 + 0.25 * resonance;
+  lastConjT = tt;
+  const gain = v * mult;
+  S.light += gain; S.runLight += gain; S.lifeLight += gain;
+  S.st.conj++;
+  if (k >= 4) { S.ice += 1; }
+  lines.push({ ang, mem: mem.slice(), k, t: 0, text: KWORD[Math.min(7, k)] + ' in a line' + (beamed ? ', in the beam' : ''), gain });
+  if (k >= 3) sfxConj(k); else tone(SCALE[7], 0.5, 0.025);
+  if (k > S.st.maxK) { S.st.maxK = k; window.TTG?.track('level_complete', { level: k }); }
+  observe('c' + Math.min(7, k));
+  if (S.st.conj >= 100) observe('c100');
+  const real = performance.now() / 1000;
+  lastConj.push(real); lastConj = lastConj.filter(x => real - x <= 10);
+  if (lastConj.length >= 3) observe('chain');
+}
+function step(dt) {
+  if (S.wind > 0) S.wind = Math.max(0, S.wind - dt);
+  if (has('an4')) { autoAcc += dt * 0.25; if (autoAcc >= 0.5) { autoAcc -= 0.5; S.wind = Math.min(bankMax(), S.wind + 0.5); } }
+  if (holding) S.wind = Math.min(bankMax(), S.wind + dt * 3 * (has('an3') ? 1.5 : 1));
+  if (cometBoost > 0) { cometBoost = Math.max(0, cometBoost - dt); if (cometBoost === 0) fcDirty = true; }
+  const df = driveFactor();
+  if (df < 1 && !strainSeen) { strainSeen = true; observe('strain'); }
+  const sp = df * (S.wind > 0 ? 2 : 1), sd = dt * sp;
+  const bs = beatSec();
+  for (let i = 0; i < RINGS.length; i++) {
+    if (!ringActive(i)) continue;
+    S.ph[i] += TAU * sd / period(i);
+    if (S.ph[i] >= TAU) { S.ph[i] -= TAU; orbit(i); }
+  }
+  S.twin = wrap(S.twin + TAU * sd / (bs * TWIN_BEATS));
+  S.beam = wrap(S.beam + TAU * sd / (bs * BEAM_BEATS));
+  S.simT += sd;
+  detect(det, S.simT, points(S.ph, S.twin), tolerance(), fireConj);
+  // comets
+  if (comet) {
+    comet.t += dt / comet.dur;
+    const px = comet.x, py = comet.y, u = comet.t;
+    comet.x = comet.x0 + (comet.x1 - comet.x0) * u; comet.y = comet.y0 + (comet.y1 - comet.y0) * u - Math.sin(u * Math.PI) * sky.h * 0.12;
+    comet.dx = comet.x - px; comet.dy = comet.y - py;
+    if (comet.t >= 1) { if (has('he4')) catchComet(true); else comet = null; cometNext = cometInterval(); }
+  } else if (S.rings[1].own || S.collapses > 0) {
+    cometNext -= dt;
+    if (cometNext <= 0) spawnComet();
+  }
+  if (S.lifeLight >= 1e6) observe('l6');
+  if (S.lifeLight >= 1e9) observe('l9');
+  if (S.lifeLight >= 1e12) observe('l12');
+}
+
+/* ============================== drawing ============================== */
+function drawPlanet(x, y, r, tint, lx, ly) {
+  cx.save();
+  cx.beginPath(); cx.arc(x, y, r, 0, TAU);
+  cx.fillStyle = tint; cx.fill();
+  cx.clip();
+  const nx = -lx, ny = -ly, px = -ny, py = nx;
+  cx.strokeStyle = 'rgba(8,12,24,.62)'; cx.lineWidth = Math.max(0.7, r * 0.08);
+  const stp = Math.max(1.5, r * 0.17);
+  for (let d = -r * 0.08; d < r; d += stp * (1 - d / r * 0.45)) {
+    const qx = x + nx * d, qy = y + ny * d;
+    cx.beginPath(); cx.moveTo(qx - px * r, qy - py * r); cx.lineTo(qx + px * r, qy + py * r); cx.stroke();
+  }
+  cx.restore();
+  cx.beginPath(); cx.arc(x, y, r, 0, TAU);
+  cx.strokeStyle = 'rgba(236,227,204,.85)'; cx.lineWidth = 1; cx.stroke();
+}
+function drawStar(t) {
+  const { cx: X, cy: Y, R } = sky, st = star();
+  const r = R * (st.dark ? 0.06 : S.star === 'red' ? 0.095 : S.star === 'blue' ? 0.06 : 0.07);
+  const col = S.star === 'red' ? '232,122,84' : S.star === 'blue' ? '160,200,240' : S.star === 'pulsar' ? '200,230,240' : '243,221,154';
+  if (!st.dark) {
+    const glow = cx.createRadialGradient(X, Y, r * 0.4, X, Y, r * 3.4);
+    glow.addColorStop(0, 'rgba(' + col + ',.35)'); glow.addColorStop(1, 'rgba(' + col + ',0)');
+    cx.fillStyle = glow; cx.beginPath(); cx.arc(X, Y, r * 3.4, 0, TAU); cx.fill();
+  }
+  // engraved rays
+  const rays = 32, rot = t * 0.05 * speed();
+  cx.strokeStyle = st.dark ? 'rgba(226,214,186,.45)' : 'rgba(' + col + ',.75)'; cx.lineWidth = 1;
+  cx.beginPath();
+  for (let n = 0; n < rays; n++) {
+    const a = rot + n * TAU / rays, l = n % 2 ? 1.7 : 2.3;
+    cx.moveTo(X + Math.cos(a) * r * 1.25, Y + Math.sin(a) * r * 1.25); cx.lineTo(X + Math.cos(a) * r * l, Y + Math.sin(a) * r * l);
+  }
+  cx.stroke();
+  cx.beginPath(); cx.arc(X, Y, r, 0, TAU);
+  if (st.dark) { cx.fillStyle = '#05080f'; cx.fill(); cx.strokeStyle = 'rgba(240,200,116,.9)'; cx.lineWidth = 1.6; cx.stroke(); }
+  else { cx.fillStyle = 'rgb(' + col + ')'; cx.fill(); cx.strokeStyle = 'rgba(12,19,34,.5)'; cx.lineWidth = 1; cx.stroke(); }
+  if (st.twin) {
+    const tr = R * 0.15, tx = X + Math.sin(S.twin) * tr, ty = Y - Math.cos(S.twin) * tr;
+    cx.strokeStyle = 'rgba(226,214,186,.2)'; cx.setLineDash([2, 4]); cx.beginPath(); cx.arc(X, Y, tr, 0, TAU); cx.stroke(); cx.setLineDash([]);
+    cx.fillStyle = '#f7c9a0'; cx.beginPath(); cx.arc(tx, ty, Math.max(3, R * 0.025), 0, TAU); cx.fill();
+  }
+}
+function drawBeam() {
+  const { cx: X, cy: Y, R } = sky;
+  for (const off of [0, Math.PI]) {
+    const a = S.beam + off;
+    cx.fillStyle = 'rgba(160,220,230,.07)';
+    cx.beginPath(); cx.moveTo(X, Y);
+    cx.lineTo(X + Math.sin(a - 0.35) * R, Y - Math.cos(a - 0.35) * R);
+    cx.lineTo(X + Math.sin(a + 0.35) * R, Y - Math.cos(a + 0.35) * R); cx.closePath(); cx.fill();
+    cx.strokeStyle = 'rgba(160,220,230,.35)'; cx.lineWidth = 1;
+    cx.beginPath(); cx.moveTo(X, Y); cx.lineTo(X + Math.sin(a) * R, Y - Math.cos(a) * R); cx.stroke();
+  }
+}
+function draw(dt, t) {
+  cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  if (layerDirty || !layer) buildLayer();
+  cx.drawImage(layer, 0, 0, W, H);
+  const { cx: X, cy: Y, R } = sky;
+  // winding: the key's charge fills the limb clockwise from noon
+  if (S.wind > 0) {
+    cx.strokeStyle = 'rgba(240,200,116,.9)'; cx.lineWidth = 3;
+    cx.beginPath(); cx.arc(X, Y, R * 0.978, -Math.PI / 2, -Math.PI / 2 + TAU * clamp(S.wind / bankMax(), 0, 1)); cx.stroke();
+  }
+  if (star().beam) drawBeam();
+  // conjunction lines, ruled from the star out to the limb
+  for (let n = lines.length - 1; n >= 0; n--) {
+    const L = lines[n]; L.t += dt;
+    const life = L.k >= 3 ? 2.2 : 1.1; if (L.t > life) { lines.splice(n, 1); continue; }
+    const grow = clamp(L.t / 0.3, 0, 1), fade = L.t < life - 0.8 ? 1 : (life - L.t) / 0.8;
+    const ex = X + Math.sin(L.ang) * R * grow, ey = Y - Math.cos(L.ang) * R * grow;
+    cx.strokeStyle = L.k >= 4 ? 'rgba(226,87,60,' + fade + ')' : 'rgba(240,200,116,' + (L.k >= 3 ? fade : fade * 0.45) + ')';
+    cx.lineWidth = L.k >= 4 ? 2 : L.k >= 3 ? 1.4 : 1;
+    cx.beginPath(); cx.moveTo(X, Y); cx.lineTo(ex, ey); cx.stroke();
+    for (const m of L.mem) {
+      if (m >= 6 || L.k < 3) continue;
+      const a = S.ph[m], rr = R * RINGS[m].r, pr = Math.max(5, R * RINGS[m].size);
+      cx.beginPath(); cx.arc(X + Math.sin(a) * rr, Y - Math.cos(a) * rr, pr + 5 + L.t * 6, 0, TAU);
+      cx.lineWidth = 1; cx.stroke();
+    }
+    if (grow >= 1 && L.k < 3 && !L.small) {
+      L.small = true;
+      floatText(X + Math.sin(L.ang) * R * 0.9, Y - Math.cos(L.ang) * R * 0.9, '+' + fmt(L.gain), 'rgba(240,200,116,.95)', 11, 1);
+    }
+    if (grow >= 1 && L.k >= 3) {
+      const tx = X + Math.sin(L.ang) * (R + 26), ty = Y - Math.cos(L.ang) * (R + 20);
+      cx.globalAlpha = fade;
+      cx.textAlign = 'center'; cx.textBaseline = 'middle';
+      cx.font = (L.k >= 4 ? 20 : 16) + 'px Georgia, serif';
+      const lx = clamp(tx, sky.x + 50, sky.x + sky.w - 50), ly = clamp(ty, sky.y + 70, sky.y + sky.h - 40);
+      cx.fillStyle = 'rgba(5,9,18,.6)'; const tw = cx.measureText(L.text).width + 16; cx.fillRect(lx - tw / 2, ly - 13, tw, 26);
+      cx.fillStyle = L.k >= 4 ? '#f08a6e' : '#f0c874'; cx.fillText(L.text, lx, ly);
+      cx.font = '12px Georgia, serif'; cx.fillStyle = '#ece3cc'; cx.fillText('+' + fmt(L.gain) + ' light', lx, ly + 22);
+      cx.globalAlpha = 1;
+    }
+  }
+  drawStar(t);
+  // planets and their moons
+  for (let i = 0; i < RINGS.length; i++) {
+    if (!ringActive(i)) continue;
+    const a = S.ph[i], rr = R * RINGS[i].r, pr = Math.max(5, R * RINGS[i].size);
+    const x = X + Math.sin(a) * rr, y = Y - Math.cos(a) * rr;
+    const lx = (X - x) / rr, ly = (Y - y) / rr;
+    const mo = S.rings[i].moons;
+    for (let m = 0; m < mo; m++) {
+      const ma = t * (1.2 - m * 0.3) * speed() + m * 2.1, md = pr + 5 + m * 4;
+      cx.strokeStyle = 'rgba(116,184,168,.25)'; cx.lineWidth = 1; cx.beginPath(); cx.arc(x, y, md, 0, TAU); cx.stroke();
+      cx.fillStyle = '#9fd3c6'; cx.beginPath(); cx.arc(x + Math.cos(ma) * md, y + Math.sin(ma) * md, Math.max(1.6, pr * 0.22), 0, TAU); cx.fill();
+    }
+    drawPlanet(x, y, pr, RINGS[i].tint, lx, ly);
+  }
+  // comet
+  if (comet) {
+    const len = Math.hypot(comet.dx, comet.dy) || 1, ux = -comet.dx / len, uy = -comet.dy / len;
+    for (let n = 0; n < 7; n++) {
+      const off = (n - 3) * 1.6;
+      cx.strokeStyle = 'rgba(200,236,228,' + (0.5 - Math.abs(n - 3) * 0.12) + ')'; cx.lineWidth = 1;
+      cx.beginPath(); cx.moveTo(comet.x - uy * off, comet.y + ux * off);
+      cx.lineTo(comet.x + ux * (70 - Math.abs(n - 3) * 12) - uy * off * 3, comet.y + uy * (70 - Math.abs(n - 3) * 12) + ux * off * 3); cx.stroke();
+    }
+    cx.fillStyle = '#eafaf5'; cx.beginPath(); cx.arc(comet.x, comet.y, 4.5, 0, TAU); cx.fill();
+    cx.strokeStyle = 'rgba(234,250,245,.4)'; cx.beginPath(); cx.arc(comet.x, comet.y, 12 + Math.sin(t * 6) * 2, 0, TAU); cx.stroke();
+  }
+  for (let n = ripples.length - 1; n >= 0; n--) {
+    const p = ripples[n]; p.t += dt; if (p.t > 0.6) { ripples.splice(n, 1); continue; }
+    cx.strokeStyle = 'rgba(240,200,116,' + (0.6 * (1 - p.t / 0.6)) + ')'; cx.lineWidth = 1;
+    cx.beginPath(); cx.arc(p.x, p.y, 6 + p.t * 60, 0, TAU); cx.stroke();
+  }
+  for (let n = sparks.length - 1; n >= 0; n--) {
+    const p = sparks[n]; p.t += dt; if (p.t > 0.8) { sparks.splice(n, 1); continue; }
+    p.x += p.vx * dt; p.y += p.vy * dt;
+    cx.fillStyle = 'rgba(200,236,228,' + (1 - p.t / 0.8) + ')'; cx.fillRect(p.x, p.y, 2, 2);
+  }
+  cx.textAlign = 'center'; cx.textBaseline = 'middle';
+  for (let n = floats.length - 1; n >= 0; n--) {
+    const f = floats[n]; f.t += dt; if (f.t > f.life) { floats.splice(n, 1); continue; }
+    cx.globalAlpha = 1 - f.t / f.life; cx.fillStyle = f.color; cx.font = f.size + 'px Georgia, serif';
+    cx.fillText(f.text, f.x, f.y - f.t * 22);
+  }
+  cx.globalAlpha = 1;
+}
+function drawTrack() {
+  const tc = $('track'); const g = tc.getContext('2d');
+  const w = tc.width / DPR, h = tc.height / DPR;
+  if (w < 10) return;
+  g.setTransform(DPR, 0, 0, DPR, 0, 0); g.clearRect(0, 0, w, h);
+  const sp = speed(), win = 60 * sp, x0 = 2, x1 = w - 2, base = h - 14;
+  g.strokeStyle = 'rgba(226,214,186,.35)'; g.lineWidth = 1;
+  g.beginPath(); g.moveTo(x0, base); g.lineTo(x1, base); g.stroke();
+  g.font = '10.5px Georgia, serif'; g.fillStyle = '#7f7763'; g.textBaseline = 'top';
+  for (let s = 0; s <= 60; s += 10) {
+    const x = x0 + (x1 - x0) * s / 60;
+    g.beginPath(); g.moveTo(x, base); g.lineTo(x, base + (s % 30 ? 3 : 5)); g.stroke();
+    if (s % 30 === 0) { g.textAlign = s === 0 ? 'left' : s === 60 ? 'right' : 'center'; g.fillText(s === 0 ? 'now' : s + ' s', x, base + 3); }
+  }
+  let best = null;
+  for (const e of forecast) {
+    const dtS = (e.t - S.simT) / sp;
+    if (dtS < 0 || dtS > 60) continue;
+    const x = x0 + (x1 - x0) * dtS / 60, big = e.k >= 4;
+    if (e.k < 3) { g.strokeStyle = 'rgba(216,169,78,.35)'; g.lineWidth = 1; g.beginPath(); g.moveTo(x, base); g.lineTo(x, base - 5); g.stroke(); continue; }
+    g.strokeStyle = big ? '#e2573c' : '#d8a94e'; g.lineWidth = big ? 2 : 1.4;
+    const hh = 6 + e.k * 4;
+    g.beginPath(); g.moveTo(x, base); g.lineTo(x, base - hh); g.stroke();
+    g.fillStyle = big ? '#e2573c' : '#d8a94e';
+    g.beginPath(); g.arc(x, base - hh - 3, big ? 3 : 2.2, 0, TAU); g.fill();
+    if (!best || e.k > best.k) best = { k: e.k, s: dtS };
+  }
+  g.textAlign = 'left'; g.textBaseline = 'top'; g.font = '12px Georgia, serif'; g.fillStyle = '#b8ad93';
+  let label = 'No line-ups in the next minute. Try the gears, or zero the sky.';
+  if (best) label = 'Next big line-up: ' + best.k + ' in a line in ' + Math.max(1, Math.round(best.s)) + ' s';
+  else if (forecast.length) label = 'Only pairs ahead. Zero the sky to line up more at once.';
+  if (!S.rings[1].own && !(star().dark)) label = 'Line-ups show here once you have two planets.';
+  g.fillText(label, 0, 0);
+}
+function drawGauge() {
+  const gc = $('gauge'); if (!gc || !gc.offsetWidth) return;
+  const w = 112, h = 66;
+  if (gc.width !== w * DPR) { gc.width = w * DPR; gc.height = h * DPR; }
+  const g = gc.getContext('2d'); g.setTransform(DPR, 0, 0, DPR, 0, 0); g.clearRect(0, 0, w, h);
+  const X = w / 2, Y = h - 6, r = 48, a0 = Math.PI, a1 = TAU;
+  const c = capacity(), l = load(), frac = clamp(l / (c * 1.5), 0, 1), limit = 1 / 1.5;
+  g.strokeStyle = 'rgba(226,214,186,.3)'; g.lineWidth = 1; g.beginPath(); g.arc(X, Y, r, a0, a1); g.stroke();
+  g.strokeStyle = 'rgba(226,87,60,.8)'; g.lineWidth = 3; g.beginPath(); g.arc(X, Y, r - 3, a0 + Math.PI * limit, a1); g.stroke();
+  for (let n = 0; n <= 12; n++) {
+    const a = a0 + Math.PI * n / 12; g.strokeStyle = 'rgba(216,169,78,.7)'; g.lineWidth = 1;
+    g.beginPath(); g.moveTo(X + Math.cos(a) * (r - (n % 4 ? 5 : 9)), Y + Math.sin(a) * (r - (n % 4 ? 5 : 9))); g.lineTo(X + Math.cos(a) * r, Y + Math.sin(a) * r); g.stroke();
+  }
+  const na = a0 + Math.PI * frac + (l > c ? Math.sin(performance.now() / 40) * 0.02 : 0);
+  g.strokeStyle = '#f0c874'; g.lineWidth = 1.6; g.beginPath(); g.moveTo(X, Y); g.lineTo(X + Math.cos(na) * (r - 6), Y + Math.sin(na) * (r - 6)); g.stroke();
+  g.fillStyle = '#d8a94e'; g.beginPath(); g.arc(X, Y, 4, 0, TAU); g.fill();
+}
+
+/* ============================== format ============================== */
+const SUF = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc'];
+function fmt(n) {
+  if (!isFinite(n) || n <= 0) return '0';
+  if (n < 1000) return n < 10 && n % 1 ? n.toFixed(1) : String(Math.floor(n));
+  const e = Math.floor(Math.log10(n) / 3);
+  if (e >= SUF.length) return n.toExponential(2).replace('+', '');
+  const v = n / Math.pow(1000, e);
+  return (v < 10 ? v.toFixed(2) : v < 100 ? v.toFixed(1) : Math.floor(v)) + SUF[e];
+}
+function fmtDur(s) {
+  s = Math.max(0, Math.round(s));
+  const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60);
+  if (h) return h + ' h ' + m + ' min';
+  if (m) return m + ' min';
+  return s + ' s';
+}
+const fmtSec = s => (s < 10 ? s.toFixed(1) : Math.round(s)) + ' s';
+
+/* ============================== observations ============================== */
+function observe(id) {
+  if (S.log[id]) return;
+  const o = OBS.find(x => x.id === id); if (!o) return;
+  S.log[id] = { night: S.collapses + 1 };
+  toast('Logged: ' + o.n + '. Light +3%');
+  logDot = true; fcDirty = true;
+}
+let toastT = 0;
+function toast(msg) { hintOverride = msg; toastT = 3.2; }
+
+/* ============================== the deck ============================== */
+let tab = 'planets', buyAmt = 1, deckDirty = true, logDot = false, zeroArm = false;
+const body = $('body');
+function h(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; }
+let refs = {};
+const CHEV = d => '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="' + d + '"/></svg>';
+const CHEV_L = CHEV('M14.5 6l-6 6 6 6'), CHEV_R = CHEV('M9.5 6l6 6-6 6');
+function buildPlanets() {
+  body.innerHTML = ''; refs = { rows: [] };
+  const bar = h('div', 'bar', '<span>Buy in steps of</span>');
+  const amt = h('div', 'amt');
+  [[1, '×1'], [10, '×10'], [0, 'Max']].forEach(([v, l]) => {
+    const b = h('button', buyAmt === v ? 'on' : '', l);
+    b.addEventListener('click', () => { buyAmt = v; buildPlanets(); });
+    amt.appendChild(b);
+  });
+  bar.appendChild(amt); body.appendChild(bar);
+  for (let i = 0; i < RINGS.length; i++) {
+    if (i === 0 && star().dark) {
+      const row = h('div', 'row locked'); row.innerHTML = '<span class="sw"></span><div><div class="nm">Ring I</div><div class="sub">Swallowed by the dark star.</div></div><span></span>';
+      body.appendChild(row); continue;
+    }
+    const r = S.rings[i];
+    if (!r.own) {
+      if (i !== nextLocked()) continue;
+      const row = h('div', 'row locked');
+      row.innerHTML = '<span class="sw"></span><div><div class="nm">Ring ' + ROMAN[i] + ' is empty</div><div class="sub">A planet here would pay <b class="num">' + fmt(RINGS[i].base * globalMult()) + '</b> light a turn</div></div>';
+      const b = h('button', 'btn buy', '<span class="bl">Set a planet</span><span class="bc num">' + fmt(RINGS[i].unlock) + '</span>');
+      b.addEventListener('click', () => unlockRing(i));
+      row.appendChild(b); body.appendChild(row);
+      refs.unlock = { b, i };
+      continue;
+    }
+    const row = h('div', 'row');
+    row.innerHTML = '<span class="sw" style="--t:' + RINGS[i].tint + '"></span>' +
+      '<div><div class="nm">' + RINGS[i].n + '<span class="lv num"></span></div>' +
+      '<div class="sub num"><b class="v"></b> light a turn, every <span class="p"></span></div>' +
+      '<div class="mo"><span class="pips"><i></i><i></i><i></i></span><button class="moon num"></button></div></div>';
+    const b = h('button', 'btn buy', '<span class="bl">Polish</span><span class="bc num"></span>');
+    b.addEventListener('click', () => polish(i));
+    row.appendChild(b);
+    const moon = row.querySelector('.moon');
+    moon.addEventListener('click', () => buyMoon(i));
+    body.appendChild(row);
+    refs.rows[i] = { lv: row.querySelector('.lv'), v: row.querySelector('.v'), p: row.querySelector('.p'), pips: row.querySelectorAll('.pips i'), moon, b, bc: b.querySelector('.bc'), bl: b.querySelector('.bl') };
+  }
+  updateDeck();
+}
+function buildGears() {
+  body.innerHTML = ''; refs = { g: [] };
+  const drive = h('div', 'sect');
+  drive.innerHTML = '<h3>The mainspring</h3><div class="drive"><canvas id="gauge" width="112" height="66"></canvas><div><p class="num" id="gLoad"></p><p class="num" id="gState"></p></div></div>';
+  const act = h('div', 'act');
+  const sb = h('button', 'btn buy', '<span class="bl">Tighten</span><span class="bc num"></span>');
+  sb.addEventListener('click', buySpring);
+  act.appendChild(h('span', 'note', 'Faster gears and heavier planets add load.'));
+  act.appendChild(sb); drive.appendChild(act); body.appendChild(drive);
+  refs.sb = sb;
+  const key = h('div', 'sect');
+  key.innerHTML = '<h3>The winding key</h3><p>Tap or hold the sky to wind it. While it is wound, everything turns twice as fast.</p>';
+  const ka = h('div', 'act'); const kn = h('span', 'note num'); const kb = h('button', 'btn buy', '<span class="bl">Longer spring</span><span class="bc num"></span>');
+  kb.addEventListener('click', buyBank); ka.appendChild(kn); ka.appendChild(kb); key.appendChild(ka); body.appendChild(key);
+  refs.kb = kb; refs.kn = kn;
+  const z = h('div', 'sect');
+  z.innerHTML = '<h3>Zero the sky</h3><p>Sends every planet back to the top of its ring at once. From then on, planets on gears that fit together keep lining up, three, four, five at a time.</p>';
+  const za = h('div', 'act'); const zn = h('span', 'note num'); const zb = h('button', 'btn', 'Zero');
+  zb.addEventListener('click', zeroSky); za.appendChild(zn); za.appendChild(zb); z.appendChild(za); body.appendChild(z);
+  refs.zb = zb; refs.zn = zn;
+  const gs = h('div', 'sect', '<h3>Gears</h3><p>A 3:1 gear turns its ring once every three beats. Rings on different gears that fit together line up often. Two rings on the same gear only count once.</p>');
+  body.appendChild(gs);
+  for (let i = 0; i < RINGS.length; i++) {
+    if (!ringActive(i)) continue;
+    const row = h('div', 'grow');
+    row.innerHTML = '<div><div class="nm">' + RINGS[i].n + '</div><div class="sub num"></div></div>';
+    const dial = h('div', 'dial');
+    const dn = h('button', '', CHEV_L), up = h('button', '', CHEV_R), knob = h('span', 'knob num');
+    dn.setAttribute('aria-label', 'Faster gear for ' + RINGS[i].n); up.setAttribute('aria-label', 'Slower gear for ' + RINGS[i].n);
+    dn.addEventListener('click', () => shiftGear(i, -1)); up.addEventListener('click', () => shiftGear(i, 1));
+    dial.appendChild(dn); dial.appendChild(knob); dial.appendChild(up); row.appendChild(dial); body.appendChild(row);
+    refs.g[i] = { sub: row.querySelector('.sub'), knob, dn, up };
+  }
+  const cab = GEARS.map((g, gi) => gi).filter(gi => S.gears.indexOf(gi) < 0);
+  if (cab.length) {
+    body.appendChild(h('div', 'sect', '<h3>Gear cabinet</h3><p>New gears work on any ring.</p>'));
+    refs.cab = [];
+    cab.sort((a, b) => GEARS[a].cost - GEARS[b].cost).forEach(gi => {
+      const row = h('div', 'cab');
+      const per = gearVal(gi) * beatSec();
+      row.innerHTML = '<div><div class="nm num">' + gearLabel(gi) + ' gear</div><div class="sub num">A ring on it turns every ' + fmtSec(per) + '</div></div>';
+      const b = h('button', 'btn buy', '<span class="bl">Buy</span><span class="bc num">' + fmt(GEARS[gi].cost) + '</span>');
+      b.addEventListener('click', () => buyGear(gi));
+      row.appendChild(b); body.appendChild(row); refs.cab.push({ b, gi });
+    });
+  }
+  updateDeck();
+}
+function buildDeck() {
+  document.querySelectorAll('#tabs .tab[data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+  const st = body.scrollTop;
+  if (tab === 'planets') buildPlanets(); else buildGears();
+  body.scrollTop = st;
+  deckDirty = false;
+}
+function updateDeck() {
+  $('logBtn').innerHTML = 'Logbook' + (logDot ? '<span class="dot"></span>' : '');
+  const canCol = S.runLight >= COLLAPSE_AT || TREE.some(t => canLight(t));
+  $('chartBtn').innerHTML = 'Star chart' + (canCol ? '<span class="dot"></span>' : '');
+  if (tab === 'planets' && refs.rows) {
+    const gm = globalMult();
+    for (let i = 0; i < RINGS.length; i++) {
+      const R = refs.rows[i]; if (!R) continue;
+      const r = S.rings[i], bi = buyInfo(i);
+      R.lv.textContent = 'level ' + r.lvl;
+      R.v.textContent = fmt(value(i, gm));
+      R.p.textContent = fmtSec(period(i) / driveFactor());
+      R.pips.forEach((p, m) => p.classList.toggle('on', m < r.moons));
+      if (r.moons >= 3) { R.moon.textContent = 'Three moons'; R.moon.disabled = true; }
+      else { const mc = moonCost(i, r.moons); R.moon.textContent = 'Moon: ' + mc + ' ice'; R.moon.disabled = S.ice < mc; }
+      R.bl.textContent = bi.n > 1 ? 'Polish ×' + bi.n : 'Polish';
+      R.bc.textContent = fmt(bi.cost);
+      R.b.disabled = S.light < bi.cost || bi.n < 1;
+    }
+    if (refs.unlock) refs.unlock.b.disabled = S.light < RINGS[refs.unlock.i].unlock;
+  } else if (tab === 'gears' && refs.g) {
+    const c = capacity(), l = load(), df = driveFactor();
+    const gl = $('gLoad'), gsx = $('gState');
+    if (gl) gl.textContent = 'Load ' + l.toFixed(2) + ' of ' + c.toFixed(2);
+    if (gsx) { gsx.textContent = df < 1 ? 'Straining: the whole sky runs at ' + Math.round(df * 100) + '% speed.' : 'Running at full speed.'; gsx.style.color = df < 1 ? '#f08a6e' : ''; }
+    refs.sb.querySelector('.bc').textContent = fmt(springCost()); refs.sb.disabled = S.light < springCost();
+    if (S.bank >= 3) { refs.kb.disabled = true; refs.kb.querySelector('.bl').textContent = 'Longest'; refs.kb.querySelector('.bc').textContent = ''; }
+    else { refs.kb.querySelector('.bc').textContent = fmt(bankCost()); refs.kb.disabled = S.light < bankCost(); }
+    refs.kn.textContent = 'Holds ' + bankMax() + ' s of winding';
+    const wait = S.zeroReady - performance.now() / 1000;
+    refs.zb.disabled = wait > 0; refs.zb.textContent = zeroArm ? 'Sure? Zero' : 'Zero';
+    refs.zn.textContent = wait > 0 ? 'Ready in ' + Math.ceil(wait) + ' s' : 'Ready';
+    const owned = S.gears.slice().sort((a, b) => gearVal(a) - gearVal(b));
+    for (let i = 0; i < RINGS.length; i++) {
+      const G = refs.g[i]; if (!G) continue;
+      const gi = S.rings[i].gear, k = owned.indexOf(gi);
+      G.knob.textContent = gearLabel(gi);
+      G.knob.style.setProperty('--r', (k * 36 - 90) + 'deg');
+      G.sub.textContent = 'Turns every ' + fmtSec(period(i) / df) + ', load ' + (mass(i) / gearVal(gi)).toFixed(2);
+      G.dn.disabled = k <= 0; G.up.disabled = k >= owned.length - 1;
+    }
+    if (refs.cab) refs.cab.forEach(c2 => { c2.b.disabled = S.light < GEARS[c2.gi].cost; });
+  }
+}
+
+/* ============================== actions ============================== */
+function spend(c) { if (S.light < c) return false; S.light -= c; return true; }
+function polish(i) {
+  const bi = buyInfo(i); if (bi.n < 1 || !spend(bi.cost)) return;
+  S.rings[i].lvl += bi.n; sfxBuy(); fcDirty = true;
+  window.TTG?.track('upgrade_bought', { level: S.rings[i].lvl, value: Math.round(bi.cost) });
+  updateDeck();
+}
+function unlockRing(i) {
+  if (!spend(RINGS[i].unlock)) return;
+  const r = S.rings[i]; r.own = true; r.lvl = Math.max(1, r.lvl);
+  // a new planet is set at the top of its ring; it falls into step with the others once the sky is zeroed
+  S.ph[i] = 0;
+  sfxBuy(); layerDirty = true; fcDirty = true; deckDirty = true;
+  window.TTG?.track('level_start', { level: S.rings.filter(x => x.own).length });
+}
+function buyMoon(i) {
+  const r = S.rings[i]; if (r.moons >= 3) return;
+  const c = moonCost(i, r.moons); if (S.ice < c) return;
+  S.ice -= c; r.moons++; sfxBuy(); fcDirty = true;
+  if (r.moons >= 3) observe('moons');
+  window.TTG?.track('upgrade_bought', { level: r.moons, value: c });
+  updateDeck();
+}
+function buySpring() { const c = springCost(); if (!spend(c)) return; S.spring++; sfxBuy(); fcDirty = true; window.TTG?.track('upgrade_bought', { level: S.spring, value: Math.round(c) }); updateDeck(); }
+function buyBank() { if (S.bank >= 3) return; const c = bankCost(); if (!spend(c)) return; S.bank++; sfxBuy(); window.TTG?.track('upgrade_bought', { level: S.bank, value: Math.round(c) }); updateDeck(); }
+function buyGear(gi) {
+  if (S.gears.indexOf(gi) >= 0 || !spend(GEARS[gi].cost)) return;
+  S.gears.push(gi); sfxBuy(); observe('gear');
+  window.TTG?.track('upgrade_bought', { level: S.gears.length, value: GEARS[gi].cost });
+  deckDirty = true;
+}
+function shiftGear(i, d) {
+  const owned = S.gears.slice().sort((a, b) => gearVal(a) - gearVal(b));
+  const k = owned.indexOf(S.rings[i].gear), n = clamp(k + d, 0, owned.length - 1);
+  if (n === k) return;
+  S.rings[i].gear = owned[n]; fcDirty = true; sfxTick();
+  updateDeck();
+}
+let zeroArmT = 0;
+function zeroSky() {
+  const nowR = performance.now() / 1000;
+  if (S.zeroReady > nowR) return;
+  if (!zeroArm) { zeroArm = true; zeroArmT = 3; updateDeck(); return; }
+  zeroArm = false;
+  for (let i = 0; i < RINGS.length; i++) S.ph[i] = 0;
+  S.twin = 0; S.zeroT = S.simT;
+  det = newDet(); det.block = points(S.ph, S.twin).map(p => p.i);
+  S.zeroReady = nowR + zeroCooldown();
+  observe('zero'); sfxConj(2); fcDirty = true; updateDeck();
+}
+
+/* ============================== chart & collapse ============================== */
+let selNode = null, pickStar = null, colArm = false;
+function canLight(t) {
+  if (has(t.id)) return false;
+  const same = TREE.filter(x => x.c === t.c), idx = same.indexOf(t);
+  return (idx === 0 || has(same[idx - 1].id)) && S.aether >= t.cost;
+}
+function reachable(t) { const same = TREE.filter(x => x.c === t.c), idx = same.indexOf(t); return idx === 0 || has(same[idx - 1].id); }
+function buildChart() {
+  const map = $('map');
+  map.querySelectorAll('.node,.cname').forEach(e => e.remove());
+  Object.keys(CONSTS).forEach(k => {
+    const c = CONSTS[k], e = h('span', 'cname', c.n);
+    e.style.left = c.x + '%'; e.style.top = c.y + '%'; e.style.transform = 'translate(-50%,-50%)';
+    map.appendChild(e);
+  });
+  TREE.forEach(t => {
+    const b = h('button', 'node' + (has(t.id) ? ' lit' : reachable(t) ? ' open' : '') + (selNode === t.id ? ' sel' : ''), '<i></i>');
+    b.style.left = t.x + '%'; b.style.top = t.y + '%';
+    b.setAttribute('aria-label', t.n);
+    b.addEventListener('click', () => { selNode = t.id; buildChart(); });
+    map.appendChild(b);
+  });
+  $('chartLede').textContent = 'You have ' + S.aether + ' aether to spend. Every aether you have ever earned also adds 4% light, spent or not (' + S.aetherLife + ' so far).';
+  const info = $('nodeInfo');
+  if (!selNode) info.innerHTML = '<p class="lede">Tap a star on the chart to see what it does. Stars light in order along each constellation.</p>';
+  else {
+    const t = TREE_BY[selNode];
+    info.innerHTML = '<h3>' + t.n + '</h3><p>' + t.t + '</p>';
+    if (has(t.id)) info.appendChild(h('p', 'lede', 'Lit.'));
+    else {
+      const b = h('button', 'btn buy', '<span class="bl">Light this star</span><span class="bc num">' + t.cost + ' aether</span>');
+      b.disabled = !canLight(t);
+      b.addEventListener('click', () => lightNode(t));
+      info.appendChild(b);
+      if (!reachable(t)) info.appendChild(h('p', 'lede', 'Light the star before it in ' + CONSTS[t.c].n + ' first.'));
+    }
+  }
+  // collapse
+  const g = aetherGain(), ready = S.runLight >= COLLAPSE_AT;
+  $('colText').textContent = ready
+    ? 'You have made ' + fmt(S.runLight) + ' light around this star. Letting it go out now gives ' + g + ' aether. Planets, gears and light start over. Aether, the chart, the logbook and your ice stay.'
+    : 'A star can collapse once it has given ' + fmt(COLLAPSE_AT) + ' light in one run. This one has given ' + fmt(S.runLight) + ' so far.';
+  const pick = $('starPick'); pick.innerHTML = '';
+  if (!pickStar || !starOpen(pickStar)) pickStar = S.star;
+  STAR_ORDER.forEach(k => {
+    const b = h('button', pickStar === k ? 'on' : '', STARS[k].n);
+    b.disabled = !starOpen(k);
+    b.addEventListener('click', () => { pickStar = k; colArm = false; buildChart(); });
+    pick.appendChild(b);
+  });
+  $('starText').textContent = 'Next star: ' + STARS[pickStar].t;
+  $('colBtn').disabled = !ready; $('colBtn').style.display = colArm ? 'none' : '';
+  $('colYes').style.display = colArm ? '' : 'none';
+  requestAnimationFrame(drawMapLines);
+}
+const starOpen = k => !STARS[k].need || has(STARS[k].need);
+function drawMapLines() {
+  const c = $('mapLines'); if (!c || !c.offsetWidth) return;
+  const w = c.offsetWidth, hh = c.offsetHeight;
+  c.width = Math.round(w * DPR); c.height = Math.round(hh * DPR);
+  const g = c.getContext('2d'); g.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const R = rand(77); g.fillStyle = 'rgba(236,227,204,.35)';
+  for (let n = 0; n < 90; n++) g.fillRect(R() * w, R() * hh, 1, 1);
+  Object.keys(CONSTS).forEach(k => {
+    const ns = TREE.filter(t => t.c === k);
+    for (let n = 1; n < ns.length; n++) {
+      const a = ns[n - 1], b = ns[n], lit = has(a.id) && has(b.id);
+      g.strokeStyle = lit ? 'rgba(240,200,116,.8)' : 'rgba(226,214,186,.22)'; g.lineWidth = lit ? 1.4 : 1;
+      g.setLineDash(lit ? [] : [3, 4]);
+      g.beginPath(); g.moveTo(a.x / 100 * w, a.y / 100 * hh); g.lineTo(b.x / 100 * w, b.y / 100 * hh); g.stroke();
+    }
+  });
+  g.setLineDash([]);
+}
+function lightNode(t) {
+  if (!canLight(t)) return;
+  S.aether -= t.cost; S.tree[t.id] = 1; sfxConj(3); fcDirty = true; deckDirty = true;
+  window.TTG?.track('upgrade_bought', { level: Object.keys(S.tree).length, value: t.cost });
+  buildChart(); persist();
+}
+function doCollapse() {
+  const g = aetherGain(); if (S.runLight < COLLAPSE_AT) return;
+  const keep = has('la4') ? S.rings.map(r => r.moons) : null;
+  S.aether += g; S.aetherLife += g; S.collapses++;
+  S.star = pickStar || 'yellow';
+  S.light = has('la3') ? 1000 : 0; S.runLight = 0;
+  S.rings = freshRings();
+  if (keep) S.rings.forEach((r, i) => { r.moons = keep[i]; });
+  if (star().dark) { S.rings[1].own = true; S.rings[1].lvl = 1; }
+  if (has('la3')) { const j = star().dark ? 2 : 1; S.rings[j].own = true; S.rings[j].lvl = 1; }
+  S.gears = BASE_GEARS.slice(); S.spring = 0; S.bank = 0; S.wind = 0;
+  S.ph = [0, 0, 0, 0, 0, 0]; S.twin = 0; S.beam = 0; S.zeroT = S.simT;
+  det = newDet(); det.block = points(S.ph, S.twin).map(p => p.i);
+  observe('collapse'); if (S.star !== 'yellow') observe('s_' + S.star);
+  window.TTG?.track('village_levelup', { level: S.collapses });
+  colArm = false; layerDirty = true; fcDirty = true; deckDirty = true;
+  persist(); closeScreen('chart'); sfxConj(5);
+  toast(STARS[S.star].n + ' lit. ' + g + ' aether earned.');
+}
+
+/* ============================== logbook ============================== */
+function buildLog() {
+  const n = obsCount();
+  $('logLede').textContent = n + ' of ' + OBS.length + ' observed. Each one adds 3% light for good, across every star.';
+  const grid = $('logGrid'); grid.innerHTML = '';
+  OBS.forEach((o, i) => {
+    const got = S.log[o.id];
+    const e = h('div', 'obs' + (got ? ' got' : ''));
+    e.innerHTML = '<span class="seal">' + (i + 1) + '</span><div><h4>' + o.n + '</h4><p>' + o.t + '</p>' + (got ? '<div class="when">Star ' + got.night + '</div>' : '') + '</div>';
+    grid.appendChild(e);
+  });
+  logDot = false;
+}
+
+/* ============================== screens ============================== */
+let openScreen = null;
+function showScreen(id) {
+  openScreen = id; $(id).classList.add('show');
+  if (id === 'chart') { buildChart(); window.TTG?.track('shop_open'); }
+  if (id === 'log') buildLog();
+}
+function closeScreen(id) { $(id).classList.remove('show'); if (openScreen === id) openScreen = null; deckDirty = true; }
+$('chartBtn').addEventListener('click', () => showScreen('chart'));
+$('logBtn').addEventListener('click', () => showScreen('log'));
+$('chartBack').addEventListener('click', () => { colArm = false; closeScreen('chart'); });
+$('logBack').addEventListener('click', () => closeScreen('log'));
+$('colBtn').addEventListener('click', () => { colArm = true; buildChart(); });
+$('colYes').addEventListener('click', doCollapse);
+document.querySelectorAll('#tabs .tab[data-tab]').forEach(b => b.addEventListener('click', () => { tab = b.dataset.tab; zeroArm = false; buildDeck(); }));
+window.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && openScreen && openScreen !== 'title' && openScreen !== 'away') { closeScreen(openScreen); }
+  if (e.key === ' ' && started && !openScreen && (document.activeElement === document.body || !document.activeElement)) { e.preventDefault(); wind(null); }
+});
+
+/* ============================== offline ============================== */
+let pendingAway = 0;
+function awayGain(sec) {
+  if (fcDirty) runForecast();
+  const df = driveFactor();
+  const rate = incomeOrbits() / speed() * df / (cometBoost > 0 ? 2 : 1) + fcBonusRate * df;
+  return rate * sec * offFrac();
+}
+function checkAway(minSec) {
+  const el = (Date.now() - S.lastSeen) / 1000;
+  if (!isFinite(el) || el < (minSec || 60)) { S.lastSeen = Date.now(); return; }
+  const sec = Math.min(el, offCap());
+  const g = awayGain(sec);
+  // the sky turned while you were gone
+  const sd = sec * driveFactor();
+  for (let i = 0; i < RINGS.length; i++) if (ringActive(i)) S.ph[i] = wrap(S.ph[i] + TAU * sd / period(i));
+  S.simT += sd; det = newDet(); det.block = bestCluster(points(S.ph, S.twin), tolerance()).mem;
+  S.lastSeen = Date.now();
+  if (g < 1) return;
+  pendingAway = g;
+  $('awayTime').textContent = 'The sky kept turning for ' + fmtDur(sec) + (el > sec + 60 ? ' (the most it can turn on its own).' : '.');
+  $('awayGain').textContent = '+' + fmt(g) + ' light';
+  $('awayNote').textContent = offFrac() < 1 ? 'Time away pays half speed. The Lantern on the star chart can change that.' : '';
+  showScreen('away');
+}
+$('awayBtn').addEventListener('click', () => {
+  S.light += pendingAway; S.runLight += pendingAway; S.lifeLight += pendingAway;
+  window.TTG?.track('offline_claim', { value: Math.round(pendingAway) });
+  pendingAway = 0; closeScreen('away'); persist();
+});
+
+/* ============================== input ============================== */
+let holding = false, holdPid = null, started = false;
+function wind(p) {
+  audio(); if (AC && AC.state === 'suspended') AC.resume();
+  const before = S.wind;
+  S.wind = Math.min(bankMax(), S.wind + windPerTap());
+  if ((before > 0) !== (S.wind > 0)) fcDirty = true;
+  sfxTick();
+  if (p) ripples.push({ x: p.x, y: p.y, t: 0 });
+  if (S.hints < 1) { windTaps++; if (windTaps >= 3) S.hints = 1; }
+}
+let windTaps = 0;
+cv.addEventListener('pointerdown', e => {
+  if (!started || openScreen) return;
+  const x = e.clientX, y = e.clientY;
+  if (x > sky.x + sky.w || y > sky.y + sky.h) return;
+  audio(); if (AC && AC.state === 'suspended') AC.resume();
+  if (comet && Math.hypot(comet.x - x, comet.y - y) < 42) { catchComet(false); cometNext = cometInterval(); return; }
+  wind({ x, y });
+  holding = true; holdPid = e.pointerId;
+  try { cv.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+});
+const endHold = e => { if (e.pointerId === holdPid) { holding = false; holdPid = null; } };
+cv.addEventListener('pointerup', endHold); cv.addEventListener('pointercancel', endHold); cv.addEventListener('lostpointercapture', endHold);
+document.addEventListener('touchmove', e => {
+  let n = e.target;
+  while (n && n !== document.body) {
+    if (n.scrollHeight > n.clientHeight + 1) { const oy = getComputedStyle(n).overflowY; if (oy === 'auto' || oy === 'scroll') return; }
+    n = n.parentElement;
+  }
+  if (e.cancelable) e.preventDefault();
+}, { passive: false });
+$('muteBtn').addEventListener('click', () => { audio(); setMuted(!S.muted); });
+$('playBtn').addEventListener('click', () => {
+  audio(); if (AC && AC.state === 'suspended') AC.resume();
+  started = true; S.started = true;
+  $('title').classList.remove('show'); openScreen = null;
+  ['hud', 'hint'].forEach(id => { $(id).style.display = 'block'; });
+  $('deck').style.display = 'flex'; $('muteBtn').style.display = 'flex';
+  layout(); buildDeck();
+  checkAway(60);
+});
+
+/* ============================== hints ============================== */
+let hintOverride = '';
+function hintText() {
+  if (toastT > 0) return hintOverride;
+  if (S.hints < 1) return 'Tap or hold the sky to wind the clockwork.';
+  if (!S.rings[1].own && !S.rings[2].own) return 'Each planet pays light when it comes round. Set a second planet on ring II.';
+  if (!S.log.c2) return 'When planets line up with the star, they pay extra. Watch the track below.';
+  if (!S.log.zero && S.rings.filter(r => r.own).length >= 3) return 'New planets start out of step. Zero the sky on the Gears tab to bring them together.';
+  if (!S.log.gear && S.lifeLight > 1200) return 'The Gears tab sells new gears. Rings on gears that fit together line up more often.';
+  if (!S.log.comet && comet) return 'A comet! Tap it before it leaves the sky.';
+  if (S.runLight >= COLLAPSE_AT && S.collapses === 0) return 'This star can collapse now. Open the star chart.';
+  return '';
+}
+
+/* ============================== loop ============================== */
+let last = performance.now(), running = true, uiT = 0, simAcc = 0, fcT = 0;
+function frame(nowMs) {
+  if (!running) return;
+  const dt = Math.min(0.05, Math.max(0, (nowMs - last) / 1000)); last = nowMs;
+  const t = nowMs / 1000;
+  if (started && openScreen !== 'away') {
+    simAcc += dt;
+    while (simAcc >= 1 / 60) { step(1 / 60); simAcc -= 1 / 60; }
+  } else if (!started) {
+    // the title screen shows the orrery idling
+    const sd = dt * 0.6;
+    for (let i = 0; i < RINGS.length; i++) if (ringActive(i)) S.ph[i] = wrap(S.ph[i] + TAU * sd / period(i));
+    S.twin = wrap(S.twin + TAU * sd / (beatSec() * TWIN_BEATS)); S.beam = wrap(S.beam + TAU * sd / (beatSec() * BEAM_BEATS)); S.simT += sd;
+  }
+  chimeBudget = Math.max(0, chimeBudget - dt * 3);
+  if (toastT > 0) toastT -= dt;
+  if (zeroArm) { zeroArmT -= dt; if (zeroArmT <= 0) { zeroArm = false; } }
+  draw(dt, t);
+  fcT -= dt;
+  if (started && (fcDirty || fcT <= 0 || S.simT - fcAt > 20)) { runForecast(); fcT = 2; }
+  uiT -= dt;
+  if (started && uiT <= 0) {
+    uiT = 0.2;
+    $('hLight').textContent = fmt(S.light);
+    const rate = incomeOrbits() + fcBonusRate * speed();
+    $('hRate').textContent = fmt(rate) + ' a second' + (S.wind > 0 ? ', wound' : '') + (driveFactor() < 1 ? ', straining' : '');
+    $('hIce').textContent = S.ice > 0 || S.st.comets > 0 ? fmt(S.ice) + ' ice' : '';
+    $('hBoost').textContent = cometBoost > 0 ? 'Comet light, double for ' + Math.ceil(cometBoost) + ' s' : '';
+    const ht = hintText(), hint = $('hint');
+    if (hint.textContent !== ht) hint.textContent = ht;
+    if (deckDirty && !openScreen) buildDeck(); else updateDeck();
+    drawTrack(); drawGauge();
+    if (openScreen === 'chart') {
+      const cb = $('colBtn'); cb.disabled = S.runLight < COLLAPSE_AT;
+    }
+  }
+  saveTimer -= dt;
+  if (started && saveTimer <= 0) { saveTimer = 5; persist(); }
+  requestAnimationFrame(frame);
+}
+
+/* ============================== pause ============================== */
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    running = false; holding = false;
+    if (started) persist();
+    if (AC && AC.state === 'running') AC.suspend();
+  } else {
+    if (running) return;
+    running = true; last = performance.now();
+    if (AC && AC.state === 'suspended' && !S.muted) AC.resume();
+    if (started && !openScreen) checkAway(30);
+    requestAnimationFrame(frame);
+  }
+});
+window.addEventListener('pagehide', () => { if (started) persist(); });
+window.addEventListener('resize', () => { layout(); });
+
+/* ============================== boot ============================== */
+setMuted(S.muted, true);
+layout();
+if (S.started) {
+  $('titleStat').textContent = fmt(S.light) + ' light' + (S.collapses ? ', star ' + (S.collapses + 1) : '') + '. The sky kept turning while you were gone.';
+  $('playBtn').textContent = 'Back to the sky';
+}
+requestAnimationFrame(t => { last = t; frame(t); });
+})();
+</script>
+</body>
+</html>

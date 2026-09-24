@@ -12,6 +12,7 @@ export const GAMES = Object.freeze([
   'broadside-baron',
   'buzzcut-buddies',
   'chopper-drop',
+  'clockwork-sky',
   'comet-garden',
   'core-drill',
   'crucible',
