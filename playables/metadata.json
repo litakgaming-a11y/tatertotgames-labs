@@ -1,8 +1,11 @@
 {
-  "_notes": "Developer Portal listing data per game. title <= 50 chars, short_description <= 150 chars, 1-2 genres. No studio name or logo in any title, description or thumbnail (design requirement 4.2). Pick the closest genre names the portal offers; these are suggestions. tier: A = submit first, B = submit after A passes, hold = see SUBMISSION.txt.",
+  "_notes": "Developer Portal listing data per game. title <= 50 chars, short_description <= 150 chars, 1-2 genres. No studio name or logo in any title, description or thumbnail (design requirement 4.2). Pick the closest genre names the portal offers; these are suggestions. tier: A = submit first, B = submit after A passes, hold = see SUBMISSION.txt. Incremental is the shelf name used on the website; on YouTube pick Simulation or Casual, whichever the portal offers.",
   "publisher": "TaterTot Games",
   "developer": "TaterTot Games",
   "games": {
+    "core-drill":        { "tier": "B", "title": "Core Drill", "genres": ["Incremental", "Simulation"], "short_description": "Tap to dig, buy drills that dig for you, and watch the heat as the rock gets richer and meaner." },
+    "tater-line":        { "tier": "B", "title": "Tater Line", "genres": ["Incremental", "Simulation"], "short_description": "Run a potato line from field to truck. Find the stage that is holding everything up, then fix it." },
+    "comet-garden":      { "tier": "B", "title": "Comet Garden", "genres": ["Incremental", "Casual"], "short_description": "Grow a vine from a window box into orbit on water and light, then reseed it for stardust." },
     "puff-puff-fit":     { "tier": "A", "title": "Puff Puff Fit", "genres": ["Casual", "Arcade"], "short_description": "Inflate a squishy blob to fill the chamber, and release before it kisses a spike. Perfect fills rain confetti." },
     "topple-party":      { "tier": "A", "title": "Topple Party", "genres": ["Puzzle", "Casual"], "short_description": "Sketch domino runs with your finger, hit GO, and watch the cascade clack its way into every target in slow motion." },
     "slingshot-salvage": { "tier": "B", "title": "Slingshot Salvage", "genres": ["Arcade", "Puzzle"], "short_description": "Fling your pod through planetary gravity wells, hoover up space junk, and bank scrap for garage upgrades." },

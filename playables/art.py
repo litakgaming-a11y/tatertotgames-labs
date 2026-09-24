@@ -6,12 +6,13 @@
 Writes dist/art/<slug>-<kind>.png and re-saves it pixel-only (no embedded metadata).
 YouTube Playables thumbnails must carry no logos or branding: use key/square/tall there,
 and the titled set only on the website."""
-import json, os, subprocess, sys
+import glob, json, os, subprocess, sys
 from concurrent.futures import ThreadPoolExecutor
 from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CODEX = os.path.expandvars(r'%LOCALAPPDATA%\OpenAI\Codex\bin\cdef5aaf3e41ab53\codex.exe')
+# Codex updates itself into a new hashed folder, so take the newest codex.exe, not a fixed path.
+CODEX = max(glob.glob(os.path.expandvars(r'%LOCALAPPDATA%\OpenAI\Codex\bin\*\codex.exe')), key=os.path.getmtime)
 META = json.load(open(os.path.join(ROOT, 'playables', 'metadata.json'), encoding='utf-8'))['games']
 OUT = os.path.join(ROOT, 'dist', 'art')
 NO_TEXT = "No text, no letters, no numbers, no logos, no UI, no watermark."
