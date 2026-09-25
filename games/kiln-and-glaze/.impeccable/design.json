@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-25T18:00:00Z",
+  "title": "Design System: Kiln & Glaze",
+  "extensions": {
+    "colorMeta": {
+      "cobalt": { "role": "primary", "displayName": "Cobalt", "canonical": "#2f55c0", "tonalRamp": ["#0f1c40", "#172c66", "#23439c", "#2a4db0", "#2f55c0", "#5f7fd4", "#97aee4", "#d5def5"] },
+      "ember": { "role": "secondary", "displayName": "Ember", "canonical": "#f0a04b", "tonalRamp": ["#5a1a10", "#8a2a14", "#b8341c", "#d9601f", "#f0a04b", "#f5bb7c", "#fad6ae", "#fdeedd"] },
+      "slate": { "role": "neutral", "displayName": "Studio Slate", "canonical": "#353c40", "tonalRamp": ["#1e2a31", "#262b2e", "#353c40", "#50606a", "#87949b", "#d6dcdf", "#e9ecea", "#f4f5f2"] },
+      "clay": { "role": "tertiary", "displayName": "Clay", "canonical": "#b09c84", "tonalRamp": ["#3a2f25", "#4a3f35", "#6b5a48", "#8f857a", "#b09c84", "#c7b8a4", "#ddd3c5", "#eeede8"] }
+    },
+    "typographyMeta": {
+      "recipe": { "displayName": "Recipe", "purpose": "Recipe and firing lines on the index card, set on the blue ruling." },
+      "label": { "displayName": "Label", "purpose": "Control group labels on the glaze and kiln cards." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "press", "value": "0.12s ease-out background and 1px drop", "purpose": "A button inverting to ink when pressed." },
+      { "name": "dip", "value": "0.9s sine, pot sinks into the bucket and rises", "purpose": "Glazing a pot." },
+      { "name": "reveal", "value": "1.8s linear brightening", "purpose": "Opening the kiln: pots come up out of the dark." }
+    ],
+    "breakpoints": [
+      { "name": "landscape", "value": "width > 1.05 * height" },
+      { "name": "compact", "value": "height <= 520px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Button",
+      "kind": "button",
+      "refersTo": "button",
+      "description": "Card-coloured button with an ink border that inverts when pressed and is hatched when disabled.",
+      "html": "<button class=\"ds-btn\">Squash it</button> <button class=\"ds-btn\" disabled>Not yet</button>",
+      "css": ".ds-btn { min-height: 44px; padding: 0 16px; border: 1.5px solid #1e2a31; border-radius: 10px; background: #f4f5f2; color: #1e2a31; font: 600 14px 'Segoe UI', system-ui, sans-serif; cursor: pointer; transition: background-color .12s ease-out, transform .12s ease-out; } .ds-btn:hover:not(:disabled) { background: #fff; } .ds-btn:active:not(:disabled) { background: #1e2a31; color: #f4f5f2; transform: translateY(1px); } .ds-btn:focus-visible { outline: 2px solid #2f55c0; outline-offset: 2px; } .ds-btn:disabled { color: #87949b; border-color: #d6dcdf; background: repeating-linear-gradient(135deg, rgba(30,42,49,.08) 0 1px, transparent 1px 5px), #e9ecea; cursor: default; }"
+    },
+    {
+      "name": "Go Button",
+      "kind": "button",
+      "refersTo": "button-go",
+      "description": "The one primary action per screen.",
+      "html": "<button class=\"ds-go\">Fire the kiln</button>",
+      "css": ".ds-go { min-height: 52px; padding: 0 30px; border: 0; border-radius: 10px; background: #2f55c0; color: #fff; font: 600 16px 'Segoe UI', system-ui, sans-serif; cursor: pointer; } .ds-go:hover { background: #2a4db0; } .ds-go:active { background: #23439c; } .ds-go:focus-visible { outline: 2px solid #2f55c0; outline-offset: 2px; }"
+    },
+    {
+      "name": "Recipe Card",
+      "kind": "custom",
+      "refersTo": "recipe-card",
+      "description": "An index card with a warm top rule; recipe lines rest on blue ruling.",
+      "html": "<div class=\"ds-card\"><h3>Celadon</h3><div class=\"ds-lines\"><span><b>Glaze:</b> Clear base, Iron 1. Medium dip.</span><span><b>Firing:</b> Gas kiln, cone 10, starved of air.</span></div></div>",
+      "css": ".ds-card { width: 320px; padding: 12px 14px; border-radius: 12px; background: #fbfbf9; border: 1px solid #d6dcdf; border-top: 3px solid #e3a49c; font: 14px 'Segoe UI', system-ui, sans-serif; color: #1e2a31; } .ds-card h3 { font-size: 16px; font-weight: 800; } .ds-lines { margin-top: 6px; font-size: 13px; line-height: 26px; background: repeating-linear-gradient(180deg, transparent 0 25px, #c9d7ea 25px 26px); } .ds-lines span { display: block; }"
+    },
+    {
+      "name": "Oxide Row",
+      "kind": "custom",
+      "refersTo": "oxide-pip",
+      "description": "One pass of oxide: a name and five pips from 0 to 4.",
+      "html": "<div class=\"ds-ox\"><span>Iron</span><button>0</button><button class=\"on\">1</button><button>2</button><button>3</button><button>4</button></div>",
+      "css": ".ds-ox { width: 300px; display: grid; grid-template-columns: 1fr repeat(5, 34px); gap: 4px; align-items: center; font: 600 13.5px 'Segoe UI', system-ui, sans-serif; color: #1e2a31; } .ds-ox button { height: 34px; border-radius: 8px; border: 1.5px solid #d6dcdf; background: #fff; color: #50606a; font-weight: 700; } .ds-ox button.on { background: #1e2a31; border-color: #1e2a31; color: #f4f5f2; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Studio at Night",
+    "overview": "Kiln & Glaze is a slate-grey pottery studio where the only saturated colour is fired glaze, beside a stack of index-card recipes.",
+    "keyCharacteristics": ["Slate studio scene", "Colour only from fired glaze", "Index-card recipes on blue ruling", "A live firing trace over the kiln", "A pegboard of 36 test tiles, frosted until found"],
+    "rules": [
+      { "name": "Colour is glaze", "body": "The interface stays slate, card and ink so every colour on screen is one the player fired.", "section": "colors" },
+      { "name": "Cobalt is the action", "body": "One cobalt button per screen, plus selection.", "section": "colors" },
+      { "name": "Amber is heat", "body": "Ember amber only for the kiln and its trace.", "section": "colors" }
+    ],
+    "dos": ["Let glazes be the only colour", "Write recipes as a potter would", "Show flaws on the pot"],
+    "donts": ["No glows or box shadows", "No decorative cobalt or amber", "No glyph icons", "No fired colour before the kiln opens"]
+  }
+}

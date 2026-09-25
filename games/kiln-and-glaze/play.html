@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Kiln &amp; Glaze | TaterTot Games</title>
+<meta name="theme-color" content="#262b2e">
+<link rel="icon" href="data:,">
+<script src="/analytics.js" defer></script>
+<style>
+  :root {
+    --wall: #353c40; --wall2: #262b2e; --card: #f4f5f2; --card2: #e9ecea; --rule: #d6dcdf; --blue-rule: #c9d7ea;
+    --ink: #1e2a31; --ink2: #50606a; --faint: #87949b; --cobalt: #2f55c0; --cobalt-press: #23439c; --ember: #f0a04b;
+    --sans: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+    --hatch: repeating-linear-gradient(135deg, rgba(30, 42, 49, .08) 0 1px, transparent 1px 5px);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--wall2); touch-action: none; overscroll-behavior: none; position: fixed; inset: 0; }
+  body { font-family: var(--sans); color: var(--ink); font-size: 14px; line-height: 1.4; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  ::selection { background: var(--cobalt); color: #fff; }
+  canvas#view { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  button { font-family: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid var(--cobalt); outline-offset: 2px; }
+  .num { font-variant-numeric: tabular-nums lining-nums; }
+
+  .btn { min-height: 44px; padding: 0 16px; border: 1.5px solid var(--ink); border-radius: 10px; font-size: 14px; font-weight: 600;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: var(--card); color: var(--ink); transition: background-color .12s ease-out, transform .12s ease-out; }
+  .btn:hover:not(:disabled) { background: #fff; }
+  .btn:active:not(:disabled) { background: var(--ink); color: var(--card); transform: translateY(1px); }
+  .btn:disabled { color: var(--faint); border-color: var(--rule); background: var(--hatch), var(--card2); cursor: default; }
+  .btn.go { background: var(--cobalt); border-color: var(--cobalt); color: #fff; }
+  .btn.go:hover:not(:disabled) { background: #2a4db0; }
+  .btn.go:active:not(:disabled) { background: var(--cobalt-press); border-color: var(--cobalt-press); }
+  .btn.go:disabled { color: var(--faint); border-color: var(--rule); background: var(--hatch), var(--card2); }
+  .btn.sm { min-height: 36px; padding: 0 12px; font-size: 13px; }
+  .btn.wide { width: 100%; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+  #deck { position: fixed; display: none; flex-direction: column; background: var(--card); z-index: 3; }
+  body.port #deck { left: 0; right: 0; bottom: 0; border-top: 2px solid var(--ink); }
+  body.land #deck { top: 0; right: 0; bottom: 0; border-left: 2px solid var(--ink); }
+  #stat { flex: 0 0 auto; padding: 9px 14px 7px; display: flex; justify-content: space-between; gap: 10px; align-items: baseline; font-size: 13px; color: var(--ink2); background: var(--card2); border-bottom: 1px solid var(--rule); }
+  #stat b { color: var(--ink); font-size: 16px; }
+  #tabs { flex: 0 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); border-bottom: 1px solid var(--rule); }
+  .tab { min-height: 42px; font-size: 13.5px; font-weight: 600; color: var(--faint); position: relative; }
+  .tab.on { color: var(--ink); }
+  .tab.on::after { content: ""; position: absolute; left: 18%; right: 18%; bottom: -1px; height: 3px; border-radius: 3px; background: var(--cobalt); }
+  .tab .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--cobalt); margin-left: 4px; vertical-align: 2px; }
+  #jbody { flex: 1 1 auto; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; padding-bottom: 16px; }
+  .scroll::-webkit-scrollbar { width: 6px; } .scroll::-webkit-scrollbar-thumb { background: #bcc6cb; border-radius: 3px; }
+  .scroll { scrollbar-width: thin; scrollbar-color: #bcc6cb transparent; }
+  .note { padding: 10px 14px 2px; font-size: 13px; color: var(--ink2); }
+  .note b { color: var(--ink); }
+  .sec { padding: 12px 14px 4px; font-size: 14px; font-weight: 800; color: var(--ink); }
+  .pad { padding: 8px 14px 0; }
+
+  /* index card */
+  .card { margin: 10px 14px 4px; padding: 12px 14px 12px; border-radius: 12px; background: #fbfbf9; border: 1px solid var(--rule); border-top: 3px solid #e3a49c; }
+  .card h3 { font-size: 16px; font-weight: 800; line-height: 1.25; }
+  .card .sub { font-size: 12.5px; color: var(--ink2); }
+  .card .lines { margin-top: 6px; font-size: 13px; line-height: 26px; background: repeating-linear-gradient(180deg, transparent 0 25px, var(--blue-rule) 25px 26px); }
+  .card .lines span { display: block; }
+  .card .lines span b { font-weight: 700; }
+
+  .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 1.5px solid var(--ink); border-radius: 10px; overflow: hidden; }
+  .seg button { min-height: 38px; font-size: 13px; font-weight: 600; padding: 0 6px; border-left: 1px solid var(--rule); }
+  .seg button:first-child { border-left: 0; }
+  .seg button.on { background: var(--ink); color: var(--card); }
+  .seg button:disabled { color: var(--faint); background: var(--hatch); cursor: default; }
+  .lab { font-size: 12px; font-weight: 700; color: var(--ink2); margin: 10px 0 5px; }
+
+  .ox { display: grid; grid-template-columns: 1fr repeat(5, 34px); gap: 4px; align-items: center; margin-top: 4px; }
+  .ox span { font-size: 13.5px; font-weight: 600; }
+  .ox button { height: 34px; border-radius: 8px; border: 1.5px solid var(--rule); font-size: 13px; font-weight: 700; color: var(--ink2); background: #fff; }
+  .ox button.on { background: var(--ink); border-color: var(--ink); color: var(--card); }
+  .ox button.lo { border-color: var(--ink); }
+
+  .ware { display: flex; gap: 8px; overflow-x: auto; padding: 8px 14px 4px; touch-action: pan-x; }
+  .ware button { flex: 0 0 auto; width: 62px; height: 70px; border-radius: 10px; border: 1.5px solid var(--rule); background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; color: var(--ink2); }
+  .ware button.sel { border-color: var(--cobalt); box-shadow: 0 0 0 2px var(--cobalt) inset; }
+  .ware canvas { width: 44px; height: 44px; }
+
+  .order { margin: 8px 14px 0; padding: 10px 12px; border-radius: 12px; border: 1.5px solid var(--rule); background: #fff; display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; }
+  .order.ok { border-color: var(--cobalt); }
+  .order .who { font-size: 12.5px; color: var(--ink2); }
+  .order .what { font-size: 14px; font-weight: 700; }
+  .order .pay { font-size: 12.5px; color: var(--ink2); }
+  .up { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 8px 14px; }
+  .up + .up { border-top: 1px solid var(--rule); }
+  .up h4 { font-size: 14px; } .up p { font-size: 12.5px; color: var(--ink2); }
+  .buy { flex-direction: column; gap: 0; line-height: 1.15; min-width: 86px; }
+  .buy small { font-size: 11.5px; font-weight: 600; }
+  input[type=range] { width: 100%; accent-color: var(--cobalt); height: 30px; }
+  .airrow { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; font-size: 12.5px; color: var(--ink2); }
+
+  #muteBtn { position: fixed; width: 42px; height: 42px; display: none; align-items: center; justify-content: center; z-index: 4;
+    background: rgba(244, 245, 242, .94); border: 1.5px solid var(--ink); border-radius: 21px; color: var(--ink); }
+  #muteBtn svg { width: 20px; height: 20px; }
+  #muteBtn:active { background: var(--ink); color: var(--card); }
+  #toast { position: fixed; display: none; z-index: 4; pointer-events: none; background: rgba(244, 245, 242, .97); color: var(--ink); border: 1.5px solid var(--ink);
+    border-radius: 12px; padding: 7px 14px; font-size: 13px; font-weight: 600; max-width: min(92vw, 460px); text-align: center; transform: translateX(-50%); }
+
+  .screen { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 10; background: rgba(20, 25, 28, .6); padding: 14px; }
+  .screen.show { display: flex; }
+  .panel { width: min(440px, 100%); max-height: 100%; overflow-y: auto; overscroll-behavior: contain; background: var(--card); border: 2px solid var(--ink); border-radius: 14px; padding: 20px; touch-action: pan-y; text-align: center; }
+  .panel h2 { font-size: 20px; font-weight: 800; }
+  .panel p { color: var(--ink2); font-size: 14px; margin-top: 8px; }
+  .panel .act { margin-top: 16px; display: flex; justify-content: center; }
+  #title { background: linear-gradient(180deg, rgba(38, 43, 46, .9) 0%, rgba(38, 43, 46, .35) 34%, rgba(38, 43, 46, 0) 52%, rgba(38, 43, 46, 0) 66%, rgba(38, 43, 46, .92) 100%);
+    flex-direction: column; justify-content: space-between; text-align: center; padding: max(8vh, 26px) 16px 18px; color: #f4f5f2; }
+  #title h1 { font-size: clamp(40px, min(12vw, 13vh), 92px); font-weight: 800; line-height: .95; letter-spacing: -.01em; }
+  #title h1 span { color: #9fc9b4; }
+  #title .tag { margin-top: 12px; font-size: clamp(14px, 3.6vw, 17px); color: #dfe4e6; font-weight: 600; }
+  #title .go { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  #title .btn.go { min-height: 52px; padding: 0 30px; font-size: 17px; }
+  #title .stat { font-size: 13px; color: #dfe4e6; font-weight: 600; }
+  #badge { color: #dfe4e6; font-size: 13px; font-weight: 600; text-decoration: none; border-bottom: 1.5px solid #7f9be3; padding: 6px 2px 2px; }
+  body.land #title { align-items: flex-start; text-align: left; padding: max(9vh, 22px) 6vw max(7vh, 18px);
+    background: linear-gradient(90deg, rgba(38, 43, 46, .95) 0%, rgba(38, 43, 46, .78) 30%, rgba(38, 43, 46, 0) 48%); }
+  body.land #title .go { align-items: flex-start; }
+  body.land #title > div { max-width: 34vw; }
+  @media (max-height: 520px) { #stat { padding: 5px 12px 4px; } .tab { min-height: 36px; } .card { margin-top: 6px; } .seg button { min-height: 34px; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body class="port">
+<canvas id="view"></canvas>
+<button id="muteBtn" aria-label="Sound on or off">
+  <svg id="icoOn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6"/><path d="M18 6.5a7.8 7.8 0 0 1 0 11"/></svg>
+  <svg id="icoOff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" style="display:none"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
+</button>
+<div id="toast"></div>
+
+<div id="deck">
+  <div id="stat" class="num"></div>
+  <nav id="tabs">
+    <button class="tab on" data-tab="wheel">Wheel</button>
+    <button class="tab" data-tab="glaze">Glaze</button>
+    <button class="tab" data-tab="kiln">Kiln</button>
+    <button class="tab" data-tab="shelf">Shelf</button>
+    <button class="tab" data-tab="book">Book</button>
+  </nav>
+  <div id="jbody" class="scroll"></div>
+</div>
+
+<div id="title" class="screen show">
+  <div>
+    <h1>Kiln &amp;<br><span>Glaze</span></h1>
+    <p class="tag">Throw it, glaze it, fire it. Then open the kiln and see.</p>
+  </div>
+  <div class="go">
+    <button class="btn go" id="playBtn">Open the studio</button>
+    <div class="stat num" id="titleStat"></div>
+    <a id="badge" href="https://tatertotgames.com">tatertotgames.com</a>
+  </div>
+</div>
+
+<div id="away" class="screen">
+  <div class="panel">
+    <h2>While you were away</h2>
+    <p class="num" id="awayText"></p>
+    <div class="act"><button class="btn go" id="awayBtn">Back to the studio</button></div>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+const TAU = Math.PI * 2;
+const pick = a => a[Math.floor(Math.random() * a.length)];
+function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function hex(h) { const n = parseInt(h.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; }
+function toHex(c) { return '#' + c.map(v => clamp(Math.round(v), 0, 255).toString(16).padStart(2, '0')).join(''); }
+function mixC(a, b, t) { const A = hex(a), B = hex(b); return toHex(A.map((v, i) => v + (B[i] - v) * t)); }
+function shade(h, amt) { return toHex(hex(h).map(v => v + amt)); }
+function rgba(h, a) { const c = hex(h); return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + a + ')'; }
+
+/* ============================== the studio's materials ============================== */
+const CLAYS = {
+  stone: { n: 'Stoneware', raw: '#8f857a', fired: '#b09c84', mult: 1, lvl: 0, t: 'Buff clay with a little iron in it. Takes any firing.' },
+  red:   { n: 'Red earthenware', raw: '#8a5040', fired: '#a4533a', mult: 0.8, lvl: 0, t: 'Rich red clay. Only takes the coolest firing, cone 04.' },
+  porc:  { n: 'Porcelain', raw: '#c9c8c3', fired: '#eeede8', mult: 1.6, lvl: 2, t: 'White and fine. Glazes glow on it.' },
+  speck: { n: 'Speckled stoneware', raw: '#948b80', fired: '#b8aa94', mult: 1.25, lvl: 5, speck: true, t: 'Iron specks bleed up through the glaze.' },
+};
+const CLAY_ORDER = ['stone', 'red', 'porc', 'speck'];
+const OXIDES = [
+  { id: 'fe', n: 'Iron', lvl: 0, col: '#a8651e' }, { id: 'cu', n: 'Copper', lvl: 0, col: '#3f8a4e' }, { id: 'co', n: 'Cobalt', lvl: 0, col: '#2d4fa8' },
+  { id: 'sn', n: 'Tin', lvl: 1, col: '#f2f1ec' }, { id: 'ru', n: 'Rutile', lvl: 1, col: '#c49a5a' },
+  { id: 'cr', n: 'Chrome', lvl: 3, col: '#4f7a3a' }, { id: 'mn', n: 'Manganese', lvl: 3, col: '#6b3b52' },
+];
+const BASES = { clear: { n: 'Clear', lvl: 0 }, matte: { n: 'Matte', lvl: 0 }, bare: { n: 'None', lvl: 0 }, shino: { n: 'Shino', lvl: 4 }, ash: { n: 'Ash', lvl: 5 } };
+const BASE_ORDER = ['clear', 'matte', 'shino', 'ash', 'bare'];
+const DIPS = ['Thin', 'Medium', 'Thick'];
+const KILNS = {
+  electric: { n: 'Electric', cones: ['04', '6'], air: false, lvl: 0, up: 18, cool: 7 },
+  gas:      { n: 'Gas', cones: ['6', '10'], air: true, lvl: 2, up: 22, cool: 8 },
+  wood:     { n: 'Wood', cones: ['10'], air: true, lvl: 5, up: 28, cool: 10 },
+};
+const KILN_ORDER = ['electric', 'gas', 'wood'];
+const CONE_T = { '04': 1060, '6': 1220, '10': 1300 };
+const FORMS = {
+  plate: { n: 'plate', v: 9 }, bowl: { n: 'bowl', v: 10 }, cup: { n: 'cup', v: 6 }, jar: { n: 'jar', v: 13 },
+  vase: { n: 'vase', v: 15 }, bottle: { n: 'bottle', v: 18 }, pot: { n: 'pot', v: 7 },
+};
+const PRESETS = {
+  plate: { r0: 3, r1: 10, r2: 12, r3: 13, H: 3 }, bowl: { r0: 3, r1: 6.5, r2: 9, r3: 10, H: 7 }, cup: { r0: 3, r1: 4.2, r2: 4.3, r3: 4.5, H: 9 },
+  jar: { r0: 4, r1: 8, r2: 8.5, r3: 5, H: 13 }, vase: { r0: 3.5, r1: 6.5, r2: 4.5, r3: 3.5, H: 22 }, bottle: { r0: 4, r1: 7.5, r2: 3, r3: 1.6, H: 24 },
+};
+function classify(p) {
+  const m = Math.max(p.r1, p.r2, p.r3), W = 2 * m;
+  if (p.H < 0.28 * W) return 'plate';
+  if (p.r3 <= 0.38 * m && p.H >= 0.9 * W) return 'bottle';
+  if (p.r3 >= 0.9 * m && p.H < 0.75 * W) return 'bowl';
+  if (p.r3 >= 0.75 * m && p.H >= 0.75 * W && W <= 12) return 'cup';
+  if (p.H >= 1.15 * W && p.r3 < 0.9 * m) return 'vase';
+  if (p.r3 < 0.9 * m) return 'jar';
+  return 'pot';
+}
+const LEVELS = [0, 8, 20, 40, 65, 100];
+const LEVEL_NOTE = ['', 'Tin and rutile are on the glaze shelf.', 'The gas kiln is built, and porcelain has arrived.', 'Chrome and manganese are on the glaze shelf.', 'The shino base is mixed.', 'The wood kiln is built. Ash glaze and speckled clay are in.'];
+const LEVEL_NEXT = ['', 'tin and rutile', 'the gas kiln and porcelain', 'chrome and manganese', 'the shino base', 'the wood kiln'];
+
+/* ============================== the glaze book ============================== */
+// c1 main colour, c2 the second colour (breaks, streaks, blush), surf: gloss, satin, matte, metal.
+const G = {
+  clear:    { n: 'Clear', fam: 'clear', rare: 0, lvl: 0, c1: '', c2: '', surf: 'gloss', pat: 'none', clues: ['Nothing in it at all.', 'The glossy base on its own.'] },
+  satin:    { n: 'Satin White', fam: 'white', rare: 0, lvl: 0, c1: '#e7e5de', c2: '#cfcbc0', surf: 'satin', pat: 'none', clues: ['Nothing in it at all.', 'The matte base on its own.'] },
+  honey:    { n: 'Honey', fam: 'amber', rare: 0, lvl: 0, c1: '#d99a3a', c2: '#8f5214', surf: 'gloss', pat: 'break', clues: ['A touch of iron.', 'Plenty of air in the kiln.'] },
+  amber:    { n: 'Amber', fam: 'amber', rare: 1, lvl: 0, c1: '#b8641d', c2: '#5e2c0a', surf: 'gloss', pat: 'break', clues: ['Iron, two of it.', 'Plenty of air in the kiln.'] },
+  tenmoku:  { n: 'Tenmoku', fam: 'black', rare: 1, lvl: 0, c1: '#2a1a12', c2: '#9a5220', surf: 'gloss', pat: 'break', clues: ['A lot of iron.', 'Cone 6 or hotter.'] },
+  hare:     { n: "Hare's Fur", fam: 'black', rare: 4, lvl: 0, c1: '#231710', c2: '#b8702e', surf: 'gloss', pat: 'hare', clues: ['The most iron, glossy, dipped thick.', 'Let it cool slowly.'] },
+  cobalt:   { n: 'Cobalt Blue', fam: 'blue', rare: 1, lvl: 0, c1: '#2446a8', c2: '#102a70', surf: 'gloss', pat: 'break', clues: ['Cobalt, just one.', 'Any kiln will do.'] },
+  midnight: { n: 'Midnight Blue', fam: 'blue', rare: 1, lvl: 0, c1: '#16245e', c2: '#0a1133', surf: 'gloss', pat: 'none', clues: ['More cobalt than you think.', 'Any kiln will do.'] },
+  cugreen:  { n: 'Copper Green', fam: 'green', rare: 1, lvl: 0, c1: '#4e8f58', c2: '#2a5a33', surf: 'gloss', pat: 'break', clues: ['Copper, with air.', 'Cone 6 or hotter.'] },
+  turq:     { n: 'Turquoise', fam: 'blue', rare: 2, lvl: 0, c1: '#3fb0b0', c2: '#1f7f86', surf: 'gloss', pat: 'break', clues: ['Copper.', 'The coolest firing, cone 04.'] },
+  oribe:    { n: 'Oribe', fam: 'green', rare: 2, lvl: 0, c1: '#2f7a4a', c2: '#173f26', surf: 'gloss', pat: 'runs', clues: ['Two of copper, glossy, dipped thick.', 'Cone 6 or hotter, with air.'] },
+  bronze:   { n: 'Copper Bronze', fam: 'brown', rare: 2, lvl: 0, c1: '#5a4a36', c2: '#b89868', surf: 'metal', pat: 'streak', clues: ['A lot of copper in the matte base.', 'With air.'] },
+  tinwhite: { n: 'Tin White', fam: 'white', rare: 0, lvl: 1, c1: '#f2f1ec', c2: '#d9d6cc', surf: 'gloss', pat: 'none', clues: ['Tin makes things white.', 'Cone 6 or hotter.'] },
+  majolica: { n: 'Majolica White', fam: 'white', rare: 1, lvl: 1, c1: '#f4f0e4', c2: '#ddd4bd', surf: 'gloss', pat: 'none', clues: ['Tin makes things white.', 'The coolest firing, cone 04.'] },
+  powder:   { n: 'Powder Blue', fam: 'blue', rare: 1, lvl: 1, c1: '#9db8e0', c2: '#6f8fc4', surf: 'gloss', pat: 'float', clues: ['Cobalt with tin.', 'Nothing else in it.'] },
+  rutblue:  { n: 'Rutile Blue', fam: 'blue', rare: 2, lvl: 1, c1: '#5d7fa6', c2: '#c9a46a', surf: 'gloss', pat: 'streak', clues: ['Cobalt and rutile together.', 'Nothing else in it.'] },
+  floating: { n: 'Floating Blue', fam: 'blue', rare: 3, lvl: 1, c1: '#3f6f9e', c2: '#b4cbdc', surf: 'gloss', pat: 'float', clues: ['Cobalt, rutile and iron.', 'Cone 6 or hotter, cooled slowly.'] },
+  robin:    { n: "Robin's Egg", fam: 'blue', rare: 2, lvl: 1, c1: '#9fd3cf', c2: '#6fb3ae', surf: 'satin', pat: 'float', clues: ['Copper with tin.', 'Cone 6 or hotter, with air.'] },
+  rutgold:  { n: 'Rutile Gold', fam: 'gold', rare: 1, lvl: 1, c1: '#c89a52', c2: '#7b5424', surf: 'satin', pat: 'streak', clues: ['Rutile on its own.', 'Any kiln will do.'] },
+  celadon:  { n: 'Celadon', fam: 'green', rare: 3, lvl: 2, c1: '#a9c9b2', c2: '#7aa48c', surf: 'gloss', pat: 'pool', clues: ['A touch of iron in the glossy base.', 'Hottest firing, starved of air.'] },
+  jun:      { n: 'Jun Blue', fam: 'blue', rare: 3, lvl: 2, c1: '#7f9fce', c2: '#c7d6ec', surf: 'satin', pat: 'float', clues: ['A touch of iron in the matte base, dipped thick.', 'Hottest firing, starved of air.'] },
+  oilspot:  { n: 'Oil Spot', fam: 'black', rare: 4, lvl: 2, c1: '#1b1512', c2: '#c4c0b8', surf: 'gloss', pat: 'spot', clues: ['The most iron, glossy, dipped thick.', 'Hottest firing, then crash cool.'] },
+  kaki:     { n: 'Kaki', fam: 'orange', rare: 3, lvl: 2, c1: '#9a3f1c', c2: '#5f2410', surf: 'matte', pat: 'float', clues: ['The most iron in the matte base.', 'Hottest firing with air, cooled slowly.'] },
+  cured:    { n: 'Copper Red', fam: 'red', rare: 3, lvl: 2, c1: '#9e1f2a', c2: '#d8c2b6', surf: 'gloss', pat: 'rim', clues: ['Copper, no more than two.', 'Hottest firing, starved of air.'] },
+  peach:    { n: 'Peach Bloom', fam: 'pink', rare: 3, lvl: 2, c1: '#e0a19a', c2: '#b5646a', surf: 'satin', pat: 'float', clues: ['Just a touch of copper, dipped thin.', 'Hottest firing, starved of air.'] },
+  flambe:   { n: 'Flambé', fam: 'red', rare: 4, lvl: 2, c1: '#8e2233', c2: '#5a78b0', surf: 'gloss', pat: 'streak', clues: ['Copper and rutile.', 'Hottest firing, starved of air.'] },
+  crgreen:  { n: 'Chrome Green', fam: 'green', rare: 1, lvl: 3, c1: '#4f6b2f', c2: '#2e421a', surf: 'satin', pat: 'none', clues: ['Chrome on its own.', 'With air.'] },
+  pink:     { n: 'Chrome-Tin Pink', fam: 'pink', rare: 2, lvl: 3, c1: '#d98a9a', c2: '#b85f75', surf: 'satin', pat: 'break', clues: ['Chrome with tin.', 'Cone 6 or hotter, with air.'] },
+  teal:     { n: 'Teal', fam: 'green', rare: 2, lvl: 3, c1: '#2f7f86', c2: '#174c52', surf: 'gloss', pat: 'break', clues: ['Cobalt and chrome.', 'Nothing else in it.'] },
+  iris:     { n: 'Iris', fam: 'purple', rare: 2, lvl: 3, c1: '#5a4c9a', c2: '#2f2560', surf: 'gloss', pat: 'break', clues: ['Cobalt and manganese.', 'Nothing else in it.'] },
+  plum:     { n: 'Plum Brown', fam: 'brown', rare: 1, lvl: 3, c1: '#5e3a3a', c2: '#3a2020', surf: 'gloss', pat: 'break', clues: ['Manganese.', 'Not too much of it, or not too hot.'] },
+  mnbronze: { n: 'Manganese Bronze', fam: 'brown', rare: 3, lvl: 3, c1: '#3b3230', c2: '#b0927a', surf: 'metal', pat: 'streak', clues: ['Three or more of manganese.', 'Hottest firing.'] },
+  shino:    { n: 'Shino', fam: 'orange', rare: 2, lvl: 4, c1: '#ead8c2', c2: '#d98a52', surf: 'matte', pat: 'blush', clues: ['The shino base, nothing in it.', 'Hottest firing, starved of air.'] },
+  carbon:   { n: 'Carbon Trap Shino', fam: 'orange', rare: 4, lvl: 4, c1: '#d9b89a', c2: '#2b2420', surf: 'matte', pat: 'float', clues: ['The shino base, dipped thin.', 'Starved of air, cooled slowly.'] },
+  ash:      { n: 'Wood Ash', fam: 'green', rare: 3, lvl: 5, c1: '#8ea86a', c2: '#4f6d34', surf: 'gloss', pat: 'runs', clues: ['The ash base, nothing in it.', 'Hottest firing.'] },
+  flashed:  { n: 'Flashed', fam: 'orange', rare: 3, lvl: 5, c1: '#d0864f', c2: '#8a4a2a', surf: 'matte', pat: 'flash', clues: ['No glaze at all.', 'Only the wood kiln does this.'] },
+};
+const BOOK = Object.keys(G);
+const FAM_WORD = { clear: 'clear', white: 'white', amber: 'amber', black: 'black', blue: 'blue', green: 'green', brown: 'brown', gold: 'gold', red: 'red', pink: 'pink', purple: 'purple', orange: 'orange' };
+
+// What comes out of the kiln: the rules a potter learns one firing at a time.
+function fireGlaze(pot, f) {
+  const r = pot.rec, o = r.o, cone = f.cone, red = f.atm === 'red', slow = f.cool === 'slow', t = r.t;
+  const has = Object.keys(o).filter(k => o[k] > 0), only = (...ids) => has.length === ids.length && ids.every(i => o[i] > 0);
+  const total = has.reduce((s, k) => s + o[k], 0), hot = cone === '10', mid = cone !== '04';
+  let key = null, flaw = null;
+  if (pot.clay === 'red' && cone !== '04') flaw = 'Slumped in the heat. Red clay only takes cone 04.';
+  else if (total >= 7) flaw = 'The glaze crawled into beads. Too much oxide.';
+  else if (r.base === 'clear' && t === 3 && hot && Math.random() < 0.3) flaw = 'Ran down onto the kiln shelf and had to be ground off.';
+  if (r.base === 'bare') key = f.kiln === 'wood' ? 'flashed' : null;
+  else if (r.base === 'ash') key = hot && !has.length ? 'ash' : null;
+  else if (r.base === 'shino') key = hot && red && !has.length ? (t === 1 && slow ? 'carbon' : 'shino') : null;
+  else {
+    const clear = r.base === 'clear', matte = r.base === 'matte';
+    if (!has.length) key = clear ? 'clear' : 'satin';
+    else if (only('sn')) key = cone === '04' ? 'majolica' : 'tinwhite';
+    else if (only('fe')) {
+      if (o.fe === 1) key = red ? (hot ? (clear ? 'celadon' : t === 3 ? 'jun' : null) : null) : 'honey';
+      else if (o.fe === 2) key = red ? null : 'amber';
+      else if (mid) {
+        if (o.fe === 4 && matte && !red && slow && hot) key = 'kaki';
+        else if (o.fe === 4 && t === 3 && clear && slow) key = 'hare';
+        else if (o.fe === 4 && t === 3 && clear && !slow && hot) key = 'oilspot';
+        else key = 'tenmoku';
+      }
+    }
+    else if (only('co')) key = o.co === 1 ? 'cobalt' : 'midnight';
+    else if (only('co', 'sn')) key = 'powder';
+    else if (only('co', 'ru')) key = 'rutblue';
+    else if (only('co', 'ru', 'fe')) key = mid && slow ? 'floating' : 'rutblue';
+    else if (only('co', 'mn')) key = 'iris';
+    else if (only('co', 'cr')) key = 'teal';
+    else if (only('cu')) {
+      if (red) key = hot ? (o.cu === 1 && t === 1 ? 'peach' : o.cu <= 2 ? 'cured' : null) : null;
+      else if (cone === '04') key = 'turq';
+      else if (o.cu >= 3 && matte) key = 'bronze';
+      else if (o.cu >= 2 && t === 3 && clear) key = 'oribe';
+      else key = 'cugreen';
+    }
+    else if (only('cu', 'ru')) key = red && hot ? 'flambe' : null;
+    else if (only('cu', 'sn')) key = !red && mid ? 'robin' : null;
+    else if (only('cr')) key = red ? null : 'crgreen';
+    else if (only('cr', 'sn')) key = !red && mid ? 'pink' : null;
+    else if (only('ru')) key = 'rutgold';
+    else if (only('mn')) key = o.mn >= 3 && hot ? 'mnbronze' : 'plum';
+  }
+  const res = { key, flaw, kiln: f.kiln, cone, atm: f.atm, cool: f.cool };
+  if (key) {
+    const g = G[key];
+    res.name = g.n; res.fam = g.fam; res.surf = g.surf; res.pat = g.pat;
+    if (key === 'clear') { const c = CLAYS[pot.clay].fired; res.c1 = shade(c, -8); res.c2 = shade(c, -40); }
+    else { res.c1 = g.c1; res.c2 = g.c2; }
+    if (key === 'celadon' && pot.clay === 'porc') res.c1 = '#b3d6c2';
+  } else {
+    // an unnamed result: the oxides blend, and reduction or a low firing muddies them
+    let col = r.base === 'bare' ? CLAYS[pot.clay].fired : r.base === 'shino' ? '#d9c2a4' : r.base === 'ash' ? '#9aa47c' : r.base === 'matte' ? '#e2dfd6' : shade(CLAYS[pot.clay].fired, 10);
+    let w = 0; const mix = [0, 0, 0];
+    for (const k of has) { if (k === 'sn') continue; const c = hex(OXIDES.find(x => x.id === k).col); for (let i = 0; i < 3; i++) mix[i] += c[i] * o[k]; w += o[k]; }
+    if (w) { col = mixC(col, toHex(mix.map(v => v / w)), Math.min(0.9, 0.35 + w * 0.15)); if (o.fe >= 3) col = mixC(col, '#2a1a12', 0.5); }
+    if (o.sn) col = mixC(col, '#f2f1ec', 0.3 * o.sn / 4 + 0.15);
+    if (red) col = mixC(col, '#4a4540', 0.3);
+    if (cone === '04' && r.base !== 'bare') col = mixC(col, '#d8d4c8', 0.15);
+    res.c1 = col; res.c2 = shade(col, -35);
+    res.surf = r.base === 'matte' || r.base === 'shino' || r.base === 'bare' ? 'matte' : 'gloss'; res.pat = r.base === 'bare' ? 'none' : 'break';
+    const dom = has.filter(k => k !== 'sn').sort((a, b) => o[b] - o[a])[0];
+    res.fam = r.base === 'bare' ? 'clear' : !dom ? 'white' : dom === 'fe' ? (o.fe >= 3 ? 'black' : 'amber') : dom === 'cu' ? (red ? 'red' : 'green') : dom === 'co' ? 'blue' : dom === 'ru' ? 'gold' : dom === 'mn' ? 'brown' : 'green';
+    res.name = r.base === 'bare' ? 'Bare clay' : 'Unnamed ' + FAM_WORD[res.fam] + (res.surf === 'matte' ? ' matte' : ' gloss');
+  }
+  res.val = Math.max(1, Math.round(FORMS[pot.form].v * CLAYS[pot.clay].mult * pot.q * (key ? 1 + G[key].rare * 0.5 : 0.8) * (flaw ? 0.4 : 1)));
+  return res;
+}
+
+/* ============================== save ============================== */
+const KEY = 'ttg_kilnglaze';
+function fresh() {
+  return { v: 1, started: false, muted: false, coins: 20, rep: 0, lvl: 0, nextId: 1, pots: [], orders: [], book: {}, notes: {}, newBook: false,
+    up: { shelf: 0, board: 0 }, wheel: { state: 'empty', clay: 'stone' }, kilnType: 'electric', cone: '6', cool: 'slow', air: 1,
+    kiln: { state: 'idle', load: [], t: 0, trace: [], airSum: 0, airN: 0 }, lastRec: null, orderClock: 20, fired: 0, lastSeen: Date.now() };
+}
+function loadSave() {
+  let s = null;
+  try { s = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { s = null; }
+  if (!s || typeof s !== 'object' || !Array.isArray(s.pots)) return fresh();
+  const o = Object.assign(fresh(), s);
+  ['coins', 'rep', 'lvl', 'nextId', 'fired', 'orderClock'].forEach(k => { if (!isFinite(o[k]) || o[k] < 0) o[k] = fresh()[k]; });
+  o.pots = o.pots.filter(p => p && FORMS[p.form] && CLAYS[p.clay] && p.p && ['raw', 'glazed', 'fired'].indexOf(p.st) >= 0);
+  o.orders = Array.isArray(o.orders) ? o.orders.filter(x => x && x.want) : [];
+  if (!o.kiln || !Array.isArray(o.kiln.load)) o.kiln = fresh().kiln;
+  o.kiln.load = o.kiln.load.filter(id => o.pots.some(p => p.id === id));
+  if (!KILNS[o.kilnType]) o.kilnType = 'electric';
+  if (!o.wheel || !CLAYS[o.wheel.clay]) o.wheel = fresh().wheel;
+  if (o.wheel.state === 'lump') o.wheel.state = 'empty';
+  o.muted = !!o.muted;
+  return o;
+}
+let S = loadSave();
+function persist() { S.lastSeen = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* storage blocked */ } }
+const levelOf = rep => { let l = 0; for (let i = 0; i < LEVELS.length; i++) if (rep >= LEVELS[i]) l = i; return l; };
+const found = () => BOOK.filter(k => S.book[k]).length;
+const wareCap = () => 4 + S.up.board * 2;
+const kilnCap = () => 3 + S.up.shelf;
+const ware = () => S.pots.filter(p => p.st !== 'fired' && S.kiln.load.indexOf(p.id) < 0);
+const shelfPots = () => S.pots.filter(p => p.st === 'fired');
+const potById = id => S.pots.find(p => p.id === id);
+function gainRep(n) {
+  S.rep += n; const l = levelOf(S.rep);
+  if (l > S.lvl) { S.lvl = l; toast(LEVEL_NOTE[l]); sfxLevel(); window.TTG?.track('village_levelup', { level: l }); }
+}
+
+/* ============================== audio ============================== */
+let AC = null, master = null, roarG = null, humO = null, humG = null;
+function audio() {
+  if (AC) return AC;
+  try {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    master = AC.createGain(); master.gain.value = S.muted ? 0 : 0.8; master.connect(AC.destination);
+    const len = AC.sampleRate * 2, buf = AC.createBuffer(1, len, AC.sampleRate), d = buf.getChannelData(0);
+    let b = 0; for (let i = 0; i < len; i++) { b = b * 0.985 + (Math.random() * 2 - 1) * 0.015; d[i] = b * 4; }
+    const src = AC.createBufferSource(); src.buffer = buf; src.loop = true;
+    const f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 380;
+    roarG = AC.createGain(); roarG.gain.value = 0; src.connect(f); f.connect(roarG); roarG.connect(master); src.start();
+    humO = AC.createOscillator(); humO.type = 'triangle'; humO.frequency.value = 52; humG = AC.createGain(); humG.gain.value = 0; humO.connect(humG); humG.connect(master); humO.start();
+  } catch (e) { AC = null; }
+  return AC;
+}
+function tone(f, dur, vol, type, delay) {
+  if (!AC || S.muted || AC.state !== 'running') return;
+  const t = AC.currentTime + (delay || 0), o = AC.createOscillator(), g = AC.createGain();
+  o.type = type || 'sine'; o.frequency.value = f;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + 0.02);
+}
+const sfxTap = () => tone(620, 0.05, 0.03, 'triangle');
+const sfxPing = () => tone(2400 + Math.random() * 1800, 0.35, 0.02, 'sine');
+const sfxDip = () => { tone(160, 0.3, 0.06); tone(90, 0.4, 0.05, 'sine', 0.05); };
+const sfxCut = () => { tone(1200, 0.08, 0.03, 'sawtooth'); tone(300, 0.2, 0.04, 'sine', 0.05); };
+const sfxCoin = () => { tone(1320, 0.1, 0.04, 'triangle'); tone(1760, 0.14, 0.035, 'triangle', 0.07); };
+const sfxOpen = () => [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.6, 0.04, 'triangle', i * 0.09));
+const sfxLevel = () => [392, 523, 659, 784].forEach((f, i) => tone(f, 0.7, 0.05, 'sine', i * 0.12));
+function setMuted(m, keep) { S.muted = m; if (master) master.gain.value = m ? 0 : 0.8; $('icoOn').style.display = m ? 'none' : ''; $('icoOff').style.display = m ? '' : 'none'; if (!keep) persist(); }
+
+/* ============================== layout ============================== */
+const cv = $('view'), cx = cv.getContext('2d');
+let W = 1, H = 1, DPR = 1, land = false, mode = 'title', tab = 'wheel';
+const area = { x: 0, y: 0, w: 1, h: 1 };
+function layout() {
+  W = Math.max(1, innerWidth); H = Math.max(1, innerHeight); DPR = clamp(devicePixelRatio || 1, 1, 2.5);
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  land = W > H * 1.05; document.body.className = land ? 'land' : 'port';
+  const deck = $('deck');
+  if (mode !== 'play') { area.x = land ? Math.round(W * 0.36) : 0; area.y = 0; area.w = W - area.x; area.h = H; }
+  else if (land) { const dw = Math.round(clamp(W * 0.36, 300, 420)); deck.style.width = dw + 'px'; deck.style.height = ''; area.x = 0; area.y = 0; area.w = W - dw; area.h = H; }
+  else { const dh = Math.round(clamp(H * 0.47, 280, 460)); deck.style.height = dh + 'px'; deck.style.width = ''; area.x = 0; area.y = 0; area.w = W; area.h = H - dh; }
+  const mb = $('muteBtn'); mb.style.left = (area.x + area.w - 52) + 'px'; mb.style.top = (area.y + 10) + 'px';
+  bg = null;
+}
+let bg = null;
+function buildBg() {
+  bg = document.createElement('canvas'); bg.width = cv.width; bg.height = cv.height;
+  const g = bg.getContext('2d'); g.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#3b4347'); gr.addColorStop(1, '#23282b');
+  g.fillStyle = gr; g.fillRect(0, 0, W, H);
+  const R = rng(7);
+  for (let i = 0; i < 90; i++) { const x = R() * W, y = R() * H, r = 20 + R() * 90; const rg = g.createRadialGradient(x, y, 0, x, y, r); rg.addColorStop(0, R() < 0.5 ? 'rgba(255,255,255,.035)' : 'rgba(0,0,0,.06)'); rg.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = rg; g.fillRect(x - r, y - r, r * 2, r * 2); }
+  g.fillStyle = 'rgba(255,255,255,.035)'; for (let i = 0; i < 500; i++) g.fillRect(R() * W, R() * H, 1, 1);
+}
+
+/* ============================== pots ============================== */
+function profilePts(p, n) {
+  const P = [[p.r0, 0], [p.r1, 0.3 * p.H], [p.r2, 0.65 * p.H], [p.r3, p.H]], out = [];
+  const Q = [P[0], ...P, P[3]];
+  for (let s = 1; s < 4; s++) {
+    const p0 = Q[s - 1], p1 = Q[s], p2 = Q[s + 1], p3 = Q[s + 2];
+    for (let k = 0; k < n; k++) {
+      const t = k / n, t2 = t * t, t3 = t2 * t;
+      out.push([0.5 * (2 * p1[0] + (-p0[0] + p2[0]) * t + (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2 + (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3),
+        0.5 * (2 * p1[1] + (-p0[1] + p2[1]) * t + (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2 + (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t3)]);
+    }
+  }
+  out.push(P[3]);
+  return out.map(q => [Math.max(0.6, q[0]), q[1]]);
+}
+function bodyPath(g, pts, cx0, by, s) {
+  g.beginPath();
+  g.moveTo(cx0 - pts[0][0] * s, by);
+  for (const q of pts) g.lineTo(cx0 + q[0] * s, by - q[1] * s);
+  for (let i = pts.length - 1; i >= 0; i--) g.lineTo(cx0 - pts[i][0] * s, by - pts[i][1] * s);
+  g.closePath();
+}
+// paint a fired glaze inside the current clip, over the box x0..x1, y0..y1
+function paintGlaze(g, res, x0, y0, x1, y1, seed, clay) {
+  const R = rng(seed), w = x1 - x0, h = y1 - y0;
+  if (res.pat === 'flash') {
+    g.fillStyle = CLAYS[clay].fired; g.fillRect(x0, y0, w, h);
+    const rg = g.createRadialGradient(x0 + w * 0.25, y0 + h * 0.4, 0, x0 + w * 0.25, y0 + h * 0.4, w * 0.8);
+    rg.addColorStop(0, rgba(res.c1, 0.95)); rg.addColorStop(0.6, rgba(res.c2, 0.5)); rg.addColorStop(1, rgba(res.c2, 0)); g.fillStyle = rg; g.fillRect(x0, y0, w, h);
+  } else {
+    const lg = g.createLinearGradient(0, y0, 0, y1); lg.addColorStop(0, res.c1); lg.addColorStop(1, mixC(res.c1, res.c2, res.pat === 'none' || res.pat === 'rim' ? 0.35 : 0.2));
+    g.fillStyle = lg; g.fillRect(x0, y0, w, h);
+  }
+  g.save();
+  switch (res.pat) {
+    case 'break': { const e = g.createLinearGradient(x0, 0, x1, 0); e.addColorStop(0, rgba(res.c2, 0.55)); e.addColorStop(0.2, rgba(res.c2, 0)); e.addColorStop(0.8, rgba(res.c2, 0)); e.addColorStop(1, rgba(res.c2, 0.6)); g.fillStyle = e; g.fillRect(x0, y0, w, h);
+      const tb = g.createLinearGradient(0, y0, 0, y0 + h * 0.18); tb.addColorStop(0, rgba(res.c2, 0.7)); tb.addColorStop(1, rgba(res.c2, 0)); g.fillStyle = tb; g.fillRect(x0, y0, w, h * 0.18); break; }
+    case 'rim': case 'pool': { const tb = g.createLinearGradient(0, y0, 0, y0 + h * 0.22); tb.addColorStop(0, rgba(res.c2, res.pat === 'rim' ? 0.95 : 0.5)); tb.addColorStop(1, rgba(res.c2, 0)); g.fillStyle = tb; g.fillRect(x0, y0, w, h * 0.22);
+      const bb = g.createLinearGradient(0, y1 - h * 0.25, 0, y1); bb.addColorStop(0, rgba(res.pat === 'rim' ? shade(res.c1, -30) : res.c2, 0)); bb.addColorStop(1, rgba(res.pat === 'rim' ? shade(res.c1, -30) : res.c2, 0.7)); g.fillStyle = bb; g.fillRect(x0, y1 - h * 0.25, w, h * 0.25); break; }
+    case 'streak': g.strokeStyle = rgba(res.c2, 0.5); g.lineCap = 'round';
+      for (let i = 0; i < 16; i++) { const x = x0 + R() * w; g.lineWidth = Math.max(1, w * (0.01 + R() * 0.035)); g.beginPath(); g.moveTo(x, y0); g.bezierCurveTo(x + (R() - 0.5) * w * 0.1, y0 + h * 0.3, x + (R() - 0.5) * w * 0.12, y0 + h * 0.6, x + (R() - 0.5) * w * 0.08, y0 + h * (0.5 + R() * 0.5)); g.stroke(); } break;
+    case 'float': case 'blush':
+      for (let i = 0; i < (res.pat === 'blush' ? 5 : 12); i++) { const x = x0 + R() * w, y = y0 + R() * h, r = w * (0.1 + R() * 0.25); const rg = g.createRadialGradient(x, y, 0, x, y, r); rg.addColorStop(0, rgba(res.c2, res.pat === 'blush' ? 0.6 : 0.45)); rg.addColorStop(1, rgba(res.c2, 0)); g.fillStyle = rg; g.fillRect(x - r, y - r, r * 2, r * 2); } break;
+    case 'hare': g.lineCap = 'round';
+      for (let i = 0; i < 90; i++) { const x = x0 + R() * w, L = h * (0.15 + R() * 0.5); g.strokeStyle = rgba(res.c2, 0.25 + R() * 0.45); g.lineWidth = Math.max(0.6, w * 0.006); g.beginPath(); g.moveTo(x, y0 + R() * h * 0.2); g.lineTo(x + (R() - 0.5) * 2, y0 + L); g.stroke(); } break;
+    case 'spot': for (let i = 0; i < 70; i++) { const x = x0 + R() * w, y = y0 + R() * h * 0.9, r = Math.max(0.7, w * (0.006 + R() * 0.014)); g.fillStyle = rgba(res.c2, 0.55 + R() * 0.4); g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill(); } break;
+    case 'runs': g.fillStyle = rgba(res.c2, 0.75);
+      for (let i = 0; i < 9; i++) { const x = x0 + R() * w, y = y1 - h * (0.05 + R() * 0.3), rw = Math.max(1.5, w * (0.02 + R() * 0.03)); g.beginPath(); g.ellipse(x, y, rw, h * (0.05 + R() * 0.12), 0, 0, TAU); g.fill(); } break;
+  }
+  if (clay && CLAYS[clay].speck) { g.fillStyle = 'rgba(40,25,15,.55)'; for (let i = 0; i < 45; i++) { g.beginPath(); g.arc(x0 + R() * w, y0 + R() * h, Math.max(0.6, w * 0.008), 0, TAU); g.fill(); } }
+  if (res.surf === 'gloss' || res.surf === 'metal') {
+    const hx = x0 + w * 0.3, hg = g.createLinearGradient(hx - w * 0.08, 0, hx + w * 0.08, 0);
+    const a = res.surf === 'metal' ? 0.5 : 0.34; hg.addColorStop(0, 'rgba(255,255,255,0)'); hg.addColorStop(0.5, 'rgba(255,255,255,' + a + ')'); hg.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = hg; g.fillRect(hx - w * 0.08, y0, w * 0.16, h);
+  } else if (res.surf === 'satin') {
+    const hg = g.createLinearGradient(x0, 0, x1, 0); hg.addColorStop(0.1, 'rgba(255,255,255,0)'); hg.addColorStop(0.32, 'rgba(255,255,255,.14)'); hg.addColorStop(0.6, 'rgba(255,255,255,0)'); g.fillStyle = hg; g.fillRect(x0, y0, w, h);
+  } else { g.fillStyle = 'rgba(255,255,255,.05)'; for (let i = 0; i < 60; i++) g.fillRect(x0 + R() * w, y0 + R() * h, 1, 1); }
+  g.restore();
+}
+// draw a pot standing on (cx0, by) at s px per cm; glow darkens it for the kiln
+function drawPot(g, pot, cx0, by, s, opt) {
+  opt = opt || {};
+  const p = pot.p, pts = profilePts(p, 7), top = by - p.H * s, maxR = Math.max(p.r0, p.r1, p.r2, p.r3) * s;
+  const clay = CLAYS[pot.clay];
+  g.save();
+  g.fillStyle = 'rgba(0,0,0,.28)'; g.beginPath(); g.ellipse(cx0 + 2, by + 1, p.r0 * s * 1.25 + 3, Math.max(2, p.r0 * s * 0.2), 0, 0, TAU); g.fill();
+  bodyPath(g, pts, cx0, by, s); g.save(); g.clip();
+  const x0 = cx0 - maxR, x1 = cx0 + maxR;
+  if (pot.st === 'fired' && pot.res) {
+    const glazeLine = pot.rec.base === 'bare' || pot.res.pat === 'flash' ? by : by - Math.max(2, p.H * s * 0.1);
+    g.fillStyle = clay.fired; g.fillRect(x0, top, x1 - x0, by - top);
+    g.save(); g.beginPath(); g.rect(x0 - 1, top - 1, x1 - x0 + 2, glazeLine - top + 1); g.clip();
+    paintGlaze(g, pot.res, x0, top, x1, glazeLine, pot.seed, pot.clay); g.restore();
+    if (glazeLine < by) { g.strokeStyle = rgba(pot.res.c2 || '#000', 0.5); g.lineWidth = Math.max(1, s * 0.15); g.beginPath(); g.moveTo(x0, glazeLine); g.lineTo(x1, glazeLine); g.stroke(); }
+  } else if (pot.st === 'glazed') {
+    g.fillStyle = clay.raw; g.fillRect(x0, top, x1 - x0, by - top);
+    const raw = pot.rec.base === 'bare' ? clay.raw : rawGlazeCol(pot.rec);
+    g.fillStyle = raw; g.fillRect(x0, top, x1 - x0, by - top - Math.max(2, p.H * s * 0.1));
+    const R = rng(pot.seed); g.fillStyle = 'rgba(255,255,255,.12)'; for (let i = 0; i < 40; i++) g.fillRect(x0 + R() * (x1 - x0), top + R() * (by - top), 1.5, 1.5);
+  } else {
+    g.fillStyle = clay.raw; g.fillRect(x0, top, x1 - x0, by - top);
+    g.strokeStyle = 'rgba(0,0,0,.12)'; g.lineWidth = 1;
+    for (let y = by - s * 0.9; y > top; y -= Math.max(3, s * 1.1)) { g.beginPath(); g.moveTo(x0, y); g.lineTo(x1, y); g.stroke(); }
+  }
+  // turn the flat fill into a round pot
+  const sh = g.createLinearGradient(x0, 0, x1, 0); sh.addColorStop(0, 'rgba(0,0,0,.28)'); sh.addColorStop(0.25, 'rgba(255,255,255,.1)'); sh.addColorStop(0.55, 'rgba(0,0,0,0)'); sh.addColorStop(1, 'rgba(0,0,0,.42)');
+  g.fillStyle = sh; g.fillRect(x0, top, x1 - x0, by - top);
+  g.restore();
+  // the opening
+  const rr = p.r3 * s, ry = Math.max(1.5, rr * 0.24);
+  const inner = pot.st === 'fired' && pot.res ? (pot.rec.base === 'bare' ? shade(clay.fired, -30) : shade(pot.res.c1, -45)) : pot.st === 'glazed' ? shade(rawGlazeCol(pot.rec), -30) : shade(clay.raw, -35);
+  g.fillStyle = inner; g.beginPath(); g.ellipse(cx0, top, rr, ry, 0, 0, TAU); g.fill();
+  g.strokeStyle = 'rgba(255,255,255,.25)'; g.lineWidth = Math.max(1, s * 0.12); g.beginPath(); g.ellipse(cx0, top, rr, ry, 0, Math.PI, TAU); g.stroke();
+  if (opt.dark) { bodyPath(g, pts, cx0, by, s); g.fillStyle = 'rgba(10,10,12,' + opt.dark + ')'; g.fill(); g.beginPath(); g.ellipse(cx0, top, rr, ry, 0, 0, TAU); g.fill(); }
+  if (opt.glow) { bodyPath(g, pts, cx0, by, s); g.fillStyle = opt.glow; g.fill(); g.beginPath(); g.ellipse(cx0, top, rr, ry, 0, 0, TAU); g.fill(); }
+  if (opt.sel) { g.strokeStyle = '#6f8ff0'; g.lineWidth = 2.5; g.beginPath(); g.ellipse(cx0, by + 2, Math.max(maxR, 10) + 5, Math.max(4, maxR * 0.2), 0, 0, TAU); g.stroke(); }
+  g.restore();
+}
+function rawGlazeCol(rec) {
+  let c = rec.base === 'shino' ? '#e4d9cc' : rec.base === 'ash' ? '#bdb9ad' : '#d9d6ce';
+  const o = rec.o; if (o.co) c = mixC(c, '#7d8fb8', 0.15 * o.co); if (o.cu) c = mixC(c, '#8fae95', 0.12 * o.cu); if (o.fe) c = mixC(c, '#b89a80', 0.12 * o.fe); if (o.mn) c = mixC(c, '#9a8590', 0.1 * o.mn);
+  return c;
+}
+function thumb(pot, size) {
+  const c = document.createElement('canvas'); c.width = size * DPR; c.height = size * DPR;
+  const g = c.getContext('2d'); g.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const p = pot.p, s = Math.min((size * 0.8) / p.H, (size * 0.82) / (2 * Math.max(p.r0, p.r1, p.r2, p.r3)));
+  drawPot(g, pot, size / 2, size * 0.9, s);
+  return c;
+}
+
+/* ============================== orders ============================== */
+const PEOPLE = [
+  { who: 'Ines from the tea room', forms: ['cup', 'bowl'] }, { who: 'Tomasz the florist', forms: ['vase', 'jar', 'bottle'] },
+  { who: 'The noodle bar on Mill Lane', forms: ['bowl'] }, { who: 'Mrs Adebayo', forms: ['plate', 'bowl'] },
+  { who: 'Dev next door', forms: ['cup', 'jar'] }, { who: 'A collector from the city', forms: ['vase', 'bottle', 'jar'], collector: true },
+];
+function reachable() { return BOOK.filter(k => G[k].lvl <= S.lvl && k !== 'clear'); }
+function newOrder() {
+  const people = PEOPLE.filter(p => !p.collector || S.lvl >= 2), per = pick(people), want = {};
+  const reach = reachable(), fams = [...new Set(reach.map(k => G[k].fam))];
+  const known = BOOK.filter(k => S.book[k] && G[k].rare >= 1);
+  if (per.collector) { want.form = pick(per.forms); if (known.length && Math.random() < 0.7) want.key = pick(known); else want.fam = pick(fams); if (Math.random() < 0.4) want.clay = 'porc'; }
+  else { const r = Math.random(); if (r < 0.55) { want.form = pick(per.forms); want.fam = pick(fams); } else if (r < 0.8) want.form = pick(per.forms); else if (known.length && r < 0.92) { want.form = pick(per.forms); want.key = pick(known); } else want.fam = pick(fams); }
+  const base = FORMS[want.form || 'bowl'].v;
+  const pay = Math.round(base * (want.key ? (1 + G[want.key].rare * 0.5) * 1.7 : want.fam && want.form ? 1.8 : 1.4) * (want.clay ? 1.6 : 1)) + 4;
+  const rep = 1 + (want.key ? 2 : 0) + (want.clay ? 1 : 0) + (want.form && (want.fam || want.key) ? 1 : 0);
+  S.orders.push({ id: S.nextId++, who: per.who, want, pay, rep });
+}
+function orderText(w) {
+  const a = w.form ? (w.form === 'pot' ? 'A pot' : 'A ' + FORMS[w.form].n) : 'Anything';
+  let t = w.key ? a + ' in ' + G[w.key].n : w.fam ? (w.form ? a + ' in any ' + FAM_WORD[w.fam] : 'Anything ' + FAM_WORD[w.fam]) : a + ', any glaze';
+  if (w.clay) t += ', on porcelain';
+  return t;
+}
+function fits(pot, w) {
+  if (!pot || pot.st !== 'fired' || !pot.res || pot.res.flaw) return false;
+  if (w.form && pot.form !== w.form) return false;
+  if (w.key && pot.res.key !== w.key) return false;
+  if (w.fam && pot.res.fam !== w.fam) return false;
+  if (w.clay && pot.clay !== w.clay) return false;
+  return true;
+}
+
+/* ============================== kiln ============================== */
+function kilnDur() { const k = KILNS[S.kiln.kiln || S.kilnType]; return { up: k.up, hold: 2, cool: k.cool * (S.kiln.cool === 'fast' ? 0.6 : 1.5) }; }
+function kilnTemp(t) {
+  const d = kilnDur(), peak = CONE_T[S.kiln.cone];
+  if (t < d.up) return 20 + (peak - 20) * Math.pow(t / d.up, 1.25);
+  if (t < d.up + d.hold) return peak;
+  const c = Math.min(1, (t - d.up - d.hold) / d.cool); return peak - (peak - 90) * Math.pow(c, 0.7);
+}
+function startFiring() {
+  if (S.kiln.state !== 'idle' || !S.kiln.load.length) return;
+  const k = KILNS[S.kilnType]; if (k.cones.indexOf(S.cone) < 0) S.cone = k.cones[k.cones.length - 1];
+  Object.assign(S.kiln, { state: 'firing', kiln: S.kilnType, cone: S.cone, cool: S.cool, t: 0, trace: [], airSum: 0, airN: 0, lastSample: -1, cooling: false });
+  window.TTG?.track('level_start', { level: S.fired + 1 });
+  toast(k.air ? 'The burners are lit. Close the damper to starve it of air.' : 'The kiln is on.'); persist(); dirty = true;
+}
+function stepKiln(dt) {
+  const K = S.kiln; if (K.state !== 'firing') return;
+  const d = kilnDur(), end = d.up + d.hold + d.cool;
+  K.t = Math.min(end, K.t + dt);
+  const T = kilnTemp(K.t), heating = K.t < d.up + d.hold, air = KILNS[K.kiln].air ? S.air : 1;
+  if (heating && T > 900) { K.airSum += air * dt; K.airN += dt; }
+  if (heating) K.cool = S.cool;
+  if (!heating && !K.cooling) { K.cooling = true; dirty = true; }
+  if (K.t - K.lastSample >= end / 120) { K.trace.push([K.t, T, air]); K.lastSample = K.t; }
+  if (!heating && Math.random() < dt * 1.2 && T < 700) sfxPing();
+  if (K.t >= end) { K.state = 'done'; toast('The kiln has cooled. Open it up.'); dirty = true; persist(); }
+}
+let reveal = 0, revealIds = [];
+function openKiln() {
+  const K = S.kiln; if (K.state !== 'done') return;
+  const atm = KILNS[K.kiln].air && K.airN > 0 && K.airSum / K.airN < 0.45 ? 'red' : 'ox';
+  const f = { kiln: K.kiln, cone: K.cone, atm, cool: K.cool }, news = [];
+  for (const id of K.load) {
+    const pot = potById(id); if (!pot) continue;
+    pot.res = fireGlaze(pot, f); pot.st = 'fired';
+    if (pot.res.key && !S.book[pot.res.key]) { S.book[pot.res.key] = { rec: JSON.parse(JSON.stringify(pot.rec)), clay: pot.clay, f, form: pot.form }; news.push(pot.res.key); S.newBook = true; }
+  }
+  S.fired++; revealIds = K.load.slice(); K.state = 'idle'; K.load = []; K.trace = []; reveal = 1; sfxOpen();
+  if (news.length) { news.forEach(k => window.TTG?.track('level_complete', { level: found() })); gainRep(2 * news.length); toast('New in the book: ' + news.map(k => G[k].n).join(', ') + '.'); }
+  else toast(atm === 'red' ? 'Out of a reduction firing, still warm.' : 'Out of the kiln, still warm.');
+  tab = 'kiln'; dirty = true; persist();
+}
+
+/* ============================== drawing ============================== */
+let hits = [], t0 = 0;
+function hit(x, y, w, h, fn) { hits.push({ x, y, w, h, fn }); }
+function sceneScale(maxH, maxR, fh, fw) { return Math.min(area.h * fh / maxH, area.w * fw / (maxR * 2)); }
+function draw(t) {
+  cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  if (!bg) buildBg();
+  cx.drawImage(bg, 0, 0, W, H);
+  hits = [];
+  if (mode === 'title') { drawTitleScene(t); return; }
+  if (tab === 'wheel') drawWheel(t); else if (tab === 'glaze') drawGlazeBench(t); else if (tab === 'kiln') drawKiln(t); else if (tab === 'shelf') drawShelf(t); else drawBook(t);
+}
+function bench(y) { const g = cx; g.fillStyle = '#4a3f35'; g.fillRect(area.x, y, area.w, area.y + area.h - y); g.fillStyle = '#5b4d40'; g.fillRect(area.x, y, area.w, 6); g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(area.x, y + 6, area.w, 3); }
+function drawTitleScene(t) {
+  // a shelf of finished work on the studio wall
+  const y1 = area.y + area.h * 0.62, show = ['celadon', 'tenmoku', 'cured', 'cobalt', 'shino', 'floating', 'oribe'];
+  const forms = ['vase', 'bowl', 'bottle', 'jar', 'cup', 'vase', 'jar'];
+  const n = land ? 7 : 5, s = Math.min(area.h * 0.3 / 24, area.w / n / 22);
+  cx.fillStyle = '#5b4d40'; cx.fillRect(area.x + area.w * 0.04, y1, area.w * 0.92, 8); cx.fillStyle = 'rgba(0,0,0,.3)'; cx.fillRect(area.x + area.w * 0.04, y1 + 8, area.w * 0.92, 4);
+  for (let i = 0; i < n; i++) {
+    const k = show[i], pot = { p: PRESETS[forms[i]], clay: k === 'celadon' ? 'porc' : 'stone', st: 'fired', rec: { base: 'clear', o: {} }, seed: 11 + i * 7, res: fireGlazeFake(k) };
+    drawPot(cx, pot, area.x + area.w * (0.1 + 0.8 * (i + 0.5) / n), y1, s);
+  }
+}
+function fireGlazeFake(k) { const g = G[k]; return { key: k, c1: g.c1, c2: g.c2, surf: g.surf, pat: g.pat, fam: g.fam }; }
+
+function wheelGeom() {
+  const s = sceneScale(30, 14, 0.66, 0.8), cx0 = area.x + area.w / 2, by = area.y + area.h * 0.8;
+  return { s, cx0, by };
+}
+function drawWheel(t) {
+  const { s, cx0, by } = wheelGeom(), Wh = S.wheel;
+  bench(by + 30);
+  const spin = Wh.state !== 'empty';
+  // splash pan and wheel head
+  const pr = Math.min(area.w * 0.42, 17 * s), hr = pr * 0.66;
+  cx.fillStyle = '#2c3134'; cx.beginPath(); cx.ellipse(cx0, by + 16, pr, pr * 0.22, 0, 0, TAU); cx.fill();
+  cx.fillStyle = '#3d4448'; cx.beginPath(); cx.ellipse(cx0, by + 10, pr, pr * 0.2, 0, 0, TAU); cx.fill();
+  cx.fillStyle = '#6d7479'; cx.beginPath(); cx.ellipse(cx0, by + 3, hr, hr * 0.2, 0, 0, TAU); cx.fill();
+  cx.fillStyle = '#80878c'; cx.beginPath(); cx.ellipse(cx0, by, hr, hr * 0.2, 0, 0, TAU); cx.fill();
+  cx.strokeStyle = 'rgba(0,0,0,.25)'; cx.lineWidth = 1.5;
+  for (let i = 0; i < 6; i++) { const a = (spin ? t * 7 : 0) + i * TAU / 6, x = Math.cos(a) * hr * 0.8, y = Math.sin(a) * hr * 0.16; if (Math.sin(a) > -0.2) { cx.beginPath(); cx.moveTo(cx0 + x * 0.6, by + y * 0.6); cx.lineTo(cx0 + x, by + y); cx.stroke(); } }
+  if (Wh.state === 'lump') {
+    const wob = Wh.wob, off = Math.sin(t * 16) * wob * 7;
+    const lump = { p: { r0: 5.5, r1: 6.4, r2: 5.2, r3: 2.2, H: 7 }, clay: Wh.clay, st: 'raw', seed: 3 };
+    drawPot(cx, lump, cx0 + off, by, s);
+    if (Wh.hold) { cx.strokeStyle = 'rgba(111,143,240,.8)'; cx.lineWidth = 2; cx.beginPath(); cx.arc(cx0, by - 4 * s, 7 * s + wob * 20, 0, TAU); cx.stroke(); }
+    cx.fillStyle = '#dfe4e6'; cx.font = '600 13px ' + FONT; cx.textAlign = 'center';
+    cx.fillText(Wh.hold ? 'Hold still' : 'Press and hold on the clay', cx0, area.y + area.h * 0.12);
+    hit(cx0 - 9 * s, by - 9 * s, 18 * s, 10 * s, null);
+  } else if (Wh.state === 'shape') {
+    const pot = { p: Wh.p, clay: Wh.clay, st: 'raw', seed: 5 };
+    drawPot(cx, pot, cx0, by, s);
+    // pull handles
+    handles().forEach((hd, i) => {
+      const act = drag && drag.i === i;
+      cx.fillStyle = act ? '#6f8ff0' : '#f4f5f2'; cx.strokeStyle = '#1e2a31'; cx.lineWidth = 2;
+      cx.beginPath(); cx.arc(hd.x, hd.y, act ? 11 : 9, 0, TAU); cx.fill(); cx.stroke();
+      if (i === 2) { cx.strokeStyle = 'rgba(244,245,242,.6)'; cx.setLineDash([3, 4]); cx.beginPath(); cx.moveTo(hd.x, hd.y - 16); cx.lineTo(hd.x, hd.y - 34); cx.stroke(); cx.setLineDash([]); }
+    });
+    cx.fillStyle = '#dfe4e6'; cx.font = '700 15px ' + FONT; cx.textAlign = 'center';
+    cx.fillText('Reads as a ' + FORMS[classify(Wh.p)].n, cx0, area.y + area.h * 0.1);
+  } else {
+    cx.fillStyle = '#dfe4e6'; cx.font = '600 13px ' + FONT; cx.textAlign = 'center';
+    cx.fillText(ware().length >= wareCap() ? 'The ware board is full' : 'Put some clay on the wheel', cx0, area.y + area.h * 0.12);
+  }
+}
+function handles() {
+  const { s, cx0, by } = wheelGeom(), p = S.wheel.p;
+  return [{ x: cx0 + p.r1 * s, y: by - 0.3 * p.H * s }, { x: cx0 + p.r2 * s, y: by - 0.65 * p.H * s }, { x: cx0 + p.r3 * s, y: by - p.H * s }];
+}
+let dip = 0, dipId = null;
+function drawGlazeBench(t) {
+  const pot = potById(dip > 0 && dipId ? dipId : selGlaze), s = sceneScale(30, 14, 0.58, 0.7), cx0 = area.x + area.w / 2, by = area.y + area.h * 0.74;
+  bench(by + 18);
+  cx.fillStyle = '#6d7479'; cx.beginPath(); cx.ellipse(cx0, by + 4, 12 * s, 2.4 * s, 0, 0, TAU); cx.fill(); cx.fillStyle = '#80878c'; cx.beginPath(); cx.ellipse(cx0, by, 12 * s, 2.4 * s, 0, 0, TAU); cx.fill();
+  if (!pot) { cx.fillStyle = '#dfe4e6'; cx.font = '600 13px ' + FONT; cx.textAlign = 'center'; cx.fillText('Nothing on the banding wheel', cx0, area.y + area.h * 0.14); return; }
+  if (dip <= 0) { drawPot(cx, pot, cx0, by, s); return; }
+  // the bucket stands in front of the banding wheel while the pot goes in
+  const ph = pot.p.H * s, bw = Math.max(Math.max(pot.p.r1, pot.p.r2, pot.p.r3) * 2 * s + 30, 60), rimY = by - ph * 0.45, depth = Math.sin(Math.min(1, dip) * Math.PI) * ph * 0.8;
+  cx.save(); cx.beginPath(); cx.rect(area.x, area.y, area.w, rimY - area.y); cx.clip(); drawPot(cx, pot, cx0, by + depth, s); cx.restore();
+  cx.fillStyle = '#4f5a60'; cx.beginPath(); cx.moveTo(cx0 - bw / 2, rimY); cx.lineTo(cx0 + bw / 2, rimY); cx.lineTo(cx0 + bw * 0.42, by + 14); cx.lineTo(cx0 - bw * 0.42, by + 14); cx.closePath(); cx.fill();
+  cx.fillStyle = 'rgba(255,255,255,.08)'; cx.fillRect(cx0 - bw * 0.46, rimY + 8, bw * 0.92, 3);
+  cx.fillStyle = pot.rec && pot.rec.base !== 'bare' ? rawGlazeCol(pot.rec) : '#9aa0a4'; cx.beginPath(); cx.ellipse(cx0, rimY, bw / 2, Math.max(4, bw * 0.07), 0, 0, TAU); cx.fill();
+}
+function kilnRect() {
+  const gh = Math.max(70, area.h * 0.24), top = area.y + gh + 26, avail = area.y + area.h - top - 20;
+  const rows = kilnCap() > 3 ? 2 : 1, w = Math.min(area.w * 0.84, avail * (rows > 1 ? 1.05 : 1.5)), h = Math.min(avail, w * (rows > 1 ? 0.95 : 0.66));
+  return { x: area.x + (area.w - w) / 2, y: top + (avail - h) / 2, w, h, gh };
+}
+function tempCol(T) { return T < 550 ? null : T < 850 ? mixC('#5a1a10', '#b8341c', (T - 550) / 300) : T < 1100 ? mixC('#b8341c', '#f08a2a', (T - 850) / 250) : mixC('#f08a2a', '#ffe0a0', Math.min(1, (T - 1100) / 200)); }
+function drawKiln(t) {
+  const K = S.kiln, kr = kilnRect(), firing = K.state === 'firing' || K.state === 'done';
+  const T = K.state === 'firing' ? kilnTemp(K.t) : K.state === 'done' ? 90 : 20;
+  // graticule with the firing trace
+  const gx = area.x + 14, gy = area.y + 12, gw = area.w - 28 - 52, gh = kr.gh;
+  cx.fillStyle = '#15191b'; cx.fillRect(gx, gy, gw, gh);
+  cx.strokeStyle = 'rgba(160,175,180,.16)'; cx.lineWidth = 1;
+  for (let i = 0; i <= 10; i++) { const x = gx + gw * i / 10; cx.beginPath(); cx.moveTo(x, gy); cx.lineTo(x, gy + gh); cx.stroke(); }
+  for (let i = 0; i <= 4; i++) { const y = gy + gh * i / 4; cx.beginPath(); cx.moveTo(gx, y); cx.lineTo(gx + gw, y); cx.stroke(); }
+  const cone = firing ? K.cone : S.cone, peakY = gy + gh - gh * CONE_T[cone] / 1400;
+  cx.strokeStyle = 'rgba(240,160,75,.45)'; cx.setLineDash([5, 5]); cx.beginPath(); cx.moveTo(gx, peakY); cx.lineTo(gx + gw, peakY); cx.stroke(); cx.setLineDash([]);
+  cx.fillStyle = 'rgba(240,160,75,.85)'; cx.font = '600 11px ' + FONT; cx.textAlign = 'left'; cx.fillText('Cone ' + cone + ', ' + CONE_T[cone] + '°C', gx + 6, peakY - 5);
+  if (K.trace.length > 1) {
+    const d = kilnDur(), end = d.up + d.hold + d.cool;
+    if (KILNS[K.kiln].air) { cx.strokeStyle = 'rgba(127,160,240,.55)'; cx.lineWidth = 1.5; cx.beginPath(); K.trace.forEach((q, i) => { const x = gx + gw * q[0] / end, y = gy + gh - 4 - (gh * 0.3) * q[2]; i ? cx.lineTo(x, y) : cx.moveTo(x, y); }); cx.stroke(); }
+    cx.strokeStyle = '#f0a04b'; cx.lineWidth = 2; cx.beginPath(); K.trace.forEach((q, i) => { const x = gx + gw * q[0] / end, y = gy + gh - gh * q[1] / 1400; i ? cx.lineTo(x, y) : cx.moveTo(x, y); }); cx.stroke();
+  }
+  cx.fillStyle = '#dfe4e6'; cx.font = '700 14px ' + FONT; cx.textAlign = 'left';
+  cx.fillText(K.state === 'firing' ? Math.round(T) + '°C' : K.state === 'done' ? 'Cooled' : 'Cold', gx + 6, gy + gh - 8);
+  // the kiln: a brick chamber with shelves
+  const { x, y, w, h } = kr, kind = K.state === 'idle' ? S.kilnType : K.kiln;
+  const brick = kind === 'electric' ? '#8d9296' : kind === 'gas' ? '#b98e6a' : '#8a5a3c';
+  cx.fillStyle = brick; cx.beginPath(); cx.moveTo(x, y + h); cx.lineTo(x, y + w * 0.12); cx.quadraticCurveTo(x + w / 2, y - w * 0.1, x + w, y + w * 0.12); cx.lineTo(x + w, y + h); cx.closePath(); cx.fill();
+  cx.strokeStyle = 'rgba(0,0,0,.2)'; cx.lineWidth = 1;
+  for (let yy = y + w * 0.1; yy < y + h; yy += 12) { cx.beginPath(); cx.moveTo(x, yy); cx.lineTo(x + w, yy); cx.stroke(); }
+  const ix = x + w * 0.08, iw = w * 0.84, iy = y + w * 0.1, ih = h - w * 0.1 - 10;
+  cx.fillStyle = '#1b1614'; cx.fillRect(ix, iy, iw, ih);
+  const n = kilnCap(), rows = n > 3 ? 2 : 1, perRow = Math.ceil(n / rows), rowH = ih / rows;
+  cx.fillStyle = '#7a6a5a';
+  for (let r = 1; r <= rows; r++) cx.fillRect(ix, iy + rowH * r - 5, iw, 5);
+  const loadPots = (firing ? K.load : K.load).map(potById).filter(Boolean);
+  const s = Math.min((rowH - 14) / 24, iw / perRow / 22);
+  const glow = K.state === 'firing' ? tempCol(T) : null;
+  for (let i = 0; i < n; i++) {
+    const r = Math.floor(i / perRow), c = i % perRow, px = ix + iw * (c + 0.5) / perRow, py = iy + rowH * (r + 1) - 5;
+    const pot = loadPots[i];
+    if (pot) {
+      drawPot(cx, pot, px, py, s, glow ? { glow: rgba(glow, 0.75) } : {});
+      if (K.state === 'idle') hit(px - iw / perRow / 2, py - rowH + 8, iw / perRow, rowH - 8, () => { K.load.splice(K.load.indexOf(pot.id), 1); sfxTap(); dirty = true; persist(); });
+    } else if (K.state === 'idle') { cx.strokeStyle = 'rgba(255,255,255,.22)'; cx.setLineDash([4, 4]); cx.strokeRect(px - iw / perRow * 0.35, py - rowH + 14, iw / perRow * 0.7, rowH - 20); cx.setLineDash([]); }
+  }
+  if (glow) { cx.fillStyle = rgba(glow, 0.35); cx.fillRect(ix, iy, iw, ih); }
+  // reveal: the opened kiln slowly brightens
+  if (reveal > 0) {
+    const rs = revealIds.map(potById).filter(Boolean);
+    for (let i = 0; i < rs.length; i++) { const r = Math.floor(i / perRow), c = i % perRow; drawPot(cx, rs[i], ix + iw * (c + 0.5) / perRow, iy + rowH * (r + 1) - 5, s, { dark: 0.85 * reveal }); }
+  }
+  if (kind !== 'electric' && K.state === 'firing') {
+    for (let i = 0; i < 3; i++) { const fx = ix + iw * (i + 0.5) / 3, fy = y + h - 4, fl = 8 + Math.sin(t * 20 + i) * 3; cx.fillStyle = S.air < 0.45 ? 'rgba(255,170,60,.9)' : 'rgba(120,160,255,.9)'; cx.beginPath(); cx.moveTo(fx - 5, fy); cx.quadraticCurveTo(fx, fy - fl * 2, fx + 5, fy); cx.fill(); }
+  }
+  cx.fillStyle = '#dfe4e6'; cx.font = '600 12px ' + FONT; cx.textAlign = 'center'; cx.fillText(KILNS[kind].n + ' kiln', x + w / 2, y + h + 14);
+}
+function shelfGeom() {
+  const pots = shelfPots(), n = Math.max(1, pots.length), rows = n <= 4 ? 1 : n <= 10 ? 2 : 3;
+  const perRow = Math.max(1, Math.ceil(n / rows)), rowH = (area.h - 40) / Math.max(rows, 2);
+  return { pots, rows, perRow, rowH, s: Math.min((rowH - 22) / 26, area.w / Math.max(3, perRow) / 22) };
+}
+function drawShelf(t) {
+  const { pots, rows, perRow, rowH, s } = shelfGeom();
+  for (let r = 0; r < Math.max(rows, 2); r++) {
+    const y = area.y + 30 + rowH * (r + 1);
+    cx.fillStyle = '#5b4d40'; cx.fillRect(area.x + 10, y, area.w - 20, 7); cx.fillStyle = 'rgba(0,0,0,.3)'; cx.fillRect(area.x + 10, y + 7, area.w - 20, 4);
+  }
+  if (!pots.length) { cx.fillStyle = '#dfe4e6'; cx.font = '600 13px ' + FONT; cx.textAlign = 'center'; cx.fillText('Fired pots will sit here', area.x + area.w / 2, area.y + 40 + rowH * 0.6); return; }
+  pots.forEach((pot, i) => {
+    const r = Math.floor(i / perRow), c = i % perRow, px = area.x + 10 + (area.w - 20) * (c + 0.5) / perRow, py = area.y + 30 + rowH * (r + 1);
+    drawPot(cx, pot, px, py, s, { sel: selShelf === pot.id });
+    if (pot.res && pot.res.flaw) { cx.fillStyle = '#f0a04b'; cx.font = '700 10px ' + FONT; cx.textAlign = 'center'; cx.fillText('Second', px, py + 20); }
+    hit(px - (area.w - 20) / perRow / 2, py - rowH + 10, (area.w - 20) / perRow, rowH, () => { selShelf = pot.id; sfxTap(); dirty = true; });
+  });
+}
+function bookGeom() {
+  const cols = area.w > area.h * 1.2 ? 9 : 6, rows = Math.ceil(BOOK.length / cols), pad = 12;
+  const tw = Math.min((area.w - pad * 2) / cols, (area.h - pad * 2 - 20) / rows / 1.05);
+  return { cols, rows, tw, x0: area.x + (area.w - tw * cols) / 2, y0: area.y + pad + 18 + (area.h - pad * 2 - 20 - tw * 1.05 * rows) / 2 };
+}
+function drawBook(t) {
+  const { cols, tw, x0, y0 } = bookGeom();
+  cx.fillStyle = '#2d3336'; cx.fillRect(x0 - 8, y0 - 14, tw * cols + 16, tw * 1.05 * Math.ceil(BOOK.length / cols) + 18);
+  cx.fillStyle = 'rgba(0,0,0,.35)'; for (let yy = y0 - 6; yy < y0 + tw * 1.05 * 6; yy += 14) for (let xx = x0; xx < x0 + tw * cols; xx += 14) cx.fillRect(xx, yy, 2, 2);
+  BOOK.forEach((k, i) => {
+    const c = i % cols, r = Math.floor(i / cols), x = x0 + c * tw + tw * 0.1, y = y0 + r * tw * 1.05 + tw * 0.12, w = tw * 0.8, h = tw * 0.8;
+    const got = S.book[k];
+    cx.fillStyle = '#111'; cx.beginPath(); cx.arc(x + w / 2, y - 3, 2, 0, TAU); cx.fill();
+    cx.save(); cx.beginPath(); cx.rect(x, y, w, h); cx.clip();
+    if (got) {
+      const res = fireGlazeFake(k); if (k === 'clear') { res.c1 = shade(CLAYS[got.clay].fired, -8); res.c2 = shade(CLAYS[got.clay].fired, -40); }
+      cx.fillStyle = CLAYS[got.clay].fired; cx.fillRect(x, y, w, h);
+      cx.save(); cx.beginPath(); cx.rect(x, y, w, h * 0.8); cx.clip(); paintGlaze(cx, res, x, y, x + w, y + h * 0.8, i * 13 + 1, got.clay); cx.restore();
+    } else {
+      cx.fillStyle = 'rgba(210,218,222,.16)'; cx.fillRect(x, y, w, h);
+      cx.fillStyle = 'rgba(255,255,255,.08)'; for (let j = 0; j < 30; j++) cx.fillRect(x + ((j * 37) % 100) / 100 * w, y + ((j * 61) % 100) / 100 * h, 1.5, 1.5);
+      if (S.notes[k]) { cx.fillStyle = 'rgba(223,228,230,.5)'; cx.font = '700 ' + Math.round(tw * 0.18) + 'px ' + FONT; cx.textAlign = 'center'; cx.fillText(S.notes[k] > 1 ? '2 notes' : '1 note', x + w / 2, y + h / 2 + 4); }
+    }
+    cx.restore();
+    if (selBook === k) { cx.strokeStyle = '#6f8ff0'; cx.lineWidth = 3; cx.strokeRect(x - 2, y - 2, w + 4, h + 4); }
+    hit(x, y, w, h, () => { selBook = k; S.newBook = false; sfxTap(); dirty = true; });
+  });
+  cx.fillStyle = '#dfe4e6'; cx.font = '700 13px ' + FONT; cx.textAlign = 'left'; cx.fillText(found() + ' of ' + BOOK.length + ' test tiles', x0 - 4, y0 - 22 < area.y + 14 ? area.y + 14 : y0 - 22);
+}
+
+/* ============================== the side card ============================== */
+let dirty = true, selGlaze = null, selShelf = null, selBook = null, drag = null;
+let recipe = { base: 'clear', t: 2, o: { fe: 0, cu: 0, co: 0, sn: 0, ru: 0, cr: 0, mn: 0 } };
+const FONT = getComputedStyle(document.documentElement).getPropertyValue('--sans') || 'sans-serif';
+const jb = $('jbody');
+function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; }
+function button(label, cls, fn, dis) { const b = el('button', 'btn ' + (cls || ''), label); b.disabled = !!dis; b.addEventListener('click', () => { audio(); fn(); }); return b; }
+function seg(opts, cur, fn) { const s = el('div', 'seg'); opts.forEach(o => { const b = el('button', o.v === cur ? 'on' : '', o.n); b.disabled = !!o.dis; b.addEventListener('click', () => { sfxTap(); fn(o.v); }); s.appendChild(b); }); return s; }
+function buildDeck() {
+  const l = S.lvl, next = LEVELS[l + 1];
+  $('stat').innerHTML = '<span><b>' + S.coins + '</b> coins</span><span>Reputation <b>' + S.rep + '</b>' + (next ? ' / ' + next : '') + '</span>';
+  document.querySelectorAll('#tabs .tab').forEach(b => {
+    b.classList.toggle('on', b.dataset.tab === tab);
+    const dot = (b.dataset.tab === 'kiln' && S.kiln.state === 'done') || (b.dataset.tab === 'shelf' && S.orders.some(o => shelfPots().some(p => fits(p, o.want)))) || (b.dataset.tab === 'book' && S.newBook);
+    const name = b.dataset.tab[0].toUpperCase() + b.dataset.tab.slice(1);
+    b.innerHTML = name + (dot && b.dataset.tab !== tab ? '<span class="dot"></span>' : '');
+  });
+  const st = jb.scrollTop; jb.innerHTML = '';
+  ({ wheel: deckWheel, glaze: deckGlaze, kiln: deckKiln, shelf: deckShelf, book: deckBook })[tab]();
+  jb.scrollTop = st; dirty = false;
+}
+function deckWheel() {
+  const Wh = S.wheel, full = ware().length >= wareCap();
+  jb.appendChild(el('div', 'note num', 'Ware board: <b>' + ware().length + ' of ' + wareCap() + '</b> pots waiting to be glazed or fired.'));
+  if (Wh.state === 'empty') {
+    jb.appendChild(el('div', 'sec', 'Clay'));
+    const card = el('div', 'pad'); card.appendChild(seg(CLAY_ORDER.map(k => ({ v: k, n: CLAYS[k].n.replace(' stoneware', '').replace(' earthenware', ''), dis: CLAYS[k].lvl > S.lvl })), Wh.clay, v => { Wh.clay = v; dirty = true; }));
+    jb.appendChild(card);
+    jb.appendChild(el('div', 'note', CLAYS[Wh.clay].t));
+    const row = el('div', 'pad'); row.appendChild(button('Put it on the wheel', 'go wide', () => { Wh.state = 'lump'; Wh.wob = 1; Wh.jit = 0; Wh.hold = null; toast('Press and hold on the clay until it runs true.'); dirty = true; }, full)); jb.appendChild(row);
+    if (full) jb.appendChild(el('div', 'note', 'The board is full. Glaze and fire what is on it first.'));
+  } else if (Wh.state === 'lump') {
+    jb.appendChild(el('div', 'sec', 'Centering'));
+    const n = el('div', 'note num', 'Press and hold on the clay and keep still. It runs true when the wobble stops. <b id="lumpPct">' + Math.round((1 - Wh.wob) * 100) + '%</b>'); jb.appendChild(n);
+  } else {
+    jb.appendChild(el('div', 'sec', 'Pull the walls'));
+    jb.appendChild(el('div', 'note', 'Drag the white handles. The top one sets the height too. It reads as a <b>' + FORMS[classify(Wh.p)].n + '</b>.'));
+    const pr = el('div', 'pad row'); Object.keys(PRESETS).forEach(k => pr.appendChild(button(k[0].toUpperCase() + k.slice(1), 'sm', () => { Wh.p = Object.assign({}, PRESETS[k]); dirty = true; })));
+    jb.appendChild(pr);
+    const row = el('div', 'pad row');
+    row.appendChild(button('Cut it off the wheel', 'go', cutOff));
+    row.appendChild(button('Squash it', '', () => { Wh.state = 'empty'; dirty = true; }));
+    jb.appendChild(row);
+    jb.appendChild(el('div', 'note num', 'Centered at <b>' + Math.round(Wh.q * 100) + '%</b>. Truer pots sell for more.'));
+  }
+}
+function cutOff() {
+  const Wh = S.wheel; if (ware().length >= wareCap()) { toast('The ware board is full.'); return; }
+  const pot = { id: S.nextId++, form: classify(Wh.p), clay: Wh.clay, p: Object.assign({}, Wh.p), q: Wh.q, st: 'raw', seed: Math.floor(Math.random() * 1e9) };
+  S.pots.push(pot); Wh.state = 'empty'; selGlaze = pot.id; sfxCut();
+  toast('A ' + FORMS[pot.form].n + ' on the ware board. Glaze it next.'); dirty = true; persist();
+}
+function deckGlaze() {
+  const pots = ware();
+  if (!pots.length) { jb.appendChild(el('div', 'note', 'Nothing on the ware board. Throw something on the wheel first.')); return; }
+  if (!potById(selGlaze) || potById(selGlaze).st === 'fired' || S.kiln.load.indexOf(selGlaze) >= 0) selGlaze = (pots.find(p => p.st === 'raw') || pots[0]).id;
+  const row = el('div', 'ware');
+  pots.forEach(p => { const b = el('button', p.id === selGlaze ? 'sel' : ''); b.appendChild(thumb(p, 44)); b.appendChild(el('span', '', p.st === 'glazed' ? 'Glazed' : FORMS[p.form].n)); b.addEventListener('click', () => { selGlaze = p.id; sfxTap(); dirty = true; }); row.appendChild(b); });
+  jb.appendChild(row);
+  const pot = potById(selGlaze);
+  if (pot.st === 'glazed') {
+    const card = el('div', 'card'); card.innerHTML = '<h3>Glazed and waiting</h3><div class="sub">' + recipeText(pot.rec) + '</div>'; jb.appendChild(card);
+    const r = el('div', 'pad row'); r.appendChild(button('Load it in the kiln', 'go', () => { loadPot(pot.id); })); r.appendChild(button('Wash it off', '', () => { pot.st = 'raw'; pot.rec = null; dirty = true; persist(); })); jb.appendChild(r);
+    return;
+  }
+  const card = el('div', 'card');
+  card.appendChild(el('h3', '', 'Glaze card'));
+  card.appendChild(el('div', 'lab', 'Base'));
+  card.appendChild(seg(BASE_ORDER.map(k => ({ v: k, n: BASES[k].n, dis: BASES[k].lvl > S.lvl })), recipe.base, v => { recipe.base = v; dirty = true; }));
+  if (recipe.base !== 'bare') {
+    card.appendChild(el('div', 'lab', 'Oxides, a pass each'));
+    OXIDES.filter(x => x.lvl <= S.lvl).forEach(x => {
+      const r = el('div', 'ox'); r.appendChild(el('span', '', x.n));
+      for (let v = 0; v <= 4; v++) { const b = el('button', recipe.o[x.id] === v ? 'on' : '', String(v)); b.setAttribute('aria-label', x.n + ' ' + v); b.addEventListener('click', () => { recipe.o[x.id] = v; sfxTap(); dirty = true; }); r.appendChild(b); }
+      card.appendChild(r);
+    });
+    card.appendChild(el('div', 'lab', 'Dip'));
+    card.appendChild(seg(DIPS.map((n, i) => ({ v: i + 1, n })), recipe.t, v => { recipe.t = v; dirty = true; }));
+  }
+  jb.appendChild(card);
+  const known = BOOK.filter(k => S.book[k]);
+  if (known.length) {
+    jb.appendChild(el('div', 'note', 'From the book'));
+    const r = el('div', 'pad row'); known.slice(0, 12).forEach(k => r.appendChild(button(G[k].n, 'sm', () => { useRecipe(k); }))); jb.appendChild(r);
+  }
+  const r = el('div', 'pad'); r.appendChild(button(recipe.base === 'bare' ? 'Leave it bare' : 'Dip it', 'go wide', doDip)); jb.appendChild(r);
+}
+function useRecipe(k) { const b = S.book[k]; if (!b) return; recipe = JSON.parse(JSON.stringify(b.rec)); OXIDES.forEach(x => { if (recipe.o[x.id] == null) recipe.o[x.id] = 0; }); tab = 'glaze'; dirty = true; toast(G[k].n + ': ' + firingText(b.f)); }
+function recipeText(r) {
+  if (r.base === 'bare') return 'No glaze.';
+  const ox = OXIDES.filter(x => r.o[x.id]).map(x => x.n + ' ' + r.o[x.id]);
+  return BASES[r.base].n + ' base' + (ox.length ? ', ' + ox.join(', ') : '') + '. ' + DIPS[r.t - 1] + ' dip.';
+}
+function firingText(f) { return KILNS[f.kiln].n + ' kiln, cone ' + f.cone + ', ' + (f.atm === 'red' ? 'starved of air' : 'plenty of air') + ', cooled ' + (f.cool === 'slow' ? 'slowly' : 'fast') + '.'; }
+function doDip() {
+  const pot = potById(selGlaze); if (!pot || pot.st !== 'raw') return;
+  pot.rec = JSON.parse(JSON.stringify(recipe)); pot.st = 'glazed'; S.lastRec = pot.rec; dip = 0.001; dipId = pot.id; sfxDip();
+  const nx = ware().find(q => q.st === 'raw'); if (nx) selGlaze = nx.id;
+  toast(pot.rec.base === 'bare' ? 'Left bare. It will show the flame.' : 'Glazed. Raw glaze looks nothing like fired glaze.');
+  dirty = true; persist();
+}
+function loadPot(id) {
+  const K = S.kiln; if (K.state !== 'idle') { toast('The kiln is busy.'); return; }
+  if (K.load.length >= kilnCap()) { toast('The kiln is full.'); return; }
+  const pot = potById(id); if (!pot || pot.st !== 'glazed') return;
+  K.load.push(id); sfxTap(); dirty = true; persist();
+}
+function deckKiln() {
+  const K = S.kiln;
+  if (K.state === 'idle') {
+    const kinds = KILN_ORDER.filter(k => KILNS[k].lvl <= S.lvl);
+    if (kinds.length > 1) { jb.appendChild(el('div', 'lab pad', 'Kiln')); const p = el('div', 'pad'); p.appendChild(seg(kinds.map(k => ({ v: k, n: KILNS[k].n })), S.kilnType, v => { S.kilnType = v; const c = KILNS[v].cones; if (c.indexOf(S.cone) < 0) S.cone = c[c.length - 1]; dirty = true; })); jb.appendChild(p); }
+    const glazed = S.pots.filter(p => p.st === 'glazed' && K.load.indexOf(p.id) < 0);
+    jb.appendChild(el('div', 'note num', 'Loaded <b>' + K.load.length + ' of ' + kilnCap() + '</b>. Tap a pot in the kiln to take it out.'));
+    const r0 = el('div', 'pad row');
+    r0.appendChild(button('Load everything glazed', 'sm', () => { glazed.forEach(p => { if (K.load.length < kilnCap()) K.load.push(p.id); }); sfxTap(); dirty = true; persist(); }, !glazed.length || K.load.length >= kilnCap()));
+    jb.appendChild(r0);
+    if (!K.load.length && !glazed.length) jb.appendChild(el('div', 'note', 'Nothing glazed yet. Glaze a pot first, or leave one bare.'));
+    const k = KILNS[S.kilnType];
+    jb.appendChild(el('div', 'lab pad', 'How hot'));
+    const p1 = el('div', 'pad'); p1.appendChild(seg(k.cones.map(c => ({ v: c, n: 'Cone ' + c + ' (' + CONE_T[c] + '°C)' })), S.cone, v => { S.cone = v; dirty = true; })); jb.appendChild(p1);
+    jb.appendChild(el('div', 'lab pad', 'Cooling'));
+    const p2 = el('div', 'pad'); p2.appendChild(seg([{ v: 'slow', n: 'Slow' }, { v: 'fast', n: 'Crash cool' }], S.cool, v => { S.cool = v; dirty = true; })); jb.appendChild(p2);
+    if (k.air) jb.appendChild(airControl());
+    else jb.appendChild(el('div', 'note', 'An electric kiln always fires with plenty of air.'));
+    const p3 = el('div', 'pad'); p3.style.marginTop = '10px'; p3.appendChild(button('Fire the kiln', 'go wide', startFiring, !K.load.length)); jb.appendChild(p3);
+  } else if (K.state === 'firing') {
+    const d = kilnDur(), T = kilnTemp(K.t), heating = K.t < d.up + d.hold;
+    jb.appendChild(el('div', 'sec num', heating ? 'Climbing to cone ' + K.cone : 'Cooling ' + (K.cool === 'slow' ? 'slowly' : 'fast')));
+    const ks = el('div', 'note num', kilnStatus()); ks.id = 'kstat'; jb.appendChild(ks);
+    if (KILNS[K.kiln].air && heating) jb.appendChild(airControl());
+    if (heating) { jb.appendChild(el('div', 'lab pad', 'Cooling')); const p2 = el('div', 'pad'); p2.appendChild(seg([{ v: 'slow', n: 'Slow' }, { v: 'fast', n: 'Crash cool' }], S.cool, v => { S.cool = v; dirty = true; })); jb.appendChild(p2); }
+  } else {
+    jb.appendChild(el('div', 'sec', 'The kiln is cool'));
+    const p = el('div', 'pad'); p.appendChild(button('Open the kiln', 'go wide', openKiln)); jb.appendChild(p);
+  }
+}
+function kilnStatus() {
+  const K = S.kiln, d = kilnDur(), T = kilnTemp(K.t), heating = K.t < d.up + d.hold;
+  return '<b>' + Math.round(T) + '°C</b>. ' + (heating ? (T > 900 ? 'The glazes are melting. The air in the kiln matters now.' : 'Water and carbon are burning out of the clay.') : 'Listen for the glazes pinging as they cool.');
+}
+function airControl() {
+  const wrap = el('div', 'pad');
+  wrap.appendChild(el('div', 'lab', 'Damper'));
+  const r = el('div', 'airrow'); r.appendChild(el('span', '', 'Starved')); const inp = document.createElement('input'); inp.type = 'range'; inp.min = 0; inp.max = 100; inp.value = Math.round(S.air * 100); inp.setAttribute('aria-label', 'Air in the kiln');
+  inp.addEventListener('input', () => { S.air = inp.value / 100; }); r.appendChild(inp); r.appendChild(el('span', '', 'Open')); wrap.appendChild(r);
+  wrap.appendChild(el('div', 'note', 'Starve it of air while the glazes melt, above 900°C, and copper turns red and iron turns celadon green.'));
+  return wrap;
+}
+function deckShelf() {
+  window.TTG?.track('shop_open');
+  const sel = potById(selShelf) && potById(selShelf).st === 'fired' ? potById(selShelf) : null;
+  if (sel) {
+    const r = sel.res, card = el('div', 'card');
+    card.innerHTML = '<h3>' + r.name + ' ' + FORMS[sel.form].n + '</h3><div class="sub">' + CLAYS[sel.clay].n + '. ' + recipeText(sel.rec) + '</div><div class="lines num"><span>' + firingText(r) + '</span>' + (r.flaw ? '<span><b>Flaw:</b> ' + r.flaw + '</span>' : '') + '<span>Worth <b>' + r.val + '</b> coins.</span></div>';
+    const act = el('div', 'row'); act.style.marginTop = '8px';
+    act.appendChild(button('Sell for ' + r.val, 'go', () => { S.coins += r.val; S.pots.splice(S.pots.indexOf(sel), 1); selShelf = null; sfxCoin(); window.TTG?.track('purchase', { value: r.val }); dirty = true; persist(); }));
+    card.appendChild(act); jb.appendChild(card);
+  } else if (shelfPots().length) jb.appendChild(el('div', 'note', 'Tap a pot on the shelf to see it, sell it, or give it to someone who ordered one.'));
+  jb.appendChild(el('div', 'sec', 'Orders'));
+  if (!S.orders.length) jb.appendChild(el('div', 'note', 'Nobody has asked for anything yet. Orders come in every minute or so.'));
+  S.orders.forEach(o => {
+    const ok = sel && fits(sel, o.want), any = shelfPots().some(p => fits(p, o.want));
+    const box = el('div', 'order' + (ok ? ' ok' : ''));
+    box.appendChild(el('div', '', '<div class="who">' + o.who + '</div><div class="what">' + orderText(o.want) + '</div><div class="pay num">' + o.pay + ' coins and ' + o.rep + ' reputation</div>'));
+    box.appendChild(button(ok ? 'Give it' : any ? 'Pick it' : 'Not yet', ok ? 'go sm' : 'sm', () => {
+      if (ok) { S.coins += o.pay; gainRep(o.rep); S.pots.splice(S.pots.indexOf(sel), 1); S.orders.splice(S.orders.indexOf(o), 1); selShelf = null; sfxCoin(); toast(o.who + ' is delighted.'); window.TTG?.track('purchase', { value: o.pay }); dirty = true; persist(); }
+      else if (any) { selShelf = shelfPots().find(p => fits(p, o.want)).id; dirty = true; }
+    }, !ok && !any));
+    jb.appendChild(box);
+  });
+  jb.appendChild(el('div', 'sec', 'The studio'));
+  const ups = [
+    { n: 'Kiln shelf', t: 'Room for one more pot in every firing.', lv: S.up.shelf, cost: [50, 120, 260], fn: () => { S.up.shelf++; } },
+    { n: 'Ware board', t: 'Two more pots can wait to be glazed.', lv: S.up.board, cost: [40, 110], fn: () => { S.up.board++; } },
+  ];
+  ups.forEach(u => {
+    const row = el('div', 'up'); row.appendChild(el('div', '', '<h4>' + u.n + '</h4><p>' + u.t + '</p>'));
+    const c = u.cost[u.lv];
+    if (c == null) row.appendChild(el('span', 'note', 'Done'));
+    else row.appendChild(button('Buy<small>' + c + ' coins</small>', 'buy num', () => { if (S.coins < c) return; S.coins -= c; u.fn(); sfxCoin(); window.TTG?.track('upgrade_bought', { level: u.lv + 1, value: c }); dirty = true; persist(); }, S.coins < c));
+    jb.appendChild(row);
+  });
+  const next = LEVELS[S.lvl + 1];
+  if (next) jb.appendChild(el('div', 'note num', 'At <b>' + next + '</b> reputation: ' + LEVEL_NEXT[S.lvl + 1] + '. New glazes in the book count for 2 each.'));
+}
+function deckBook() {
+  jb.appendChild(el('div', 'note num', '<b>' + found() + ' of ' + BOOK.length + '</b> glazes found. Tap a tile.'));
+  const k = selBook || BOOK.find(x => S.book[x]) || BOOK[0];
+  const g = G[k], b = S.book[k], card = el('div', 'card');
+  if (b) {
+    card.innerHTML = '<h3>' + g.n + '</h3><div class="sub">First came out on a ' + FORMS[b.form].n + ' of ' + CLAYS[b.clay].n.toLowerCase() + '.</div><div class="lines"><span><b>Glaze:</b> ' + recipeText(b.rec) + '</span><span><b>Firing:</b> ' + firingText(b.f) + '</span></div>';
+    const r = el('div', 'row'); r.style.marginTop = '8px'; r.appendChild(button('Glaze with this', 'go', () => useRecipe(k))); card.appendChild(r);
+  } else {
+    const n = S.notes[k] || 0, lock = g.lvl > S.lvl;
+    card.innerHTML = '<h3>Not found yet</h3><div class="sub">' + (lock ? 'Needs something the studio does not have yet.' : 'A ' + FAM_WORD[g.fam] + ' glaze.') + '</div><div class="lines">' + g.clues.slice(0, n).map(c => '<span>' + c + '</span>').join('') + '</div>';
+    if (n < 2) { const cost = 20 + n * 20, r = el('div', 'row'); r.style.marginTop = '8px'; r.appendChild(button('Buy a note, ' + cost + ' coins', 'go', () => { if (S.coins < cost) return; S.coins -= cost; S.notes[k] = n + 1; sfxCoin(); window.TTG?.track('upgrade_bought', { value: cost }); dirty = true; persist(); }, S.coins < cost)); card.appendChild(r); }
+  }
+  jb.appendChild(card);
+}
+document.querySelectorAll('#tabs .tab').forEach(b => b.addEventListener('click', () => { audio(); tab = b.dataset.tab; if (tab === 'book') S.newBook = false; sfxTap(); dirty = true; }));
+
+/* ============================== input ============================== */
+function toast(msg) { const e = $('toast'); e.textContent = msg; e.style.display = 'block'; e.style.left = (area.x + area.w / 2) + 'px'; e.style.bottom = (H - (area.y + area.h) + 12) + 'px'; toastT = 3.4 + Math.min(3, msg.length / 40); }
+let toastT = 0;
+cv.addEventListener('pointerdown', e => {
+  audio(); if (AC && AC.state === 'suspended') AC.resume();
+  if (mode !== 'play') return;
+  const x = e.clientX, y = e.clientY; if (x > area.x + area.w || y > area.y + area.h) return;
+  if (tab === 'wheel') {
+    const Wh = S.wheel;
+    if (Wh.state === 'lump') { Wh.hold = [x, y]; try { cv.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ } return; }
+    if (Wh.state === 'shape') { let best = -1, bd = 34; handles().forEach((h, i) => { const d = Math.hypot(h.x - x, h.y - y); if (d < bd) { bd = d; best = i; } }); if (best >= 0) { drag = { i: best }; try { cv.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ } } return; }
+  }
+  for (let i = hits.length - 1; i >= 0; i--) { const h = hits[i]; if (h.fn && x >= h.x && x <= h.x + h.w && y >= h.y && y <= h.y + h.h) { h.fn(); return; } }
+});
+cv.addEventListener('pointermove', e => {
+  if (mode !== 'play' || tab !== 'wheel') return;
+  const Wh = S.wheel, x = e.clientX, y = e.clientY;
+  if (Wh.state === 'lump' && Wh.hold) { Wh.jit += Math.hypot(x - Wh.hold[0], y - Wh.hold[1]); Wh.hold = [x, y]; }
+  if (Wh.state === 'shape' && drag) {
+    const { s, cx0, by } = wheelGeom(), p = Wh.p, r = clamp((x - cx0) / s, 1.2, 14);
+    if (drag.i === 0) p.r1 = r; else if (drag.i === 1) p.r2 = clamp(r, 1.2, p.r1 * 1.6 + 1); else { p.r3 = clamp(r, 1.2, p.r2 * 1.6 + 1); p.H = clamp((by - y) / s, 2, 30); }
+    p.r0 = clamp(Math.min(p.r1, p.r2 + 2) * 0.55, 2, 6);
+  }
+});
+function up() { if (tab === 'wheel') { if (S.wheel.hold) S.wheel.hold = null; if (drag) { drag = null; dirty = true; } } }
+cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+document.addEventListener('touchmove', e => {
+  let n = e.target;
+  while (n && n !== document.body) { const oy = getComputedStyle(n).overflowY, ox = getComputedStyle(n).overflowX; if ((n.scrollHeight > n.clientHeight + 1 && (oy === 'auto' || oy === 'scroll')) || (n.scrollWidth > n.clientWidth + 1 && (ox === 'auto' || ox === 'scroll')) || n.type === 'range') return; n = n.parentElement; }
+  if (e.cancelable) e.preventDefault();
+}, { passive: false });
+$('muteBtn').addEventListener('click', () => { audio(); setMuted(!S.muted); });
+
+/* ============================== time ============================== */
+function stepWheel(dt) {
+  const Wh = S.wheel;
+  if (Wh.state === 'lump') {
+    if (Wh.hold) Wh.wob = Math.max(0, Wh.wob - dt * 0.5 + Math.min(0.05, Wh.jit * 0.0006)); else Wh.wob = Math.min(1, Wh.wob + dt * 0.04);
+    if (Wh.hold && Wh.wob <= 0.04) { Wh.state = 'shape'; Wh.q = clamp(1 - Wh.jit * 0.0012, 0.72, 1); Wh.p = Object.assign({}, PRESETS.cup); Wh.hold = null; toast('Centered. Now pull the walls.'); dirty = true; }
+  }
+  if (humG) humG.gain.value = S.muted || tab !== 'wheel' || Wh.state === 'empty' ? 0 : 0.04;
+}
+function stepOrders(dt) {
+  S.orderClock -= dt;
+  if (S.orderClock <= 0) { S.orderClock = 70 + Math.random() * 30; if (S.orders.length < 4 && (S.fired > 0 || S.pots.length)) { newOrder(); dirty = true; if (tab !== 'shelf') toast('A new order came in.'); } }
+}
+function checkAway() {
+  const el2 = (Date.now() - S.lastSeen) / 1000;
+  if (!isFinite(el2) || el2 < 120) { S.lastSeen = Date.now(); return false; }
+  const lines = [];
+  if (S.kiln.state === 'firing') { stepKiln(1e6); lines.push('The kiln finished its firing and has cooled.'); }
+  let n = 0; while (S.orders.length < 4 && n < Math.floor(el2 / 80) && (S.fired > 0 || S.pots.length)) { newOrder(); n++; }
+  if (n) lines.push(n + ' new order' + (n > 1 ? 's' : '') + ' came in.');
+  if (!lines.length) { S.lastSeen = Date.now(); return false; }
+  $('awayText').textContent = lines.join(' ');
+  window.TTG?.track('offline_claim', { value: n });
+  $('away').classList.add('show'); persist(); return true;
+}
+$('awayBtn').addEventListener('click', () => { $('away').classList.remove('show'); dirty = true; });
+$('playBtn').addEventListener('click', () => {
+  audio(); if (AC && AC.state === 'suspended') AC.resume();
+  const first = !S.started; S.started = true; mode = 'play';
+  $('title').classList.remove('show'); $('deck').style.display = 'flex'; $('muteBtn').style.display = 'flex';
+  window.TTG?.track('game_launch');
+  layout(); dirty = true;
+  if (!checkAway() && first) toast('Pick a clay and put it on the wheel.');
+  persist();
+});
+let last = performance.now(), running = true, saveT = 0, uiT = 0;
+function frame(now) {
+  if (!running) return;
+  const dt = Math.min(0.05, Math.max(0, (now - last) / 1000)); last = now;
+  const t = now / 1000;
+  if (mode === 'play' && !$('away').classList.contains('show')) {
+    stepWheel(dt); stepKiln(dt); stepOrders(dt);
+    if (dip > 0) { dip += dt * 1.1; if (dip >= 1) dip = 0; }
+    if (reveal > 0) reveal = Math.max(0, reveal - dt / 1.8);
+    if (roarG) { const T = S.kiln.state === 'firing' ? kilnTemp(S.kiln.t) : 0; roarG.gain.value = S.muted ? 0 : clamp(T / 1300, 0, 1) * (tab === 'kiln' ? 0.22 : 0.07); }
+  }
+  draw(t);
+  if (toastT > 0) { toastT -= dt; if (toastT <= 0) $('toast').style.display = 'none'; }
+  uiT -= dt;
+  if (mode === 'play' && dirty && !drag) buildDeck();
+  if (mode === 'play' && uiT <= 0) {
+    uiT = 0.25;
+    const ks = $('kstat'); if (ks && S.kiln.state === 'firing') ks.innerHTML = kilnStatus();
+    const lp = $('lumpPct'); if (lp && S.wheel.state === 'lump') lp.textContent = Math.round((1 - S.wheel.wob) * 100) + '%';
+  }
+  saveT -= dt; if (saveT <= 0 && mode === 'play') { saveT = 8; persist(); }
+  requestAnimationFrame(frame);
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { running = false; if (mode === 'play') persist(); if (AC && AC.state === 'running') AC.suspend(); }
+  else { if (running) return; running = true; last = performance.now(); if (AC && AC.state === 'suspended' && !S.muted) AC.resume(); if (mode === 'play') { checkAway(); dirty = true; } requestAnimationFrame(frame); }
+});
+window.addEventListener('pagehide', () => { if (mode === 'play') persist(); });
+window.addEventListener('resize', () => { layout(); dirty = true; });
+if (/[?&]debug(&|=|$)/.test(location.search)) window.__kg = {
+  state: () => ({ mode, tab, coins: S.coins, rep: S.rep, lvl: S.lvl, found: found(), pots: S.pots.map(p => p.id + ':' + p.form + ':' + p.st + (p.res ? ':' + (p.res.key || p.res.name) : '')), kiln: S.kiln.state, load: S.kiln.load.length, orders: S.orders.length, wheel: S.wheel.state, area: Object.assign({}, area) }),
+  fire: (rec, f, clay, form) => fireGlaze({ rec, clay: clay || 'stone', form: form || 'bowl', q: 1 }, f), ff: sec => { for (let i = 0; i < sec * 10; i++) { stepKiln(0.1); stepOrders(0.1); } dirty = true; },
+  give: (c, r) => { S.coins += c || 0; if (r) gainRep(r); dirty = true; }, S: () => S, book: () => BOOK, G,
+};
+setMuted(S.muted, true);
+layout();
+if (S.started) { $('titleStat').textContent = found() + ' of ' + BOOK.length + ' glazes in the book. ' + S.coins + ' coins.'; $('playBtn').textContent = 'Back to the studio'; }
+requestAnimationFrame(t => { last = t; frame(t); });
+})();
+</script>
+</body>
+</html>
