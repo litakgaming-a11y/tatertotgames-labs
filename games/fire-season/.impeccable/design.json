@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-25T12:00:00Z",
+  "title": "Design System: Fire Season",
+  "extensions": {
+    "colorMeta": {
+      "signal": { "role": "primary", "displayName": "Signal Orange", "canonical": "#e2521c", "tonalRamp": ["#3d1506", "#6b240a", "#8f2f08", "#c2410c", "#e2521c", "#ec7a4f", "#f4a88a", "#fbd9cb"] },
+      "retardant": { "role": "secondary", "displayName": "Retardant Pink", "canonical": "#d9677a", "tonalRamp": ["#3b141b", "#61202d", "#8c2f41", "#b54a5c", "#d9677a", "#e48f9d", "#eeb7c0", "#f8e0e4"] },
+      "map-paper": { "role": "neutral", "displayName": "Map Paper", "canonical": "#edf0e8", "tonalRamp": ["#1c2120", "#3a403c", "#545b57", "#858b86", "#b3b8b1", "#c9cdc3", "#edf0e8", "#f6f7f2"] },
+      "contour": { "role": "tertiary", "displayName": "Contour Brown", "canonical": "#a7784c", "tonalRamp": ["#2e1f12", "#4d341e", "#6e4b2b", "#8f6139", "#a7784c", "#bf9771", "#d6b99b", "#ecdccb"] }
+    },
+    "typographyMeta": {
+      "clock": { "displayName": "Clock", "purpose": "Game time in the deck." },
+      "label": { "displayName": "Label", "purpose": "Stat captions and forecast hours." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "press", "value": "0.1s ease-out background", "purpose": "A button inverting to ink when pressed." },
+      { "name": "flicker", "value": "two fire tones alternating per cell", "purpose": "Burning cells." }
+    ],
+    "breakpoints": [
+      { "name": "landscape", "value": "width > 1.05 * height" },
+      { "name": "compact", "value": "height <= 520px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Button",
+      "kind": "button",
+      "refersTo": "button",
+      "description": "Paper button with an ink border that inverts when pressed and is hatched when disabled.",
+      "html": "<button class=\"ds-btn\">Cut line</button> <button class=\"ds-btn\" disabled>Air tanker: 0 left</button>",
+      "css": ".ds-btn { min-height: 44px; padding: 0 16px; border: 1.5px solid #1c2120; border-radius: 3px; background: #f6f7f2; color: #1c2120; font: 600 14px 'Segoe UI', system-ui, sans-serif; cursor: pointer; transition: background-color .1s ease-out; } .ds-btn:hover:not(:disabled) { background: #fff; } .ds-btn:active:not(:disabled) { background: #1c2120; color: #f6f7f2; } .ds-btn:focus-visible { outline: 2px solid #e2521c; outline-offset: 2px; } .ds-btn:disabled { color: #858b86; border-color: #c9cdc3; background: repeating-linear-gradient(135deg, rgba(28,33,32,.09) 0 1px, transparent 1px 5px); cursor: default; }"
+    },
+    {
+      "name": "Go Button",
+      "kind": "button",
+      "refersTo": "button-go",
+      "description": "The one primary action per screen.",
+      "html": "<button class=\"ds-go\">Respond</button>",
+      "css": ".ds-go { min-height: 52px; padding: 0 30px; border: 0; border-radius: 3px; background: #c2410c; color: #fff; font: 600 16px 'Segoe UI', system-ui, sans-serif; cursor: pointer; } .ds-go:hover { background: #b03a0a; } .ds-go:active { background: #8f2f08; } .ds-go:focus-visible { outline: 2px solid #e2521c; outline-offset: 2px; }"
+    },
+    {
+      "name": "Crew Row",
+      "kind": "custom",
+      "refersTo": "crew-row",
+      "description": "A crew in the deck with its live status; the selected one rings its marker in orange.",
+      "html": "<button class=\"ds-crew sel\"><span class=\"mk\">A</span><span><b>Alder Crew</b><br><small>Cutting line, 7 to go</small></span></button>",
+      "css": ".ds-crew { display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: center; padding: 5px 12px; min-height: 46px; width: 280px; text-align: left; border: 0; background: #f6f7f2; font: 14px 'Segoe UI', system-ui, sans-serif; color: #1c2120; } .ds-crew.sel { background: #fff; } .ds-crew .mk { width: 30px; height: 30px; border-radius: 50%; background: #1c2120; color: #fff; font-size: 11px; font-weight: 700; display: grid; place-items: center; } .ds-crew.sel .mk { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #e2521c; } .ds-crew small { color: #545b57; font-size: 12px; }"
+    },
+    {
+      "name": "Grade Stamp",
+      "kind": "custom",
+      "refersTo": "panel",
+      "description": "The incident grade, stamped.",
+      "html": "<div class=\"ds-stamp\">A</div>",
+      "css": ".ds-stamp { width: 96px; height: 96px; border-radius: 50%; border: 4px solid #e2521c; color: #e2521c; display: grid; place-items: center; font: 800 54px 'Segoe UI', system-ui, sans-serif; transform: rotate(-8deg); background: #f6f7f2; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Ranger's Sheet",
+    "overview": "Fire Season is played on a survey-style contour map where every order and every state is drawn as map symbology. The fire carries the drama; the interface stays paper and ink.",
+    "keyCharacteristics": ["Contour map with fuel tints and symbols", "One signal orange for fire and action", "Pink only for retardant", "Ink-bordered paper forms", "Radio line reports in plain sentences"],
+    "rules": [
+      { "name": "Orange is fire", "body": "Signal orange marks fire, selection and the primary action, never decoration.", "section": "colors" },
+      { "name": "Pink is air", "body": "Retardant pink appears only where a tanker dropped.", "section": "colors" },
+      { "name": "Paper has no shadows", "body": "Depth comes from ink borders, never shadows or glows.", "section": "elevation" }
+    ],
+    "dos": ["Draw orders as map symbology", "Keep the fire the only saturated area", "Report events on the radio line"],
+    "donts": ["No glows or shadows", "No decorative orange", "No side stripes for selection", "No glyph icons"]
+  }
+}

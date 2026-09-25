@@ -1,0 +1,1675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Fire Season | TaterTot Games</title>
+<meta name="theme-color" content="#edf0e8">
+<link rel="icon" href="data:,">
+<script src="/analytics.js" defer></script>
+<style>
+  :root {
+    --paper: #edf0e8; --paper2: #f6f7f2; --rule: #c9cdc3; --ink: #1c2120; --dim: #545b57; --faint: #858b86;
+    --signal: #e2521c; --signal-dk: #b83d10; --signal-btn: #c2410c; --signal-btn-hi: #b03a0a; --fire: #d8341c; --pink: #d9677a; --water: #7fb3d6; --contour: #a7784c;
+    --sans: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+    --hatch: repeating-linear-gradient(135deg, rgba(28, 33, 32, .09) 0 1px, transparent 1px 5px);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--paper); touch-action: none; overscroll-behavior: none; position: fixed; inset: 0; }
+  body { font-family: var(--sans); color: var(--ink); font-size: 14px; line-height: 1.4; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  ::selection { background: var(--signal); color: #fff; }
+  canvas#map { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  button { font-family: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  button:focus-visible, a:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+  .num { font-variant-numeric: tabular-nums lining-nums; }
+
+  .btn { min-height: 44px; padding: 0 16px; border: 1.5px solid var(--ink); border-radius: 3px; font-size: 14px; font-weight: 600;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: var(--paper2); transition: background-color .1s ease-out; }
+  .btn:hover:not(:disabled) { background: #fff; }
+  .btn:active:not(:disabled) { background: var(--ink); color: var(--paper2); }
+  .btn:disabled { color: var(--faint); border-color: var(--rule); background: var(--hatch); cursor: default; }
+  .btn.go { background: var(--signal-btn); border-color: var(--signal-btn); color: #fff; }
+  .btn.go:hover:not(:disabled) { background: var(--signal-btn-hi); border-color: var(--signal-btn-hi); }
+  .btn.go:active:not(:disabled) { background: #8f2f08; border-color: #8f2f08; }
+  .btn.on { background: var(--ink); color: var(--paper2); }
+  .btn.sm { min-height: 36px; padding: 0 10px; font-size: 13px; }
+
+  /* ---------- incident deck ---------- */
+  #deck { position: fixed; display: none; flex-direction: column; background: var(--paper2); z-index: 3; }
+  body.port #deck { left: 0; right: 0; bottom: 0; border-top: 1.5px solid var(--ink); }
+  body.land #deck { top: 0; right: 0; bottom: 0; border-left: 1.5px solid var(--ink); }
+  #dHead { flex: 0 0 auto; display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--rule); }
+  #clock { font-size: 26px; font-weight: 700; letter-spacing: -.01em; line-height: 1; }
+  #phase { font-size: 12px; color: var(--dim); font-weight: 600; }
+  .tctl { display: flex; gap: 6px; }
+  .tctl .btn { min-width: 44px; padding: 0 8px; }
+  #dStats { flex: 0 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid var(--rule); }
+  #dStats div { padding: 6px 12px; }
+  #dStats div + div { border-left: 1px solid var(--rule); }
+  #dStats b { display: block; font-size: 16px; }
+  #dStats span { font-size: 11px; color: var(--dim); letter-spacing: .04em; }
+  #units { flex: 1 1 auto; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; }
+  .u { display: grid; grid-template-columns: 34px 1fr auto; gap: 10px; align-items: center; padding: 5px 12px; min-height: 46px; width: 100%; text-align: left; }
+  .u + .u { border-top: 1px solid #e3e5de; }
+  .u.sel { background: #fff; }
+  .u.sel .mk { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--signal); }
+  .u .mk { width: 30px; height: 30px; border-radius: 50%; background: var(--ink); color: #fff; font-size: 11px; font-weight: 700; display: grid; place-items: center; }
+  .u .mk.engine { border-radius: 4px; }
+  .u .mk.dozer { border-radius: 2px; transform: rotate(45deg) scale(.86); }
+  .u .mk.dozer i { transform: rotate(-45deg); font-style: normal; }
+  .u .nm { font-weight: 600; font-size: 14px; }
+  .u .st { font-size: 12px; color: var(--dim); }
+  .u .ht { font-size: 12px; font-weight: 700; color: var(--signal); }
+  .u.out { opacity: .5; }
+  #acts { flex: 0 0 auto; padding: 7px 12px; border-top: 1px solid var(--rule); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  #acts .hint { font-size: 12px; color: var(--dim); flex: 1 1 100%; line-height: 1.35; }
+  #air { flex: 0 0 auto; padding: 8px 12px 10px; border-top: 1px solid var(--rule); display: flex; gap: 6px; }
+  #air .btn { flex: 1 1 0; }
+  .scroll::-webkit-scrollbar { width: 6px; }
+  .scroll::-webkit-scrollbar-thumb { background: #b9bdb4; border-radius: 3px; }
+  .scroll { scrollbar-width: thin; scrollbar-color: #b9bdb4 transparent; }
+
+  #radio { flex: 0 0 auto; font-size: 12.5px; padding: 5px 12px; border-bottom: 1px solid var(--rule); min-height: 28px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #radio b { font-weight: 700; margin-right: 6px; }
+  #radio.warn { color: var(--signal-dk); font-weight: 600; }
+  #radio.warn b { color: var(--ink); }
+  #muteBtn { position: fixed; width: 40px; height: 40px; display: none; align-items: center; justify-content: center; z-index: 4;
+    background: rgba(246, 247, 242, .92); border: 1.5px solid var(--ink); border-radius: 3px; }
+  #muteBtn svg { width: 20px; height: 20px; }
+  #muteBtn:active { background: var(--ink); color: var(--paper2); }
+
+  /* ---------- screens ---------- */
+  .screen { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 10; background: rgba(28, 33, 32, .55); padding: 14px; }
+  .screen.show { display: flex; }
+  .panel { width: min(640px, 100%); max-height: 100%; overflow-y: auto; overscroll-behavior: contain; background: var(--paper2); border: 1.5px solid var(--ink);
+    border-radius: 3px; padding: 18px 18px 20px; touch-action: pan-y; }
+  .ph { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .ph h2 { font-size: 22px; font-weight: 800; letter-spacing: .01em; }
+  .lede { color: var(--dim); font-size: 13.5px; max-width: 62ch; }
+  .money { font-size: 20px; font-weight: 700; }
+  .rule { border: 0; border-top: 1px solid var(--rule); margin: 14px 0; }
+
+  #title { background: linear-gradient(180deg, rgba(237, 240, 232, .92) 0%, rgba(237, 240, 232, .55) 34%, rgba(237, 240, 232, 0) 55%, rgba(237, 240, 232, 0) 70%, rgba(237, 240, 232, .9) 100%);
+    flex-direction: column; justify-content: space-between; text-align: center; padding: max(8vh, 26px) 16px 18px; }
+  #title h1 { font-size: clamp(38px, min(11vw, 13vh), 88px); font-weight: 800; letter-spacing: .06em; line-height: .95; text-transform: uppercase; }
+  #title h1 span { color: var(--signal); }
+  #title .tag { margin-top: 12px; font-size: clamp(14px, 3.6vw, 17px); color: var(--dim); font-weight: 600; }
+  #title .go { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  #title .btn.go { min-height: 52px; padding: 0 30px; font-size: 17px; }
+  #title .stat { font-size: 13px; color: var(--dim); font-weight: 600; }
+  #badge { color: var(--dim); font-size: 13px; font-weight: 600; text-decoration: none; border-bottom: 1.5px solid var(--signal); padding: 6px 2px 2px; }
+
+  .call { border: 1.5px solid var(--ink); border-radius: 3px; padding: 12px 14px; margin: 14px 0 4px; display: grid; grid-template-columns: 1fr auto; gap: 8px 14px; align-items: center; background: #fff; }
+  .call h3 { font-size: 18px; font-weight: 800; }
+  .call .facts { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 6px 14px; font-size: 13px; }
+  .call .facts div span { display: block; font-size: 11px; color: var(--dim); letter-spacing: .04em; }
+  .call .facts div b { font-weight: 700; }
+  .danger { font-weight: 800; }
+  .danger.d3, .danger.d4 { color: var(--signal); }
+  .tabs { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1.5px solid var(--ink); margin-top: 16px; }
+  .tabs button { min-height: 42px; font-weight: 700; font-size: 13.5px; color: var(--dim); position: relative; }
+  .tabs button.on { color: var(--ink); }
+  .tabs button.on::after { content: ""; position: absolute; left: 18%; right: 18%; bottom: -1.5px; height: 3px; background: var(--signal); }
+  .crew { display: grid; grid-template-columns: 34px 1fr auto; gap: 10px; align-items: center; padding: 10px 0; }
+  .crew + .crew { border-top: 1px solid #e3e5de; }
+  .crew .mk { width: 30px; height: 30px; border-radius: 50%; background: var(--ink); color: #fff; font-size: 11px; font-weight: 700; display: grid; place-items: center; }
+  .crew .mk.engine { border-radius: 4px; }
+  .crew .mk.dozer { border-radius: 2px; }
+  .crew .nm { font-weight: 700; }
+  .crew .st { font-size: 12.5px; color: var(--dim); }
+  .crew .tr { font-size: 12px; color: var(--ink); margin-top: 2px; }
+  .crew .tr i { font-style: normal; border: 1px solid var(--rule); border-radius: 2px; padding: 0 5px; margin-right: 4px; display: inline-block; }
+  .crew .out { color: var(--signal); font-weight: 700; }
+  .tog { min-height: 36px; min-width: 64px; border: 1.5px solid var(--ink); border-radius: 3px; font-size: 12.5px; font-weight: 700; }
+  .tog.off { border-color: var(--rule); color: var(--faint); }
+  .row2 { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; padding: 10px 0; }
+  .row2 + .row2 { border-top: 1px solid #e3e5de; }
+  .row2 h4 { font-size: 14.5px; font-weight: 700; }
+  .row2 p { font-size: 12.5px; color: var(--dim); }
+  .row2 .lv { font-size: 12px; color: var(--dim); font-weight: 600; margin-left: 6px; }
+  .buy { flex-direction: column; gap: 0; line-height: 1.15; min-width: 92px; padding: 4px 10px; }
+  .buy small { font-size: 11.5px; font-weight: 600; }
+  .recs { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; margin-top: 12px; }
+  .rec { border: 1px solid var(--rule); border-radius: 3px; padding: 8px 10px; background: var(--hatch); }
+  .rec.got { background: #fff; border-color: var(--ink); }
+  .rec h4 { font-size: 13px; font-weight: 700; }
+  .rec p { font-size: 11.5px; color: var(--dim); }
+  .rec:not(.got) h4 { color: var(--dim); }
+
+  .stamp { width: 96px; height: 96px; border-radius: 50%; border: 4px solid var(--signal); color: var(--signal); display: grid; place-items: center;
+    font-size: 54px; font-weight: 800; transform: rotate(-8deg); margin: 4px auto 8px; }
+  .stamp.gF, .stamp.gD { border-color: var(--ink); color: var(--ink); }
+  .res { display: grid; grid-template-columns: 1fr auto; font-size: 14px; }
+  .res div { padding: 6px 0; border-bottom: 1px solid #e3e5de; }
+  .res div:nth-child(even) { text-align: right; font-weight: 700; }
+  .lvup { border: 1.5px solid var(--signal); border-radius: 3px; padding: 10px 12px; margin-top: 10px; background: #fff; }
+  .lvup h4 { font-size: 14px; font-weight: 800; }
+  .lvup .opts { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .lvup .opts .btn { flex: 1 1 140px; flex-direction: column; gap: 0; padding: 6px 10px; line-height: 1.2; text-align: left; align-items: flex-start; }
+  .lvup .opts .btn small { font-weight: 400; font-size: 11.5px; }
+  @media (max-height: 520px) {
+    #dHead { padding: 4px 10px; } #clock { font-size: 20px; } #phase { font-size: 11px; }
+    #dStats div { padding: 3px 10px; } #dStats b { font-size: 14px; } #dStats span { font-size: 11px; white-space: nowrap; }
+    .u { min-height: 42px; padding: 5px 10px; } .u .mk { width: 26px; height: 26px; }
+    #acts { padding: 5px 10px; min-height: 0; gap: 4px; } #acts .hint { font-size: 11.5px; } #acts .btn.sm { min-height: 34px; }
+    #air { padding: 5px 10px 6px; } #air .btn.sm { min-height: 34px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body class="port">
+<canvas id="map"></canvas>
+<button id="muteBtn" aria-label="Sound on or off">
+  <svg id="icoOn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6"/><path d="M18 6.5a7.8 7.8 0 0 1 0 11"/></svg>
+  <svg id="icoOff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" style="display:none"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
+</button>
+
+<div id="deck">
+  <div id="dHead">
+    <div><div id="clock" class="num">10:00</div><div id="phase">Morning</div></div>
+    <div></div>
+    <div class="tctl"><button class="btn sm" id="pauseBtn" aria-label="Pause or resume"></button><button class="btn sm num" id="speedBtn">1x</button></div>
+  </div>
+  <div id="dStats">
+    <div><b class="num" id="sAcres">0</b><span>Acres burned</span></div>
+    <div><b class="num" id="sHomes">0</b><span>Homes safe</span></div>
+    <div><b class="num" id="sCont">0%</b><span>Contained</span></div>
+  </div>
+  <div id="radio" class="num" aria-live="polite"></div>
+  <div id="units" class="scroll"></div>
+  <div id="acts"></div>
+  <div id="air"><button class="btn sm" id="dropBtn"></button><button class="btn sm" id="heliBtn"></button></div>
+</div>
+
+<div id="title" class="screen show">
+  <div>
+    <h1>Fire<br><span>Season</span></h1>
+    <p class="tag">Read the wind. Cut the line. Hold the town.</p>
+  </div>
+  <div class="go">
+    <button class="btn go" id="playBtn">Report for duty</button>
+    <div class="stat num" id="titleStat"></div>
+    <a id="badge" href="https://tatertotgames.com">tatertotgames.com</a>
+  </div>
+</div>
+
+<div id="station" class="screen">
+  <div class="panel scroll">
+    <div class="ph"><h2 id="stTitle">Station</h2><div class="money num" id="stBudget"></div></div>
+    <p class="lede num" id="stLede"></p>
+    <div class="call" id="callCard"></div>
+    <div class="tabs"><button data-t="crews" class="on">Crews</button><button data-t="station">Station</button><button data-t="record">Record</button></div>
+    <div id="stBody"></div>
+  </div>
+</div>
+
+<div id="results" class="screen">
+  <div class="panel scroll">
+    <div class="ph"><h2 id="rsTitle">Incident report</h2></div>
+    <div class="stamp" id="rsStamp">A</div>
+    <p class="lede" id="rsLede" style="text-align:center;margin:0 auto 12px"></p>
+    <div class="res num" id="rsTable"></div>
+    <div id="rsCrew"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:16px"><button class="btn go" id="rsBack">Back to station</button></div>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+const TAU = Math.PI * 2;
+
+/* ============================== data ============================== */
+// terrain: 0 rock, 1 grass, 2 brush, 3 timber, 4 house, 5 water, 6 road
+const TERR = [
+  { n: 'Rock',   rate: 0,     dur: 0,  heat: 0,   spot: 0,   fill: '#d4d2cb' },
+  { n: 'Grass',  rate: 0.13,  dur: 6,  heat: 1,   spot: 0.15, fill: '#e8e4c4' },
+  { n: 'Brush',  rate: 0.08,  dur: 14, heat: 2,   spot: 0.4, fill: '#c5d1a8' },
+  { n: 'Timber', rate: 0.045, dur: 30, heat: 3,   spot: 1,   fill: '#a3c291' },
+  { n: 'House',  rate: 0.05,  dur: 20, heat: 2.5, spot: 0.6, fill: '#e8e4c4' },
+  { n: 'Water',  rate: 0,     dur: 0,  heat: 0,   spot: 0,   fill: '#a9cde4' },
+  { n: 'Road',   rate: 0,     dur: 0,  heat: 0,   spot: 0,   fill: '#e8e4c4' },
+];
+const BURNABLE = [false, true, true, true, true, false, false];
+// cells per game minute
+const WALK = {
+  hand:   [0.45, 0.8, 0.5, 0.45, 0.6, 0, 1.2],
+  hot:    [0.6, 1.05, 0.66, 0.6, 0.8, 0, 1.5],
+  engine: [0, 0.6, 0.25, 0.2, 0.5, 0, 3],
+  dozer:  [0, 0.7, 0.6, 0.45, 0, 0, 1.2],
+};
+const CUT = {
+  hand:  [0.6, 0.45, 0.22, 0.15, 0, 0, 0],
+  hot:   [0.8, 0.63, 0.31, 0.21, 0, 0, 0],
+  dozer: [0, 0.9, 0.6, 0.4, 0, 0, 0],
+};
+const UTYPE = {
+  hand:   { n: 'Hand crew', cost: 7000, cut: true, burn: true, tol: 8 },
+  hot:    { n: 'Hotshot crew', cost: 22000, cut: true, burn: true, tol: 10 },
+  engine: { n: 'Engine', cost: 11000, protect: true, tol: 14 },
+  dozer:  { n: 'Dozer', cost: 14000, cut: true, tol: 10 },
+};
+const NAMES = {
+  hand: ['Alder Crew', 'Pinecrest Crew', 'Cedar Flat Crew', 'Mill Creek Crew', 'Juniper Crew', 'Sawtooth Crew', 'Bear Gulch Crew', 'Red Rock Crew'],
+  hot: ['Granite Hotshots', 'Timberline Hotshots', 'Kettle Hotshots'],
+  engine: ['Engine 21', 'Engine 34', 'Engine 47', 'Engine 52', 'Engine 63'],
+  dozer: ['Dozer 4', 'Dozer 9', 'Dozer 12'],
+};
+const TRAITS = {
+  sawyers:  { n: 'Sawyers', t: 'Cuts line 25% faster.', for: ['hand', 'hot', 'dozer'] },
+  surefoot: { n: 'Surefooted', t: 'Moves 20% faster and climbs slopes easily.', for: ['hand', 'hot', 'dozer', 'engine'] },
+  steady:   { n: 'Steady', t: 'Takes half again as much heat before they are hurt.', for: ['hand', 'hot', 'dozer', 'engine'] },
+  firing:   { n: 'Firing boss', t: 'Lights backburns at full walking pace.', for: ['hand', 'hot'] },
+  pump:     { n: 'Big pump', t: 'Knocks down one more burning cell a minute.', for: ['engine'] },
+  tank:     { n: 'Extra tank', t: 'Carries six more loads of water.', for: ['engine'] },
+  blade:    { n: 'Wide blade', t: 'Cuts a line three cells wide.', for: ['dozer'] },
+};
+const XPLV = [0, 30, 70, 120, 180, 260, 350, 460, 580, 720];
+const REGIONS = {
+  valley:    { n: 'Grass Valley', mix: [['grass', 0.68], ['brush', 0.2], ['timber', 0.12]], wind: [8, 22], moist: 0.24, houses: 9, water: 0.06, shape: 'rolling',
+               t: 'Open grass that runs fast in the wind and burns out quickly.' },
+  foothills: { n: 'Chaparral Foothills', mix: [['grass', 0.25], ['brush', 0.58], ['rock', 0.17]], wind: [12, 30], moist: 0.16, houses: 11, water: 0.03, shape: 'hills',
+               t: 'Thick brush on steep slopes. Fire races uphill.' },
+  ridge:     { n: 'Pine Ridge', mix: [['grass', 0.15], ['brush', 0.25], ['timber', 0.55], ['rock', 0.05]], wind: [10, 36], moist: 0.2, houses: 8, water: 0.03, shape: 'ridge',
+               t: 'Tall timber that throws embers far ahead of the fire.' },
+  canyon:    { n: 'Canyon Town', mix: [['grass', 0.25], ['brush', 0.5], ['timber', 0.15], ['rock', 0.1]], wind: [16, 42], moist: 0.12, houses: 16, water: 0.02, shape: 'canyon',
+               t: 'A town in a canyon bottom. The wind funnels straight down it.' },
+};
+const SCHEDULE = [
+  ['valley', 'valley', 'foothills', 'valley', 'foothills', 'foothills'],
+  ['foothills', 'valley', 'ridge', 'foothills', 'ridge', 'ridge'],
+  ['ridge', 'foothills', 'canyon', 'ridge', 'canyon', 'canyon'],
+];
+const CALLS_PER_SEASON = 6;
+const UPG = [
+  { id: 'lookout',  n: 'Lookout tower',    t: 'Spot fires sooner, so they start smaller.', cost: [6000, 14000, 30000] },
+  { id: 'weather',  n: 'Weather station',  t: 'See the wind further ahead, and more accurately.', cost: [5000, 12000, 26000] },
+  { id: 'air',      n: 'Air tanker contract', t: 'One more retardant drop per fire. From level 3, drops are twice as wide.', cost: [4000, 10000, 22000, 45000] },
+  { id: 'saws',     n: 'Better saws',      t: 'Hand crews and hotshots cut line 15% faster per level.', cost: [5000, 12000, 25000] },
+  { id: 'tanks',    n: 'Engine tanks',     t: 'Engines carry more water, and from level 2 knock down fire twice as fast.', cost: [5000, 11000, 24000] },
+  { id: 'dispatch', n: 'Dispatch',         t: 'Send one more crew to every fire.', cost: [8000, 16000, 30000, 55000] },
+  { id: 'dozer',    n: 'Dozer contract',   t: 'Lets you hire dozers, which cut wide line fast on gentle ground.', cost: [12000] },
+  { id: 'heli',     n: 'Helitack base',    t: 'A helicopter that drops a bucket of water on a spot every half hour.', cost: [30000] },
+  { id: 'training', n: 'Training center',  t: 'Crews learn half as fast again per level.', cost: [10000, 25000] },
+  { id: 'medical',  n: 'Medical unit',     t: 'Injured crews are back one call sooner, and heat wears off faster.', cost: [8000] },
+];
+const RECS = [
+  { id: 'first',   n: 'First call',              t: 'Worked your first fire.' },
+  { id: 'held',    n: 'Held the line',           t: 'Contained a fire.' },
+  { id: 'gradeA',  n: 'A clean day',             t: 'Earned an A.' },
+  { id: 'allhomes', n: 'Every home standing',    t: 'Lost no homes on a call with eight or more.' },
+  { id: 'early',   n: 'Before the burn period',  t: 'Contained a fire before 14:00.' },
+  { id: 'backburn', n: 'Fight fire with fire',   t: 'Backburned ten cells in one call.' },
+  { id: 'pink',    n: 'Pink line',               t: 'Called in an air tanker drop.' },
+  { id: 'dozer',   n: 'Iron on the line',        t: 'Hired a dozer.' },
+  { id: 'hotshot', n: 'Hotshots',                t: 'Hired a hotshot crew.' },
+  { id: 'lvl5',    n: 'Seasoned',                t: 'A crew reached level 5.' },
+  { id: 'season',  n: 'One season in',           t: 'Finished a fire season.' },
+  { id: 'safe',    n: 'Everyone home',           t: 'Finished a season with no one hurt.' },
+  { id: 'ridge',   n: 'Up the ridge',            t: 'Worked a fire on Pine Ridge.' },
+  { id: 'canyon',  n: 'Canyon town',             t: 'Worked a fire in Canyon Town.' },
+  { id: 'bigsave', n: 'Held at the edge of town', t: 'Saved twelve or more homes on one call.' },
+  { id: 'streak',  n: 'Three in a row',          t: 'Earned three A grades in a row.' },
+];
+
+/* ============================== save ============================== */
+const KEY = 'ttg_fireseason';
+function newCrew(type, id) {
+  const used = S ? S.crews.filter(c => c.type === type).map(c => c.name) : [];
+  const name = NAMES[type].find(n => used.indexOf(n) < 0) || (UTYPE[type].n + ' ' + id);
+  return { id, type, name, lvl: 1, xp: 0, traits: [], out: 0, send: true, pick: null };
+}
+let S = null;
+function fresh() {
+  const s = { v: 1, started: false, muted: false, season: 1, call: 1, calls: 0, budget: 6000, crews: [], up: {}, rec: {}, grades: [], seasonHurt: 0, seed: (Math.random() * 1e9) | 0, lastSeen: Date.now() };
+  S = s;
+  s.crews.push(newCrew('hand', 1)); s.crews.push(newCrew('hand', 2)); s.crews.push(newCrew('engine', 3));
+  return s;
+}
+function loadSave() {
+  let s = null;
+  try { s = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { s = null; }
+  if (!s || typeof s !== 'object' || !Array.isArray(s.crews) || !s.crews.length) return fresh();
+  const f = fresh();
+  const o = Object.assign(f, s);
+  o.crews = o.crews.filter(c => c && UTYPE[c.type]).map(c => Object.assign({ lvl: 1, xp: 0, traits: [], out: 0, send: true, pick: null }, c));
+  if (!o.crews.length) return fresh();
+  ['budget', 'season', 'call', 'calls', 'seasonHurt'].forEach(k => { if (!isFinite(o[k]) || o[k] < 0) o[k] = f[k]; });
+  o.season = Math.max(1, o.season | 0); o.call = clamp(o.call | 0, 1, CALLS_PER_SEASON);
+  if (!o.up || typeof o.up !== 'object') o.up = {};
+  if (!o.rec || typeof o.rec !== 'object') o.rec = {};
+  if (!Array.isArray(o.grades)) o.grades = [];
+  o.muted = !!o.muted;
+  return o;
+}
+S = loadSave();
+function persist() { S.lastSeen = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* storage blocked */ } }
+const up = id => S.up[id] | 0;
+
+/* ============================== rng + noise ============================== */
+function rng(seed) {
+  let a = seed >>> 0;
+  return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+function noiseField(R, cols, rows, cell) {
+  const gw = Math.ceil(cols / cell) + 2, gh = Math.ceil(rows / cell) + 2, g = new Float32Array(gw * gh);
+  for (let i = 0; i < g.length; i++) g[i] = R();
+  const out = new Float32Array(cols * rows);
+  const sm = t => t * t * (3 - 2 * t);
+  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+    const fx = x / cell, fy = y / cell, x0 = Math.floor(fx), y0 = Math.floor(fy), tx = sm(fx - x0), ty = sm(fy - y0);
+    const a = g[y0 * gw + x0], b = g[y0 * gw + x0 + 1], c = g[(y0 + 1) * gw + x0], d = g[(y0 + 1) * gw + x0 + 1];
+    out[y * cols + x] = (a + (b - a) * tx) * (1 - ty) + (c + (d - c) * tx) * ty;
+  }
+  return out;
+}
+
+/* ============================== calls ============================== */
+function callFor(season, call, seed) {
+  const R = rng(seed + season * 7919 + call * 104729);
+  const sched = SCHEDULE[Math.min(season, SCHEDULE.length) - 1];
+  let region = sched[call - 1];
+  if (season > SCHEDULE.length) region = ['foothills', 'ridge', 'canyon', 'valley'][Math.floor(R() * 4)];
+  const reg = REGIONS[region];
+  const hard = season - 1 + (call - 1) * 0.25;
+  const windLo = reg.wind[0] + hard * 1.5, windHi = reg.wind[1] + hard * 2.2;
+  const moist = Math.max(0.03, reg.moist - hard * 0.015);
+  const danger = clamp(Math.round((windHi / 12) + (0.3 - moist) * 8 - 1.2), 0, 4);
+  return { season, call, region, seed: (R() * 1e9) | 0, windLo, windHi, moist, danger, first: S.calls === 0 };
+}
+const DANGER = ['Low', 'Moderate', 'High', 'Very high', 'Extreme'];
+const COMPASS = ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'];
+// wind blows toward angle a (0 = east, y down); it comes from the opposite side
+const fromName = a => COMPASS[(Math.round(((a + Math.PI) % TAU + TAU) % TAU / (TAU / 8)) % 8)];
+
+/* ============================== map generation ============================== */
+let inc = null;          // the live incident (or the preview/title map)
+function genIncident(call, cols, rows) {
+  const R = rng(call.seed), reg = REGIONS[call.region], N = cols * rows;
+  const e1 = noiseField(R, cols, rows, Math.max(6, cols / 3.2)), e2 = noiseField(R, cols, rows, 5), e3 = noiseField(R, cols, rows, 2.2);
+  const elev = new Float32Array(N), fz = noiseField(R, cols, rows, 3.5);
+  const ang0 = R() * TAU;
+  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+    const i = y * cols + x;
+    let e = e1[i] * 0.6 + e2[i] * 0.3 + e3[i] * 0.1;
+    const u = x / cols - 0.5, v = y / rows - 0.5;
+    if (reg.shape === 'hills') e = e * 0.8 + Math.abs(Math.sin(u * 5 + v * 3)) * 0.2;
+    if (reg.shape === 'ridge') { const d = Math.abs(u * Math.cos(ang0) + v * Math.sin(ang0)); e = e * 0.55 + (1 - d * 2.2) * 0.45; }
+    if (reg.shape === 'canyon') { const along = cols > rows ? v : u; e = e * 0.45 + Math.min(1, Math.abs(along) * 2.4) * 0.55; }
+    elev[i] = e;
+  }
+  let lo = 1, hi = 0; for (let i = 0; i < N; i++) { lo = Math.min(lo, elev[i]); hi = Math.max(hi, elev[i]); }
+  for (let i = 0; i < N; i++) elev[i] = (elev[i] - lo) / (hi - lo || 1);
+  const terr = new Uint8Array(N);
+  // fuel bands by elevation mixed with patch noise
+  const key = new Float32Array(N); const idx = [];
+  for (let i = 0; i < N; i++) { key[i] = elev[i] * 0.55 + fz[i] * 0.45; idx.push(i); }
+  idx.sort((a, b) => key[a] - key[b]);
+  const ids = { grass: 1, brush: 2, timber: 3, rock: 0 };
+  const order = reg.mix.slice().sort((a, b) => ['grass', 'brush', 'timber', 'rock'].indexOf(a[0]) - ['grass', 'brush', 'timber', 'rock'].indexOf(b[0]));
+  let k = 0;
+  order.forEach(([f, p], n) => { const cnt = n === order.length - 1 ? N - k : Math.round(p * N); for (let c = 0; c < cnt && k < N; c++, k++) terr[idx[k]] = ids[f]; });
+  // water in the lowest ground
+  const byElev = idx.slice().sort((a, b) => elev[a] - elev[b]);
+  const wn = Math.round(reg.water * N);
+  for (let c = 0; c < wn; c++) terr[byElev[c]] = 5;
+  // moisture: wetter near water and in hollows
+  const moist = new Float32Array(N);
+  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+    const i = y * cols + x; let m = call.moist + (0.5 - elev[i]) * 0.12;
+    for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+      const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= cols || yy >= rows) continue;
+      if (terr[yy * cols + xx] === 5) { m += 0.08; }
+    }
+    moist[i] = clamp(m, 0, 0.85);
+  }
+  const g = { cols, rows, N, elev, terr, moist };
+  // a road from one edge to the other, preferring flat ground
+  const horiz = cols >= rows;
+  const pickEdge = side => {
+    for (let t = 0; t < 60; t++) {
+      const a = horiz ? { x: side ? cols - 1 : 0, y: 2 + Math.floor(R() * (rows - 4)) } : { x: 2 + Math.floor(R() * (cols - 4)), y: side ? rows - 1 : 0 };
+      if (terr[a.y * cols + a.x] !== 5) return a.y * cols + a.x;
+    }
+    return horiz ? (side ? cols - 1 : 0) + Math.floor(rows / 2) * cols : Math.floor(cols / 2) + (side ? rows - 1 : 0) * cols;
+  };
+  const rA = pickEdge(0), rB = pickEdge(1);
+  const road = roadPath(g, rA, rB);
+  road.forEach(i => { terr[i] = 6; });
+  // the town sits by the road on low ground, away from the start
+  let best = -1, bestS = -1e9;
+  for (let n = Math.floor(road.length * 0.3); n < Math.floor(road.length * 0.75); n++) {
+    const i = road[n]; const sc = -elev[i] + R() * 0.3; if (sc > bestS) { bestS = sc; best = i; }
+  }
+  const tx = best % cols, ty = (best / cols) | 0;
+  const houses = [];
+  const want = reg.houses + Math.floor((call.season - 1) * 1.5);
+  const cand = [];
+  for (let dy = -4; dy <= 4; dy++) for (let dx = -4; dx <= 4; dx++) {
+    const x = tx + dx, y = ty + dy; if (x < 0 || y < 0 || x >= cols || y >= rows) continue;
+    const i = y * cols + x; if (terr[i] === 5 || terr[i] === 6 || terr[i] === 0) continue;
+    let near = 9; for (const r of road) { const d = Math.max(Math.abs(r % cols - x), Math.abs(((r / cols) | 0) - y)); if (d < near) near = d; }
+    if (near > 2 || near < 1) continue;
+    cand.push({ i, s: Math.hypot(dx, dy) + R() * 2 });
+  }
+  cand.sort((a, b) => a.s - b.s);
+  for (const c of cand) { if (houses.length >= want) break; if ((c.i % cols + ((c.i / cols) | 0)) % 2 === 0 || R() < 0.35) { terr[c.i] = 4; houses.push(c.i); } }
+  // the station is where the road leaves the map
+  const station = rA;
+  // wind: a forecast by the hour, 10:00 to 20:00, with a shift in the afternoon
+  const baseDir = R() * TAU, shiftAt = 13 + R() * 3, shift = (R() < 0.5 ? -1 : 1) * (0.9 + R() * 1.2);
+  const fDir = [], fSpd = [];
+  for (let hh = 10; hh <= 20; hh++) {
+    const d = baseDir + (hh - 10) * 0.05 + (hh >= shiftAt ? shift * clamp((hh - shiftAt) / 1.5 + 0.35, 0, 1) : 0);
+    const bump = Math.exp(-Math.pow((hh - 15.5) / 2.6, 2));
+    fDir.push(d); fSpd.push(call.windLo + (call.windHi - call.windLo) * bump * (0.85 + R() * 0.3));
+  }
+  // light the fire upwind of town, so the afternoon wind pushes it toward the houses
+  const afternoonDir = fDir[6];
+  const diag = Math.hypot(cols, rows);
+  // label the connected runs of fuel; the fire must start in the one that reaches town
+  const comp = new Int32Array(N).fill(-1), compSize = [];
+  for (let s = 0; s < N; s++) {
+    if (comp[s] >= 0 || !BURNABLE[terr[s]]) continue;
+    const id = compSize.length, q = [s]; comp[s] = id; let n = 0;
+    while (q.length) {
+      const c = q.pop(); n++;
+      const x = c % cols, y = (c / cols) | 0;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= cols || yy >= rows) continue; const j = yy * cols + xx; if (comp[j] < 0 && BURNABLE[terr[j]]) { comp[j] = id; q.push(j); } }
+    }
+    compSize.push(n);
+  }
+  const townComps = new Set();
+  for (const h of houses) if (comp[h] >= 0) townComps.add(comp[h]);
+  let ign = -1, bestI = -1e9;
+  for (let t = 0; t < 1200; t++) {
+    const x = Math.floor(R() * cols), y = Math.floor(R() * rows), i = y * cols + x;
+    if (!BURNABLE[terr[i]] || terr[i] === 4) continue;
+    const dT = Math.hypot(x - tx, y - ty), dS = Math.hypot(x - station % cols, y - ((station / cols) | 0));
+    if (dT < diag * 0.3 || dS < diag * 0.25) continue;
+    // start where there is fuel all around, so a fire never opens already boxed in by rock or water
+    let fuel = 0;
+    for (let dy = -4; dy <= 4; dy++) for (let dx = -4; dx <= 4; dx++) { const xx = x + dx, yy = y + dy; if (xx >= 0 && yy >= 0 && xx < cols && yy < rows && BURNABLE[terr[yy * cols + xx]] && terr[yy * cols + xx] !== 4) fuel++; }
+    if (fuel < 62 || !townComps.has(comp[i]) || compSize[comp[i]] < N * 0.3) continue;
+    const toTown = Math.atan2(ty - y, tx - x), align = Math.cos(toTown - afternoonDir);
+    const sc = align * 2 - Math.abs(dT - diag * 0.42) / diag * 3 + R() * 0.6;
+    if (sc > bestI) { bestI = sc; ign = i; }
+  }
+  if (ign < 0) ign = idx[Math.floor(N / 2)];
+  const streets = ['Mill Road', 'Cedar Lane', 'Ridge Road', 'Creek Street', 'Old Mine Road'];
+  return Object.assign(g, {
+    call, reg, road, houses, station, ign, fDir, fSpd, town: best, street: streets[Math.floor(R() * streets.length)],
+    state: new Uint8Array(N), left: new Float32Array(N), burnedAt: new Float32Array(N), wet: new Float32Array(N),
+    burning: [], units: [], t: 600, R: rng(call.seed ^ 0x5bd1e995), errD: 0, errS: 0, drops: 0, dropsLeft: 1 + up('air'),
+    heliReady: 0, pending: [], planes: [], embers: [], log: [], over: false, housesLost: 0, cutCells: 0, burnCells: 0,
+    burnableStart: 0, contained: false, containPct: 0, fx: [],
+  });
+}
+function roadPath(g, a, b) {
+  const { cols, rows, elev, terr } = g, N = cols * rows;
+  const dist = new Float32Array(N).fill(Infinity), prev = new Int32Array(N).fill(-1), done = new Uint8Array(N);
+  dist[a] = 0; const open = [a];
+  while (open.length) {
+    let bi = 0; for (let n = 1; n < open.length; n++) if (dist[open[n]] < dist[open[bi]]) bi = n;
+    const c = open.splice(bi, 1)[0]; if (done[c]) continue; done[c] = 1; if (c === b) break;
+    const cx = c % cols, cy = (c / cols) | 0;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const x = cx + dx, y = cy + dy; if (x < 0 || y < 0 || x >= cols || y >= rows) continue;
+      const j = y * cols + x; if (done[j] || terr[j] === 5) continue;
+      const w = 1 + Math.abs(elev[j] - elev[c]) * 60;
+      if (dist[c] + w < dist[j]) { dist[j] = dist[c] + w; prev[j] = c; open.push(j); }
+    }
+  }
+  const path = []; let c = b; while (c >= 0) { path.push(c); if (c === a) break; c = prev[c]; }
+  return path.reverse();
+}
+
+/* ============================== layout ============================== */
+const cv = $('map'), cx = cv.getContext('2d');
+let W = 1, H = 1, DPR = 1, land = false, mode = 'title';
+const area = { x: 0, y: 0, w: 1, h: 1 }, grid = { x: 0, y: 0, cs: 10 };
+const STRIP = 58;
+function layout() {
+  W = Math.max(1, innerWidth); H = Math.max(1, innerHeight); DPR = clamp(devicePixelRatio || 1, 1, 2.5);
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  land = W > H * 1.05;
+  document.body.className = land ? 'land' : 'port';
+  const deck = $('deck');
+  if (mode !== 'incident') { area.x = 0; area.y = 0; area.w = W; area.h = H; }
+  else if (land) { const dw = Math.round(clamp(W * 0.34, 290, 390)); deck.style.width = dw + 'px'; deck.style.height = ''; area.x = 0; area.y = 0; area.w = W - dw; area.h = H; }
+  else { const dh = Math.round(clamp(H * 0.46, 270, 420)); deck.style.height = dh + 'px'; deck.style.width = ''; area.x = 0; area.y = 0; area.w = W; area.h = H - dh; }
+  fitGrid();
+  const mb = $('muteBtn'); mb.style.left = (area.x + area.w - 48) + 'px'; mb.style.top = (area.y + 9) + 'px';
+  baseDirty = true;
+}
+function fitGrid() {
+  if (!inc) return;
+  const top = mode === 'incident' ? STRIP : 0, mw = area.w - 8, mh = area.h - top - 8;
+  grid.cs = Math.max(3, Math.min(mw / inc.cols, mh / inc.rows));
+  grid.x = area.x + (area.w - inc.cols * grid.cs) / 2;
+  grid.y = area.y + top + (area.h - top - inc.rows * grid.cs) / 2;
+}
+function gridDims() {
+  // pick a grid whose shape matches the incident's map area, about 1400 cells
+  const lw = W > H * 1.05, aw = lw ? W - Math.round(clamp(W * 0.34, 290, 390)) : W, ah = lw ? H : H - Math.round(clamp(H * 0.46, 270, 420));
+  const top = STRIP, a = Math.max(0.3, (aw - 8) / Math.max(40, ah - top - 8)), Nt = 1400;
+  const cols = clamp(Math.round(Math.sqrt(Nt * a)), 22, 66), rows = clamp(Math.round(Nt / cols), 22, 66);
+  return [cols, rows];
+}
+
+/* ============================== contours + base layer ============================== */
+let base = null, baseDirty = true;
+function contourSegs(g, field, levels) {
+  const segs = [], { cols, rows } = g, elev = field || g.elev;
+  for (let lv = 1; lv < 20; lv++) {
+    if (levels && levels.indexOf(lv) < 0) continue;
+    const L = lv / 20, index = lv % 5 === 0;
+    for (let y = 0; y < rows - 1; y++) for (let x = 0; x < cols - 1; x++) {
+      const a = elev[y * cols + x], b = elev[y * cols + x + 1], c = elev[(y + 1) * cols + x + 1], d = elev[(y + 1) * cols + x];
+      const code = (a > L ? 8 : 0) | (b > L ? 4 : 0) | (c > L ? 2 : 0) | (d > L ? 1 : 0);
+      if (code === 0 || code === 15) continue;
+      const lerp = (p, q) => (L - p) / (q - p || 1e-6);
+      const T = [x + lerp(a, b), y], Rr = [x + 1, y + lerp(b, c)], B = [x + lerp(d, c), y + 1], Lf = [x, y + lerp(a, d)];
+      const add = (p, q) => segs.push([p[0] + 0.5, p[1] + 0.5, q[0] + 0.5, q[1] + 0.5, index]);
+      switch (code) {
+        case 1: case 14: add(Lf, B); break; case 2: case 13: add(B, Rr); break; case 3: case 12: add(Lf, Rr); break;
+        case 4: case 11: add(T, Rr); break; case 6: case 9: add(T, B); break; case 7: case 8: add(Lf, T); break;
+        case 5: add(Lf, T); add(B, Rr); break; case 10: add(T, Rr); add(Lf, B); break;
+      }
+    }
+  }
+  return segs;
+}
+function buildBase() {
+  if (!base) base = document.createElement('canvas');
+  base.width = cv.width; base.height = cv.height;
+  const b = base.getContext('2d'); b.setTransform(DPR, 0, 0, DPR, 0, 0);
+  b.fillStyle = '#edf0e8'; b.fillRect(0, 0, W, H);
+  if (!inc) { baseDirty = false; return; }
+  const g = inc, cs = grid.cs, ox = grid.x, oy = grid.y;
+  // fuel tints: one pixel per cell, scaled up smoothly so areas blend like a printed map
+  if (!g.tint) {
+    const tc = document.createElement('canvas'); tc.width = g.cols; tc.height = g.rows;
+    const tg = tc.getContext('2d'), img = tg.createImageData(g.cols, g.rows);
+    for (let i = 0; i < g.N; i++) {
+      const hex = TERR[g.terr[i]].fill, n = parseInt(hex.slice(1), 16);
+      img.data[i * 4] = n >> 16; img.data[i * 4 + 1] = (n >> 8) & 255; img.data[i * 4 + 2] = n & 255; img.data[i * 4 + 3] = 255;
+    }
+    tg.putImageData(img, 0, 0); g.tint = tc;
+    const wf = new Float32Array(g.N); for (let i = 0; i < g.N; i++) wf[i] = g.terr[i] === 5 ? 1 : 0;
+    g.shore = contourSegs(g, wf, [10]);
+  }
+  b.save(); b.imageSmoothingEnabled = true; b.imageSmoothingQuality = 'high';
+  b.beginPath(); b.rect(ox, oy, g.cols * cs, g.rows * cs); b.clip();
+  b.drawImage(g.tint, ox - cs / 2, oy - cs / 2, (g.cols + 1) * cs, (g.rows + 1) * cs);
+  b.restore();
+  // symbols: tree dots, shrub marks, rock stipple
+  const R = rng(g.call.seed ^ 77);
+  for (let i = 0; i < g.N; i++) {
+    const x = ox + (i % g.cols) * cs, y = oy + ((i / g.cols) | 0) * cs, t = g.terr[i];
+    if (t === 3) { b.fillStyle = 'rgba(58,110,52,.45)'; for (let n = 0; n < 2; n++) { b.beginPath(); b.arc(x + cs * (0.25 + R() * 0.5), y + cs * (0.25 + R() * 0.5), Math.max(1, cs * 0.14), 0, TAU); b.fill(); } }
+    else if (t === 2 && R() < 0.7) { b.strokeStyle = 'rgba(82,106,52,.45)'; b.lineWidth = 1; const px = x + cs * (0.2 + R() * 0.5), py = y + cs * (0.3 + R() * 0.5); b.beginPath(); b.moveTo(px, py); b.lineTo(px + cs * 0.15, py - cs * 0.22); b.lineTo(px + cs * 0.3, py); b.stroke(); }
+    else if (t === 0) { b.fillStyle = 'rgba(80,76,70,.35)'; for (let n = 0; n < 3; n++) b.fillRect(x + R() * cs, y + R() * cs, 1, 1); }
+    else if (t === 5) { /* water: drawn below */ }
+  }
+  // shoreline: a contour of the water, inked in blue
+  b.strokeStyle = '#4f8fbd'; b.lineWidth = 1.2; b.beginPath();
+  for (const s of g.shore) { b.moveTo(ox + s[0] * cs, oy + s[1] * cs); b.lineTo(ox + s[2] * cs, oy + s[3] * cs); }
+  b.stroke();
+  // contours: brown, every fifth one heavier
+  if (!g.segs) g.segs = contourSegs(g);
+  for (const heavy of [0, 1]) {
+    b.strokeStyle = heavy ? 'rgba(150,100,58,.8)' : 'rgba(167,120,76,.5)'; b.lineWidth = heavy ? 1.3 : 0.8;
+    b.beginPath();
+    for (const s of g.segs) { if (s[4] !== !!heavy) continue; b.moveTo(ox + s[0] * cs, oy + s[1] * cs); b.lineTo(ox + s[2] * cs, oy + s[3] * cs); }
+    b.stroke();
+  }
+  // road: a red line cased in black, like a survey map
+  const pts = g.road.map(i => [ox + (i % g.cols + 0.5) * cs, oy + (((i / g.cols) | 0) + 0.5) * cs]);
+  b.lineJoin = 'round'; b.lineCap = 'round';
+  b.strokeStyle = '#2a2624'; b.lineWidth = Math.max(3, cs * 0.34); b.beginPath(); pts.forEach((p, n) => (n ? b.lineTo(p[0], p[1]) : b.moveTo(p[0], p[1]))); b.stroke();
+  b.strokeStyle = '#d95c45'; b.lineWidth = Math.max(1.4, cs * 0.18); b.stroke();
+  // houses: small black squares
+  for (const i of g.houses) {
+    const x = ox + (i % g.cols) * cs, y = oy + ((i / g.cols) | 0) * cs, s = Math.max(3, cs * 0.52);
+    b.fillStyle = '#1c2120'; b.fillRect(x + (cs - s) / 2, y + (cs - s) / 2, s, s);
+  }
+  // station flag
+  const sx = ox + (g.station % g.cols + 0.5) * cs, sy = oy + (((g.station / g.cols) | 0) + 0.5) * cs;
+  b.strokeStyle = '#1c2120'; b.fillStyle = '#e2521c'; b.lineWidth = 1.6;
+  b.beginPath(); b.moveTo(sx, sy + 7); b.lineTo(sx, sy - 9); b.stroke();
+  b.beginPath(); b.moveTo(sx, sy - 9); b.lineTo(sx + 9, sy - 6); b.lineTo(sx, sy - 3); b.closePath(); b.fill();
+  // labels
+  b.font = '600 ' + Math.round(clamp(cs * 0.9, 10, 13)) + 'px ' + getComputedStyle(document.body).fontFamily;
+  b.fillStyle = 'rgba(28,33,32,.8)'; b.textAlign = 'center';
+  const tx = ox + (g.town % g.cols + 0.5) * cs, ty = oy + (((g.town / g.cols) | 0) - 3) * cs;
+  b.fillText(g.reg.n.split(' ')[0] === 'Canyon' ? 'Canyon Town' : townName(g), clamp(tx, grid.x + 40, grid.x + g.cols * cs - 40), clamp(ty, grid.y + 12, grid.y + g.rows * cs - 4));
+  b.textAlign = 'left'; b.fillText('Station', clamp(sx + 10, grid.x + 2, grid.x + g.cols * cs - 60), clamp(sy - 12, grid.y + 12, grid.y + g.rows * cs - 4));
+  // scale bar: a cell is 50 m
+  const km = cs * 20, bx = grid.x + g.cols * cs - km - 10, by = grid.y + g.rows * cs - 10;
+  b.fillStyle = '#1c2120'; b.fillRect(bx, by, km / 2, 3); b.strokeStyle = '#1c2120'; b.lineWidth = 1; b.strokeRect(bx, by, km, 3);
+  b.font = '600 10px ' + getComputedStyle(document.body).fontFamily; b.textAlign = 'center'; b.fillText('1 km', bx + km / 2, by - 3);
+  // map frame
+  b.strokeStyle = '#1c2120'; b.lineWidth = 1.5; b.strokeRect(grid.x, grid.y, g.cols * cs, g.rows * cs);
+  baseDirty = false;
+}
+const townName = g => ['Mill Creek', 'Cedar Flat', 'Hollis', 'Sawyer', 'Juniper Springs', 'Barlow'][g.call.seed % 6];
+
+/* ============================== fire ============================== */
+const burnIndex = t => { const h = t / 60; let b = 0.72 + 0.7 * Math.exp(-Math.pow((h - 15) / 2.3, 2)); if (h > 18) b -= 0.14 * (h - 18); return Math.max(0.3, b); };
+const phaseName = t => (t < 750 ? 'Morning' : t < 1050 ? 'Burn period' : 'Laying down');
+function forecastAt(g, t) {
+  const h = clamp(t / 60 - 10, 0, 10), i0 = Math.floor(h), i1 = Math.min(10, i0 + 1), f = h - i0;
+  let d0 = g.fDir[i0], d1 = g.fDir[i1]; while (d1 - d0 > Math.PI) d1 -= TAU; while (d0 - d1 > Math.PI) d1 += TAU;
+  return { dir: d0 + (d1 - d0) * f, spd: g.fSpd[i0] + (g.fSpd[i1] - g.fSpd[i0]) * f };
+}
+const ERR_D = [0.5, 0.35, 0.2, 0.08], ERR_S = [10, 7, 4, 2], SHOW_H = [3, 5, 8, 11];
+function windAt(g, t) {
+  const f = forecastAt(g, t), lv = Math.min(3, up('weather'));
+  return { dir: f.dir + g.errD * ERR_D[lv], spd: Math.max(0, f.spd + g.errS * ERR_S[lv] + Math.sin(t * 0.7) * 2) };
+}
+const canBurn = (g, i) => g.state[i] === 0 && BURNABLE[g.terr[i]];
+function ignite(g, i) {
+  if (!canBurn(g, i)) return false;
+  g.state[i] = 1; g.left[i] = TERR[g.terr[i]].dur * (0.8 + g.R() * 0.4); g.burning.push(i);
+  return true;
+}
+const N8 = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
+function spreadMinute(g) {
+  const t = g.t, bi = burnIndex(t), w = windAt(g, t), wx = Math.cos(w.dir), wy = Math.sin(w.dir);
+  const next = [], still = [];
+  for (const i of g.burning) {
+    if (g.state[i] !== 1) continue;
+    g.left[i] -= 1;
+    if (g.left[i] <= 0) {
+      g.state[i] = 2; g.burnedAt[i] = t;
+      if (g.terr[i] === 4) { g.housesLost++; if (mode === 'incident') { say('A home on ' + g.street + ' was lost.', true); sfxLoss(); } }
+      continue;
+    }
+    still.push(i);
+    const x = i % g.cols, y = (i / g.cols) | 0, tr = TERR[g.terr[i]];
+    for (let k = 0; k < 8; k++) {
+      const dx = N8[k][0], dy = N8[k][1], xx = x + dx, yy = y + dy;
+      if (xx < 0 || yy < 0 || xx >= g.cols || yy >= g.rows) continue;
+      const j = yy * g.cols + xx; if (!canBurn(g, j)) continue;
+      const diag = k >= 4;
+      if (diag && !canBurn(g, y * g.cols + xx) && !canBurn(g, yy * g.cols + x) && g.state[y * g.cols + xx] !== 1 && g.state[yy * g.cols + x] !== 1) continue;
+      const len = diag ? 1.414 : 1, cos = (dx * wx + dy * wy) / len;
+      const W = Math.max(0.12, 1 + w.spd / 15 * cos);
+      const S = clamp(1 + (g.elev[j] - g.elev[i]) * 25, 0.4, 2.5);
+      const crown = g.terr[j] === 3 && w.spd > 25 ? 2.2 : 1;
+      let p = TERR[g.terr[j]].rate * crown * W * S * bi * (1 - g.moist[j]) * (diag ? 0.7 : 1);
+      if (g.wet[j] > t) p *= 0.1;
+      if (g.R() < Math.min(0.95, p)) next.push(j);
+    }
+    // embers on the wind
+    const sp = tr.spot * Math.pow(w.spd / 40, 2) * bi * 0.004;
+    if (sp > 0 && g.R() < sp) {
+      const a = w.dir + (g.R() - 0.5) * 0.9, d = 2 + g.R() * (1 + w.spd / 8);
+      const tx = Math.round(x + Math.cos(a) * d), ty = Math.round(y + Math.sin(a) * d);
+      if (tx >= 0 && ty >= 0 && tx < g.cols && ty < g.rows) {
+        const j = ty * g.cols + tx;
+        g.embers.push({ x0: x, y0: y, x1: tx, y1: ty, t: 0 });
+        if (canBurn(g, j) && g.wet[j] <= t && g.R() < 0.55 * (1 - g.moist[j])) next.push(j);
+      }
+    }
+  }
+  g.burning = still;
+  for (const j of next) ignite(g, j);
+}
+function frontAndContainment(g) {
+  let open = 0, held = 0, front = 0;
+  const burning = g.burning;
+  for (let i = 0; i < g.N; i++) {
+    const s = g.state[i]; if (s !== 1 && s !== 2) continue;
+    const x = i % g.cols, y = (i / g.cols) | 0;
+    let isFront = false;
+    for (let k = 0; k < 4; k++) {
+      const xx = x + N8[k][0], yy = y + N8[k][1]; if (xx < 0 || yy < 0 || xx >= g.cols || yy >= g.rows) continue;
+      const j = yy * g.cols + xx, sj = g.state[j];
+      if (sj === 1 || sj === 2) continue;
+      if (canBurn(g, j) && g.wet[j] <= g.t) { open++; if (s === 1) isFront = true; } else held++;
+    }
+    if (s === 1 && !isFront) {
+      for (let k = 4; k < 8; k++) { const xx = x + N8[k][0], yy = y + N8[k][1]; if (xx < 0 || yy < 0 || xx >= g.cols || yy >= g.rows) continue; const j = yy * g.cols + xx; if (canBurn(g, j) && g.wet[j] <= g.t && (canBurn(g, y * g.cols + xx) || canBurn(g, yy * g.cols + x))) { isFront = true; break; } }
+    }
+    if (isFront) front++;
+  }
+  g.containPct = held + open ? held / (held + open) : 0;
+  return burning.length ? front : 0;
+}
+
+/* ============================== units ============================== */
+function crewSpeedMul(c) { return (1 + 0.04 * (c.lvl - 1)) * (c.traits.indexOf('surefoot') >= 0 ? 1.2 : 1); }
+function walkSpeed(g, u, from, to) {
+  const tr = g.terr[to];
+  let s = WALK[u.type][tr];
+  if (g.state[to] === 2) s = Math.max(s, WALK[u.type][1] * 0.9);
+  if (g.state[to] === 3) s = Math.max(s, WALK[u.type][1]);
+  if (!s) return 0;
+  const dh = g.elev[to] - g.elev[from];
+  if (dh > 0) s /= 1 + dh * (u.crew.traits.indexOf('surefoot') >= 0 ? 4 : 8);
+  if (u.type === 'dozer' && dh > 0.12) return 0;
+  return s * crewSpeedMul(u.crew);
+}
+function passable(g, u, i) { return WALK[u.type][g.terr[i]] > 0 && g.state[i] !== 1 || (g.state[i] === 2 && u.type !== 'engine'); }
+function astar(g, u, from, to, maxN) {
+  if (from === to) return [from];
+  const N = g.N, cost = new Float32Array(N).fill(Infinity), prev = new Int32Array(N).fill(-1), closed = new Uint8Array(N);
+  const hx = to % g.cols, hy = (to / g.cols) | 0;
+  const heap = [];
+  const push = (i, f) => { heap.push([f, i]); let n = heap.length - 1; while (n > 0) { const p = (n - 1) >> 1; if (heap[p][0] <= heap[n][0]) break; [heap[p], heap[n]] = [heap[n], heap[p]]; n = p; } };
+  const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length) { heap[0] = last; let n = 0; for (;;) { const l = 2 * n + 1, r = l + 1; let m = n; if (l < heap.length && heap[l][0] < heap[m][0]) m = l; if (r < heap.length && heap[r][0] < heap[m][0]) m = r; if (m === n) break; [heap[m], heap[n]] = [heap[n], heap[m]]; n = m; } } return top; };
+  cost[from] = 0; push(from, 0); let expanded = 0;
+  while (heap.length) {
+    const [, c] = pop(); if (closed[c]) continue; closed[c] = 1;
+    if (c === to) break;
+    if (++expanded > (maxN || 6000)) break;
+    const x = c % g.cols, y = (c / g.cols) | 0;
+    for (let k = 0; k < 8; k++) {
+      const xx = x + N8[k][0], yy = y + N8[k][1]; if (xx < 0 || yy < 0 || xx >= g.cols || yy >= g.rows) continue;
+      const j = yy * g.cols + xx; if (closed[j]) continue;
+      if (!passable(g, u, j) && j !== to) continue;
+      const sp = walkSpeed(g, u, c, j); if (!sp) continue;
+      if (k >= 4 && (!passable(g, u, y * g.cols + xx) || !passable(g, u, yy * g.cols + x))) continue;
+      const nc = cost[c] + (k >= 4 ? 1.414 : 1) / sp;
+      if (nc < cost[j]) { cost[j] = nc; prev[j] = c; push(j, nc + Math.hypot(xx - hx, yy - hy) / 3); }
+    }
+  }
+  if (!closed[to]) return null;
+  const p = []; let c = to; while (c >= 0) { p.push(c); if (c === from) break; c = prev[c]; }
+  return p.reverse();
+}
+function nearestSafe(g, u) {
+  // breadth-first search for ground with no fire within two cells
+  const seen = new Uint8Array(g.N), q = [u.cell]; seen[u.cell] = 1; let head = 0;
+  while (head < q.length && head < 900) {
+    const c = q[head++], x = c % g.cols, y = (c / g.cols) | 0;
+    let hot = false;
+    for (let dy = -2; dy <= 2 && !hot; dy++) for (let dx = -2; dx <= 2; dx++) { const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= g.cols || yy >= g.rows) continue; if (g.state[yy * g.cols + xx] === 1) { hot = true; break; } }
+    if (!hot) return c;
+    for (let k = 0; k < 8; k++) { const xx = x + N8[k][0], yy = y + N8[k][1]; if (xx < 0 || yy < 0 || xx >= g.cols || yy >= g.rows) continue; const j = yy * g.cols + xx; if (seen[j] || !passable(g, u, j)) continue; seen[j] = 1; q.push(j); }
+  }
+  return -1;
+}
+function makeUnits(g) {
+  const cap = 3 + up('dispatch');
+  const team = S.crews.filter(c => c.out <= 0 && c.send).slice(0, cap);
+  const spawn = [g.station];
+  // spread arrivals along the road near the station
+  for (let n = 1; n < 6 && n < g.road.length; n++) spawn.push(g.road[n]);
+  g.units = team.map((c, n) => {
+    const tank = 10 + 4 * up('tanks') + (c.traits.indexOf('tank') >= 0 ? 6 : 0);
+    return { crew: c, type: c.type, cell: spawn[n % spawn.length], next: -1, acc: 0, order: null, heat: 0, hurt: false, tank, tankMax: tank, status: 'At the station', cut: 0, lit: 0, protect: false, retreat: false, id: n };
+  });
+}
+function unitLabel(c) {
+  if (c.type === 'engine') return c.name.replace('Engine ', '');
+  if (c.type === 'dozer') return 'D' + c.name.replace('Dozer ', '');
+  if (c.type === 'hot') return 'H' + c.name[0];
+  return c.name[0] + (c.name.split(' ')[1] && c.name.split(' ').length > 2 ? c.name.split(' ')[1][0] : '');
+}
+function setOrder(u, order) {
+  u.order = order; u.protect = false; u.retreat = false; u.next = -1; u.acc = 0;
+  if (order && order.type === 'protect') { u.protect = true; }
+}
+function orderPath(g, u, target) { return astar(g, u, u.cell, target, 8000); }
+function stepAlong(g, u, dtMin) {
+  // move along u.path; returns true when the path is done
+  if (!u.path || u.pi >= u.path.length - 1) return true;
+  const nx = u.path[u.pi + 1];
+  if (!passable(g, u, nx)) { u.path = null; return true; }
+  const sp = walkSpeed(g, u, u.cell, nx) * (u.slow || 1);
+  if (!sp) { u.path = null; return true; }
+  u.next = nx; u.acc += sp * dtMin;
+  if (u.acc >= 1) { u.acc -= 1; u.cell = nx; u.pi++; u.next = -1; if (u.onStep) u.onStep(u.cell); }
+  return u.pi >= u.path.length - 1;
+}
+function cutRate(g, u, i) {
+  const base = (CUT[u.type] || [])[g.terr[i]] || 0; if (!base) return 0;
+  let r = base * (1 + 0.04 * (u.crew.lvl - 1));
+  if (u.type === 'hand' || u.type === 'hot') r *= 1 + 0.15 * up('saws');
+  if (u.crew.traits.indexOf('sawyers') >= 0) r *= 1.25;
+  return r;
+}
+function lineCell(g, i) { if (g.state[i] === 0 && BURNABLE[g.terr[i]] && g.terr[i] !== 4) { g.state[i] = 3; return true; } return false; }
+function unitMinute(g, u) {
+  if (u.hurt) return;
+  // heat from fire next to the crew
+  const x = u.cell % g.cols, y = (u.cell / g.cols) | 0;
+  let heat = 0, near = false;
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+    const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= g.cols || yy >= g.rows) continue;
+    const j = yy * g.cols + xx; if (g.state[j] !== 1) continue;
+    near = true; heat += (dx || dy) ? TERR[g.terr[j]].heat : 6;
+  }
+  u.heat = Math.max(0, u.heat + heat - (1.2 + up('medical') * 0.6));
+  const tol = UTYPE[u.type].tol * (u.crew.traits.indexOf('steady') >= 0 ? 1.5 : 1);
+  if (u.heat >= tol) {
+    u.hurt = true; u.status = 'Hurt, pulled off the line'; u.order = null; u.path = null;
+    say(u.crew.name + ' has an injury and is off the line.', true); sfxLoss(); return;
+  }
+  const safeHere = g.state[u.cell] === 3 && heat < 2;
+  // crews pull back once the heat builds, not the moment fire is next to them
+  const limit = !u.order ? 0 : tol * (u.order.type === 'burn' ? 0.5 : 0.3);
+  if (near && (u.heat >= limit || g.state[u.cell] === 1) && !u.retreat && !(u.protect && g.terr[u.cell] === 6) && !safeHere) {
+    const s = nearestSafe(g, u);
+    if (s >= 0) { const p = orderPath(g, u, s); if (p) { u.order = { type: 'retreat' }; u.path = p; u.pi = 0; u.retreat = true; u.protect = false; u.status = 'Falling back'; say(u.crew.name + ' is falling back.', true); } }
+  }
+  // engines refill near the station or the town
+  if (u.type === 'engine' && g.terr[u.cell] === 6) {
+    const dS = Math.hypot(u.cell % g.cols - g.station % g.cols, ((u.cell / g.cols) | 0) - ((g.station / g.cols) | 0));
+    const dT = Math.hypot(u.cell % g.cols - g.town % g.cols, ((u.cell / g.cols) | 0) - ((g.town / g.cols) | 0));
+    if ((dS < 3 || dT < 4) && u.tank < u.tankMax) u.tank = Math.min(u.tankMax, u.tank + 2);
+  }
+  if (u.protect && u.tank > 0) {
+    const per = (up('tanks') >= 2 ? 2 : 1) + (u.crew.traits.indexOf('pump') >= 0 ? 1 : 0);
+    for (let n = 0; n < per && u.tank > 0; n++) {
+      let best = -1, bs = -1;
+      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+        const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= g.cols || yy >= g.rows) continue;
+        const j = yy * g.cols + xx; if (g.state[j] !== 1) continue;
+        let s = 1; if (g.terr[j] === 4) s += 5;
+        for (const h of g.houses) if (Math.abs(h % g.cols - xx) <= 1 && Math.abs(((h / g.cols) | 0) - yy) <= 1) s += 2;
+        if (s > bs) { bs = s; best = j; }
+      }
+      if (best < 0) break;
+      g.left[best] = 0.01; g.wet[best] = g.t + 40; u.tank--;
+      g.fx.push({ kind: 'spray', from: u.cell, to: best, t: 0 });
+    }
+    u.status = u.tank > 0 ? 'Protecting, water ' + u.tank + ' of ' + u.tankMax : 'Out of water';
+  }
+}
+function unitMove(g, u, dtMin) {
+  if (u.hurt || !u.order) return;
+  const o = u.order;
+  if (o.type === 'retreat' || o.type === 'move') {
+    if (stepAlong(g, u, dtMin)) { u.order = null; u.retreat = false; u.status = o.type === 'retreat' ? 'Holding at a safe spot' : 'Standing by'; }
+    else u.status = o.type === 'retreat' ? 'Falling back' : 'On the move';
+    return;
+  }
+  if (o.type === 'protect') {
+    if (o.stage === 'go') { if (stepAlong(g, u, dtMin)) { o.stage = 'at'; u.protect = true; } else u.status = 'Heading to protect'; }
+    return;
+  }
+  if (o.type === 'cut' || o.type === 'burn') {
+    if (o.stage === 'go') {
+      if (stepAlong(g, u, dtMin)) { o.stage = 'work'; o.k = 0; }
+      else { u.status = 'Heading to the line'; return; }
+    }
+    // work along the drawn cells
+    while (o.k < o.cells.length && dtMin > 0) {
+      const target = o.cells[o.k];
+      if (target !== u.cell) {
+        // walk one step toward the next line cell
+        if (!u.path || u.path[u.path.length - 1] !== target) { u.path = astar(g, u, u.cell, target, 600); u.pi = 0; if (!u.path) { o.k++; continue; } }
+        if (o.type === 'burn') u.slow = u.crew.traits.indexOf('firing') >= 0 ? 1 : 0.8;
+        const prevCell = u.cell;
+        stepAlong(g, u, dtMin); u.slow = 1;
+        if (o.type === 'burn' && u.cell !== prevCell && o.k > 0) { if (ignite(g, prevCell)) { g.burnCells++; u.lit++; } }
+        u.status = o.type === 'cut' ? 'Cutting line, ' + (o.cells.length - o.k) + ' to go' : 'Backburning, ' + (o.cells.length - o.k) + ' to go';
+        return;
+      }
+      if (o.type === 'cut') {
+        const r = cutRate(g, u, target);
+        if (!r || g.state[target] !== 0) { o.k++; continue; }
+        u.work = (u.work || 0) + r * dtMin; dtMin = 0;
+        if (u.work >= 1) {
+          u.work = 0;
+          if (lineCell(g, target)) { g.cutCells++; u.cut++; }
+          if (u.type === 'dozer') {
+            const w = u.crew.traits.indexOf('blade') >= 0 ? 2 : 1, dir = o.cells[o.k + 1] !== undefined ? o.cells[o.k + 1] - target : target - (o.cells[o.k - 1] || target);
+            const side = Math.abs(dir) === 1 ? g.cols : 1;
+            for (let s = 1; s <= w; s++) { const j = target + side * (s % 2 ? 1 : -1) * Math.ceil(s / 2); if (j >= 0 && j < g.N) lineCell(g, j); }
+          }
+          o.k++;
+        }
+        u.status = 'Cutting line, ' + (o.cells.length - o.k) + ' to go';
+        return;
+      }
+      // backburn: light the cell behind as the crew moves on
+      o.k++;
+    }
+    u.order = null; u.status = o.type === 'cut' ? 'Line finished' : 'Backburn lit';
+    say(u.crew.name + (o.type === 'cut' ? ' finished their line.' : ' has the backburn going.'));
+  }
+}
+function issue(u, kind, cells) {
+  const g = inc; if (!g || u.hurt) return;
+  if (kind === 'move') {
+    const p = orderPath(g, u, cells[cells.length - 1]);
+    if (!p) { say(u.crew.name + ' cannot get there.', true); return; }
+    setOrder(u, { type: 'move' }); u.path = p; u.pi = 0; u.status = 'On the move';
+  } else if (kind === 'protect') {
+    const p = orderPath(g, u, cells[cells.length - 1]);
+    if (!p) { say(u.crew.name + ' cannot get there.', true); return; }
+    setOrder(u, { type: 'protect', stage: 'go' }); u.protect = false; u.path = p; u.pi = 0; u.status = 'Heading to protect';
+  } else {
+    const lineCells = cells.filter(i => kind === 'burn' ? canBurn(g, i) || g.state[i] === 3 : BURNABLE[g.terr[i]] && g.terr[i] !== 4 && g.state[i] === 0);
+    if (!lineCells.length) { say('Nothing there for ' + u.crew.name + ' to work.', true); return; }
+    const p = orderPath(g, u, lineCells[0]);
+    if (!p) { say(u.crew.name + ' cannot reach that line.', true); return; }
+    setOrder(u, { type: kind, stage: 'go', cells: lineCells, k: 0 }); u.path = p; u.pi = 0; u.work = 0;
+    u.status = 'Heading to the line';
+  }
+  sfxRadio();
+}
+
+/* ============================== air ============================== */
+function callDrop(cells) {
+  const g = inc; if (!g || g.dropsLeft <= 0 || !cells.length) return;
+  g.dropsLeft--; g.drops++;
+  const wide = up('air') >= 3;
+  g.pending.push({ kind: 'tanker', at: g.t + 8, cells: cells.slice(0, 12), wide });
+  say('Air tanker inbound, about eight minutes out.'); rec('pink'); sfxRadio();
+}
+function callHeli(cell) {
+  const g = inc; if (!g || !up('heli') || g.heliReady > g.t) return;
+  g.heliReady = g.t + 30;
+  g.pending.push({ kind: 'heli', at: g.t + 3, cell });
+  say('Helicopter on the way with a bucket.'); sfxRadio();
+}
+function airMinute(g) {
+  for (let n = g.pending.length - 1; n >= 0; n--) {
+    const p = g.pending[n]; if (p.at > g.t) continue;
+    g.pending.splice(n, 1);
+    if (p.kind === 'tanker') {
+      g.planes.push({ cells: p.cells, t: 0, wide: p.wide });
+      for (const i of p.cells) {
+        // retardant slows fire that reaches it; it does not put out what is already burning
+        const mark = j => { if (j < 0 || j >= g.N) return; g.wet[j] = g.t + 150; };
+        mark(i); if (p.wide) { mark(i + 1); mark(i + g.cols); }
+      }
+      sfxPlane();
+    } else {
+      const x = p.cell % g.cols, y = (p.cell / g.cols) | 0;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= g.cols || yy >= g.rows) continue;
+        const j = yy * g.cols + xx; g.wet[j] = g.t + 60; if (g.state[j] === 1) g.left[j] = 0.01;
+      }
+      g.fx.push({ kind: 'splash', cell: p.cell, t: 0 }); sfxPlane();
+    }
+  }
+}
+
+/* ============================== radio ============================== */
+function hhmm(t) { const h = Math.floor(t / 60), m = Math.floor(t % 60); return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m; }
+function say(msg, warn) {
+  const g = inc; if (!g || mode !== 'incident') return;
+  g.log.push({ t: g.t, msg, warn, born: performance.now() });
+  if (g.log.length > 3) g.log.shift();
+  renderRadio();
+}
+function renderRadio() {
+  const g = inc, rd = $('radio'); if (!g) return;
+  const l = g.log[g.log.length - 1];
+  const html = l ? '<b>' + hhmm(l.t) + '</b>' + l.msg : '';
+  if (rd.innerHTML !== html) { rd.innerHTML = html; rd.title = l ? l.msg : ''; }
+  rd.classList.toggle('warn', !!(l && l.warn && g.t - l.t < 30));
+}
+
+/* ============================== audio ============================== */
+let AC = null, master = null, crackle = null, crackleGain = null;
+function audio() {
+  if (AC) return AC;
+  try {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    master = AC.createGain(); master.gain.value = S.muted ? 0 : 0.8; master.connect(AC.destination);
+    const len = AC.sampleRate * 2, buf = AC.createBuffer(1, len, AC.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() < 0.002 ? (Math.random() * 2 - 1) : (Math.random() * 2 - 1) * 0.05;
+    crackle = AC.createBufferSource(); crackle.buffer = buf; crackle.loop = true;
+    const f = AC.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 900;
+    crackleGain = AC.createGain(); crackleGain.gain.value = 0;
+    crackle.connect(f); f.connect(crackleGain); crackleGain.connect(master); crackle.start();
+  } catch (e) { AC = null; }
+  return AC;
+}
+function tone(f, dur, vol, type, delay) {
+  if (!AC || S.muted || AC.state !== 'running') return;
+  const t = AC.currentTime + (delay || 0), o = AC.createOscillator(), g = AC.createGain();
+  o.type = type || 'sine'; o.frequency.value = f;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + 0.02);
+}
+function sfxRadio() { tone(1450, 0.05, 0.04, 'square'); tone(1100, 0.06, 0.03, 'square', 0.06); }
+function sfxTap() { tone(700, 0.04, 0.03, 'triangle'); }
+function sfxLoss() { tone(196, 0.5, 0.06, 'sawtooth'); tone(147, 0.7, 0.05, 'sawtooth', 0.12); }
+function sfxWin() { [523, 659, 784, 1047].forEach((f, n) => tone(f, 0.6, 0.06, 'triangle', n * 0.09)); }
+function sfxPlane() {
+  if (!AC || S.muted || AC.state !== 'running') return;
+  const t = AC.currentTime, o = AC.createOscillator(), g = AC.createGain();
+  o.type = 'sawtooth'; o.frequency.setValueAtTime(90, t); o.frequency.linearRampToValueAtTime(130, t + 1.2); o.frequency.linearRampToValueAtTime(70, t + 2.4);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.05, t + 0.6); g.gain.exponentialRampToValueAtTime(0.0001, t + 2.4);
+  const f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 600;
+  o.connect(f); f.connect(g); g.connect(master); o.start(t); o.stop(t + 2.5);
+}
+function setMuted(m, keep) {
+  S.muted = m; if (master) master.gain.value = m ? 0 : 0.8;
+  $('icoOn').style.display = m ? 'none' : ''; $('icoOff').style.display = m ? '' : 'none';
+  if (!keep) persist();
+}
+
+/* ============================== drawing ============================== */
+function cellXY(i) { return [grid.x + (i % inc.cols + 0.5) * grid.cs, grid.y + (((i / inc.cols) | 0) + 0.5) * grid.cs]; }
+function drawMap(dt, now) {
+  cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  if (baseDirty || !base) buildBase();
+  cx.drawImage(base, 0, 0, W, H);
+  const g = inc; if (!g) return;
+  const cs = grid.cs, ox = grid.x, oy = grid.y;
+  // retardant, line, burned ground and fire
+  for (let i = 0; i < g.N; i++) {
+    const s = g.state[i], wet = g.wet[i] > g.t;
+    if (!s && !wet) continue;
+    const x = ox + (i % g.cols) * cs, y = oy + ((i / g.cols) | 0) * cs;
+    if (s === 2) {
+      // fresh burn is darkest and fades to ash
+      const age = clamp((g.t - g.burnedAt[i]) / 90, 0, 1);
+      const v = Math.round(40 + age * 70);
+      cx.fillStyle = 'rgb(' + v + ',' + (v - 3) + ',' + (v - 6) + ')'; cx.fillRect(x, y, cs + 0.6, cs + 0.6);
+      if (g.terr[i] === 4) { cx.strokeStyle = '#e2521c'; cx.lineWidth = 1.2; cx.beginPath(); cx.moveTo(x + 2, y + 2); cx.lineTo(x + cs - 2, y + cs - 2); cx.moveTo(x + cs - 2, y + 2); cx.lineTo(x + 2, y + cs - 2); cx.stroke(); }
+    } else if (s === 1) {
+      const f = TERR[g.terr[i]], k = clamp(g.left[i] / (f.dur || 1), 0, 1), fl = 0.5 + 0.5 * Math.sin(now * 9 + i * 1.7);
+      cx.fillStyle = k > 0.5 ? (fl > 0.5 ? '#f08a24' : '#e8661c') : (fl > 0.5 ? '#d8341c' : '#b8281a');
+      cx.fillRect(x, y, cs + 0.6, cs + 0.6);
+      if (cs > 7) { cx.fillStyle = 'rgba(255,214,120,' + (0.35 + 0.4 * fl * k) + ')'; cx.fillRect(x + cs * 0.3, y + cs * 0.3, cs * 0.4, cs * 0.4); }
+    }
+    if (wet) { cx.fillStyle = 'rgba(217,103,122,.42)'; cx.fillRect(x, y, cs + 0.6, cs + 0.6); }
+  }
+  // fire line: black with ticks, like a map symbol for completed line
+  cx.strokeStyle = '#1c2120'; cx.lineWidth = Math.max(1.4, cs * 0.18);
+  cx.beginPath();
+  for (let i = 0; i < g.N; i++) {
+    if (g.state[i] !== 3) continue;
+    const [px, py] = cellXY(i), x = i % g.cols, y = (i / g.cols) | 0;
+    let linked = false;
+    for (let k = 0; k < 8; k++) { const xx = x + N8[k][0], yy = y + N8[k][1]; if (xx < 0 || yy < 0 || xx >= g.cols || yy >= g.rows) continue; const j = yy * g.cols + xx; if (g.state[j] === 3 && j > i) { const [qx, qy] = cellXY(j); cx.moveTo(px, py); cx.lineTo(qx, qy); linked = true; } }
+    if (!linked) { cx.moveTo(px - cs * 0.3, py); cx.lineTo(px + cs * 0.3, py); }
+  }
+  cx.stroke();
+  // fire edge: red where it is still free to run
+  cx.strokeStyle = '#b8281a'; cx.lineWidth = Math.max(1.5, cs * 0.16);
+  cx.beginPath();
+  for (const i of g.burning) {
+    const x = i % g.cols, y = (i / g.cols) | 0, px = ox + x * cs, py = oy + y * cs;
+    const open = (xx, yy) => xx >= 0 && yy >= 0 && xx < g.cols && yy < g.rows && canBurn(g, yy * g.cols + xx);
+    if (open(x, y - 1)) { cx.moveTo(px, py); cx.lineTo(px + cs, py); }
+    if (open(x, y + 1)) { cx.moveTo(px, py + cs); cx.lineTo(px + cs, py + cs); }
+    if (open(x - 1, y)) { cx.moveTo(px, py); cx.lineTo(px, py + cs); }
+    if (open(x + 1, y)) { cx.moveTo(px + cs, py); cx.lineTo(px + cs, py + cs); }
+  }
+  cx.stroke();
+  // embers
+  for (let n = g.embers.length - 1; n >= 0; n--) {
+    const e = g.embers[n]; e.t += dt * 1.6; if (e.t >= 1) { g.embers.splice(n, 1); continue; }
+    const px = ox + (e.x0 + (e.x1 - e.x0) * e.t + 0.5) * cs, py = oy + (e.y0 + (e.y1 - e.y0) * e.t + 0.5) * cs - Math.sin(e.t * Math.PI) * cs * 1.5;
+    cx.fillStyle = '#f08a24'; cx.fillRect(px - 1.5, py - 1.5, 3, 3);
+  }
+  // effects
+  for (let n = g.fx.length - 1; n >= 0; n--) {
+    const f = g.fx[n]; f.t += dt; if (f.t > 0.8) { g.fx.splice(n, 1); continue; }
+    if (f.kind === 'spray') {
+      const [ax, ay] = cellXY(f.from), [bx, by] = cellXY(f.to);
+      cx.strokeStyle = 'rgba(79,143,189,' + (1 - f.t / 0.8) + ')'; cx.lineWidth = 2; cx.setLineDash([3, 3]);
+      cx.beginPath(); cx.moveTo(ax, ay); cx.quadraticCurveTo((ax + bx) / 2, Math.min(ay, by) - cs, bx, by); cx.stroke(); cx.setLineDash([]);
+    } else if (f.kind === 'splash') {
+      const [ax, ay] = cellXY(f.cell); cx.strokeStyle = 'rgba(79,143,189,' + (1 - f.t / 0.8) + ')'; cx.lineWidth = 2;
+      cx.beginPath(); cx.arc(ax, ay, cs * (1 + f.t * 2), 0, TAU); cx.stroke();
+    }
+  }
+  // tanker planes crossing
+  for (let n = g.planes.length - 1; n >= 0; n--) {
+    const p = g.planes[n]; p.t += dt / 1.6; if (p.t >= 1) { g.planes.splice(n, 1); continue; }
+    const a = cellXY(p.cells[0]), b = cellXY(p.cells[p.cells.length - 1]);
+    const ang = Math.atan2(b[1] - a[1], b[0] - a[0]) || 0, ex = 3 * cs;
+    const sx = a[0] - Math.cos(ang) * ex, sy = a[1] - Math.sin(ang) * ex, fx2 = b[0] + Math.cos(ang) * ex, fy2 = b[1] + Math.sin(ang) * ex;
+    const px = sx + (fx2 - sx) * p.t, py = sy + (fy2 - sy) * p.t;
+    cx.save(); cx.translate(px, py); cx.rotate(ang); cx.fillStyle = '#1c2120';
+    cx.beginPath(); cx.moveTo(10, 0); cx.lineTo(-8, -2); cx.lineTo(-8, 2); cx.closePath(); cx.fill();
+    cx.fillRect(-2, -8, 4, 16); cx.fillRect(-8, -4, 2, 8);
+    cx.restore();
+  }
+  if (mode === 'incident') { drawOrders(); drawUnits(now); drawStroke(); drawStrip(now); }
+  else if (mode === 'station') drawBriefing(now);
+}
+function drawOrders() {
+  const g = inc;
+  for (const u of g.units) {
+    if (u.hurt || !u.order) continue;
+    const sel = u === selected;
+    if (u.order.cells && (u.order.type === 'cut' || u.order.type === 'burn')) {
+      cx.strokeStyle = u.order.type === 'burn' ? 'rgba(216,52,28,.8)' : 'rgba(28,33,32,.6)'; cx.lineWidth = sel ? 2.4 : 1.6; cx.setLineDash([5, 4]);
+      cx.beginPath(); u.order.cells.slice(u.order.k || 0).forEach((c, n) => { const [px, py] = cellXY(c); n ? cx.lineTo(px, py) : cx.moveTo(px, py); }); cx.stroke(); cx.setLineDash([]);
+    }
+    if (u.path && sel) {
+      cx.strokeStyle = 'rgba(226,82,28,.7)'; cx.lineWidth = 1.5; cx.setLineDash([2, 4]);
+      cx.beginPath(); u.path.slice(u.pi).forEach((c, n) => { const [px, py] = cellXY(c); n ? cx.lineTo(px, py) : cx.moveTo(px, py); }); cx.stroke(); cx.setLineDash([]);
+    }
+  }
+}
+function unitPos(u) {
+  const [ax, ay] = cellXY(u.cell); if (u.next < 0) return [ax, ay];
+  const [bx, by] = cellXY(u.next), f = clamp(u.acc, 0, 1); return [ax + (bx - ax) * f, ay + (by - ay) * f];
+}
+function drawUnits(now) {
+  const g = inc, r = Math.max(9, grid.cs * 0.62);
+  cx.font = '700 ' + Math.round(r * 0.95) + 'px ' + getComputedStyle(document.body).fontFamily; cx.textAlign = 'center'; cx.textBaseline = 'middle';
+  for (const u of g.units) {
+    const [px, py] = unitPos(u);
+    cx.globalAlpha = u.hurt ? 0.35 : 1;
+    if (u === selected) { cx.strokeStyle = '#e2521c'; cx.lineWidth = 3; cx.beginPath(); cx.arc(px, py, r + 4, 0, TAU); cx.stroke(); }
+    if (u.heat > 1 && !u.hurt) { cx.strokeStyle = '#d8341c'; cx.lineWidth = 2.5; cx.beginPath(); cx.arc(px, py, r + 1.5, -Math.PI / 2, -Math.PI / 2 + TAU * clamp(u.heat / UTYPE[u.type].tol, 0, 1)); cx.stroke(); }
+    cx.fillStyle = '#1c2120'; cx.strokeStyle = '#f6f7f2'; cx.lineWidth = 1.5;
+    cx.beginPath();
+    if (u.type === 'engine') cx.rect(px - r, py - r * 0.8, r * 2, r * 1.6);
+    else if (u.type === 'dozer') { cx.moveTo(px, py - r); cx.lineTo(px + r, py); cx.lineTo(px, py + r); cx.lineTo(px - r, py); cx.closePath(); }
+    else cx.arc(px, py, r, 0, TAU);
+    cx.fill(); cx.stroke();
+    cx.fillStyle = '#fff'; cx.fillText(unitLabel(u.crew), px, py + 0.5);
+  }
+  cx.globalAlpha = 1; cx.textBaseline = 'alphabetic';
+}
+function drawStroke() {
+  if (!stroke || stroke.pts.length < 1) return;
+  cx.strokeStyle = act === 'drop' ? '#d9677a' : act === 'burn' ? '#d8341c' : '#e2521c';
+  cx.lineWidth = act === 'drop' ? 6 : 3; cx.setLineDash(act === 'drop' ? [] : [6, 4]); cx.lineCap = 'round';
+  cx.beginPath(); stroke.pts.forEach((p, n) => (n ? cx.lineTo(p[0], p[1]) : cx.moveTo(p[0], p[1]))); cx.stroke(); cx.setLineDash([]);
+}
+function drawStrip(now) {
+  const g = inc, x0 = area.x + 8, x1 = area.x + area.w - 56, y0 = area.y + 6, h = STRIP - 12;
+  if (x1 - x0 < 120) return;
+  cx.fillStyle = 'rgba(246,247,242,.95)'; cx.fillRect(x0, y0, x1 - x0, h); cx.strokeStyle = '#1c2120'; cx.lineWidth = 1; cx.strokeRect(x0 + 0.5, y0 + 0.5, x1 - x0 - 1, h - 1);
+  const show = SHOW_H[Math.min(3, up('weather'))], hNow = g.t / 60;
+  const slots = 11, sw = (x1 - x0) / slots, font = getComputedStyle(document.body).fontFamily;
+  for (let n = 0; n < slots; n++) {
+    const hh = 10 + n, sx = x0 + n * sw, known = hh <= hNow + show;
+    // burn index shading along the bottom of each hour
+    const bi = burnIndex(hh * 60 + 30);
+    cx.fillStyle = 'rgba(226,82,28,' + clamp((bi - 0.45) * 0.55, 0.04, 0.5) + ')'; cx.fillRect(sx + 1, y0 + h - 7, sw - 2, 6);
+    cx.fillStyle = hh < Math.floor(hNow) ? '#858b86' : '#1c2120'; cx.font = '600 10px ' + font; cx.textAlign = 'center';
+    cx.fillText(hh + ':00', sx + sw / 2, y0 + 12);
+    if (!known) { cx.fillStyle = '#b3b8b1'; cx.font = '700 13px ' + font; cx.fillText('?', sx + sw / 2, y0 + 30); continue; }
+    const d = g.fDir[n], s = g.fSpd[n], ax = sx + sw / 2, ay = y0 + 27, L = Math.min(sw * 0.34, 10);
+    cx.strokeStyle = '#1c2120'; cx.fillStyle = '#1c2120'; cx.lineWidth = 1.6;
+    cx.beginPath(); cx.moveTo(ax - Math.cos(d) * L, ay - Math.sin(d) * L); cx.lineTo(ax + Math.cos(d) * L, ay + Math.sin(d) * L); cx.stroke();
+    cx.beginPath(); cx.moveTo(ax + Math.cos(d) * (L + 2), ay + Math.sin(d) * (L + 2)); cx.lineTo(ax + Math.cos(d + 2.5) * 5 + Math.cos(d) * L, ay + Math.sin(d + 2.5) * 5 + Math.sin(d) * L); cx.lineTo(ax + Math.cos(d - 2.5) * 5 + Math.cos(d) * L, ay + Math.sin(d - 2.5) * 5 + Math.sin(d) * L); cx.closePath(); cx.fill();
+    if (sw > 34) { cx.font = '600 9.5px ' + font; cx.fillText(Math.round(s) + '', sx + sw / 2 + (sw > 50 ? 16 : 11), y0 + 30); }
+  }
+  // now marker
+  const nx = x0 + (clamp(hNow, 10, 21) - 10) * sw;
+  cx.strokeStyle = '#e2521c'; cx.lineWidth = 2; cx.beginPath(); cx.moveTo(nx, y0); cx.lineTo(nx, y0 + h); cx.stroke();
+}
+function drawBriefing(now) {
+  const g = inc; if (!g) return;
+  const [ix, iy] = cellXY(g.ign), p = 0.5 + 0.5 * Math.sin(now * 3);
+  cx.strokeStyle = '#e2521c'; cx.lineWidth = 2;
+  cx.beginPath(); cx.arc(ix, iy, grid.cs * (1.4 + p), 0, TAU); cx.stroke();
+  cx.beginPath(); cx.moveTo(ix - grid.cs * 2.6, iy); cx.lineTo(ix + grid.cs * 2.6, iy); cx.moveTo(ix, iy - grid.cs * 2.6); cx.lineTo(ix, iy + grid.cs * 2.6); cx.stroke();
+}
+
+/* ============================== deck ============================== */
+let selected = null, act = null, stroke = null;
+const ACT_TEXT = {
+  move: 'Tap where they should go.',
+  cut: 'Drag a line on the map. They will walk to its start and cut along it.',
+  burn: 'Drag the strip to burn. Light it between the fire and your line, with the wind at your back.',
+  protect: 'Tap a spot on the road near the homes. The engine will knock down fire within two cells.',
+  drop: 'Drag the drop line, up to twelve cells. It lands in eight minutes and slows fire that reaches it for hours.',
+  heli: 'Tap a spot. The bucket puts out a three by three patch.',
+};
+function buildDeck() {
+  const g = inc, wrap = $('units'); wrap.innerHTML = '';
+  g.units.forEach(u => {
+    const b = document.createElement('button');
+    b.className = 'u' + (u === selected ? ' sel' : '') + (u.hurt ? ' out' : '');
+    b.innerHTML = '<span class="mk ' + u.type + '"><i>' + unitLabel(u.crew) + '</i></span><span><span class="nm">' + u.crew.name + '</span><br><span class="st"></span></span><span class="ht"></span>';
+    b.addEventListener('click', () => { if (u.hurt) return; selectUnit(u === selected ? null : u); });
+    wrap.appendChild(b); u.el = b; u.elSt = b.querySelector('.st'); u.elHt = b.querySelector('.ht');
+  });
+  buildActs(); updateDeck();
+}
+function selectUnit(u) {
+  selected = u; act = null; stroke = null; sfxTap();
+  inc.units.forEach(x => x.el && x.el.classList.toggle('sel', x === u));
+  buildActs();
+}
+function buildActs() {
+  const a = $('acts'); a.innerHTML = '';
+  const hint = document.createElement('div'); hint.className = 'hint';
+  if (act === 'drop' || act === 'heli') {
+    hint.textContent = ACT_TEXT[act]; a.appendChild(hint);
+    const c = document.createElement('button'); c.className = 'btn sm'; c.textContent = 'Cancel'; c.addEventListener('click', () => { act = null; buildActs(); }); a.appendChild(c);
+    return;
+  }
+  if (!selected) { hint.textContent = firstHint(); a.appendChild(hint); return; }
+  const u = selected, T = UTYPE[u.type];
+  hint.textContent = act ? ACT_TEXT[act] : 'Choose what ' + u.crew.name + ' should do.';
+  a.appendChild(hint);
+  const opts = [['move', 'Move']];
+  if (T.cut) opts.push(['cut', 'Cut line']);
+  if (T.burn) opts.push(['burn', 'Backburn']);
+  if (T.protect) opts.push(['protect', 'Protect']);
+  opts.push(['stop', 'Stop']);
+  opts.forEach(([k, l]) => {
+    const b = document.createElement('button'); b.className = 'btn sm' + (act === k ? ' on' : ''); b.textContent = l;
+    b.addEventListener('click', () => {
+      if (k === 'stop') { setOrder(u, null); u.path = null; u.status = 'Standing by'; act = null; buildActs(); return; }
+      act = act === k ? null : k; buildActs(); sfxTap();
+    });
+    a.appendChild(b);
+  });
+}
+function firstHint() {
+  const g = inc; if (!g) return '';
+  if (S.calls === 0 && g.cutCells === 0) return 'Tap a crew on the map or in this list, pick Cut line, then drag a line ahead of the fire.';
+  return 'Tap a crew to give orders. Pause any time to plan.';
+}
+function updateDeck() {
+  const g = inc; if (!g) return;
+  $('clock').textContent = hhmm(g.t);
+  $('phase').textContent = phaseName(g.t) + (paused ? ', paused' : '');
+  $('sAcres').textContent = String(Math.round(countBurned(g) * 0.62));
+  $('sHomes').textContent = (g.houses.length - g.housesLost) + ' of ' + g.houses.length;
+  $('sCont').textContent = Math.round(g.containPct * 100) + '%';
+  $('pauseBtn').innerHTML = paused ? PLAY_SVG : PAUSE_SVG;
+  $('speedBtn').textContent = SPEEDS[speedI] + 'x';
+  g.units.forEach(u => {
+    if (!u.elSt) return;
+    u.elSt.textContent = u.status;
+    u.elHt.textContent = u.hurt ? 'Hurt' : u.heat > 2 ? 'Hot' : '';
+    u.el.classList.toggle('out', u.hurt);
+  });
+  const db = $('dropBtn');
+  db.textContent = 'Air tanker: ' + g.dropsLeft + ' left'; db.disabled = g.dropsLeft <= 0; db.classList.toggle('on', act === 'drop');
+  const hb = $('heliBtn');
+  if (!up('heli')) { hb.style.display = 'none'; }
+  else { hb.style.display = ''; const w = g.heliReady - g.t; hb.textContent = w > 0 ? 'Helicopter in ' + Math.ceil(w) + ' min' : 'Helicopter: ready'; hb.disabled = w > 0; hb.classList.toggle('on', act === 'heli'); }
+}
+const PAUSE_SVG = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+const PLAY_SVG = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M7 5l12 7-12 7z"/></svg>';
+function countBurned(g) { let n = 0; for (let i = 0; i < g.N; i++) if (g.state[i] === 1 || g.state[i] === 2) n++; return n; }
+$('dropBtn').addEventListener('click', () => { if (!inc || inc.dropsLeft <= 0) return; selected = null; act = act === 'drop' ? null : 'drop'; inc.units.forEach(x => x.el && x.el.classList.remove('sel')); buildActs(); updateDeck(); });
+$('heliBtn').addEventListener('click', () => { if (!inc) return; selected = null; act = act === 'heli' ? null : 'heli'; inc.units.forEach(x => x.el && x.el.classList.remove('sel')); buildActs(); updateDeck(); });
+let paused = false, speedI = 0; const SPEEDS = [1, 2, 4];
+$('pauseBtn').addEventListener('click', () => { paused = !paused; sfxTap(); updateDeck(); });
+$('speedBtn').addEventListener('click', () => { speedI = (speedI + 1) % SPEEDS.length; sfxTap(); updateDeck(); });
+
+/* ============================== input on the map ============================== */
+function cellAt(px, py) {
+  if (!inc) return -1;
+  const x = Math.floor((px - grid.x) / grid.cs), y = Math.floor((py - grid.y) / grid.cs);
+  if (x < 0 || y < 0 || x >= inc.cols || y >= inc.rows) return -1;
+  return y * inc.cols + x;
+}
+function rasterize(pts) {
+  // turn a drawn stroke into a 4-connected run of cells, so fire cannot slip through the corners
+  const out = [];
+  const push = i => { if (i >= 0 && out[out.length - 1] !== i) out.push(i); };
+  let prev = null;
+  for (const p of pts) {
+    const c = cellAt(p[0], p[1]); if (c < 0) continue;
+    if (prev === null) { push(c); prev = c; continue; }
+    let x0 = prev % inc.cols, y0 = (prev / inc.cols) | 0; const x1 = c % inc.cols, y1 = (c / inc.cols) | 0;
+    while (x0 !== x1 || y0 !== y1) {
+      if (Math.abs(x1 - x0) >= Math.abs(y1 - y0)) x0 += Math.sign(x1 - x0); else y0 += Math.sign(y1 - y0);
+      push(y0 * inc.cols + x0);
+    }
+    prev = c;
+  }
+  return out;
+}
+let downAt = null, wasPaused = false;
+cv.addEventListener('pointerdown', e => {
+  audio(); if (AC && AC.state === 'suspended') AC.resume();
+  if (mode !== 'incident' || !inc || inc.over) return;
+  const px = e.clientX, py = e.clientY;
+  if (px > area.x + area.w || py > area.y + area.h) return;
+  downAt = [px, py];
+  // tap a unit to select it
+  if (!act || act === 'move' || act === 'protect') {
+    const r = Math.max(14, grid.cs * 0.9);
+    let hit = null, hd = 1e9;
+    for (const u of inc.units) { if (u.hurt) continue; const [ux, uy] = unitPos(u), d = Math.hypot(ux - px, uy - py); if (d < r && d < hd) { hd = d; hit = u; } }
+    if (hit && hit !== selected) { selectUnit(hit); downAt = null; return; }
+  }
+  if (act === 'cut' || act === 'burn' || act === 'drop') {
+    stroke = { pts: [[px, py]] }; wasPaused = paused; paused = true;
+    try { cv.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+  }
+});
+cv.addEventListener('pointermove', e => { if (stroke) stroke.pts.push([e.clientX, e.clientY]); });
+cv.addEventListener('pointerup', e => {
+  if (mode !== 'incident' || !inc) return;
+  const px = e.clientX, py = e.clientY;
+  if (stroke) {
+    const cells = rasterize(stroke.pts); paused = wasPaused; stroke = null;
+    if (cells.length) {
+      if (act === 'drop') { callDrop(cells); act = null; buildActs(); }
+      else if (selected) { issue(selected, act, cells); act = null; buildActs(); }
+    }
+    updateDeck(); return;
+  }
+  if (!downAt || Math.hypot(px - downAt[0], py - downAt[1]) > 12) { downAt = null; return; }
+  downAt = null;
+  const c = cellAt(px, py); if (c < 0) return;
+  if (act === 'heli') { callHeli(c); act = null; buildActs(); updateDeck(); return; }
+  if (selected && (act === 'move' || act === 'protect' || !act)) {
+    issue(selected, act === 'protect' ? 'protect' : 'move', [c]); act = null; buildActs();
+  }
+});
+cv.addEventListener('pointercancel', () => { if (stroke) { paused = wasPaused; stroke = null; } downAt = null; });
+document.addEventListener('touchmove', e => {
+  let n = e.target;
+  while (n && n !== document.body) {
+    if (n.scrollHeight > n.clientHeight + 1) { const oy = getComputedStyle(n).overflowY; if (oy === 'auto' || oy === 'scroll') return; }
+    n = n.parentElement;
+  }
+  if (e.cancelable) e.preventDefault();
+}, { passive: false });
+window.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (openScreen === 'results') return;
+    if (act || selected) { act = null; stroke = null; selectUnit(null); return; }
+  }
+  if (e.key === ' ' && mode === 'incident' && (document.activeElement === document.body || !document.activeElement)) { e.preventDefault(); paused = !paused; updateDeck(); }
+});
+$('muteBtn').addEventListener('click', () => { audio(); setMuted(!S.muted); });
+
+/* ============================== incident flow ============================== */
+let currentCall = null;
+function startIncident() {
+  mode = 'incident'; selected = null; act = null; stroke = null; paused = false; speedI = 0;
+  closeScreen('station');
+  $('deck').style.display = 'flex'; $('muteBtn').style.display = 'flex';
+  layout();
+  const [cols, rows] = gridDims();
+  inc = genIncident(currentCall, cols, rows);
+  let b = 0; for (let i = 0; i < inc.N; i++) if (BURNABLE[inc.terr[i]]) b++;
+  inc.burnableStart = b;
+  // the fire has already grown a little by the time the call comes in
+  const r0 = Math.max(1, 3 - up('lookout'));
+  const ix = inc.ign % inc.cols, iy = (inc.ign / inc.cols) | 0;
+  for (let dy = -r0; dy <= r0; dy++) for (let dx = -r0; dx <= r0; dx++) { const x = ix + dx, y = iy + dy; if (x >= 0 && y >= 0 && x < inc.cols && y < inc.rows && Math.hypot(dx, dy) <= r0 + 0.3) ignite(inc, y * inc.cols + x); }
+  makeUnits(inc); fitGrid(); baseDirty = true; buildDeck();
+  const w = forecastAt(inc, 600);
+  say('Fire reported in ' + inc.reg.n + '. Wind from the ' + fromName(w.dir) + ' at ' + Math.round(w.spd) + ' km/h.');
+  if (S.calls === 0) setTimeout(() => say('Cut line ahead of the fire, between it and the homes.'), 1200);
+  if (inc.call.region === 'ridge') rec('ridge');
+  if (inc.call.region === 'canyon') rec('canyon');
+  window.TTG?.track('level_start', { level: S.calls + 1 });
+}
+function tickMinute() {
+  const g = inc;
+  // forecast error drifts slowly
+  g.errD = clamp(g.errD + (g.R() - 0.5) * 0.3 - g.errD * 0.05, -1, 1);
+  g.errS = clamp(g.errS + (g.R() - 0.5) * 0.3 - g.errS * 0.05, -1, 1);
+  spreadMinute(g);
+  airMinute(g);
+  for (const u of g.units) unitMinute(g, u);
+  const prevPhase = phaseName(g.t);
+  g.t += 1;
+  if (phaseName(g.t) !== prevPhase) say(phaseName(g.t) === 'Burn period' ? 'Burn period starting. Humidity is dropping fast.' : 'The fire is laying down for the evening.', phaseName(g.t) === 'Burn period');
+  // warn when the wind is about to swing
+  const now = forecastAt(g, g.t), soon = forecastAt(g, g.t + 45);
+  let dd = Math.abs(((soon.dir - now.dir + Math.PI) % TAU + TAU) % TAU - Math.PI);
+  if (dd > 0.6 && !g.warnedShift) { g.warnedShift = true; say('Wind shift coming. Expect it from the ' + fromName(soon.dir) + ' within the hour.', true); }
+  const front = frontAndContainment(g);
+  if (!g.burning.length || front === 0) return endIncident(true);
+  if (g.t >= 1200) return endIncident(false);
+}
+function endIncident(contained) {
+  const g = inc; if (g.over) return;
+  g.over = true; g.contained = contained;
+  const burnedOut = contained && !g.burning.length && countBurned(g) > g.burnableStart * 0.15;
+  for (const i of g.burning) { if (contained) { g.state[i] = 2; g.burnedAt[i] = g.t; } }
+  const burned = countBurned(g) + (contained ? 0 : frontAndContainment(g) * 4);
+  const burnedFrac = burned / Math.max(1, g.burnableStart);
+  const housesTotal = g.houses.length, saved = housesTotal - g.housesLost;
+  let score = 60 * (1 - clamp((burnedFrac - 0.03) * 4, 0, 1)) + 30 * (housesTotal ? saved / housesTotal : 1) + (contained ? 10 : 0) + (contained && g.t < 840 ? 5 : 0);
+  score = clamp(Math.round(score), 0, 100);
+  const grade = score >= 85 ? 'A' : score >= 72 ? 'B' : score >= 58 ? 'C' : score >= 42 ? 'D' : 'F';
+  const hurt = g.units.filter(u => u.hurt).length;
+  const recBonus = 1 + 0.02 * Object.keys(S.rec).length;
+  const pay = Math.round((1500 + score * 90) * (1 + 0.15 * (S.season - 1)) * recBonus / 10) * 10;
+  S.budget += pay; S.calls++;
+  // crews learn
+  const trainMul = [1, 1.5, 2][Math.min(2, up('training'))];
+  const lines = [];
+  for (const u of g.units) {
+    const c = u.crew;
+    if (u.hurt) { c.out = Math.max(1, 2 - up('medical')); S.seasonHurt++; lines.push({ c, xp: 0, hurt: true }); continue; }
+    const xp = Math.round((12 + score / 6 + u.cut * 0.3 + u.lit * 0.2) * trainMul);
+    const before = c.lvl; c.xp += xp;
+    while (c.lvl < XPLV.length && c.xp >= XPLV[c.lvl]) c.lvl++;
+    if (c.lvl >= 5) rec('lvl5');
+    for (let L = before + 1; L <= c.lvl; L++) if (L % 3 === 0 && !c.pick) {
+      const pool = Object.keys(TRAITS).filter(k => TRAITS[k].for.indexOf(c.type) >= 0 && c.traits.indexOf(k) < 0);
+      const R = rng(c.id * 131 + L * 17 + S.calls);
+      pool.sort(() => R() - 0.5);
+      if (pool.length) c.pick = pool.slice(0, 2);
+    }
+    lines.push({ c, xp, up: c.lvl > before ? c.lvl : 0 });
+  }
+  S.crews.forEach(c => { if (!g.units.some(u => u.crew === c) && c.out > 0) c.out--; });
+  // records
+  rec('first');
+  if (contained) rec('held');
+  if (grade === 'A') rec('gradeA');
+  if (housesTotal >= 8 && g.housesLost === 0) rec('allhomes');
+  if (contained && g.t < 840) rec('early');
+  if (g.burnCells >= 10) rec('backburn');
+  if (saved >= 12) rec('bigsave');
+  S.grades.push(grade); if (S.grades.length > 12) S.grades.shift();
+  if (S.grades.slice(-3).length === 3 && S.grades.slice(-3).every(x => x === 'A')) rec('streak');
+  window.TTG?.track(grade === 'F' ? 'level_fail' : 'level_complete', { level: S.calls, value: score });
+  // season
+  let seasonDone = false;
+  if (S.call >= CALLS_PER_SEASON) {
+    seasonDone = true; rec('season'); if (S.seasonHurt === 0) rec('safe');
+    S.season++; S.call = 1; S.seasonHurt = 0;
+    window.TTG?.track('village_levelup', { level: S.season });
+  } else S.call++;
+  S.seed = (S.seed * 1103515245 + 12345) >>> 0;
+  persist();
+  if (contained) sfxWin(); else sfxLoss();
+  showResults({ grade, score, burned, contained, burnedOut, saved, housesTotal, pay, lines, hurt, seasonDone, t: g.t });
+}
+
+/* ============================== screens ============================== */
+let openScreen = 'title';
+function showScreen(id) { openScreen = id; $(id).classList.add('show'); }
+function closeScreen(id) { $(id).classList.remove('show'); if (openScreen === id) openScreen = null; }
+let stTab = 'crews';
+function toStation() {
+  mode = 'station'; selected = null; act = null;
+  $('deck').style.display = 'none'; $('muteBtn').style.display = 'flex';
+  closeScreen('results'); closeScreen('title');
+  layout();
+  currentCall = callFor(S.season, S.call, S.seed);
+  const [cols, rows] = gridDims();
+  inc = genIncident(currentCall, cols, rows);
+  fitGrid(); baseDirty = true;
+  buildStation(); showScreen('station');
+  window.TTG?.track('shop_open');
+}
+function buildStation() {
+  const c = currentCall, reg = REGIONS[c.region];
+  $('stTitle').textContent = 'Season ' + S.season + ', call ' + S.call + ' of ' + CALLS_PER_SEASON;
+  $('stBudget').textContent = '$' + S.budget.toLocaleString('en-US');
+  const cap = 3 + up('dispatch'), ready = S.crews.filter(x => x.out <= 0 && x.send).length;
+  $('stLede').textContent = 'You can send ' + cap + ' crews to each fire. ' + Math.min(cap, ready) + ' are ready to go.';
+  const w0 = inc.fDir[0], wMax = Math.max.apply(null, inc.fSpd);
+  $('callCard').innerHTML = '<div><h3>' + reg.n + '</h3><p class="lede">' + reg.t + '</p></div>' +
+    '<button class="btn go" id="respondBtn">Respond</button>' +
+    '<div class="facts num"><div><span>Fire danger</span><b class="danger d' + c.danger + '">' + DANGER[c.danger] + '</b></div>' +
+    '<div><span>Morning wind</span><b>From the ' + fromName(w0) + '</b></div>' +
+    '<div><span>Afternoon peak</span><b>' + Math.round(wMax) + ' km/h</b></div>' +
+    '<div><span>Homes nearby</span><b>' + inc.houses.length + '</b></div></div>';
+  $('respondBtn').disabled = ready === 0;
+  $('respondBtn').addEventListener('click', () => { audio(); if (AC && AC.state === 'suspended') AC.resume(); startIncident(); });
+  document.querySelectorAll('#station .tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === stTab));
+  const body = $('stBody'); body.innerHTML = '';
+  if (stTab === 'crews') buildCrews(body); else if (stTab === 'station') buildUpgrades(body); else buildRecord(body);
+}
+function crewLine(c) {
+  const next = XPLV[c.lvl] !== undefined ? ' of ' + XPLV[c.lvl] : '';
+  return UTYPE[c.type].n + ', level ' + c.lvl + ', ' + c.xp + next + ' experience';
+}
+function buildCrews(body) {
+  S.crews.forEach(c => {
+    const row = document.createElement('div'); row.className = 'crew';
+    row.innerHTML = '<span class="mk ' + c.type + '">' + unitLabel(c) + '</span><div><div class="nm">' + c.name + '</div><div class="st num">' + crewLine(c) + '</div>' +
+      (c.out > 0 ? '<div class="st out">Injured, back in ' + c.out + ' call' + (c.out > 1 ? 's' : '') + '</div>' : '') +
+      (c.traits.length ? '<div class="tr">' + c.traits.map(t => '<i>' + TRAITS[t].n + '</i>').join('') + '</div>' : '') + '</div>';
+    const tg = document.createElement('button'); tg.className = 'tog' + (c.send ? '' : ' off'); tg.textContent = c.send ? 'Send' : 'Hold';
+    tg.addEventListener('click', () => { c.send = !c.send; persist(); buildStation(); });
+    row.appendChild(tg); body.appendChild(row);
+    if (c.pick) body.appendChild(traitPicker(c, () => buildStation()));
+  });
+  const h = document.createElement('div'); h.style.marginTop = '14px';
+  h.innerHTML = '<h4 style="font-size:15px;font-weight:800;margin-bottom:4px">Hire</h4>';
+  body.appendChild(h);
+  const hires = [['hand', 'Hand crew', 'Cuts line through anything and can light backburns.']];
+  if (S.season >= 2) hires.push(['hot', 'Hotshot crew', 'An elite hand crew. Faster at everything and tougher in the heat.']);
+  hires.push(['engine', 'Engine', 'Fast on roads. Protects homes with water.']);
+  if (up('dozer')) hires.push(['dozer', 'Dozer', 'Cuts a wide line fast on gentle ground. Cannot climb steep slopes.']);
+  hires.forEach(([t, n, d]) => {
+    const row = document.createElement('div'); row.className = 'row2';
+    row.innerHTML = '<div><h4>' + n + '</h4><p>' + d + '</p></div>';
+    const b = document.createElement('button'); b.className = 'btn buy num'; b.innerHTML = 'Hire<small>$' + UTYPE[t].cost.toLocaleString('en-US') + '</small>';
+    b.disabled = S.budget < UTYPE[t].cost || S.crews.length >= 10;
+    b.addEventListener('click', () => {
+      if (S.budget < UTYPE[t].cost) return; S.budget -= UTYPE[t].cost;
+      S.crews.push(newCrew(t, S.crews.reduce((m, c) => Math.max(m, c.id), 0) + 1));
+      if (t === 'dozer') rec('dozer'); if (t === 'hot') rec('hotshot');
+      window.TTG?.track('purchase', { level: S.crews.length, value: UTYPE[t].cost }); persist(); buildStation(); sfxTap();
+    });
+    row.appendChild(b); body.appendChild(row);
+  });
+}
+function traitPicker(c, done) {
+  const box = document.createElement('div'); box.className = 'lvup';
+  box.innerHTML = '<h4>' + c.name + ' can learn a skill</h4>';
+  const o = document.createElement('div'); o.className = 'opts';
+  c.pick.forEach(k => {
+    const b = document.createElement('button'); b.className = 'btn';
+    b.innerHTML = TRAITS[k].n + '<small>' + TRAITS[k].t + '</small>';
+    b.addEventListener('click', () => { c.traits.push(k); c.pick = null; persist(); sfxTap(); done(); });
+    o.appendChild(b);
+  });
+  box.appendChild(o); return box;
+}
+function buildUpgrades(body) {
+  UPG.forEach(u => {
+    const lv = up(u.id), max = u.cost.length, row = document.createElement('div'); row.className = 'row2';
+    row.innerHTML = '<div><h4>' + u.n + '<span class="lv num">' + (max > 1 ? 'level ' + lv + ' of ' + max : lv ? 'built' : '') + '</span></h4><p>' + u.t + '</p></div>';
+    const b = document.createElement('button'); b.className = 'btn buy num';
+    if (lv >= max) { b.textContent = 'Done'; b.disabled = true; }
+    else {
+      const cost = u.cost[lv]; b.innerHTML = (lv ? 'Upgrade' : 'Build') + '<small>$' + cost.toLocaleString('en-US') + '</small>'; b.disabled = S.budget < cost;
+      b.addEventListener('click', () => { if (S.budget < cost) return; S.budget -= cost; S.up[u.id] = lv + 1; window.TTG?.track('upgrade_bought', { level: lv + 1, value: cost }); persist(); buildStation(); sfxTap(); });
+    }
+    row.appendChild(b); body.appendChild(row);
+  });
+}
+function buildRecord(body) {
+  const n = Object.keys(S.rec).length;
+  const p = document.createElement('p'); p.className = 'lede'; p.style.marginTop = '12px';
+  p.textContent = n + ' of ' + RECS.length + ' earned. Each one adds 2% to your pay for every call. Last grades: ' + (S.grades.slice(-6).join(' ') || 'none yet') + '.';
+  body.appendChild(p);
+  const g = document.createElement('div'); g.className = 'recs';
+  RECS.forEach(r => { const e = document.createElement('div'); e.className = 'rec' + (S.rec[r.id] ? ' got' : ''); e.innerHTML = '<h4>' + r.n + '</h4><p>' + r.t + '</p>'; g.appendChild(e); });
+  body.appendChild(g);
+}
+document.querySelectorAll('#station .tabs button').forEach(b => b.addEventListener('click', () => { stTab = b.dataset.t; buildStation(); sfxTap(); }));
+function rec(id) { if (S.rec[id]) return; S.rec[id] = S.calls + 1; if (mode === 'incident') say('Service record: ' + RECS.find(r => r.id === id).n + '.'); }
+function showResults(r) {
+  mode = 'report';
+  $('rsTitle').textContent = !r.contained ? 'Still burning at nightfall' : r.burnedOut ? 'The fire burned itself out' : 'Fire contained';
+  const st = $('rsStamp'); st.textContent = r.grade; st.className = 'stamp g' + r.grade;
+  $('rsLede').textContent = r.burnedOut ? 'It ran out of fuel at ' + hhmm(r.t) + ', not out of luck.' : r.contained ? 'Contained at ' + hhmm(r.t) + '.' : 'The night crew takes over. More ground will burn before morning.';
+  const rows = [['Acres burned', Math.round(r.burned * 0.62)], ['Homes saved', r.saved + ' of ' + r.housesTotal], ['Crews hurt', r.hurt], ['Score', r.score + ' of 100'], ['Pay', '$' + r.pay.toLocaleString('en-US')]];
+  $('rsTable').innerHTML = rows.map(([a, b]) => '<div>' + a + '</div><div>' + b + '</div>').join('');
+  const cw = $('rsCrew'); cw.innerHTML = '';
+  const h = document.createElement('p'); h.className = 'lede'; h.style.marginTop = '14px';
+  h.textContent = r.lines.map(l => l.hurt ? l.c.name + ' is injured' : l.c.name + ' +' + l.xp + ' experience' + (l.up ? ', now level ' + l.up : '')).join('. ') + '.';
+  cw.appendChild(h);
+  const pickers = () => { S.crews.filter(c => c.pick).forEach(c => cw.appendChild(traitPicker(c, () => { cw.querySelectorAll('.lvup').forEach(x => x.remove()); pickers(); }))); };
+  pickers();
+  if (r.seasonDone) { const s = document.createElement('p'); s.className = 'lede'; s.style.marginTop = '10px'; s.style.color = '#1c2120'; s.style.fontWeight = '700'; s.textContent = 'That was the last call of the season. Next season runs hotter and drier.'; cw.appendChild(s); }
+  showScreen('results');
+}
+$('rsBack').addEventListener('click', () => { sfxTap(); toStation(); });
+$('playBtn').addEventListener('click', () => {
+  audio(); if (AC && AC.state === 'suspended') AC.resume();
+  S.started = true; persist(); toStation();
+});
+
+/* ============================== loop ============================== */
+const GAME_MIN = 0.4;
+let last = performance.now(), running = true, acc = 0, uiT = 0, saveT = 0, titleT = 0;
+function frame(nowMs) {
+  if (!running) return;
+  const dt = Math.min(0.05, Math.max(0, (nowMs - last) / 1000)); last = nowMs;
+  const now = nowMs / 1000;
+  if (mode === 'incident' && inc && !inc.over && openScreen === null) {
+    if (!paused && !stroke) {
+      const gm = dt * SPEEDS[speedI] / GAME_MIN;
+      for (const u of inc.units) unitMove(inc, u, gm);
+      acc += gm;
+      while (acc >= 1 && !inc.over) { acc -= 1; tickMinute(); }
+    }
+    if (crackleGain) crackleGain.gain.value = paused || S.muted ? 0 : clamp(inc.burning.length / 250, 0, 0.5);
+  } else if (mode === 'title' && inc) {
+    // the title screen shows a fire running on its own
+    titleT += dt * 3;
+    while (titleT >= 1) { titleT -= 1; spreadMinute(inc); inc.t = Math.min(1100, inc.t + 1); if (!inc.burning.length || inc.t >= 1100) titleMap(); }
+    if (crackleGain) crackleGain.gain.value = 0;
+  } else if (crackleGain) crackleGain.gain.value = 0;
+  drawMap(dt, now);
+  uiT -= dt;
+  if (mode === 'incident' && uiT <= 0) { uiT = 0.25; updateDeck(); renderRadio(); }
+  saveT -= dt; if (saveT <= 0 && S.started) { saveT = 10; persist(); }
+  requestAnimationFrame(frame);
+}
+function titleMap() {
+  const c = { season: 2, call: 1, region: ['valley', 'foothills', 'ridge'][Math.floor(Math.random() * 3)], seed: (Math.random() * 1e9) | 0, windLo: 14, windHi: 30, moist: 0.14, danger: 2 };
+  const [cols, rows] = land ? [56, 32] : [30, 48];
+  inc = genIncident(c, cols, rows);
+  ignite(inc, inc.ign); inc.t = 780; fitGrid(); baseDirty = true;
+}
+
+/* ============================== pause ============================== */
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    running = false; if (S.started) persist();
+    if (AC && AC.state === 'running') AC.suspend();
+  } else {
+    if (running) return;
+    running = true; last = performance.now();
+    if (mode === 'incident') { paused = true; updateDeck(); }
+    if (AC && AC.state === 'suspended' && !S.muted) AC.resume();
+    requestAnimationFrame(frame);
+  }
+});
+window.addEventListener('pagehide', () => { if (S.started) persist(); });
+window.addEventListener('resize', () => { layout(); });
+
+/* ============================== boot ============================== */
+// read-only view of the map for automated checks; only with ?debug in the address
+if (/[?&]debug(&|=|$)/.test(location.search)) window.__fs = () => inc && ({ mode, t: inc.t, over: inc.over, cols: inc.cols, rows: inc.rows, cs: grid.cs, gx: grid.x, gy: grid.y,
+  ign: inc.ign, town: inc.town, station: inc.station, burning: inc.burning.length, burned: countBurned(inc), lost: inc.housesLost, houses: inc.houses.length,
+  cut: inc.cutCells, lit: inc.burnCells, contain: inc.containPct, units: inc.units.map(u => ({ n: u.crew.name, cell: u.cell, status: u.status, hurt: u.hurt, heat: u.heat })) });
+setMuted(S.muted, true);
+layout(); titleMap();
+if (S.started) {
+  $('titleStat').textContent = 'Season ' + S.season + ', $' + S.budget.toLocaleString('en-US') + ' in the budget.';
+  $('playBtn').textContent = 'Back to the station';
+}
+requestAnimationFrame(t => { last = t; frame(t); });
+})();
+</script>
+</body>
+</html>

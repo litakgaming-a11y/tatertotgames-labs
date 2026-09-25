@@ -17,6 +17,7 @@ export const GAMES = Object.freeze([
   'core-drill',
   'crucible',
   'cut-loose',
+  'fire-season',
   'flip-force',
   'fold-friends',
   'freeze-frame',
