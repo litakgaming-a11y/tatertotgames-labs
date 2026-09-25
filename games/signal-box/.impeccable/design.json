@@ -1,0 +1,211 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-25T23:30:00Z",
+  "title": "Design System: Signal Box",
+  "extensions": {
+    "colorMeta": {
+      "signal-red": {
+        "role": "primary",
+        "displayName": "Signal Red",
+        "canonical": "#c62f2a",
+        "tonalRamp": [
+          "#3a0e0c",
+          "#661916",
+          "#a32521",
+          "#b22a25",
+          "#c62f2a",
+          "#d65a55",
+          "#e69490",
+          "#f6d3d1"
+        ]
+      },
+      "amber": {
+        "role": "secondary",
+        "displayName": "Describer Amber",
+        "canonical": "#f2a33a",
+        "tonalRamp": [
+          "#3d2708",
+          "#6b4510",
+          "#9a6418",
+          "#c98322",
+          "#f2a33a",
+          "#f5b867",
+          "#f8cf98",
+          "#fce9cf"
+        ]
+      },
+      "direction-blue": {
+        "role": "tertiary",
+        "displayName": "Direction Blue",
+        "canonical": "#1f4d99",
+        "tonalRamp": [
+          "#08152b",
+          "#0f264d",
+          "#163a73",
+          "#1b4586",
+          "#1f4d99",
+          "#5277b3",
+          "#8ca6cf",
+          "#cbd8ec"
+        ]
+      },
+      "enamel": {
+        "role": "neutral",
+        "displayName": "Enamel and Ink",
+        "canonical": "#eef0ea",
+        "tonalRamp": [
+          "#17211d",
+          "#2b211c",
+          "#4d5a55",
+          "#7d8782",
+          "#c5cbc3",
+          "#dfe3dc",
+          "#eef0ea",
+          "#f7f8f4"
+        ]
+      },
+      "room": {
+        "role": "neutral",
+        "displayName": "Box Green",
+        "canonical": "#1f332c",
+        "tonalRamp": [
+          "#0e1714",
+          "#172722",
+          "#1f332c",
+          "#2c463d",
+          "#3f5f54",
+          "#c9d3cd",
+          "#d9e2dc",
+          "#e3ebe6"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "nameboard": {
+        "displayName": "Nameboard",
+        "purpose": "Station and line names on enamel signs."
+      },
+      "clock": {
+        "displayName": "Clock",
+        "purpose": "The signal box clock and the pulls count."
+      },
+      "headcode": {
+        "displayName": "Headcode",
+        "purpose": "Train describer berths and timetable times."
+      }
+    },
+    "shadows": [
+      {
+        "name": "plate",
+        "value": "rgba(0,0,0,.28) offset 2px 4px under the enamel plate",
+        "purpose": "The diagram hung on the wall."
+      }
+    ],
+    "motion": [
+      {
+        "name": "press",
+        "value": "0.1s ease-out background and 1px drop",
+        "purpose": "A button inverting to ink when pressed."
+      },
+      {
+        "name": "lever",
+        "value": "exponential approach, rate 14 per second",
+        "purpose": "A lever swinging to its new position."
+      },
+      {
+        "name": "train",
+        "value": "linear glide over one clock minute (0.62s, a third of that when fast)",
+        "purpose": "A train moving one section on the diagram."
+      },
+      {
+        "name": "locked",
+        "value": "sine shake decaying over 0.35s",
+        "purpose": "A lever the frame will not release."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "landscape",
+        "value": "width > 1.05 x height",
+        "purpose": "Diagram left, timetable column right, frame along the bottom."
+      },
+      {
+        "name": "short",
+        "value": "max-height 520px",
+        "purpose": "Tighter controls on landscape phones."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Button",
+      "kind": "button",
+      "refersTo": "button",
+      "description": "Enamel button with an ink border and Gill Sans lettering; inverts when pressed, hatched when disabled.",
+      "html": "<button class=\"ds-btn\">Back</button> <button class=\"ds-btn\" disabled>Step</button>",
+      "css": ".ds-btn { min-height: 44px; padding: 0 16px; border: 2px solid #17211d; border-radius: 6px; background: #eef0ea; color: #17211d; font: 600 16px 'Gill Sans', 'Gill Sans MT', 'Segoe UI', system-ui, sans-serif; cursor: pointer; } .ds-btn:hover:not(:disabled) { background: #f7f8f4; } .ds-btn:active:not(:disabled) { background: #17211d; color: #eef0ea; transform: translateY(1px); } .ds-btn:disabled { color: #7d8782; border-color: #c5cbc3; background: repeating-linear-gradient(135deg, rgba(23,33,29,.08) 0 1px, transparent 1px 5px), #dfe3dc; cursor: default; }"
+    },
+    {
+      "name": "Go button",
+      "kind": "button",
+      "refersTo": "button-go",
+      "description": "The one signal red action on a screen.",
+      "html": "<button class=\"ds-go\">Open the box</button>",
+      "css": ".ds-go { min-height: 52px; padding: 0 30px; border: 2px solid #c62f2a; border-radius: 6px; background: #c62f2a; color: #fff; font: 600 20px 'Gill Sans', 'Gill Sans MT', 'Segoe UI', system-ui, sans-serif; cursor: pointer; } .ds-go:hover { background: #b22a25; } .ds-go:active { background: #a32521; border-color: #a32521; }"
+    },
+    {
+      "name": "Nameboard",
+      "kind": "badge",
+      "refersTo": "nameboard",
+      "description": "An enamel station sign in the line's colour with a white inner border and ink outline.",
+      "html": "<span class=\"ds-board\">Pant Glas</span>",
+      "css": ".ds-board { display: inline-block; padding: 2px 12px 4px; background: #1e5b3c; color: #fff; border: 3px solid #fff; outline: 2px solid #17211d; border-radius: 8px; font: 600 18px 'Gill Sans', 'Gill Sans MT', 'Segoe UI', system-ui, sans-serif; letter-spacing: .01em; }"
+    },
+    {
+      "name": "Timetable row",
+      "kind": "list-item",
+      "refersTo": "timetable-row",
+      "description": "A train: describer berth, destination and calls, what it is doing, and its due time.",
+      "html": "<div class=\"ds-tr\"><span class=\"ds-hc\">1E</span><span class=\"ds-to\">to Hartfield, calls at Pant Glas<small>At signal 2</small></span><span class=\"ds-tm\">06:24<small>due</small></span></div>",
+      "css": ".ds-tr { display: grid; grid-template-columns: 44px 1fr auto; gap: 8px; align-items: center; background: #eef0ea; border-radius: 5px; padding: 5px 8px; font: 600 13.5px 'Segoe UI', system-ui, sans-serif; color: #17211d; } .ds-hc { font: 700 15px Consolas, Menlo, monospace; background: #101412; color: #f2a33a; border-radius: 3px; text-align: center; } .ds-to small, .ds-tm small { display: block; font-weight: 400; font-size: 12px; color: #4d5a55; } .ds-tm { font: 13px Consolas, Menlo, monospace; text-align: right; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Box",
+    "overview": "Signal Box is the inside of a railway signal box: an enamel track diagram on the wall, a painted lever frame on the floor, and trains shown as amber train describer berths.",
+    "keyCharacteristics": [
+      "Enamel diagram in ink with red semaphore arms",
+      "One painted lever per job, with brass plates",
+      "Amber for trains and time",
+      "White core for a road that is set",
+      "Line nameboards in regional colours"
+    ],
+    "rules": [
+      {
+        "name": "A colour is a job",
+        "body": "Red for signals, black for points, blue for direction, amber for trains and time.",
+        "section": "colors"
+      },
+      {
+        "name": "Route set is white light",
+        "body": "A signalled or held road shows a white core down the track.",
+        "section": "colors"
+      },
+      {
+        "name": "Flat enamel",
+        "body": "Only the enamel plate casts a shadow; panels are ink rules.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Keep every colour to its job",
+      "Explain every locked lever in one sentence",
+      "Write times as a working timetable does"
+    ],
+    "donts": [
+      "No neon route lines or glows",
+      "No cartoon trains",
+      "No emoji or glyph icons"
+    ]
+  }
+}

@@ -116,7 +116,7 @@ It also makes Esc close the open menu (Design 2.6, a SHOULD), without cancelling
 
 ## 4. Compliance matrix
 
-✅ means verified by the build validator or the QA run on all 41 bundles. 👤 means a person has to check it.
+✅ means verified by the build validator or the QA run on all 42 bundles. 👤 means a person has to check it.
 
 | Requirement | Status |
 |---|---|
@@ -135,7 +135,7 @@ It also makes Esc close the open menu (Design 2.6, a SHOULD), without cancelling
 | Design 1.1, 1.2: playable at every aspect ratio, or letterboxed | ✅ Layouts adapt from 9:32 to 32:9 · 👤 play each game through once in landscape |
 | Design 1.3: no orientation lock | ✅ |
 | Design 1.4: state survives a resize | ✅ QA resizes mid-game five times with no errors |
-| Design 2.1, 2.2: touch and mouse for every interaction | ✅ 35 games use pointer events; the Kinfold probes, Overwind and Rabble use separate mouse and touch handlers · 👤 confirm on a phone |
+| Design 2.1, 2.2: touch and mouse for every interaction | ✅ 36 games use pointer events; the Kinfold probes, Overwind and Rabble use separate mouse and touch handlers · 👤 confirm on a phone |
 | Design 2.5: keyboard for directional input (SHOULD) | Not supported. These are one-touch games. |
 | Design 2.6, 2.7: Esc closes dialogs (SHOULD); never `preventDefault` on Esc | ✅ |
 | Design 3.1: crisp text and graphics at every density | ✅ Canvases scale with `devicePixelRatio` · 👤 check on a 3× phone |
@@ -166,7 +166,7 @@ Publisher and developer are both "TaterTot Games".
 
 Each listing also needs:
 
-- **Thumbnails at 1:1, 5:7 and 16:9.** They're ready for all 41 games: `thumb-1x1.png`,
+- **Thumbnails at 1:1, 5:7 and 16:9.** They're ready for all 42 games: `thumb-1x1.png`,
   `thumb-5x7.png` and `key-art-16x9.png` in `dist/submission/<slug>/`. None has text or a logo.
   Don't upload `title-art-16x9.png` to YouTube.
 - **A 16:9 preview video.** Record real play in the dev bundle at 1920×1080: serve the repo,
@@ -181,7 +181,7 @@ A rejection costs a review cycle, so lead with the strongest, most distinct game
 Hustle, Sandfall, Tippy Ship, Cut Loose, Return Fire, Siege Pile. Each has a clear one-touch
 hook, a meta loop and a distinct mechanic.
 
-**Tier B: after Tier A passes.** The rest of waves 1–7, plus the four incremental games (Core Drill, Tater Line, Comet Garden and Clockwork Sky) the strategy game Fire Season the casual games Tide Pool and Kiln & Glaze, and the arcade game Pinball Almanac.
+**Tier B: after Tier A passes.** The rest of waves 1–7, plus the four incremental games (Core Drill, Tater Line, Comet Garden and Clockwork Sky) the strategy game Fire Season the casual games Tide Pool and Kiln & Glaze, the arcade game Pinball Almanac, and the puzzle game Signal Box.
 
 **Hold. Don't submit yet:**
 

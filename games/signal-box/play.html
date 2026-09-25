@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Signal Box | TaterTot Games</title>
+<meta name="theme-color" content="#1f332c">
+<link rel="icon" href="data:,">
+<script src="/analytics.js" defer></script>
+<style>
+  :root {
+    --room: #1f332c; --room2: #172722; --floor: #2b211c; --bed: #1a1411;
+    --enamel: #eef0ea; --enamel2: #dfe3dc; --rule: #c5cbc3; --ink: #17211d; --ink2: #4d5a55; --faint: #7d8782;
+    --red: #c62f2a; --red-press: #a32521; --blue: #1f4d99; --amber: #f2a33a; --brass: #b8963f; --steel: #c7ccce;
+    --l1: #7b2334; --l2: #1f3f74; --l3: #1e5b3c; --l4: #5d3a24; --l5: #b4521a;
+    --sign: "Gill Sans", "Gill Sans MT", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+    --sans: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: Consolas, "SF Mono", Menlo, "DejaVu Sans Mono", "Roboto Mono", monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--room); touch-action: none; overscroll-behavior: none; position: fixed; inset: 0; }
+  body { font-family: var(--sans); color: var(--ink); font-size: 14px; line-height: 1.4; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  ::selection { background: var(--red); color: #fff; }
+  button { font-family: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  button:focus-visible, a:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+  canvas { display: block; touch-action: none; }
+  .num { font-variant-numeric: tabular-nums lining-nums; }
+
+  .btn { min-height: 44px; padding: 0 16px; border: 2px solid var(--ink); border-radius: 6px; font-family: var(--sign); font-size: 16px; font-weight: 600;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: var(--enamel); color: var(--ink); transition: background-color .1s ease-out, transform .1s ease-out; white-space: nowrap; }
+  .btn:hover:not(:disabled) { background: #f7f8f4; }
+  .btn:active:not(:disabled) { background: var(--ink); color: var(--enamel); transform: translateY(1px); }
+  .btn:disabled { color: var(--faint); border-color: var(--rule); background: repeating-linear-gradient(135deg, rgba(23,33,29,.08) 0 1px, transparent 1px 5px), var(--enamel2); cursor: default; }
+  .btn.go { background: var(--red); border-color: var(--red); color: #fff; }
+  .btn.go:hover:not(:disabled) { background: #b22a25; }
+  .btn.go:active:not(:disabled) { background: var(--red-press); border-color: var(--red-press); }
+  .btn.sm { min-height: 36px; padding: 0 12px; font-size: 15px; }
+  .btn.icon { width: 44px; padding: 0; }
+  .btn svg { width: 20px; height: 20px; flex: none; }
+  .btn.icon.on { background: var(--ink); color: var(--enamel); }
+
+  .screen { position: fixed; inset: 0; display: none; z-index: 10; }
+  .screen.show { display: flex; }
+  .scrim { background: rgba(15, 24, 21, .62); align-items: center; justify-content: center; padding: 14px; z-index: 20; }
+  .panel { width: min(420px, 100%); max-height: 100%; overflow-y: auto; overscroll-behavior: contain; background: var(--enamel); border: 2px solid var(--ink); border-radius: 8px; padding: 22px 20px 20px; text-align: center; touch-action: pan-y; }
+  .panel h2 { font-family: var(--sign); font-size: 26px; font-weight: 700; line-height: 1.1; }
+  .panel p { margin-top: 10px; color: var(--ink2); }
+  .panel .act { margin-top: 18px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .stars { margin-top: 14px; display: flex; gap: 8px; justify-content: center; }
+  .stars svg { width: 34px; height: 34px; }
+  .big { font-family: var(--mono); font-size: 18px; margin-top: 8px; color: var(--ink); }
+
+  /* the nameboard: an enamel station sign */
+  .board { display: inline-block; background: var(--l1); color: #fff; border: 3px solid #fff; outline: 2px solid var(--ink); border-radius: 8px; font-family: var(--sign); font-weight: 600; letter-spacing: .01em; }
+
+  /* title */
+  #title { flex-direction: column; justify-content: space-between; align-items: center; text-align: center; padding: max(5vh, 18px) 16px 0; pointer-events: none; }
+  #title > * { pointer-events: auto; }
+  #tcv { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 1; }
+  #title h1 { font-size: clamp(38px, min(11vw, 10vh), 84px); line-height: 1; padding: .16em .5em .2em; }
+  #title .tag { margin-top: 12px; font-size: clamp(14px, 3.6vw, 17px); font-weight: 600; color: #d9e2dc; max-width: 30em; }
+  #tgo { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  #tgo .btn.go { min-height: 52px; padding: 0 30px; font-size: 20px; }
+  #tstat { font-size: 13px; color: #d9e2dc; font-weight: 600; min-height: 18px; }
+  #badge { color: #d9e2dc; font-size: 13px; font-weight: 600; text-decoration: none; border-bottom: 2px solid var(--amber); padding: 6px 2px 2px; }
+
+  /* the lines */
+  #lines { flex-direction: column; background: var(--room); }
+  .top { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--room2); border-bottom: 2px solid #0e1714; }
+  .top .grow { flex: 1 1 auto; min-width: 0; }
+  .top h2 { font-family: var(--sign); font-size: 20px; font-weight: 600; color: #fff; }
+  .top .meta { font-size: 13px; color: #c9d3cd; font-weight: 600; }
+  #tabs { flex: 0 0 auto; display: flex; gap: 6px; padding: 10px 10px 0; overflow-x: auto; touch-action: pan-x; scrollbar-width: none; }
+  #tabs::-webkit-scrollbar { display: none; }
+  #tabs button { flex: 0 0 auto; min-height: 40px; padding: 0 12px; border-radius: 6px 6px 0 0; font-family: var(--sign); font-weight: 600; font-size: 15px; color: #fff; opacity: .72; display: flex; align-items: center; gap: 8px; }
+  #tabs button .chip { width: 12px; height: 12px; border-radius: 3px; border: 2px solid #fff; }
+  #tabs button.on { opacity: 1; background: var(--enamel); color: var(--ink); }
+  #lineBody { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; background: var(--enamel); margin: 0 10px 10px; border-radius: 0 6px 6px 6px; padding: 14px; }
+  #lineHead .board { font-size: 22px; padding: 4px 14px 6px; }
+  #lineIdea { margin-top: 10px; color: var(--ink2); max-width: 40em; }
+  #lineLock { margin-top: 10px; font-weight: 600; color: var(--ink); }
+  #stations { margin-top: 12px; display: grid; gap: 6px; }
+  body.land #stations { grid-template-columns: 1fr 1fr; column-gap: 12px; }
+  .st { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; align-items: center; gap: 10px; min-height: 52px; padding: 6px 10px; border: 2px solid var(--ink); border-radius: 6px; background: #f7f8f4; text-align: left; }
+  .st:hover:not(:disabled) { background: #fff; }
+  .st:active:not(:disabled) { background: var(--enamel2); }
+  .st .n { font-family: var(--mono); font-size: 14px; color: var(--ink2); }
+  .st .nm { font-family: var(--sign); font-size: 17px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .st .sub { display: block; font-family: var(--sans); font-size: 12px; font-weight: 400; color: var(--ink2); }
+  .st .ss { display: flex; gap: 2px; }
+  .st .ss svg { width: 18px; height: 18px; }
+  .st:disabled { border-color: var(--rule); background: repeating-linear-gradient(135deg, rgba(23,33,29,.07) 0 1px, transparent 1px 5px), var(--enamel2); color: var(--faint); cursor: default; }
+  .st:disabled .n, .st:disabled .sub { color: var(--faint); }
+
+  /* the box */
+  #game { display: none; background: var(--room); }
+  #game.show { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto auto auto; }
+  body.land #game.show { grid-template-columns: minmax(0, 1fr) minmax(260px, 34%); grid-template-rows: auto minmax(0, 1fr) auto; }
+  #gTop { grid-column: 1 / -1; }
+  #gTop .board { font-size: 18px; padding: 2px 12px 4px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #gLine { font-size: 12px; color: #c9d3cd; font-weight: 600; margin-top: 2px; }
+  #muteBtn { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border: 2px solid #0e1714; border-radius: 6px; background: var(--enamel); color: var(--ink); flex: none; }
+  #muteBtn svg { width: 20px; height: 20px; }
+  #muteBtn:active { background: var(--ink); color: var(--enamel); }
+  #dWrap { position: relative; min-height: 0; }
+  #dcv { position: absolute; inset: 0; width: 100%; height: 100%; cursor: grab; }
+  #side { display: flex; flex-direction: column; min-height: 0; }
+  body.land #side { grid-row: 2; grid-column: 2; border-left: 2px solid #0e1714; background: var(--room2); }
+  body.port #side { display: contents; }
+  #note { flex: none; padding: 8px 12px; font-size: 14px; color: #e3ebe6; min-height: 44px; }
+  #note b { color: #fff; }
+  #note.warn { color: #fff; }
+  #note.warn b { color: var(--amber); }
+  #tt { overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; padding: 0 10px 6px; display: grid; gap: 4px; align-content: start; }
+  body.port #tt { max-height: 22vh; }
+  body.land #tt { flex: 1 1 auto; min-height: 0; }
+  .tr { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 8px; align-items: center; background: var(--enamel); border-radius: 5px; padding: 5px 8px; min-height: 40px; }
+  .tr .hc { font-family: var(--mono); font-weight: 700; font-size: 15px; background: #101412; color: var(--amber); border-radius: 3px; text-align: center; padding: 2px 0; }
+  .tr .to { font-size: 13.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tr .stt { display: block; font-size: 12px; font-weight: 400; color: var(--ink2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tr .tm { font-family: var(--mono); font-size: 13px; text-align: right; color: var(--ink); }
+  .tr .tm small { display: block; font-size: 11px; color: var(--ink2); }
+  .tr.in { background: var(--enamel2); }
+  .tr.in .hc { color: #8a9a92; }
+  .tr.late .tm { color: var(--red); }
+  #ctl { display: flex; align-items: center; gap: 8px; padding: 8px 10px; flex-wrap: nowrap; }
+  #clock { font-family: var(--mono); font-size: 20px; font-weight: 700; color: var(--amber); background: #101412; border-radius: 5px; padding: 6px 8px; min-width: 76px; text-align: center; }
+  #pulls { font-size: 12.5px; color: #e3ebe6; font-weight: 600; line-height: 1.2; min-width: 60px; }
+  #pulls b { display: block; font-family: var(--mono); font-size: 17px; color: #fff; }
+  #ctl .gap { flex: 1 1 auto; }
+  body.land #ctl { flex-wrap: wrap; row-gap: 8px; }
+  body.land #ctl .gap { flex-basis: 100%; height: 0; }
+  body.land #runBtn { flex: 1 1 auto; }
+  #runBtn { min-width: 84px; }
+  #fcv { grid-column: 1 / -1; width: 100%; height: clamp(118px, 24vh, 210px); }
+  body.land #fcv { height: clamp(92px, 25vh, 176px); }
+  @media (max-width: 379px) { #ctl { flex-wrap: wrap; row-gap: 8px; } #ctl .gap { flex-basis: 100%; height: 0; } #runBtn { flex: 1 1 auto; } }
+  @media (max-height: 520px) { .btn { min-height: 38px; } #muteBtn { width: 38px; height: 38px; } #clock { font-size: 17px; padding: 4px 6px; } #note { min-height: 0; padding: 4px 10px; } .top { padding: 5px 8px; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body class="port">
+<canvas id="tcv"></canvas>
+
+<div id="title" class="screen show">
+  <div>
+    <h1 class="board">Signal Box</h1>
+    <p class="tag">Set the points, clear the signals, and bring every train in on time.</p>
+  </div>
+  <div id="tgo">
+    <button class="btn go" id="playBtn">Open the box</button>
+    <div id="tstat" class="num"></div>
+    <a id="badge" href="https://tatertotgames.com">tatertotgames.com</a>
+  </div>
+</div>
+
+<div id="lines" class="screen">
+  <div class="top">
+    <button class="btn sm" id="linesBack">Back</button>
+    <div class="grow"><h2>The lines</h2></div>
+    <div class="meta num" id="starCount"></div>
+  </div>
+  <div id="tabs" role="tablist"></div>
+  <div id="lineBody">
+    <div id="lineHead"><span class="board" id="lineBoard"></span></div>
+    <p id="lineIdea"></p>
+    <p id="lineLock"></p>
+    <div id="stations"></div>
+  </div>
+</div>
+
+<div id="game" class="screen">
+  <div class="top" id="gTop">
+    <button class="btn sm" id="gameBack">Back</button>
+    <div class="grow"><span class="board" id="gBoard"></span><div id="gLine"></div></div>
+    <button id="muteBtn" aria-label="Sound on or off">
+      <svg id="icoOn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6"/><path d="M18 6.5a7.8 7.8 0 0 1 0 11"/></svg>
+      <svg id="icoOff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" style="display:none"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
+    </button>
+  </div>
+  <div id="dWrap"><canvas id="dcv"></canvas></div>
+  <div id="side">
+    <div id="note"></div>
+    <div id="tt"></div>
+    <div id="ctl">
+      <div id="clock" class="num">06:00</div>
+      <div id="pulls"></div>
+      <span class="gap"></span>
+      <button class="btn icon" id="stepBtn" aria-label="Step one minute"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5.5v13l9-6.5z"/><rect x="16.5" y="5.5" width="2.6" height="13" rx="1"/></svg></button>
+      <button class="btn icon" id="fastBtn" aria-label="Run faster"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.5 6v12l8-6zM12.5 6v12l8-6z"/></svg></button>
+      <button class="btn icon" id="resetBtn" aria-label="Start the puzzle again"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12a7.5 7.5 0 1 0 2.4-5.5"/><path d="M4.5 4v4.5H9"/></svg></button>
+      <button class="btn go" id="runBtn">Start</button>
+    </div>
+  </div>
+  <canvas id="fcv"></canvas>
+</div>
+
+<div id="done" class="screen scrim">
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="doneH">
+    <h2 id="doneH"></h2>
+    <p id="doneP"></p>
+    <div class="stars" id="doneStars"></div>
+    <div class="big num" id="doneN"></div>
+    <div class="act" id="doneAct"></div>
+  </div>
+</div>
+
+<div id="notice" class="screen scrim">
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="noticeH">
+    <h2 id="noticeH"></h2>
+    <p id="noticeP"></p>
+    <div class="act"><button class="btn go" id="noticeOk">Understood</button></div>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+/* ============================== the railway: parse, route, tick ============================== */
+const DIRS = { W: [-1, 0], E: [1, 0], NW: [-1, -1], NE: [1, -1], SW: [-1, 1], SE: [1, 1] };
+const OPP = { W: 'E', E: 'W', NW: 'SE', SE: 'NW', NE: 'SW', SW: 'NE' };
+const ACC = { '-': ['W', 'E'], '~': ['W', 'E'], '/': ['SW', 'NE'], '\\': ['NW', 'SE'], '>': ['W', 'E'], '<': ['W', 'E'], ')': ['W', 'E'], '(': ['W', 'E'] };
+const ALLD = Object.keys(DIRS);
+function accOf(c) { if (ACC[c]) return ACC[c]; if (/[A-Z]/.test(c)) return ['W', 'E']; if (/[a-z+*]/.test(c)) return ALLD; return null; }
+function dirOf(dx, dy) { for (const k in DIRS) if (DIRS[k][0] === dx && DIRS[k][1] === dy) return k; return null; }
+
+function build(L, li) {
+  const rows = L.map.replace(/^\n+/, '').replace(/\s+$/, '').split('\n');
+  const gh = rows.length, gw = Math.max(...rows.map(r => r.length));
+  const at = (x, y) => (y >= 0 && y < gh && x >= 0 && x < rows[y].length) ? rows[y][x] : ' ';
+  const idOf = (x, y) => y * gw + x;
+  const cells = new Map();
+  for (let y = 0; y < gh; y++) for (let x = 0; x < gw; x++) { const c = at(x, y); if (accOf(c)) cells.set(idOf(x, y), { id: idOf(x, y), x, y, ch: c, nb: {}, east: [], west: [] }); }
+  for (const C of cells.values()) for (const d of accOf(C.ch)) {
+    const [dx, dy] = DIRS[d], o = cells.get(idOf(C.x + dx, C.y + dy)); if (!o || o.x !== C.x + dx) continue;
+    if (accOf(o.ch).includes(OPP[d])) { C.nb[d] = o.id; (dx > 0 ? C.east : C.west).push(o.id); }
+  }
+  // a diagonal runs into a straight track that has nothing else on that side: a curve
+  for (const C of cells.values()) if (C.ch === '/' || C.ch === '\\') for (const d of accOf(C.ch)) {
+    if (C.nb[d] !== undefined) continue;
+    const [dx, dy] = DIRS[d], o = cells.get(idOf(C.x + dx, C.y + dy)); if (!o || o.x !== C.x + dx) continue;
+    const oa = accOf(o.ch); if (oa.length !== 2 || !oa.includes('W')) continue;
+    const oside = dx > 0 ? o.west : o.east; if (oside.length) continue;
+    C.nb[d] = o.id; (dx > 0 ? C.east : C.west).push(o.id);
+    o.nb[OPP[d]] = C.id; oside.push(C.id);
+  }
+  const W = { name: L.n, li, gw, gh, cells, idOf, levers: [], lock: li >= 1, places: {}, ports: {}, sections: [], trains: [], names: L.names || {}, rows };
+  const bad = m => { throw new Error((L.n || '?') + ': ' + m); };
+  const groups = {};
+  for (const C of cells.values()) {
+    const lo = /[a-z*]/.test(C.ch);
+    if (C.east.length > 2 || C.west.length > 2) bad('too many links at ' + C.x + ',' + C.y);
+    if (lo) {
+      if (!((C.east.length === 2 && C.west.length === 1) || (C.east.length === 1 && C.west.length === 2))) bad('points ' + C.ch + ' at ' + C.x + ',' + C.y + ' need 1+2 links');
+      const toeSide = C.west.length === 1 ? -1 : 1, legs = toeSide < 0 ? C.east : C.west, toe = toeSide < 0 ? C.west[0] : C.east[0];
+      const straight = legs.find(id => cells.get(id).y === C.y);
+      const normal = straight !== undefined ? straight : legs.slice().sort((a, b) => cells.get(a).y - cells.get(b).y)[0];
+      C.pts = { toeSide, toe, legs: [normal, legs.find(id => id !== normal)], lever: -1, spring: C.ch === '*' };
+      if (C.ch !== '*') (groups[C.ch] = groups[C.ch] || []).push(C.id);
+    } else if (C.ch === '+') {
+      C.dia = true;
+    } else if (C.east.length > 1 || C.west.length > 1) bad('split without points at ' + C.x + ',' + C.y);
+    if ('><)('.includes(C.ch)) C.sig = { h: (C.ch === '>' || C.ch === ')') ? 1 : -1, shunt: C.ch === ')' || C.ch === '(', lever: -1 };
+    if (/[A-Z]/.test(C.ch)) { C.place = C.ch; (W.places[C.ch] = W.places[C.ch] || []).push(C.id); }
+    if (!C.east.length && C.x === gw - 1) { C.port = 1; } else if (!C.west.length && C.x === 0) { C.port = -1; }
+    if (C.port) { if (!C.place) bad('open end without a name at ' + C.x + ',' + C.y); W.ports[C.place] = C.id; }
+    C.dead = !C.port && (!C.east.length || !C.west.length);
+  }
+  // single-line sections: runs of ~
+  const seen = new Set();
+  for (const C of cells.values()) if (C.ch === '~' && !seen.has(C.id)) {
+    const sec = new Set(), st = [C.id];
+    while (st.length) { const id = st.pop(); if (seen.has(id)) continue; const D = cells.get(id); if (D.ch !== '~') continue; seen.add(id); sec.add(id); st.push(...D.east, ...D.west); }
+    W.sections.push({ cells: sec, x: Math.min(...[...sec].map(id => cells.get(id).x)), lever: -1 });
+  }
+  // levers, numbered left to right the way the frame is laid out
+  const lv = [];
+  for (const C of cells.values()) if (C.sig) lv.push({ kind: 'sig', cells: [C.id], x: C.x + (C.sig.h < 0 ? 0.4 : 0), y: C.y, h: C.sig.h, shunt: C.sig.shunt });
+  for (const k in groups) { const xs = groups[k].map(id => cells.get(id)); lv.push({ kind: 'pts', cells: groups[k], x: Math.min(...xs.map(c => c.x)) + 0.2, y: Math.min(...xs.map(c => c.y)), key: k }); }
+  W.sections.forEach((s, i) => lv.push({ kind: 'dir', cells: [...s.cells], x: s.x + 0.1, y: cells.get([...s.cells][0]).y, sec: i }));
+  lv.sort((a, b) => a.x - b.x || a.y - b.y);
+  lv.forEach((v, i) => { v.n = i + 1; if (v.kind === 'sig') cells.get(v.cells[0]).sig.lever = i; else if (v.kind === 'pts') v.cells.forEach(id => { cells.get(id).pts.lever = i; }); else W.sections[v.sec].lever = i; });
+  W.levers = lv;
+  if (lv.length > 12) bad('too many levers');
+  for (const T of L.trains) {
+    const [code, from, t0, stops, due] = T;
+    const pl = from[0], hs = from[1];
+    let start, h;
+    if (W.ports[pl] !== undefined) { start = W.ports[pl]; h = -cells.get(start).port; }
+    else { if (!W.places[pl]) bad('no place ' + pl); h = hs === '<' ? -1 : 1; const ids = W.places[pl].map(id => cells.get(id)).sort((a, b) => (a.x - b.x) * h); start = ids[ids.length - 1].id; }
+    const stages = stops.trim().split(/\s+/).map(s => ({ p: s[0], rev: s.includes('!') }));
+    stages.forEach(s => { if (!W.places[s.p]) bad(code + ' goes to missing place ' + s.p); });
+    W.trains.push({ code, start, h, at: t0, stages, due: due || 0, slow: code[0] === '6' });
+  }
+  W.tmax = L.tmax || Math.max(Math.max(...W.trains.map(t => t.due || 0)) + 30, Math.max(...W.trains.map(t => t.at)) + 70);
+  W.rc = new Map();
+  return W;
+}
+
+function nextOf(W, lv, c, h, f) {
+  const C = W.cells.get(c), side = h > 0 ? C.east : C.west;
+  if (!side.length) return -1;
+  if (C.pts) {
+    const P = C.pts;
+    if (P.spring) {
+      // sprung points keep a facing train to its left and let a trailing one through
+      if (P.toeSide === h) return P.toe;
+      const [a, b] = P.legs.map(id => W.cells.get(id));
+      return (h > 0) === (a.y < b.y) ? a.id : b.id;
+    }
+    const set = P.legs[lv[P.lever] ? 1 : 0];
+    if (P.toeSide !== h) return set;
+    if (f >= 0 && f !== set) return -2;
+    return P.toe;
+  }
+  if (C.dia) {
+    if (f < 0) return side[0];
+    const F = W.cells.get(f), d = dirOf(C.x - F.x, C.y - F.y), n = C.nb[d];
+    return n === undefined ? -1 : n;
+  }
+  return side[0];
+}
+function routeOf(W, lv, li) {
+  const V = W.levers[li];
+  let key = li + ':'; for (let i = 0; i < lv.length; i++) if (W.levers[i].kind === 'pts') key += lv[i];
+  if (W.rc.has(key)) return W.rc.get(key);
+  let c = V.cells[0], f = -1; const cells = [], edges = [];
+  let r = { cells, edges };
+  for (let i = 0; i < 300; i++) {
+    const n = nextOf(W, lv, c, V.h, f);
+    if (n === -2) { r = null; break; }
+    if (n === -1) break;
+    edges.push(c < n ? c * 100000 + n : n * 100000 + c); cells.push(n);
+    const N = W.cells.get(n);
+    if (N.sig && N.sig.h === V.h) break;
+    f = c; c = n;
+  }
+  W.rc.set(key, r);
+  return r;
+}
+function fresh(W) {
+  const s = { t: 0, lv: W.levers.map(() => 0), pulls: 0, tr: W.trains.map(T => ({ c: -1, h: T.h, f: -1, s: 0, dw: 0, rv: 0, st: 0, hold: [], arr: -1 })), fail: null, won: false, ev: [] };
+  enter(W, s);
+  return s;
+}
+function clone(s) { return { t: s.t, lv: s.lv.slice(), pulls: s.pulls, tr: s.tr.map(o => ({ c: o.c, h: o.h, f: o.f, s: o.s, dw: o.dw, rv: o.rv, st: o.st, hold: o.hold.slice(), arr: o.arr })), fail: s.fail, won: s.won, ev: [] }; }
+function keyOf(s) { let k = s.t + '|' + s.lv.join(''); for (const o of s.tr) k += '|' + o.st + ',' + o.c + ',' + o.h + ',' + o.f + ',' + o.s + ',' + o.dw + ',' + o.rv + ',' + o.hold.join('.'); return k; }
+function occupant(s, c) { for (let k = 0; k < s.tr.length; k++) { const o = s.tr[k]; if ((o.st === 1 || o.st === 2) && o.c === c) return k; } return -1; }
+
+// the line from the edge to the first signal, which an arriving train needs clear of anything coming the other way
+function approachOf(W, lv, T) {
+  const out = [T.start];
+  let c = T.start, f = -1;
+  for (let i = 0; i < 40; i++) {
+    const C = W.cells.get(c);
+    if (i > 0 && C.sig && C.sig.h === T.h) break;
+    const n = nextOf(W, lv, c, T.h, f);
+    if (n === -2) return null;
+    if (n < 0) break;
+    out.push(n); f = c; c = n;
+  }
+  return out;
+}
+function accepted(W, s, T) {
+  const cells = W.cells.get(T.start).port ? approachOf(W, s.lv, T) : [T.start];
+  if (!cells || occupant(s, T.start) >= 0) return false;
+  for (const c of cells) {
+    const o = occupant(s, c); if (o >= 0 && s.tr[o].h !== T.h) return false;
+    for (const q of s.tr) if (q.h !== T.h && q.hold.includes(c)) return false;
+  }
+  if (W.lock) for (let j = 0; j < s.lv.length; j++) if (s.lv[j] && W.levers[j].kind === 'sig' && W.levers[j].h !== T.h) { const r = routeOf(W, s.lv, j); if (r && r.cells.some(c => cells.includes(c))) return false; }
+  for (const sec of W.sections) if (cells.some(c => sec.cells.has(c)) && (s.lv[sec.lever] ? -1 : 1) !== T.h) return false;
+  return cells;
+}
+function enter(W, s) {
+  W.trains.forEach((T, k) => {
+    const o = s.tr[k]; if (o.st !== 0 || T.at > s.t) return;
+    const cells = accepted(W, s, T); if (!cells) return;
+    o.st = 1; o.c = T.start; o.f = -1; o.h = T.h; o.hold = W.lock ? cells.slice(1) : []; s.ev.push(['enter', k]);
+  });
+}
+// why a lever cannot move, or null when it can
+function pulledOf(W, lv) { const pr = []; for (let j = 0; j < lv.length; j++) if (lv[j] && W.levers[j].kind === 'sig') pr.push([j, routeOf(W, lv, j)]); return pr; }
+function lockOf(W, s, i, pr) {
+  if (!W.lock) return null;
+  const V = W.levers[i], lv = s.lv;
+  const pulledRoutes = (pr || pulledOf(W, lv)).filter(x => x[0] !== i);
+  const held = c => { for (let k = 0; k < s.tr.length; k++) if (s.tr[k].hold.includes(c)) return k; return -1; };
+  if (V.kind === 'pts' || V.kind === 'dir') {
+    for (const c of V.cells) {
+      const o = occupant(s, c); if (o >= 0) return { why: V.kind === 'pts' ? 'train' : 'onsingle', k: o };
+      for (const [j, r] of pulledRoutes) if (r && r.cells.includes(c)) return { why: 'reads', j };
+      const h = held(c); if (h >= 0) return { why: 'held', k: h };
+    }
+    return null;
+  }
+  if (lv[i]) return null;
+  const r = routeOf(W, lv, i);
+  if (!r) return { why: 'against' };
+  for (const c of r.cells) { const o = occupant(s, c); if (o >= 0) return { why: 'occupied', k: o }; }
+  for (const [j, q] of pulledRoutes) if (q && (q.cells.some(c => r.cells.includes(c)) || q.edges.some(e => r.edges.includes(e)))) return { why: 'conflict', j };
+  for (const c of r.cells) { const h = held(c); if (h >= 0) return { why: 'held', k: h }; }
+  for (const sec of W.sections) if (r.cells.some(c => sec.cells.has(c))) { const d = lv[sec.lever] ? -1 : 1; if (d !== V.h) return { why: 'direction', j: sec.lever }; }
+  return null;
+}
+function pull(W, s, i) {
+  s.lv[i] ^= 1; s.pulls++; s.ev.push(['pull', i]);
+  const V = W.levers[i];
+  if (!W.lock && V.kind === 'pts') for (const c of V.cells) { const o = occupant(s, c); if (o >= 0) { s.fail = { why: 'moved', k: o, c }; return; } }
+}
+function tick(W, s) {
+  s.t++; s.ev = [];
+  const tr = s.tr, n = tr.length, want = new Array(n).fill(-1);
+  for (let k = 0; k < n; k++) {
+    const o = tr[k]; if (o.st !== 1) continue;
+    if (W.trains[k].slow && s.t % 2) continue;
+    if (o.dw > 0) { o.dw--; s.ev.push(['dwell', k]); if (o.dw === 0 && o.rv) { o.h = -o.h; o.f = -1; o.rv = 0; o.hold = []; s.ev.push(['rev', k]); } continue; }
+    const C = W.cells.get(o.c);
+    if (C.sig && C.sig.h === o.h && !s.lv[C.sig.lever]) continue;
+    const m = nextOf(W, s.lv, o.c, o.h, o.f);
+    if (m === -2) { s.fail = { why: 'derail', k, c: o.c }; return; }
+    if (m >= 0) want[k] = m;
+  }
+  // a train closes up behind one standing the same way round; the other way round is a collision
+  for (let changed = true; changed;) {
+    changed = false;
+    for (let k = 0; k < n; k++) if (want[k] >= 0) {
+      const q = occupant(s, want[k]);
+      if (q >= 0 && want[q] < 0) {
+        if (tr[q].h === tr[k].h) { want[k] = -1; changed = true; }
+        else { s.fail = { why: 'collide', k, q, c: want[k] }; return; }
+      }
+    }
+  }
+  for (let k = 0; k < n; k++) if (want[k] >= 0) for (let q = k + 1; q < n; q++) if (want[q] >= 0) {
+    if (want[k] === want[q]) { s.fail = { why: 'collide', k, q, c: want[k] }; return; }
+    if (want[k] === tr[q].c && want[q] === tr[k].c) { s.fail = { why: 'collide', k, q, c: tr[k].c }; return; }
+  }
+  for (let k = 0; k < n; k++) if (want[k] >= 0) {
+    const o = tr[k], T = W.trains[k], C = W.cells.get(o.c);
+    if (W.lock) {
+      if (C.sig && C.sig.h === o.h && s.lv[C.sig.lever]) { const r = routeOf(W, s.lv, C.sig.lever); o.hold = r ? r.cells.slice() : []; }
+      const ix = o.hold.indexOf(want[k]); o.hold = ix >= 0 ? o.hold.slice(ix + 1) : [];
+    }
+    o.f = o.c; o.c = want[k]; s.ev.push(['move', k]);
+    const N = W.cells.get(o.c), stg = T.stages[o.s], last = o.s === T.stages.length - 1;
+    if (N.port && N.port === o.h) {
+      if (N.place === stg.p && last) { o.st = 3; o.arr = s.t; o.hold = []; s.ev.push(['out', k]); }
+      else { s.fail = { why: 'wrong', k, c: o.c }; return; }
+    } else if (N.place && N.place === stg.p) {
+      const side = o.h > 0 ? N.east : N.west, nn = side.length === 1 ? side[0] : -1;
+      if (!(nn >= 0 && W.cells.get(nn).place === stg.p)) {
+        if (last) { o.st = 2; o.arr = s.t; o.hold = []; s.ev.push(['in', k]); }
+        else { o.s++; o.dw = 1; o.rv = (stg.rev || N.dead) ? 1 : 0; s.ev.push(['call', k]); }
+      }
+    } else if (N.dead) {
+      const side = o.h > 0 ? N.east : N.west;
+      if (!side.length) { s.fail = { why: 'buffers', k, c: o.c }; return; }
+    }
+  }
+  enter(W, s);
+  for (let k = 0; k < n; k++) { const o = tr[k], T = W.trains[k]; if (T.due && o.st < 2 && s.t >= T.due) { s.fail = { why: 'late', k }; return; } }
+  if (tr.every(o => o.st >= 2)) s.won = true;
+}
+// fewest lever pulls that bring every train in: breadth first by pulls, the clock runs for free
+function solve(W, cap) {
+  cap = cap || 4e6;
+  const dues = W.trains.some(T => T.due);
+  const slowK = s => W.trains.some((T, k) => T.slow && s.tr[k].st === 1) ? 'p' + (s.t % 2) : '*';
+  const keyN = s => (dues || s.tr.some(o => o.st === 0) ? s.t : slowK(s)) + keyOf(s).slice(String(s.t).length);
+  const moved = s => s.ev.some(e => e[0] !== 'pull');
+  let layer = [fresh(W)], cost = 0, count = 0;
+  const seen = new Set();
+  layer[0].path = null;
+  while (layer.length && cost <= 40) {
+    const nextL = [], q = layer, queued = new Set();
+    for (let qi = 0; qi < q.length; qi++) {
+      const s = q[qi], key = keyN(s);
+      if (seen.has(key)) continue; seen.add(key);
+      if (++count > cap) return { pulls: -1, states: count, capped: true };
+      const pr = W.lock ? pulledOf(W, s.lv) : null;
+      for (let i = 0; i < W.levers.length; i++) if (!lockOf(W, s, i, pr)) { const s2 = clone(s); pull(W, s2, i); if (s2.fail) continue; const k2 = keyN(s2); if (seen.has(k2) || queued.has(k2)) continue; queued.add(k2); s2.path = [s.path, s.t, i]; nextL.push(s2); }
+      const s3 = clone(s); s3.path = s.path; tick(W, s3);
+      if (s3.won) { const p = []; for (let r = s3.path; r; r = r[0]) p.unshift([r[1], r[2]]); return { pulls: cost, states: count, path: p, t: s3.t }; }
+      if (s3.fail || s3.t > W.tmax) continue;
+      // nothing moved and nothing is still to come: more waiting cannot help
+      if (!moved(s3) && !s3.tr.some(o => o.st === 0 || o.dw > 0) && !W.trains.some((T, k) => T.slow && s3.tr[k].st === 1)) continue;
+      if (!seen.has(keyN(s3))) q.push(s3);
+    }
+    layer = nextL; cost++;
+  }
+  return { pulls: -1, states: count };
+}
+const LINES = [
+{ name: 'The Branch', levels: [
+{ n: 'Ashby Road', map: String.raw`
+W-->---------E`, names: { W: 'Wexcombe', E: 'Hartfield' },
+  trains: [['1H', 'W', 0, 'E']] },
+{ n: 'Coombe Halt', map: String.raw`
+W-->--a------E
+       \
+        -----B`, names: { W: 'Wexcombe', E: 'Hartfield', B: 'Bramley' },
+  trains: [['2B', 'W', 0, 'B']] },
+{ n: 'Kettle Lane', map: String.raw`
+W-->--a------E
+       \
+        -----B`, names: { W: 'Wexcombe', E: 'Hartfield', B: 'Bramley' },
+  trains: [['1H', 'W', 0, 'E'], ['2B', 'W', 2, 'B']] },
+{ n: 'Mill Junction', map: String.raw`
+W-->-------a--E
+          /
+B-->------`, names: { W: 'Wexcombe', E: 'Hartfield', B: 'Bramley' },
+  trains: [['1H', 'W', 0, 'E'], ['2H', 'B', 0, 'E']] },
+{ n: 'Slade Green', map: String.raw`
+W-->--a-----PPPP]
+       \
+        b---QQQQ]
+         \
+          --RRRR]`, names: { W: 'Wexcombe', P: 'Platform 1', Q: 'Platform 2', R: 'Platform 3' },
+  trains: [['1R', 'W', 0, 'R'], ['2Q', 'W', 2, 'Q'], ['3P', 'W', 4, 'P']] },
+{ n: 'Oxley Bank', map: String.raw`
+W-->-------a--PPP--E
+          /
+B-->------`, names: { W: 'Wexcombe', E: 'Hartfield', B: 'Bramley', P: 'Oxley Bank' },
+  trains: [['1H', 'W', 0, 'P E'], ['2H', 'B', 1, 'P E'], ['3H', 'W', 3, 'P E'], ['4H', 'B', 5, 'P E']] },
+{ n: 'Holt', map: String.raw`
+A-->--a-------------B
+       \
+D-------a---PPPP-<--C`, names: { A: 'Wexcombe', B: 'Hartfield', C: 'Hartfield', D: 'Wexcombe', P: 'Platform 2' },
+  trains: [['1P', 'A', 0, 'P'], ['2D', 'C', 3, 'D'], ['3B', 'A', 5, 'B']] },
+{ n: 'Fenwick', map: String.raw`
+W-->-a-------b-<--E
+      \     /
+       --->-`, names: { W: 'Wexcombe', E: 'Hartfield' },
+  trains: [['1E', 'W', 0, 'E'], ['2W', 'E', 2, 'W']] },
+{ n: 'Harrow Dene', map: String.raw`
+W-->--a---<PPPP]
+       \
+        --<QQQQ]`, names: { W: 'Wexcombe', P: 'Platform 1', Q: 'Platform 2' },
+  trains: [['2W', 'Q<', 0, 'W'], ['4W', 'P<', 0, 'W'], ['1P', 'W', 14, 'P'], ['3Q', 'W', 16, 'Q']] },
+{ n: 'Stoke Mandel', map: String.raw`
+W-->--a------E
+       \
+        -----B`, names: { W: 'Wexcombe', E: 'Hartfield', B: 'Bramley' },
+  trains: [['1H', 'W', 0, 'E'], ['2B', 'W', 2, 'B'], ['3B', 'W', 3, 'B'], ['4H', 'W', 5, 'E'], ['5B', 'W', 7, 'B']] },
+{ n: 'Wadden Cross', map: String.raw`
+W-->--a----------E
+       \
+D-------+-----<--C
+         \
+          -------B`, names: { W: 'Wexcombe', E: 'Hartfield', C: 'Hartfield', D: 'Wexcombe', B: 'Bramley' },
+  trains: [['1B', 'W', 0, 'B'], ['2D', 'C', 0, 'D'], ['3E', 'W', 2, 'E'], ['4B', 'W', 4, 'B'], ['5D', 'C', 5, 'D']] },
+{ n: 'Bramley Town', map: String.raw`
+W-->--a------b------E
+       \    /
+        -PP>
+D----------c--<-----C
+          /
+    QQQQQ-`, names: { W: 'Wexcombe', E: 'Hartfield', C: 'Hartfield', D: 'Wexcombe', P: 'Bramley loop', Q: 'Bay' },
+  trains: [['1E', 'W', 0, 'P E'], ['2Q', 'C', 1, 'Q'], ['3E', 'W', 3, 'E'], ['4D', 'C', 4, 'D']] },
+]},
+{ name: 'The Frame', levels: [
+{ n: 'Carrow Road', map: String.raw`
+W-->--a------E
+       \
+        -----B`, names: { W: 'Wexcombe', E: 'Hartfield', B: 'Bramley' },
+  trains: [['1H', 'W', 0, 'E'], ['2B', 'W', 2, 'B']] },
+{ n: 'Elmstead', map: String.raw`
+W-->-------a--E
+          /
+B-->------`, names: { W: 'Wexcombe', E: 'Hartfield', B: 'Bramley' },
+  trains: [['1H', 'W', 0, 'E'], ['2H', 'B', 1, 'E'], ['3H', 'W', 2, 'E'], ['4H', 'B', 3, 'E']] },
+{ n: 'Pinfold', map: String.raw`
+A-->--a-------------B
+       \
+D-------a---PPPP-<--C`, names: { A: 'Wexcombe', B: 'Hartfield', C: 'Hartfield', D: 'Wexcombe', P: 'Platform 2' },
+  trains: [['1P', 'A', 0, 'P'], ['2D', 'C', 3, 'D'], ['3B', 'A', 5, 'B']] },
+{ n: 'Throstle Nest', map: String.raw`
+W-->--a-----PPPP]
+       \
+        b---QQQQ]
+         \
+          --RRRR]`, names: { W: 'Wexcombe', P: 'Platform 1', Q: 'Platform 2', R: 'Platform 3' },
+  trains: [['1R', 'W', 0, 'R'], ['2Q', 'W', 2, 'Q'], ['3P', 'W', 4, 'P']] },
+{ n: 'Kimble', map: String.raw`
+A-->--a---------PPPP]
+       \
+B-->----b-c-----QQQQ]
+           \
+            ----RRRR]`, names: { A: 'Wexcombe', B: 'Bramley', P: 'Platform 1', Q: 'Platform 2', R: 'Platform 3' },
+  trains: [['1R', 'A', 0, 'R'], ['2Q', 'B', 0, 'Q'], ['3P', 'A', 2, 'P']] },
+{ n: 'Deepcut', map: String.raw`
+F-->--a----------b-G
+       \        /
+S-->----a-PPPP>b---H`, names: { F: 'Wexcombe', S: 'Wexcombe', G: 'Hartfield', H: 'Hartfield', P: 'Deepcut' },
+  trains: [['1G', 'F', 0, 'P G'], ['2H', 'S', 0, 'H'], ['3G', 'F', 2, 'G'], ['4H', 'S', 3, 'P H']] },
+{ n: 'Gosling Street', map: String.raw`
+W-->--a---<PPPP]
+       \
+        --<QQQQ]`, names: { W: 'Wexcombe', P: 'Platform 1', Q: 'Platform 2' },
+  trains: [['2W', 'Q<', 0, 'W'], ['4W', 'P<', 0, 'W'], ['1P', 'W', 14, 'P'], ['3Q', 'W', 16, 'Q']] },
+{ n: 'Upper Hale', map: String.raw`
+W-->--a----------E
+       \
+D-------+-----<--C
+         \
+          -------B`, names: { W: 'Wexcombe', E: 'Hartfield', C: 'Hartfield', D: 'Wexcombe', B: 'Bramley' },
+  trains: [['1B', 'W', 0, 'B'], ['2D', 'C', 0, 'D'], ['3E', 'W', 2, 'E'], ['4B', 'W', 4, 'B'], ['5D', 'C', 5, 'D']] },
+{ n: 'Sallow Bridge', map: String.raw`
+W-->--a----------------E
+       \
+D-------+----b--<------C
+         \    \
+          \    ---<----U
+           \
+            -----------B`, names: { W: 'Wexcombe', E: 'Hartfield', C: 'Hartfield', D: 'Wexcombe', U: 'Bramley', B: 'Bramley' },
+  trains: [['1B', 'W', 0, 'B'], ['2D', 'C', 0, 'D'], ['3D', 'U', 1, 'D'], ['4E', 'W', 3, 'E'], ['5D', 'C', 6, 'D']] },
+{ n: 'Cold Norton', map: String.raw`
+W-->--a------b------E
+       \    /
+        -PP>
+D----------c--<-----C
+          /
+    QQQQQ-`, names: { W: 'Wexcombe', E: 'Hartfield', C: 'Hartfield', D: 'Wexcombe', P: 'Cold Norton loop', Q: 'Bay' },
+  trains: [['1E', 'W', 0, 'P E'], ['2Q', 'C', 1, 'Q'], ['3E', 'W', 3, 'E'], ['4D', 'C', 4, 'D']] },
+{ n: 'Leverton', map: String.raw`
+A-->--a-----b--<PPPP]
+       \   /
+D-------a-b----<QQQQ]`, names: { A: 'Wexcombe', D: 'Wexcombe', P: 'Platform 1', Q: 'Platform 2' },
+  trains: [['3D', 'P<', 0, 'D'], ['4D', 'Q<', 0, 'D'], ['1P', 'A', 4, 'P'], ['2Q', 'A', 6, 'Q']] },
+{ n: 'Kingsbury', map: String.raw`
+W-->--a------b------E
+       \    /
+        -PP>
+D----------c--<-----C
+          /
+    QQQQQ-`, names: { W: 'Wexcombe', E: 'Hartfield', C: 'Hartfield', D: 'Wexcombe', P: 'Kingsbury loop', Q: 'Bay' },
+  trains: [['1E', 'W', 0, 'P E'], ['2Q', 'C', 1, 'Q'], ['3E', 'W', 3, 'E'], ['4D', 'C', 4, 'D'], ['5E', 'W', 8, 'P E']] },
+]},
+{ name: 'The Single Line', levels: [
+{ n: 'Llanfair Road', map: String.raw`
+W~~~~>-PPP-<~~~~E`, names: { W: 'Wexcombe', E: 'Hartfield', P: 'Llanfair Road' },
+  trains: [['1E', 'W', 0, 'P E'], ['2W', 'E', 2, 'P W']] },
+{ n: 'Pant Glas', map: String.raw`
+W~~~>*-PP>-*<~~~E
+      \   /
+       <QQ`, names: { W: 'Wexcombe', E: 'Hartfield', P: 'Pant Glas', Q: 'Pant Glas' },
+  trains: [['1E', 'W', 0, 'P E', 24], ['2W', 'E', 0, 'Q W', 28]] },
+{ n: 'Leckford', map: String.raw`
+W-->-a-------b-<--E
+      \     /
+       --->-`, names: { W: 'Wexcombe', E: 'Hartfield' },
+  trains: [['1E', 'W', 0, 'E', 24], ['2W', 'E', 2, 'W', 28]] },
+{ n: 'Afon Wen', map: String.raw`
+W~~~>*-PP>-*<~~~E
+      \   /
+       <QQ`, names: { W: 'Wexcombe', E: 'Hartfield', P: 'Afon Wen', Q: 'Afon Wen' },
+  trains: [['1E', 'W', 0, 'P E', 24], ['2W', 'E', 2, 'Q W', 30], ['3E', 'W', 10, 'P E', 40]] },
+{ n: 'Tal-y-bont', map: String.raw`
+W~~*-P>-*~~*-R>-*~~E
+    \  /    \  /
+     <Q      <S`, names: { W: 'Wexcombe', E: 'Hartfield', P: 'Tal-y-bont', Q: 'Tal-y-bont', R: 'Bont Newydd', S: 'Bont Newydd' },
+  trains: [['1E', 'W', 0, 'P R E', 30], ['2W', 'E', 0, 'S Q W', 30]] },
+{ n: 'Bryn Teg', map: String.raw`
+W~~*-P>-*~~*-R>-*~~E
+    \  /    \  /
+     <Q      <S`, names: { W: 'Wexcombe', E: 'Hartfield', P: 'Bryn Teg', Q: 'Bryn Teg', R: 'Rhyd Ddu', S: 'Rhyd Ddu' },
+  trains: [['1E', 'W', 0, 'P R E', 30], ['2W', 'E', 0, 'S Q W', 30], ['3E', 'W', 8, 'P R E', 40]] },
+{ n: 'Nant Gwyn', map: String.raw`
+W~~*-P>-*~~c~~~~E
+    \  /    \
+     <Q      ~~~B`, names: { W: 'Wexcombe', E: 'Hartfield', B: 'Bramley', P: 'Nant Gwyn', Q: 'Nant Gwyn' },
+  trains: [['1E', 'W', 0, 'P E', 30], ['2W', 'B', 0, 'Q W', 30], ['3B', 'W', 6, 'P B', 40]] },
+{ n: 'Cwm Mawr', map: String.raw`
+W~~*-P>-*~~c~~~~E
+    \  /    \
+     <Q      ~~~B`, names: { W: 'Wexcombe', E: 'Hartfield', B: 'Bramley', P: 'Cwm Mawr', Q: 'Cwm Mawr' },
+  trains: [['1E', 'W', 0, 'P E'], ['2W', 'B', 0, 'Q W'], ['3B', 'W', 6, 'P B'], ['4W', 'E', 10, 'Q W']] },
+{ n: 'Moel Fach', map: String.raw`
+W~~*-P>-*~~*-R>-*~~E
+    \  /    \  /
+     <Q      <S`, names: { W: 'Wexcombe', E: 'Hartfield', P: 'Moel Fach', Q: 'Moel Fach', R: 'Pen Llyn', S: 'Pen Llyn' },
+  trains: [['1E', 'W', 0, 'P R E', 30], ['2W', 'E', 0, 'S Q W', 30], ['3E', 'W', 8, 'P R E', 42], ['4W', 'E', 10, 'S Q W', 44]] },
+{ n: 'Pen-y-cae', map: String.raw`
+W~~*-P>-*~~*-R>-*~~E
+    \  /    \  /
+     <Q      <S`, names: { W: 'Wexcombe', E: 'Hartfield', P: 'Pen-y-cae', Q: 'Pen-y-cae', R: 'Cefn Bach', S: 'Cefn Bach' },
+  trains: [['1E', 'W', 0, 'P R E', 30], ['2W', 'E', 0, 'S Q W', 30], ['3E', 'W', 8, 'P R E', 42], ['4W', 'E', 12, 'S Q W', 46], ['5E', 'W', 16, 'P R E', 52]] },
+{ n: 'Glyn Ceiriog', map: String.raw`
+A->-----a-------B
+       /
+D-----+---b-<---C
+     /   /
+W~~>d----`, names: { A: 'Wexcombe', B: 'Hartfield', C: 'Hartfield', D: 'Wexcombe', W: 'Glyn Ceiriog' },
+  trains: [['1B', 'W', 0, 'B', 26], ['2W', 'C', 0, 'W', 26], ['3D', 'C', 3, 'D', 30], ['4B', 'A', 0, 'B', 30]] },
+{ n: 'Dolwen', map: String.raw`
+W~~*-R>-*~~c-<PPP]
+    \  /    \
+     <S      -<QQQ]`, names: { W: 'Wexcombe', R: 'Pont Rhyd', S: 'Pont Rhyd', P: 'Platform 1', Q: 'Platform 2' },
+  trains: [['2W', 'Q<', 0, 'S W', 24], ['1P', 'W', 0, 'R P S W', 50], ['3Q', 'W', 10, 'R Q', 40]] },
+]},
+{ name: 'The Yard', levels: [
+{ n: 'Marsh Lane', map: String.raw`
+W-->----a(X---E
+       /
+  YYYY-`, names: { W: 'Wexcombe', E: 'Hartfield', X: 'the stop board', Y: 'Coal siding' },
+  trains: [['6Y', 'W', 0, 'X! Y'], ['1E', 'W', 4, 'E']] },
+{ n: 'Gasworks', map: String.raw`
+W-->----a(X---E
+       /
+  YYY)-`, names: { W: 'Wexcombe', E: 'Hartfield', X: 'the stop board', Y: 'Gasworks siding' },
+  trains: [['6E', 'W', 0, 'X! Y E'], ['1E', 'W', 6, 'E', 66]] },
+{ n: 'Timber Wharf', map: String.raw`
+W-->--a---------E
+       \
+        -b-(HHH]
+        /
+   YYYY-`, names: { W: 'Wexcombe', E: 'Hartfield', H: 'the headshunt', Y: 'Timber siding' },
+  trains: [['6Y', 'W', 0, 'H Y'], ['2W', 'E', 8, 'W'], ['1E', 'W', 16, 'E']] },
+{ n: 'Coal Drops', map: String.raw`
+W-->-----a(X---E
+        /
+  YYYY)b
+      /
+  ZZZ-`, names: { W: 'Wexcombe', E: 'Hartfield', X: 'the stop board', Y: 'Road 1', Z: 'Road 2' },
+  trains: [['6E', 'Y>', 0, 'E'], ['6Z', 'W', 2, 'X! Z'], ['1E', 'W', 8, 'E']] },
+{ n: 'Wharf Road', map: String.raw`
+W-->--a---------E
+       \
+        -b-(HHH]
+        /
+   YYYY-`, names: { W: 'Wexcombe', E: 'Hartfield', H: 'the headshunt', Y: 'Wharf siding' },
+  trains: [['6W', 'Y>', 0, 'H W'], ['6Y', 'W', 24, 'H Y'], ['1E', 'W', 30, 'E']] },
+{ n: 'Cattle Dock', map: String.raw`
+W-->-----a(X---E
+        /
+  YYYY)b
+      /
+  ZZZ-`, names: { W: 'Wexcombe', E: 'Hartfield', X: 'the stop board', Y: 'Cattle dock', Z: 'Road 2' },
+  trains: [['6Y', 'W', 0, 'X! Y'], ['6E', 'Z>', 0, 'E'], ['1E', 'W', 6, 'E']] },
+{ n: 'Brickfield', map: String.raw`
+W-->----a(X---E
+       /
+  YYY)-`, names: { W: 'Wexcombe', E: 'Hartfield', X: 'the stop board', Y: 'Brickworks siding' },
+  trains: [['6E', 'W', 0, 'X! Y E'], ['1E', 'W', 6, 'E', 41], ['2E', 'W', 16, 'E', 42]] },
+{ n: 'Down Yard', map: String.raw`
+W-->-----a(X---E
+        /
+  YYYY)b
+      /
+  ZZZ-`, names: { W: 'Wexcombe', E: 'Hartfield', X: 'the stop board', Y: 'Road 1', Z: 'Road 2' },
+  trains: [['6E', 'Y>', 0, 'E'], ['6Z', 'W', 2, 'X! Z'], ['1E', 'W', 8, 'E', 46], ['2E', 'W', 20, 'E', 47]] },
+{ n: 'Carriage Sidings', map: String.raw`
+W---c->-a---<PPPP]
+   /     \
+ CC       --<QQQQ]`, names: { W: 'Wexcombe', C: 'Carriage siding', P: 'Platform 1', Q: 'Platform 2' },
+  trains: [['1P', 'W', 0, 'P C'], ['2Q', 'W', 4, 'Q W'], ['3P', 'W', 14, 'P']] },
+{ n: 'Goods Shed', map: String.raw`
+W-->-----a(X---E
+        /
+  YYYY)b
+      /
+  ZZZ-`, names: { W: 'Wexcombe', E: 'Hartfield', X: 'the stop board', Y: 'Shed road', Z: 'Road 2' },
+  trains: [['6E', 'Y>', 0, 'E'], ['6Z', 'W', 0, 'X! Z'], ['7Y', 'W', 10, 'X! Y'], ['1E', 'W', 4, 'E']] },
+{ n: 'Hump End', map: String.raw`
+W---c->-a---<PPPP]
+   /     \
+ CC       --<QQQQ]`, names: { W: 'Wexcombe', C: 'Carriage siding', P: 'Platform 1', Q: 'Platform 2' },
+  trains: [['1Q', 'W', 0, 'Q C'], ['2P', 'W', 4, 'P W'], ['3Q', 'W', 16, 'Q']] },
+{ n: 'Kings Wharf', map: String.raw`
+W-->-----a(X---E
+        /
+  YYYY)b
+      /
+  ZZZ-`, names: { W: 'Wexcombe', E: 'Hartfield', X: 'the stop board', Y: 'Wharf road', Z: 'Road 2' },
+  trains: [['6E', 'Y>', 0, 'E'], ['6Z', 'W', 0, 'X! Z'], ['7Y', 'W', 10, 'X! Y'], ['1E', 'W', 4, 'E'], ['2E', 'W', 22, 'E']] },
+]},
+{ name: 'The Timetable', levels: [
+{ n: 'Saltney', map: String.raw`
+W-->-------a--E
+          /
+B-->------`, names: { W: 'Wexcombe', E: 'Hartfield', B: 'Bramley' },
+  trains: [['1H', 'W', 0, 'E', 31], ['2H', 'B', 1, 'E', 16], ['3H', 'W', 4, 'E', 32], ['4H', 'B', 5, 'E', 20]] },
+{ n: 'Hollin Bank', map: String.raw`
+A-->--a-------------B
+       \
+D-------a---PPPP-<--C`, names: { A: 'Wexcombe', B: 'Hartfield', C: 'Hartfield', D: 'Wexcombe', P: 'Platform 2' },
+  trains: [['1P', 'A', 0, 'P'], ['2D', 'C', 3, 'D', 25], ['3B', 'A', 5, 'B', 59], ['6D', 'C', 8, 'D']] },
+{ n: 'Crossgates', map: String.raw`
+W-->-a-------b-<--E
+      \     /
+       --->-`, names: { W: 'Wexcombe', E: 'Hartfield' },
+  trains: [['6E', 'W', 0, 'E'], ['1W', 'E', 2, 'W', 33], ['2E', 'W', 10, 'E', 39]] },
+{ n: 'Kingsmoor', map: String.raw`
+W-->--a------b------E
+       \    /
+        -PP>
+D----------c--<-----C
+          /
+    QQQQQ-`, names: { W: 'Wexcombe', E: 'Hartfield', C: 'Hartfield', D: 'Wexcombe', P: 'Kingsmoor loop', Q: 'Bay' },
+  trains: [['6E', 'W', 0, 'P E'], ['1E', 'W', 3, 'E', 33], ['2D', 'C', 2, 'D', 24]] },
+{ n: 'Hexthorpe', map: String.raw`
+W-->--a----------------E
+       \
+D-------+----b--<------C
+         \    \
+          \    ---<----U
+           \
+            -----------B`, names: { W: 'Wexcombe', E: 'Hartfield', C: 'Hartfield', D: 'Wexcombe', U: 'Bramley', B: 'Bramley' },
+  trains: [['6B', 'W', 0, 'B'], ['2D', 'C', 0, 'D', 36], ['3D', 'U', 1, 'D'], ['1E', 'W', 3, 'E', 36], ['5D', 'C', 6, 'D']] },
+{ n: 'Five Ways', map: String.raw`
+A-->--a---------PPPP]
+       \
+B-->----b-c-----QQQQ]
+           \
+            ----RRRR]`, names: { A: 'Wexcombe', B: 'Bramley', P: 'Platform 1', Q: 'Platform 2', R: 'Platform 3' },
+  trains: [['1R', 'A', 0, 'R', 21], ['2Q', 'B', 0, 'Q'], ['3P', 'A', 2, 'P', 25]] },
+{ n: 'Castle Cross', map: String.raw`
+W-->--a----------E
+       \
+D-------+-----<--C
+         \
+          -------B`, names: { W: 'Wexcombe', E: 'Hartfield', C: 'Hartfield', D: 'Wexcombe', B: 'Bramley' },
+  trains: [['1B', 'W', 0, 'B'], ['2D', 'C', 0, 'D', 25], ['3E', 'W', 2, 'E', 23], ['6B', 'W', 4, 'B'], ['5D', 'C', 5, 'D']] },
+{ n: 'Ferrybridge', map: String.raw`
+F-->--a----------b-G
+       \        /
+S-->----a-PPPP>b---H`, names: { F: 'Wexcombe', S: 'Wexcombe', G: 'Hartfield', H: 'Hartfield', P: 'Ferrybridge' },
+  trains: [['6H', 'S', 0, 'H'], ['1G', 'F', 0, 'P G'], ['2G', 'F', 3, 'G', 24], ['3H', 'S', 4, 'P H', 53]] },
+{ n: 'Bell Lane', map: String.raw`
+A-->--a-----b--<PPPP]
+       \   /
+D-------a-b----<QQQQ]`, names: { A: 'Wexcombe', D: 'Wexcombe', P: 'Platform 1', Q: 'Platform 2' },
+  trains: [['3D', 'P<', 0, 'D'], ['4D', 'Q<', 0, 'D'], ['1P', 'A', 4, 'P', 25], ['2Q', 'A', 6, 'Q', 42]] },
+{ n: 'Upperby', map: String.raw`
+W-->--a---<PPPP]
+       \
+        --<QQQQ]`, names: { W: 'Wexcombe', P: 'Platform 1', Q: 'Platform 2' },
+  trains: [['2W', 'Q<', 0, 'W'], ['4W', 'P<', 0, 'W'], ['1P', 'W', 14, 'P', 37], ['3Q', 'W', 16, 'Q', 41]] },
+{ n: 'Welland Junction', map: String.raw`
+A->-----a-------B
+       /
+D-----+---b-<---C
+     /   /
+W~~>d----`, names: { A: 'Wexcombe', B: 'Hartfield', C: 'Hartfield', D: 'Wexcombe', W: 'Welland' },
+  trains: [['6B', 'W', 0, 'B'], ['2W', 'C', 0, 'W', 24], ['3D', 'C', 3, 'D'], ['4B', 'A', 0, 'B', 48]] },
+{ n: 'Grand Junction', map: String.raw`
+W-->--a----------------E
+       \
+D-------+----b--<------C
+         \    \
+          \    ---<----U
+           \
+            -----------B`, names: { W: 'Wexcombe', E: 'Hartfield', C: 'Hartfield', D: 'Wexcombe', U: 'Bramley', B: 'Bramley' },
+  trains: [['1B', 'W', 0, 'B'], ['2D', 'C', 0, 'D', 27], ['3D', 'U', 1, 'D'], ['4E', 'W', 3, 'E', 29], ['6B', 'W', 5, 'B'], ['5D', 'C', 4, 'D']] },
+]},
+];
+const PAR = [1, 2, 2, 3, 5, 3, 6, 5, 6, 4, 5, 7, 4, 4, 7, 9, 9, 8, 10, 10, 9, 9, 10, 9, 5, 9, 8, 9, 9, 10, 12, 11, 12, 12, 13, 16, 7, 10, 7, 11, 11, 11, 10, 12, 14, 14, 15, 17, 5, 7, 8, 9, 9, 10, 10, 10, 10, 10, 13, 13];
+const NOTES = {"Ashby Road": "One train, one signal. Pull lever 1 to clear it, then start the clock.", "Coombe Halt": "2B is for Bramley. Set the points before it reaches them.", "Kettle Lane": "A signal stays off until you put it back, so one pull can serve two trains.", "Mill Junction": "Two lines join here. Let one train over the junction at a time, with the points set for its line.", "Slade Green": "Three bays with buffers at the end. Each train needs the points set for its own platform.", "Oxley Bank": "Four trains, two lines, one junction. Send them in batches rather than one by one.", "Holt": "1P crosses the other line to reach platform 2. Hold it until 2D has gone by.", "Fenwick": "A single line with a loop. Two trains can pass here without either one stopping, if the timing is right.", "Harrow Dene": "Get both departures away before the arrivals come in. There is only one line out.", "Stoke Mandel": "Trains that bunch up at a signal leave no gap to change the points. Clear the signal early.", "Wadden Cross": "The Bramley line crosses the other main on the level. Keep trains apart at the crossing.", "Bramley Town": "1E calls in the loop and 3E behind it runs straight through. Watch the bay on the other line.", "Carrow Road": "The same junction as Kettle Lane, now interlocked. The points will not move while signal 1 is off.", "Elmstead": "The frame only lets one of the two signals off at a time.", "Throstle Nest": "Three bays again. Count the pulls the frame asks for now.", "Kimble": "Two lines feed three platforms. The order you take them in changes the count.", "Pinfold": "One lever works both ends of the crossover.", "Gosling Street": "Departures first. Arrivals wait outside until the line is clear.", "Upper Hale": "The frame guards the crossing now. Think about which trains share a road.", "Deepcut": "Trains calling at Deepcut use the slow line and cross back after.", "Sallow Bridge": "A double junction. Branch trains cross the other main on their way.", "Leverton": "Two crossovers into a terminus. Clear the platforms before the arrivals.", "Cold Norton": "1E calls in the loop while 3E runs past it.", "Kingsbury": "Five trains through Kingsbury. Plan the loop and the bay together.", "Llanfair Road": "One line, both ways. The blue levers set which way each single line runs.", "Pant Glas": "To be on time, the trains have to pass at Pant Glas. The loop points are sprung, so each train keeps left.", "Afon Wen": "Three trains and one loop. Decide who waits.", "Leckford": "A loop with levered points, and a timetable to keep.", "Tal-y-bont": "Two loops. Pick where the trains pass.", "Bryn Teg": "Three trains and two loops.", "Nant Gwyn": "The line splits beyond Nant Gwyn. Each branch has its own direction lever.", "Moel Fach": "Four trains, two loops and a tight timetable.", "Dolwen": "1P runs to the terminus and comes straight back. Keep a platform free for 3Q.", "Glyn Ceiriog": "The branch joins the main line here. Branch trains cross the other main to get on.", "Pen-y-cae": "Five trains through two loops.", "Cwm Mawr": "Trains from three ends and one loop between them.", "Marsh Lane": "6Y runs past the points, stops at the board and sets back into the siding. Keep 1E off its back.", "Gasworks": "Put the goods into the siding so the express can pass, then let it out again.", "Coal Drops": "One goods out of road 1, another into road 2.", "Wharf Road": "Into the headshunt, reverse, and back into the siding.", "Carriage Sidings": "1P arrives, then its empty coaches go to the carriage siding.", "Cattle Dock": "A goods in, a goods out, and a passenger in between.", "Goods Shed": "Three goods moves and a passenger to fit around them.", "Timber Wharf": "The main line here is single. Fit the timber train in around the passengers.", "Brickfield": "Two expresses behind one slow goods.", "Hump End": "Empty coaches to the siding, a train turned round, and another arrival.", "Down Yard": "A busy yard, and two passengers to keep moving.", "Kings Wharf": "The whole yard at once.", "Kingsmoor": "The express is right behind a slow goods. Use the loop.", "Saltney": "Expresses on both lines and a goods from Bramley.", "Five Ways": "Three platforms, three trains and a timetable.", "Castle Cross": "The crossing again, with trains that cannot wait.", "Hollin Bank": "The crossover, with a goods on the other line.", "Ferrybridge": "A goods on the slow line and expresses on the fast.", "Bell Lane": "Departures out and arrivals in, on time.", "Crossgates": "A goods on the single line and two trains that have to pass it.", "Upperby": "The terminus at rush hour.", "Welland Junction": "A goods off the branch and three trains on the main.", "Hexthorpe": "The double junction, with a goods to get across.", "Grand Junction": "Six trains. Every road in use."};
+
+/* ============================== the lines ============================== */
+const $ = id => document.getElementById(id);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const LEVELS = [];
+LINES.forEach((l, li) => l.levels.forEach((L, i) => LEVELS.push({ L, li, i, g: LEVELS.length })));
+const LINE = [
+  { c: '#7b2334', idea: 'Points and signals, and nothing to stop you sending two trains at each other.',
+    head: 'The Branch', notice: 'Tap a lever to pull it, and again to put it back. Red levers work signals: a train stops at a signal at danger. Black levers work points. Start the clock when you are ready and stop it whenever you like. Every lever movement counts, and fewer pulls earn more stars.' },
+  { c: '#1f3f74', idea: 'An interlocked frame. It stops the dangerous moves, and it asks for more pulls in return.',
+    head: 'The Frame', notice: 'This frame is interlocked. It will not clear two signals for roads that cross, move points under a train or under a signal that is off, or clear a signal into an occupied line. A train holds the road it was signalled on until it has gone by. Put a signal back to free the points it reads over.' },
+  { c: '#1e5b3c', idea: 'One track, both directions, blue levers and a timetable to keep.',
+    head: 'The Single Line', notice: 'One track, both ways. Each single line has a blue lever that sets which way it runs, and a train is only let on in that direction. Loop points are sprung, so trains keep to the left road on their own. From here on, trains have due times. A late train ends the puzzle.' },
+  { c: '#5d3a24', idea: 'Goods trains, sidings, headshunts and trains that reverse.',
+    head: 'The Yard', notice: 'Goods trains carry a 6 in their headcode and move at half speed. Some trains stop at a board or at the end of a siding and reverse. The small disc signals control those moves.' },
+  { c: '#b4521a', idea: 'Every box you know, at rush hour.',
+    head: 'The Timetable', notice: 'Rush hour. The boxes are ones you have worked before, with express trains that must be in on time and slow goods to get out of their way.' },
+];
+const PER = LEVELS.filter(x => x.li === 0).length;
+const OPEN_NEXT = 8;
+
+/* ============================== save ============================== */
+const KEY = 'ttg_signalbox';
+function freshSave() { return { v: 1, started: false, muted: false, best: {}, seen: {}, tab: 0, fast: false, lastSeen: Date.now() }; }
+function loadSave() {
+  let s = null; try { s = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { s = null; }
+  const o = s && typeof s === 'object' ? Object.assign(freshSave(), s) : freshSave();
+  if (!o.best || typeof o.best !== 'object') o.best = {};
+  if (!o.seen || typeof o.seen !== 'object') o.seen = {};
+  for (const k in o.best) if (!(+k >= 0 && +k < LEVELS.length) || !(o.best[k] > 0)) delete o.best[k];
+  o.tab = clamp(o.tab | 0, 0, LINES.length - 1); o.muted = !!o.muted; o.fast = !!o.fast;
+  return o;
+}
+let S = loadSave();
+function persist() { S.lastSeen = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* storage blocked */ } }
+const solved = g => S.best[g] > 0;
+const starsFor = (g, n) => n <= PAR[g] ? 3 : n <= PAR[g] + Math.max(2, Math.ceil(PAR[g] * 0.25)) ? 2 : 1;
+const starsOf = g => solved(g) ? starsFor(g, S.best[g]) : 0;
+const totalStars = () => LEVELS.reduce((n, x) => n + starsOf(x.g), 0);
+const solvedIn = li => LEVELS.filter(x => x.li === li && solved(x.g)).length;
+const lineOpen = li => li === 0 || solvedIn(li - 1) >= OPEN_NEXT;
+function stationOpen(x) {
+  if (!lineOpen(x.li)) return false;
+  if (x.i < 2) return true;
+  return solved(x.g - 1) || solved(x.g - 2);
+}
+
+/* ============================== sound: levers, bells and the block ============================== */
+let AC = null, master = null, noiseBuf = null;
+function audio() {
+  if (AC) return AC;
+  try {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    master = AC.createGain(); master.gain.value = S.muted ? 0 : 0.8; master.connect(AC.destination);
+    noiseBuf = AC.createBuffer(1, AC.sampleRate * 0.6, AC.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  } catch (e) { AC = null; }
+  return AC;
+}
+const live = () => AC && !S.muted && AC.state === 'running' && mode === 'game';
+function tone(f, dur, vol, type, delay) {
+  if (!live()) return;
+  const t = AC.currentTime + (delay || 0), o = AC.createOscillator(), g = AC.createGain();
+  o.type = type || 'sine'; o.frequency.value = f;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + 0.02);
+}
+function thud(freq, dur, vol, delay) {
+  if (!live()) return;
+  const t = AC.currentTime + (delay || 0), s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain();
+  s.buffer = noiseBuf; f.type = 'lowpass'; f.frequency.value = freq; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  s.connect(f); f.connect(g); g.connect(master); s.start(t); s.stop(t + dur);
+}
+const bell = (n, gap) => { for (let i = 0; i < n; i++) { tone(1245, 0.9, 0.07, 'sine', i * (gap || 0.22)); tone(2988, 0.35, 0.02, 'sine', i * (gap || 0.22)); } };
+const sfxLever = () => { thud(700, 0.1, 0.45); tone(140, 0.07, 0.07, 'square'); tone(2400, 0.02, 0.03, 'square', 0.09); };
+const sfxLocked = () => { thud(260, 0.06, 0.4); thud(260, 0.06, 0.35, 0.09); };
+const sfxCrash = () => { thud(1600, 0.7, 0.9); thud(180, 0.9, 0.8, 0.05); };
+function setMuted(m, quiet) {
+  S.muted = m; if (!quiet) persist();
+  if (master) master.gain.value = m ? 0 : 0.8;
+  $('icoOn').style.display = m ? 'none' : ''; $('icoOff').style.display = m ? '' : 'none';
+}
+
+/* ============================== drawing: the enamel diagram ============================== */
+const COL = { enamel: '#eef0ea', shade: '#dfe3dc', rule: '#c5cbc3', ink: '#17211d', ink2: '#4d5a55', faint: '#7d8782', red: '#c62f2a', blue: '#1f4d99', amber: '#f2a33a', berth: '#101412', room: '#1f332c', floor: '#2b211c', bed: '#1a1411', brass: '#b8963f', brassInk: '#2a2413', steel: '#c7ccce', steel2: '#8c9396', green: '#2f8f58' };
+const FONT_SIGN = '"Gill Sans", "Gill Sans MT", "Segoe UI", system-ui, sans-serif';
+const FONT_SANS = '"Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif';
+const FONT_MONO = 'Consolas, "SF Mono", Menlo, "DejaVu Sans Mono", monospace';
+const hhmm = t => { const m = 6 * 60 + t; return String(Math.floor(m / 60) % 24).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function prep(W) {
+  if (W.pre) return W.pre;
+  const edges = [];
+  for (const C of W.cells.values()) for (const id of C.east) edges.push([C.id, id]);
+  const runs = [];
+  for (const p in W.places) {
+    const ids = W.places[p].map(id => W.cells.get(id)).sort((a, b) => a.y - b.y || a.x - b.x);
+    let cur = null;
+    for (const C of ids) { if (cur && cur.y === C.y && C.x === cur.x1 + 1) cur.x1 = C.x; else { cur = { p, y: C.y, x0: C.x, x1: C.x }; runs.push(cur); } }
+  }
+  const dead = [...W.cells.values()].filter(C => C.dead);
+  W.pre = { edges, runs, dead };
+  return W.pre;
+}
+const nameOf = (W, p) => W.names[p] || ('Platform ' + p);
+const isBoard = (W, p) => /stop board/.test(nameOf(W, p));
+function geom(W, x, y, w, h, minCs) {
+  let cs = Math.min(w / (W.gw + 1.3), h / (W.gh + 1.15), 54);
+  if (minCs && cs < minCs) cs = Math.min(minCs, h / (W.gh + 1.15));
+  const bw = (W.gw - 1) * cs + cs * 2.3, bh = (W.gh - 1) * cs + cs * 2.05;
+  const bx = x + (w - bw) / 2, by = y + (h - bh) / 2;
+  return { cs, bx, by, bw, bh, ox: bx + cs * 1.15, oy: by + cs * 1.0 };
+}
+function rrect(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+
+// lit roads: the routes of signals that are off, and what trains still hold
+function litEdges(W, s) {
+  const out = new Set(), key = (a, b) => a < b ? a + ':' + b : b + ':' + a;
+  s.lv.forEach((v, j) => { if (!v || W.levers[j].kind !== 'sig') return; const r = routeOf(W, s.lv, j); if (!r) return; let p = W.levers[j].cells[0]; for (const c of r.cells) { out.add(key(p, c)); p = c; } });
+  s.tr.forEach(o => { if (o.st !== 1 || !o.hold.length) return; let p = o.c; for (const c of o.hold) { out.add(key(p, c)); p = c; } });
+  return out;
+}
+function drawBoard(c, Gm, W, s, an, now) {
+  const pre = prep(W), cs = Gm.cs, P = id => { const C = W.cells.get(id); return [Gm.ox + C.x * cs, Gm.oy + C.y * cs]; };
+  const lw = Math.max(2.4, cs * 0.14);
+  // the enamel plate
+  c.fillStyle = 'rgba(0,0,0,.28)'; rrect(c, Gm.bx + 2, Gm.by + 4, Gm.bw, Gm.bh, 8); c.fill();
+  c.fillStyle = COL.enamel; rrect(c, Gm.bx, Gm.by, Gm.bw, Gm.bh, 8); c.fill();
+  c.strokeStyle = COL.ink; c.lineWidth = 2; rrect(c, Gm.bx + 4, Gm.by + 4, Gm.bw - 8, Gm.bh - 8, 5); c.stroke();
+  // platforms and sidings
+  for (const R of pre.runs) {
+    const C = W.cells.get(W.idOf(R.x0, R.y)); if (C.port) continue;
+    const x0 = Gm.ox + R.x0 * cs - cs * 0.46, x1 = Gm.ox + R.x1 * cs + cs * 0.46, y = Gm.oy + R.y * cs;
+    if (isBoard(W, R.p)) continue;
+    c.fillStyle = COL.shade; rrect(c, x0, y - cs * 0.3, x1 - x0, cs * 0.6, 3); c.fill();
+    c.strokeStyle = COL.rule; c.lineWidth = 1; c.stroke();
+  }
+  // single lines: a blue rule under the track, with its way marked
+  W.sections.forEach(sec => {
+    const xs = [...sec.cells].map(id => W.cells.get(id)), y = Gm.oy + xs[0].y * cs + cs * 0.36;
+    const x0 = Gm.ox + Math.min(...xs.map(C => C.x)) * cs - cs * 0.4, x1 = Gm.ox + Math.max(...xs.map(C => C.x)) * cs + cs * 0.4;
+    const d = s.lv[sec.lever] ? -1 : 1;
+    c.strokeStyle = COL.blue; c.lineWidth = Math.max(2, cs * 0.07); c.beginPath(); c.moveTo(x0, y); c.lineTo(x1, y); c.stroke();
+    const ax = d > 0 ? x1 : x0, a = cs * 0.16;
+    c.fillStyle = COL.blue; c.beginPath(); c.moveTo(ax + d * a * 0.4, y); c.lineTo(ax - d * a, y - a * 0.8); c.lineTo(ax - d * a, y + a * 0.8); c.closePath(); c.fill();
+    c.font = '700 ' + Math.round(Math.max(10, cs * 0.3)) + 'px ' + FONT_SANS; c.textAlign = 'center'; c.textBaseline = 'top';
+    const mx = (x0 + x1) / 2, tw = Math.max(14, cs * 0.5), th = Math.max(12, cs * 0.4);
+    c.fillStyle = COL.enamel; c.fillRect(mx - tw / 2, y - th / 2, tw, th); c.strokeStyle = COL.blue; c.lineWidth = 1.5; c.strokeRect(mx - tw / 2, y - th / 2, tw, th);
+    c.fillStyle = COL.blue; c.textBaseline = 'middle'; c.fillText(String(W.levers[sec.lever].n), mx, y + 0.5);
+  });
+  // track
+  const lit = litEdges(W, s), occ = new Set();
+  s.tr.forEach(o => { if (o.st === 1 || o.st === 2) occ.add(o.c); });
+  c.lineCap = 'round';
+  for (const [a, b] of pre.edges) {
+    const A = W.cells.get(a), B = W.cells.get(b);
+    let [x0, y0] = P(a), [x1, y1] = P(b);
+    let gapA = 0, gapB = 0;
+    if (A.pts && !A.pts.spring && A.pts.legs[s.lv[A.pts.lever] ? 0 : 1] === b) gapA = 0.42;
+    if (B.pts && !B.pts.spring && B.pts.legs[s.lv[B.pts.lever] ? 0 : 1] === a) gapB = 0.42;
+    const sx = x0 + (x1 - x0) * gapA, sy = y0 + (y1 - y0) * gapA, ex = x1 - (x1 - x0) * gapB, ey = y1 - (y1 - y0) * gapB;
+    c.strokeStyle = COL.ink; c.lineWidth = lw; c.beginPath(); c.moveTo(sx, sy); c.lineTo(ex, ey); c.stroke();
+    const k = a < b ? a + ':' + b : b + ':' + a;
+    if (lit.has(k)) { c.lineCap = 'butt'; c.strokeStyle = COL.enamel; c.lineWidth = Math.max(1, lw * 0.34); c.beginPath(); c.moveTo(sx, sy); c.lineTo(ex, ey); c.stroke(); c.lineCap = 'round'; }
+    if ((occ.has(a) || occ.has(b)) && !gapA && !gapB) {
+      const mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+      c.strokeStyle = COL.amber; c.lineWidth = lw * 0.5;
+      c.beginPath();
+      if (occ.has(a)) { c.moveTo(x0, y0); c.lineTo(mx, my); }
+      if (occ.has(b)) { c.moveTo(mx, my); c.lineTo(x1, y1); }
+      c.stroke();
+    }
+  }
+  // buffer stops at dead ends
+  for (const C of pre.dead) {
+    const [x, y] = P(C.id), d = C.east.length ? -1 : 1;
+    c.strokeStyle = COL.ink; c.lineWidth = lw * 1.2; c.beginPath(); c.moveTo(x + d * cs * 0.34, y - cs * 0.2); c.lineTo(x + d * cs * 0.34, y + cs * 0.2); c.stroke();
+    c.lineWidth = lw * 0.6; c.beginPath(); c.moveTo(x, y); c.lineTo(x + d * cs * 0.34, y); c.stroke();
+  }
+  // points: lever numbers beside them
+  c.font = '700 ' + Math.round(Math.max(10, cs * 0.32)) + 'px ' + FONT_SANS; c.textAlign = 'center'; c.textBaseline = 'middle';
+  const done = new Set();
+  W.levers.forEach((V, j) => {
+    if (V.kind !== 'pts') return;
+    for (const id of V.cells) {
+      if (done.has(id)) continue; done.add(id);
+      const C = W.cells.get(id), [x, y] = P(id), rv = W.cells.get(C.pts.legs[1]), up = rv.y > C.y ? -1 : 1;
+      c.fillStyle = COL.ink2; c.fillText(String(V.n), x + C.pts.toeSide * cs * 0.3, y + up * cs * 0.4);
+    }
+  });
+  // signals: a post and an arm, off when raised
+  W.levers.forEach((V, j) => {
+    if (V.kind !== 'sig') return;
+    const [x, y] = P(V.cells[0]), side = V.h > 0 ? -1 : 1, off = !!s.lv[j];
+    const top = y + side * cs * 0.5, foot = y + side * lw * 0.8;
+    c.strokeStyle = COL.ink; c.lineWidth = Math.max(1.5, cs * 0.06); c.beginPath(); c.moveTo(x, foot); c.lineTo(x, top); c.stroke();
+    if (V.shunt) {
+      const r = cs * 0.15;
+      c.fillStyle = '#fff'; c.beginPath(); c.arc(x, top, r, 0, 7); c.fill(); c.stroke();
+      c.save(); c.translate(x, top); c.rotate(off ? -Math.PI / 4 : 0); c.fillStyle = COL.red; c.fillRect(-r * 0.85, -r * 0.24, r * 1.7, r * 0.48); c.restore();
+    } else {
+      const al = cs * 0.42, ah = Math.max(3.5, cs * 0.14);
+      c.save(); c.translate(x, top); c.scale(V.h, 1); c.rotate(off ? -0.72 : 0);
+      c.fillStyle = COL.red; c.fillRect(0, -ah / 2, al, ah);
+      c.fillStyle = '#fff'; c.fillRect(al * 0.62, -ah / 2, al * 0.14, ah);
+      c.restore();
+      c.fillStyle = off ? COL.green : COL.red; c.beginPath(); c.arc(x, top, Math.max(2, cs * 0.07), 0, 7); c.fill();
+    }
+    c.fillStyle = COL.ink; c.font = '700 ' + Math.round(Math.max(10, cs * 0.32)) + 'px ' + FONT_SANS; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(String(V.n), x - V.h * Math.max(7, cs * 0.26), top);
+  });
+  // names at the ends of the line and on the platforms
+  c.font = '600 ' + Math.round(clamp(cs * 0.3, 10.5, 15)) + 'px ' + FONT_SIGN;
+  for (const p in W.ports) {
+    const C = W.cells.get(W.ports[p]), [x, y] = P(C.id);
+    c.fillStyle = COL.ink2; c.textBaseline = 'middle';
+    if (C.port < 0) { c.textAlign = 'left'; c.fillText(nameOf(W, p), x - cs * 0.5, y + (W.sections.some(sec => sec.cells.has(W.idOf(C.x + 1, C.y))) ? cs * 0.86 : cs * 0.5)); }
+    else { c.textAlign = 'right'; c.fillText(nameOf(W, p), x + cs * 0.5, y - cs * 0.5); }
+  }
+  const labelled = new Set();
+  for (const R of pre.runs) {
+    const C = W.cells.get(W.idOf(R.x0, R.y)); if (C.port) continue;
+    const k = R.p + R.y; if (labelled.has(k)) continue; labelled.add(k);
+    const x = Gm.ox + (R.x0 + R.x1) / 2 * cs, y = Gm.oy + R.y * cs;
+    c.fillStyle = COL.ink2; c.textAlign = 'center'; c.textBaseline = 'middle';
+    if (isBoard(W, R.p)) {
+      c.fillStyle = COL.ink; c.fillRect(x - cs * 0.07, y + cs * 0.12, cs * 0.14, cs * 0.26);
+      c.fillStyle = '#fff'; c.strokeStyle = COL.ink; c.lineWidth = 1.5; c.fillRect(x - cs * 0.2, y + cs * 0.3, cs * 0.4, cs * 0.24); c.strokeRect(x - cs * 0.2, y + cs * 0.3, cs * 0.4, cs * 0.24);
+      c.fillStyle = COL.ink2; c.fillText('Stop', x, y + cs * 0.74);
+    } else {
+      const sg = W.levers.find(V => V.kind === 'sig' && V.h < 0 && V.y === R.y && V.x >= R.x0 - 1.5 && V.x <= R.x1 + 1.5);
+      if (sg) { const sx = Gm.ox + Math.round(sg.x) * cs; c.textAlign = sx < x ? 'left' : 'right'; c.fillText(cap(nameOf(W, R.p)), sx + (sx < x ? 1 : -1) * cs * 0.42, y + cs * 0.62); }
+      else c.fillText(cap(nameOf(W, R.p)), x, y + cs * 0.52);
+    }
+  }
+  // trains: train describer berths with amber headcodes
+  const f = an ? an.f : 1;
+  s.tr.forEach((o, k) => {
+    const pc = an && an.prev ? an.prev[k] : -2;
+    let x, y, a = 1;
+    if (o.st === 1 || o.st === 2) {
+      const [x1, y1] = P(o.c);
+      if (pc >= 0 && pc !== o.c) { const [x0, y0] = P(pc); x = x0 + (x1 - x0) * f; y = y0 + (y1 - y0) * f; }
+      else { x = x1; y = y1; if (pc === -1) a = f; }
+    } else if (o.st === 3 && pc >= 0 && an && an.exitK && an.exitK.has(k)) {
+      const [x1, y1] = P(o.c), [x0, y0] = P(pc); x = x0 + (x1 - x0) * f; y = y0 + (y1 - y0) * f; a = 1 - f;
+    } else return;
+    if (an && an.bump && an.bump.has(k)) x += Math.sin(now * 60) * cs * 0.06;
+    const w = cs * 0.96, h = cs * 0.58;
+    c.globalAlpha = a;
+    c.fillStyle = COL.berth; rrect(c, x - w / 2, y - h / 2, w, h, Math.max(2, cs * 0.08)); c.fill();
+    c.fillStyle = COL.amber; c.fillRect(o.h > 0 ? x + w / 2 - Math.max(2, cs * 0.06) : x - w / 2, y - h / 2 + 2, Math.max(2, cs * 0.06), h - 4);
+    c.font = '700 ' + Math.round(cs * 0.36) + 'px ' + FONT_MONO; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(W.trains[k].code, x - o.h * cs * 0.03, y + 1);
+    c.globalAlpha = 1;
+  });
+  // where it went wrong
+  if (s.fail && s.fail.c !== undefined) {
+    const [x, y] = P(s.fail.c);
+    c.strokeStyle = COL.red; c.lineWidth = 3; c.beginPath(); c.arc(x, y, cs * 0.72, 0, 7); c.stroke();
+  }
+}
+
+/* ============================== drawing: the lever frame ============================== */
+function frameGeom(W, x, y, w, h) { const n = W.levers.length, p = clamp(w / (n + 0.8), 30, 78); return { n, p, x0: x + (w - p * n) / 2 + p / 2 }; }
+function drawFrame(c, x, y, w, h, W, s, lvA, shake, locks, now) {
+  c.fillStyle = COL.floor; c.fillRect(x, y + h * 0.6, w, h * 0.4);
+  const { n, p, x0 } = frameGeom(W, x, y, w, h), base = y + h * 0.62;
+  c.fillStyle = COL.bed; c.fillRect(x0 - p * 0.62, base - h * 0.03, p * n + p * 0.24, h * 0.07);
+  for (let i = 0; i < n; i++) {
+    const V = W.levers[i], k = lvA[i] || 0, sh = shake[i] > 0 ? Math.sin(now * 70) * 3 * Math.min(1, shake[i] * 4) : 0;
+    const cx = x0 + i * p + sh, L = h * 0.55, top = base - L * (1 - 0.42 * k), sw = clamp(p * 0.2, 6, 13);
+    const body = V.kind === 'pts' ? '#1c1f1e' : V.kind === 'dir' ? COL.blue : COL.red;
+    // the slot
+    c.fillStyle = '#0b0807'; c.fillRect(cx - sw * 0.9, base - h * 0.02, sw * 1.8, h * 0.035);
+    // the lever, shorter when pulled towards you
+    c.fillStyle = body; c.beginPath(); c.moveTo(cx - sw / 2, base); c.lineTo(cx - sw * 0.36, top); c.lineTo(cx + sw * 0.36, top); c.lineTo(cx + sw / 2, base); c.closePath(); c.fill();
+    c.fillStyle = 'rgba(255,255,255,.16)'; c.fillRect(cx - sw * 0.4, top, Math.max(1, sw * 0.14), base - top);
+    if (V.shunt) { c.fillStyle = '#fff'; c.fillRect(cx - sw * 0.42, top + (base - top) * 0.35, sw * 0.84, Math.max(3, (base - top) * 0.1)); }
+    // catch rod and handle, polished steel
+    c.strokeStyle = COL.steel2; c.lineWidth = Math.max(1, sw * 0.14); c.beginPath(); c.moveTo(cx + sw * 0.3, top + sw * 1.4); c.lineTo(cx + sw * 0.42, base - sw * 0.5); c.stroke();
+    const hw = sw * (1.5 + 0.4 * k), hh = sw * (1.25 + 0.35 * k);
+    c.fillStyle = COL.steel; rrect(c, cx - hw / 2, top - hh * 0.85, hw, hh, hw * 0.3); c.fill();
+    c.fillStyle = COL.steel2; c.fillRect(cx - hw / 2 + 1, top - hh * 0.85 + hh * 0.7, hw - 2, hh * 0.18);
+    // locked by the frame: a steel block over the slot
+    if (locks && locks[i]) {
+      c.fillStyle = '#3a4042'; rrect(c, cx - sw * 1.05, base - h * 0.08, sw * 2.1, h * 0.09, 2); c.fill();
+      c.fillStyle = COL.steel2; c.beginPath(); c.arc(cx, base - h * 0.035, Math.max(1.5, sw * 0.16), 0, 7); c.fill();
+    }
+    // brass number plate with what the lever works
+    const pw = Math.min(p * 0.82, 46), ph = clamp(h * 0.22, 18, 32), py = base + h * 0.08;
+    c.fillStyle = COL.brass; rrect(c, cx - pw / 2, py, pw, ph, 3); c.fill();
+    c.strokeStyle = 'rgba(42,36,19,.5)'; c.lineWidth = 1; c.stroke();
+    c.fillStyle = COL.brassInk; c.strokeStyle = COL.brassInk;
+    const gy = py + ph * 0.3, gs = ph * 0.2;
+    c.lineWidth = Math.max(1.2, ph * 0.06);
+    if (ph >= 22) {
+      if (V.kind === 'sig' && !V.shunt) { c.beginPath(); c.moveTo(cx - gs * 1.3, gy + gs); c.lineTo(cx - gs * 1.3, gy - gs); c.lineTo(cx + gs * 1.3, gy - gs * 0.6); c.stroke(); }
+      else if (V.kind === 'sig') { c.beginPath(); c.arc(cx, gy, gs * 0.8, 0, 7); c.stroke(); c.beginPath(); c.moveTo(cx - gs * 0.7, gy); c.lineTo(cx + gs * 0.7, gy); c.stroke(); }
+      else if (V.kind === 'pts') { c.beginPath(); c.moveTo(cx - gs * 1.4, gy); c.lineTo(cx + gs * 1.4, gy); c.moveTo(cx - gs * 0.2, gy); c.lineTo(cx + gs * 1.2, gy + gs * 0.9); c.stroke(); }
+      else { c.beginPath(); c.moveTo(cx - gs * 1.4, gy); c.lineTo(cx + gs * 1.4, gy); c.moveTo(cx + gs * 0.7, gy - gs * 0.6); c.lineTo(cx + gs * 1.4, gy); c.lineTo(cx + gs * 0.7, gy + gs * 0.6); c.stroke(); }
+    }
+    c.font = '700 ' + Math.round(ph * (ph >= 22 ? 0.44 : 0.62)) + 'px ' + FONT_SANS; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(String(V.n), cx, ph >= 22 ? py + ph * 0.7 : py + ph * 0.54);
+  }
+}
+
+/* ============================== canvases and layout ============================== */
+let DPR = 1, land = false, mode = 'title';
+function fit(cv) {
+  const r = cv.getBoundingClientRect(), w = Math.max(1, r.width), h = Math.max(1, r.height);
+  const W = Math.round(w * DPR), H = Math.round(h * DPR);
+  if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+  const c = cv.getContext('2d'); c.setTransform(DPR, 0, 0, DPR, 0, 0);
+  return { c, w, h };
+}
+function layout() {
+  DPR = clamp(devicePixelRatio || 1, 1, 2.5);
+  land = innerWidth > innerHeight * 1.05; document.body.className = land ? 'land' : 'port';
+  if (mode === 'title') layoutTitle();
+}
+function layoutTitle() {
+  const fh = clamp(innerHeight * 0.16, 70, 140);
+  $('title').style.paddingBottom = (fh + 14) + 'px';
+}
+
+/* ============================== the title: the box works itself ============================== */
+const DEMO = { g: LEVELS.findIndex(x => x.L.n === 'Fenwick') };
+function demoReset() {
+  const x = LEVELS[DEMO.g];
+  DEMO.W = build(x.L, x.li); DEMO.s = fresh(DEMO.W); DEMO.acc = 0; DEMO.wait = 0; DEMO.pi = 0; DEMO.an = { prev: DEMO.s.tr.map(o => o.c), f: 1, t0: 0 };
+  DEMO.lvA = DEMO.s.lv.map(() => 0); DEMO.shake = DEMO.s.lv.map(() => 0);
+  if (!DEMO.path) { const r = solve(DEMO.W, 2e5); DEMO.path = r.path || []; }
+}
+function demoStep(dt) {
+  const D = DEMO; if (!D.W) return;
+  if (D.s.won || D.s.fail) { D.wait += dt; if (D.wait > 2.4) demoReset(); return; }
+  D.acc += dt;
+  const TK = 0.42;
+  if (D.acc >= TK) {
+    D.acc -= TK;
+    while (D.pi < D.path.length && D.path[D.pi][0] === D.s.t) { pull(D.W, D.s, D.path[D.pi][1]); D.pi++; }
+    D.an = { prev: D.s.tr.map(o => (o.st === 1 || o.st === 2) ? o.c : -1), f: 0, exitK: new Set() };
+    tick(D.W, D.s);
+    D.s.ev.forEach(e => { if (e[0] === 'out') D.an.exitK.add(e[1]); });
+  }
+  D.an.f = clamp(D.acc / TK, 0, 1);
+  D.s.lv.forEach((v, i) => { D.lvA[i] += (v - D.lvA[i]) * Math.min(1, dt * 12); });
+}
+function drawTitle(now) {
+  const { c, w, h } = fit($('tcv'));
+  c.fillStyle = COL.room; c.fillRect(0, 0, w, h);
+  const fh = clamp(h * 0.16, 70, 140);
+  if (!DEMO.W) return;
+  const top = $('title').firstElementChild.getBoundingClientRect(), bot = $('tgo').getBoundingClientRect();
+  const y0 = top.bottom + 12, y1 = bot.top - 12;
+  if (y1 - y0 > 60) drawBoard(c, geom(DEMO.W, 12, y0, w - 24, y1 - y0), DEMO.W, DEMO.s, DEMO.an, now);
+  drawFrame(c, 0, h - fh, w, fh, DEMO.W, DEMO.s, DEMO.lvA, DEMO.shake, null, now);
+}
+
+/* ============================== the lines ============================== */
+const STAR = on => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.75 5.9 6.45.72-4.8 4.36 1.35 6.37L12 16.9l-5.75 3.25 1.35-6.37-4.8-4.36 6.45-.72z" fill="' + (on ? '#b8963f' : 'none') + '" stroke="#17211d" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+function openLines(tab) {
+  mode = 'lines'; stopRun();
+  if (tab !== undefined) S.tab = tab;
+  ['title', 'game', 'done', 'notice'].forEach(id => $(id).classList.remove('show'));
+  $('lines').classList.add('show'); $('tcv').style.display = 'none';
+  buildLines();
+}
+function buildLines() {
+  $('starCount').textContent = totalStars() + ' of ' + LEVELS.length * 3 + ' stars';
+  $('tabs').innerHTML = LINES.map((l, li) => '<button role="tab" data-li="' + li + '" class="' + (li === S.tab ? 'on' : '') + '" aria-selected="' + (li === S.tab) + '"><span class="chip" style="background:' + LINE[li].c + '"></span>' + (li + 1) + ' ' + l.name + '</button>').join('');
+  $('tabs').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { S.tab = +b.dataset.li; persist(); buildLines(); }));
+  const li = S.tab, info = LINE[li];
+  $('lineBoard').textContent = LINES[li].name; $('lineBoard').style.background = info.c;
+  $('lineIdea').textContent = info.idea;
+  const open = lineOpen(li);
+  $('lineLock').textContent = open ? solvedIn(li) + ' of ' + PER + ' stations worked.' : 'Opens when you have worked ' + OPEN_NEXT + ' stations on ' + LINES[li - 1].name + '. So far: ' + solvedIn(li - 1) + '.';
+  $('stations').innerHTML = LEVELS.filter(x => x.li === li).map(x => {
+    const ok = stationOpen(x), st = starsOf(x.g);
+    const sub = solved(x.g) ? 'Best ' + S.best[x.g] + ' pulls, par ' + PAR[x.g] : ok ? 'Par ' + PAR[x.g] + ' pulls' : 'Work the station before it first';
+    return '<button class="st" data-g="' + x.g + '"' + (ok ? '' : ' disabled') + '><span class="n num">' + (x.i + 1) + '</span><span class="nm">' + x.L.n + '<span class="sub">' + sub + '</span></span><span class="ss">' + STAR(st > 0) + STAR(st > 1) + STAR(st > 2) + '</span></button>';
+  }).join('');
+  $('stations').querySelectorAll('.st').forEach(b => b.addEventListener('click', () => startPuzzle(+b.dataset.g)));
+}
+
+/* ============================== working a station ============================== */
+let G = null;
+const TICK = 0.62;
+function startPuzzle(g) {
+  const x = LEVELS[g];
+  mode = 'game';
+  ['title', 'lines', 'done', 'notice'].forEach(id => $(id).classList.remove('show'));
+  $('game').classList.add('show'); $('tcv').style.display = 'none';
+  const W = build(x.L, x.li);
+  G = { g, x, W, s: fresh(W), running: false, acc: 0, over: null, noteT: 0, pan: 0, panMax: 0, lvA: W.levers.map(() => 0), shake: W.levers.map(() => 0) };
+  G.an = { prev: G.s.tr.map(o => (o.st === 1 || o.st === 2) ? -1 : -2), f: 0, t0: 0, exitK: new Set() };
+  $('gBoard').textContent = x.L.n; $('gBoard').style.background = LINE[x.li].c;
+  $('gLine').textContent = 'Line ' + (x.li + 1) + ', ' + LINES[x.li].name + ', station ' + (x.i + 1) + ' of ' + PER;
+  setNote();
+  syncRun(); updateSide();
+  window.TTG?.track('level_start', { level: g + 1 });
+  if (!S.seen[x.li]) { S.seen[x.li] = true; persist(); $('noticeH').textContent = LINE[x.li].head; $('noticeP').textContent = LINE[x.li].notice; $('notice').classList.add('show'); }
+  requestAnimationFrame(() => { layout(); });
+}
+function setNote(html, warn) {
+  const n = $('note');
+  if (html) { n.innerHTML = html; n.className = warn ? 'warn' : ''; G.noteT = 4.5; }
+  else { n.textContent = NOTES[G.x.L.n] || ''; n.className = ''; G.noteT = 0; }
+}
+const code = k => '<b>' + G.W.trains[k].code + '</b>';
+const lvN = j => G.W.levers[j].n;
+function lockText(i, lk) {
+  const n = lvN(i), V = G.W.levers[i];
+  const who = V.kind === 'sig' ? 'Signal ' + n + ' will not come off: ' : 'Lever ' + n + ' is locked: ';
+  switch (lk.why) {
+    case 'train': return who + code(lk.k) + ' is standing on the points.';
+    case 'reads': return who + 'signal ' + lvN(lk.j) + ' is off over this line. Put ' + lvN(lk.j) + ' back first.';
+    case 'held': return who + code(lk.k) + ' has not cleared the road yet.';
+    case 'onsingle': return who + code(lk.k) + ' is on the single line.';
+    case 'against': return who + 'the points ahead are set against it.';
+    case 'occupied': return who + code(lk.k) + ' is on the line ahead.';
+    case 'conflict': return who + 'signal ' + lvN(lk.j) + ' is off for a road that crosses it.';
+    case 'direction': return who + 'the single line is set the other way. Lever ' + lvN(lk.j) + ' sets it.';
+  }
+  return who + 'the frame will not allow it.';
+}
+function tryPull(i) {
+  if (!G || G.over || i < 0 || i >= G.W.levers.length) return;
+  audio(); if (AC && AC.state === 'suspended') AC.resume();
+  const lk = lockOf(G.W, G.s, i);
+  if (lk) { G.shake[i] = 0.35; sfxLocked(); setNote(lockText(i, lk), true); return; }
+  pull(G.W, G.s, i); sfxLever();
+  if (G.s.fail) { failed(); return; }
+  updateSide();
+}
+function stopRun() { if (G) { G.running = false; syncRun(); } }
+function syncRun() { if (!G) return; $('runBtn').textContent = G.running ? 'Stop' : 'Start'; $('fastBtn').classList.toggle('on', S.fast); $('fastBtn').setAttribute('aria-pressed', S.fast); $('stepBtn').disabled = G.running || !!G.over; $('runBtn').disabled = !!G.over; }
+function doTick() {
+  const s = G.s;
+  G.an = { prev: s.tr.map(o => (o.st === 1 || o.st === 2) ? o.c : -1), f: 0, exitK: new Set(), bump: null };
+  tick(G.W, s);
+  let inN = 0;
+  for (const e of s.ev) {
+    if (e[0] === 'enter') bell(1);
+    if (e[0] === 'out') { G.an.exitK.add(e[1]); inN++; }
+    if (e[0] === 'in') inN++;
+  }
+  if (inN) bell(2, 0.2);
+  if (s.fail) { failed(); return; }
+  if (s.won) { won(); return; }
+  updateSide();
+}
+const FAILS = {
+  collide: f => ['Collision', code(f.k) + ' and ' + code(f.q) + ' met on the same line.'],
+  derail: f => ['Off the road', code(f.k) + ' ran through points set against it.'],
+  moved: f => ['Off the road', 'The points moved under ' + code(f.k) + '.'],
+  wrong: f => ['Wrong road', code(f.k) + ' went out the wrong way, towards ' + nameOf(G.W, G.W.cells.get(f.c).place) + '.'],
+  buffers: f => ['Buffer stop', code(f.k) + ' ran into the buffers.'],
+  late: f => ['Late', code(f.k) + ' was due at ' + hhmm(G.W.trains[f.k].due) + ' and is not in.'],
+};
+function failed() {
+  const f = G.s.fail; G.over = 'fail'; G.running = false; syncRun(); updateSide();
+  G.an.bump = new Set([f.k, f.q].filter(k => k !== undefined));
+  sfxCrash();
+  window.TTG?.track('level_fail', { level: G.g + 1 });
+  const [h, p] = (FAILS[f.why] || (() => ['Stopped', 'Something went wrong.']))(f);
+  setTimeout(() => {
+    if (!G || mode !== 'game') return;
+    $('doneH').textContent = h; $('doneP').innerHTML = p; $('doneStars').innerHTML = ''; $('doneN').textContent = '';
+    $('doneAct').innerHTML = '<button class="btn go" id="dAgain">Try again</button><button class="btn" id="dBack">Back</button>';
+    $('dAgain').addEventListener('click', () => startPuzzle(G.g)); $('dBack').addEventListener('click', () => openLines(G.x.li));
+    $('done').classList.add('show'); $('dAgain').focus();
+  }, 950);
+}
+function won() {
+  const g = G.g, n = G.s.pulls, st = starsFor(g, n), before = starsOf(g), opened = [];
+  for (let li = 1; li < LINES.length; li++) if (!lineOpen(li)) opened.push(li);
+  G.over = 'won'; G.running = false; syncRun(); updateSide();
+  if (!(S.best[g] <= n)) S.best[g] = n;
+  persist();
+  window.TTG?.track('level_complete', { level: g + 1, value: st });
+  const nowOpen = opened.filter(li => lineOpen(li));
+  nowOpen.forEach(li => window.TTG?.track('village_levelup', { level: li + 1 }));
+  bell(3, 0.18); bell(3, 0.18);
+  setTimeout(() => {
+    if (!G || mode !== 'game') return;
+    $('doneH').textContent = 'All trains in';
+    let p = st === 3 ? 'Worked at par. That is as few pulls as this box allows.' : 'Par here is ' + PAR[g] + ' pulls. Work it at par for three stars.';
+    if (starsOf(g) > before && before > 0) p = 'A better day than last time. ' + p;
+    if (nowOpen.length) p += ' ' + LINES[nowOpen[0]].name + ' is open.';
+    $('doneP').textContent = p;
+    $('doneStars').innerHTML = STAR(st > 0) + STAR(st > 1) + STAR(st > 2);
+    $('doneN').textContent = n + ' pulls, par ' + PAR[g];
+    const next = LEVELS[g + 1] && LEVELS[g + 1].li === G.x.li && stationOpen(LEVELS[g + 1]) ? g + 1 : nowOpen.length ? LEVELS.findIndex(x => x.li === nowOpen[0]) : -1;
+    $('doneAct').innerHTML = (next >= 0 ? '<button class="btn go" id="dNext">Next station</button>' : '') + '<button class="btn" id="dAgain">Try again</button><button class="btn" id="dBack">Back</button>';
+    if (next >= 0) $('dNext').addEventListener('click', () => startPuzzle(next));
+    $('dAgain').addEventListener('click', () => startPuzzle(g)); $('dBack').addEventListener('click', () => openLines(G.x.li));
+    $('done').classList.add('show'); ($('dNext') || $('dAgain')).focus();
+  }, 800);
+}
+function statusOf(k) {
+  const W = G.W, s = G.s, o = s.tr[k], T = W.trains[k];
+  if (o.st === 0) return s.t < T.at ? 'Due in ' + hhmm(T.at) : 'Waiting to come in';
+  if (o.st >= 2) return 'In at ' + hhmm(o.arr);
+  if (o.dw > 0) return o.rv ? 'Reversing' : 'Calling at ' + cap(nameOf(W, T.stages[o.s - 1].p));
+  const C = W.cells.get(o.c);
+  if (C.sig && C.sig.h === o.h && !s.lv[C.sig.lever]) return 'At signal ' + W.levers[C.sig.lever].n;
+  if (G.an && G.an.prev && G.an.prev[k] === o.c && s.t > 0) return 'Stopped';
+  return 'Running';
+}
+function updateSide() {
+  if (!G) return;
+  const W = G.W, s = G.s;
+  $('clock').textContent = hhmm(s.t);
+  $('pulls').innerHTML = '<b>' + s.pulls + '</b>pulls, par ' + PAR[G.g];
+  $('tt').innerHTML = W.trains.map((T, k) => {
+    const o = s.tr[k], last = T.stages[T.stages.length - 1].p;
+    const via = T.stages.slice(0, -1).map(st => (st.rev || W.cells.get(W.places[st.p][0]).dead) ? 'reverses at ' + nameOf(W, st.p) : 'calls at ' + cap(nameOf(W, st.p)));
+    const late = s.fail && s.fail.why === 'late' && s.fail.k === k;
+    const tm = o.st >= 2 ? hhmm(o.arr) + '<small>in</small>' : T.due ? hhmm(T.due) + '<small>due</small>' : '';
+    return '<div class="tr' + (o.st >= 2 ? ' in' : '') + (late ? ' late' : '') + '"><span class="hc">' + T.code + '</span><span class="to">to ' + cap(nameOf(W, last)) + (via.length ? ', ' + via.join(', ') : '') + '<span class="stt">' + statusOf(k) + (T.slow ? ', goods' : '') + '</span></span><span class="tm num">' + tm + '</span></div>';
+  }).join('');
+}
+function drawGame(now) {
+  if (!G) return;
+  const d = fit($('dcv'));
+  d.c.fillStyle = COL.room; d.c.fillRect(0, 0, d.w, d.h);
+  // a wide line on a narrow screen keeps a readable size and pans sideways
+  const gm = geom(G.W, 8, 8, d.w - 16, d.h - 16, land ? 0 : 22);
+  G.panMax = Math.max(0, gm.bw - (d.w - 16));
+  G.pan = clamp(G.pan || 0, 0, G.panMax);
+  if (G.panMax > 0) { const dx = 8 - gm.bx - G.pan; gm.bx += dx; gm.ox += dx; }
+  drawBoard(d.c, gm, G.W, G.s, G.an, now);
+  if (G.panMax > 0) {
+    const cy = gm.by + gm.bh / 2;
+    const arrow = (x, dir) => { d.c.fillStyle = COL.room; d.c.fillRect(dir < 0 ? 0 : d.w - 26, gm.by, 26, gm.bh); d.c.strokeStyle = COL.amber; d.c.lineWidth = 3; d.c.lineCap = 'round'; d.c.beginPath(); d.c.moveTo(x - dir * 5, cy - 9); d.c.lineTo(x + dir * 4, cy); d.c.lineTo(x - dir * 5, cy + 9); d.c.stroke(); };
+    if (G.pan > 1) arrow(12, -1);
+    if (G.pan < G.panMax - 1) arrow(d.w - 12, 1);
+  }
+  const fr = fit($('fcv'));
+  fr.c.fillStyle = COL.room; fr.c.fillRect(0, 0, fr.w, fr.h);
+  const locks = G.W.lock && !G.over ? G.W.levers.map((v, i) => !!lockOf(G.W, G.s, i)) : null;
+  drawFrame(fr.c, 0, 0, fr.w, fr.h, G.W, G.s, G.lvA, G.shake, locks, now);
+}
+
+/* ============================== input ============================== */
+let drag = null;
+$('dcv').addEventListener('pointerdown', e => { if (G && G.panMax > 0) { drag = { x: e.clientX, p: G.pan }; $('dcv').setPointerCapture(e.pointerId); } });
+$('dcv').addEventListener('pointermove', e => { if (drag && G) G.pan = clamp(drag.p - (e.clientX - drag.x), 0, G.panMax); });
+['pointerup', 'pointercancel'].forEach(k => $('dcv').addEventListener(k, () => { drag = null; }));
+$('fcv').addEventListener('pointerdown', e => {
+  if (!G) return;
+  const r = $('fcv').getBoundingClientRect(), { n, p, x0 } = frameGeom(G.W, 0, 0, r.width, r.height);
+  const i = Math.floor((e.clientX - r.left - (x0 - p / 2)) / p);
+  if (i >= 0 && i < n) tryPull(i);
+});
+$('runBtn').addEventListener('click', () => { if (!G || G.over) return; audio(); if (AC && AC.state === 'suspended') AC.resume(); G.running = !G.running; if (G.running) G.acc = TICK * 0.999; syncRun(); });
+$('stepBtn').addEventListener('click', () => { if (!G || G.over || G.running) return; audio(); doTick(); });
+$('fastBtn').addEventListener('click', () => { S.fast = !S.fast; persist(); syncRun(); });
+$('resetBtn').addEventListener('click', () => { if (G) startPuzzle(G.g); });
+$('gameBack').addEventListener('click', () => openLines(G ? G.x.li : S.tab));
+$('linesBack').addEventListener('click', () => { mode = 'title'; $('lines').classList.remove('show'); $('title').classList.add('show'); $('tcv').style.display = ''; titleStat(); layout(); });
+$('noticeOk').addEventListener('click', () => $('notice').classList.remove('show'));
+$('playBtn').addEventListener('click', () => { audio(); if (AC && AC.state === 'suspended') AC.resume(); S.started = true; persist(); window.TTG?.track('game_launch'); openLines(); });
+$('muteBtn').addEventListener('click', () => { audio(); setMuted(!S.muted); });
+document.addEventListener('keydown', e => {
+  if (mode !== 'game' || !G || $('notice').classList.contains('show') || $('done').classList.contains('show')) return;
+  if (/^[0-9]$/.test(e.key)) { tryPull(e.key === '0' ? 9 : +e.key - 1); e.preventDefault(); }
+  else if (e.key === ' ') { $('runBtn').click(); e.preventDefault(); }
+  else if (e.key === 's' || e.key === 'S' || e.key === 'ArrowRight') $('stepBtn').click();
+  else if (e.key === 'r' || e.key === 'R') $('resetBtn').click();
+  else if (e.key === 'f' || e.key === 'F') $('fastBtn').click();
+});
+document.addEventListener('touchmove', e => {
+  let n = e.target;
+  while (n && n !== document.body) { if (n.scrollHeight > n.clientHeight + 1 || n.scrollWidth > n.clientWidth + 1) { const cs = getComputedStyle(n); if (/auto|scroll/.test(cs.overflowY + cs.overflowX)) return; } n = n.parentElement; }
+  if (e.cancelable) e.preventDefault();
+}, { passive: false });
+function titleStat() { $('tstat').textContent = S.started ? totalStars() + ' of ' + LEVELS.length * 3 + ' stars in the register.' : ''; if (S.started) $('playBtn').textContent = 'Back to the box'; }
+
+/* ============================== loop ============================== */
+let last = performance.now(), running = true;
+function frame(now) {
+  if (!running) return;
+  const dt = Math.min(0.05, Math.max(0, (now - last) / 1000)); last = now;
+  const t = now / 1000;
+  if (mode === 'title') { demoStep(dt); drawTitle(t); }
+  if (mode === 'game' && G) {
+    if (G.running && !G.over && !$('notice').classList.contains('show')) {
+      G.acc += dt * (S.fast ? 3 : 1);
+      if (G.acc >= TICK) { G.acc -= TICK; doTick(); }
+    }
+    G.an.f = G.running || G.an.f < 1 ? clamp(G.an.f + dt * (S.fast ? 3 : 1) / TICK * (G.running ? 1 : 1.6), 0, 1) : 1;
+    G.s.lv.forEach((v, i) => { G.lvA[i] += (v - G.lvA[i]) * Math.min(1, dt * 14); if (G.shake[i] > 0) G.shake[i] -= dt; });
+    if (G.noteT > 0) { G.noteT -= dt; if (G.noteT <= 0 && !G.over) setNote(); }
+    drawGame(t);
+  }
+  requestAnimationFrame(frame);
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { running = false; if (G) stopRun(); persist(); if (AC && AC.state === 'running') AC.suspend(); }
+  else { if (running) return; running = true; last = performance.now(); if (AC && AC.state === 'suspended' && !S.muted) AC.resume(); requestAnimationFrame(frame); }
+});
+window.addEventListener('pagehide', persist);
+window.addEventListener('resize', () => { layout(); if (mode === 'lines') buildLines(); });
+if (/[?&]debug(&|=|$)/.test(location.search)) window.__sb = {
+  S: () => S, G: () => G, LEVELS, PAR,
+  state: () => G && ({ g: G.g, t: G.s.t, pulls: G.s.pulls, lv: G.s.lv.slice(), won: G.s.won, fail: G.s.fail, tr: G.s.tr.map(o => [o.st, o.c, o.h]) }),
+  pull: i => tryPull(i), tick: () => G && !G.over && doTick(), start: g => startPuzzle(g),
+  solve: g => { const x = LEVELS[g]; const W = build(x.L, x.li); const r = solve(W, 5e6); return { pulls: r.pulls, path: r.path }; },
+  play: g => { const x = LEVELS[g]; startPuzzle(g); $('notice').classList.remove('show'); const r = solve(build(x.L, x.li), 5e6); let pi = 0; for (let n = 0; n < 900 && !G.over; n++) { while (pi < r.path.length && r.path[pi][0] === G.s.t) { tryPull(r.path[pi][1]); pi++; } doTick(); } return { over: G.over, pulls: G.s.pulls, par: PAR[g] }; },
+  win: (g, n) => { S.best[g] = n || PAR[g]; persist(); },
+};
+setMuted(S.muted, true);
+titleStat();
+layout();
+demoReset();
+requestAnimationFrame(t => { last = t; frame(t); });
+})();
+</script>
+</body>
+</html>

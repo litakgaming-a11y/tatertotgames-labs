@@ -21,6 +21,7 @@ export const GAMES = Object.freeze([
   'tide-pool',
   'kiln-and-glaze',
   'pinball-almanac',
+  'signal-box',
   'flip-force',
   'fold-friends',
   'freeze-frame',
