@@ -17,6 +17,13 @@ colors:
   ember: "#f0a04b"
   bench: "#4a3f35"
   wheel: "#80878c"
+  white: "#ffffff"
+  card-white: "#fbfbf9"
+  title-glaze: "#9fc9b4"
+  mist: "#dfe4e6"
+  link-rule: "#7f9be3"
+  scrollbar: "#bcc6cb"
+  scrim: "#14191c"
 typography:
   title:
     fontFamily: "'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif"
@@ -48,11 +55,31 @@ typography:
     fontWeight: 700
     lineHeight: 1.3
     letterSpacing: "normal"
+  micro:
+    fontFamily: "'Segoe UI', system-ui, -apple-system, Roboto, Arial, sans-serif"
+    fontSize: "11px"
+    fontWeight: 700
+    lineHeight: 1.3
+    letterSpacing: "normal"
+  tagline:
+    fontFamily: "'Segoe UI', system-ui, -apple-system, Roboto, Arial, sans-serif"
+    fontSize: "17px"
+    fontWeight: 600
+    lineHeight: 1.3
+    letterSpacing: "normal"
+  panel-title:
+    fontFamily: "'Segoe UI', system-ui, -apple-system, Roboto, Arial, sans-serif"
+    fontSize: "20px"
+    fontWeight: 800
+    lineHeight: 1.3
+    letterSpacing: "normal"
 rounded:
   control: "10px"
   card: "12px"
   panel: "14px"
   pip: "8px"
+  thumb: "3px"
+  round-button: "21px"
 spacing:
   xs: "4px"
   sm: "8px"

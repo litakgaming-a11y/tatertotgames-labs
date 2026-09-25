@@ -20,6 +20,7 @@ export const GAMES = Object.freeze([
   'fire-season',
   'tide-pool',
   'kiln-and-glaze',
+  'pinball-almanac',
   'flip-force',
   'fold-friends',
   'freeze-frame',

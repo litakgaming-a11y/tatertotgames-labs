@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-25T22:00:00Z",
+  "title": "Design System: Pinball Almanac",
+  "extensions": {
+    "colorMeta": {
+      "vermilion": { "role": "primary", "displayName": "Vermilion", "canonical": "#e4472f", "tonalRamp": ["#3d120b", "#6b1f12", "#8f2514", "#c7361f", "#e4472f", "#eb7361", "#f2a194", "#fad6cf"] },
+      "marigold": { "role": "secondary", "displayName": "Marigold", "canonical": "#f3b21f", "tonalRamp": ["#3d2b06", "#6b4b0b", "#9a6c10", "#c98d15", "#f3b21f", "#f6c557", "#f9d98f", "#fdeec9"] },
+      "navy": { "role": "neutral", "displayName": "Print Navy", "canonical": "#1d2340", "tonalRamp": ["#0b0f1f", "#141a33", "#1d2340", "#4a4f68", "#857f70", "#cbbd9c", "#e4d8bd", "#efe6d2"] },
+      "teal": { "role": "tertiary", "displayName": "Teal", "canonical": "#178f86", "tonalRamp": ["#062a28", "#0b4a45", "#10675f", "#137b73", "#178f86", "#4aaaa2", "#86c8c2", "#c9e7e4"] }
+    },
+    "typographyMeta": {
+      "reel": { "displayName": "Reel", "purpose": "Digits in the backglass score reels." },
+      "label": { "displayName": "Label", "purpose": "Buttons, segmented controls and backglass readouts." }
+    },
+    "shadows": [
+      { "name": "print-offset", "value": "hard navy offset 0.4 by 0.6 table units", "purpose": "The printed shadow under bumpers, rails, flippers and the ball." }
+    ],
+    "motion": [
+      { "name": "press", "value": "0.1s ease-out background and 1px drop", "purpose": "A button inverting to ink when pressed." },
+      { "name": "reel", "value": "0.09s slide from below", "purpose": "A score digit rolling over." },
+      { "name": "shake", "value": "sine sway decaying over 0.25s", "purpose": "The table after a nudge." }
+    ],
+    "breakpoints": [
+      { "name": "landscape", "value": "width > 0.95 * height" },
+      { "name": "compact", "value": "height <= 520px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Button",
+      "kind": "button",
+      "refersTo": "button",
+      "description": "Paper button with an ink border and condensed lettering; inverts when pressed, hatched when disabled.",
+      "html": "<button class=\"ds-btn\">Back</button> <button class=\"ds-btn\" disabled>Spinner</button>",
+      "css": ".ds-btn { min-height: 44px; padding: 0 18px; border: 2px solid #1d2340; border-radius: 4px; background: #efe6d2; color: #1d2340; font: 700 17px Bahnschrift, 'Roboto Condensed', 'Arial Narrow', sans-serif; font-stretch: condensed; cursor: pointer; } .ds-btn:hover:not(:disabled) { background: #f7f0e1; } .ds-btn:active:not(:disabled) { background: #1d2340; color: #efe6d2; transform: translateY(1px); } .ds-btn:focus-visible { outline: 2px solid #e4472f; outline-offset: 2px; } .ds-btn:disabled { color: #857f70; border-color: #cbbd9c; background: repeating-linear-gradient(135deg, rgba(29,35,64,.08) 0 1px, transparent 1px 5px), #e4d8bd; cursor: default; }"
+    },
+    {
+      "name": "Go Button",
+      "kind": "button",
+      "refersTo": "button-go",
+      "description": "The one primary action per page.",
+      "html": "<button class=\"ds-go\">Play County Fair</button>",
+      "css": ".ds-go { min-height: 54px; padding: 0 30px; border: 0; border-radius: 4px; background: #c7361f; color: #fff; font: 700 21px Bahnschrift, 'Roboto Condensed', 'Arial Narrow', sans-serif; font-stretch: condensed; cursor: pointer; } .ds-go:hover { background: #b32f1a; } .ds-go:active { background: #8f2514; } .ds-go:focus-visible { outline: 2px solid #e4472f; outline-offset: 2px; }"
+    },
+    {
+      "name": "Score Reels",
+      "kind": "custom",
+      "refersTo": "reel",
+      "description": "Eight reel windows; unused leading windows stay dark.",
+      "html": "<div class=\"ds-reels\"><i></i><i></i><b>1</b><b>8</b><b>5</b><b>2</b><b>5</b><b>0</b></div>",
+      "css": ".ds-reels { display: inline-flex; gap: 2px; padding: 6px; background: #141a33; } .ds-reels i, .ds-reels b { width: 30px; height: 44px; display: grid; place-items: center; } .ds-reels i { background: #262c46; } .ds-reels b { background: #efe6d2; color: #1d2340; font: 800 34px Bahnschrift, 'Roboto Condensed', 'Arial Narrow', sans-serif; font-stretch: condensed; }"
+    },
+    {
+      "name": "Mission Row",
+      "kind": "custom",
+      "refersTo": "panel",
+      "description": "A mission with its star, filled in the table's second ink once earned.",
+      "html": "<div class=\"ds-m\"><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\"><path d=\"M12 2.5l2.9 6.3 6.8.7-5.1 4.6 1.5 6.8L12 17.4l-6.1 3.5 1.5-6.8L2.3 9.5l6.8-.7z\" fill=\"#f3b21f\" stroke=\"#1d2340\" stroke-width=\"1.6\" stroke-linejoin=\"round\"/></svg><span>Lock two balls and start multiball.</span></div>",
+      "css": ".ds-m { display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: center; font: 14px 'Segoe UI', system-ui, sans-serif; color: #1d2340; background: #efe6d2; padding: 8px; width: 320px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Printed Flyer",
+    "overview": "Pinball Almanac is a screen-printed pinball flyer that plays: navy ground, two inks per table in halftone and slightly off register, with electro-mechanical score reels that chime as they count.",
+    "keyCharacteristics": ["Two inks per table on navy", "Halftone and misregistration", "Score reels, not a dot matrix", "Lamps designed lit and unlit", "Flyer pages between games"],
+    "rules": [
+      { "name": "Two inks a table", "body": "No table adds a third saturated colour.", "section": "colors" },
+      { "name": "Lamps are designed unlit", "body": "An unlit insert is its ink mixed toward navy; lit is the full ink. Nothing glows.", "section": "colors" },
+      { "name": "Print, not chrome", "body": "Depth is a hard printed offset; the ball is the only chrome.", "section": "elevation" }
+    ],
+    "dos": ["Print in two inks on navy", "Show every lamp unlit as well as lit", "Keep the backglass to four readouts"],
+    "donts": ["No dot-matrix display or neon", "No third ink on a table", "No glyph icons"]
+  }
+}
