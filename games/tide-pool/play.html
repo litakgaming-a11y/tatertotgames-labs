@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Tide Pool | TaterTot Games</title>
+<meta name="theme-color" content="#1d4f6b">
+<link rel="icon" href="data:,">
+<script src="/analytics.js" defer></script>
+<style>
+  :root {
+    --page: #fafcfb; --page2: #eef4f4; --wash: #d9eaf0; --rule: #c6d8dc; --ink: #173a5e; --ink2: #3d5f7c; --faint: #7f97a8;
+    --coral: #e8553f; --coral-btn: #c8402c; --kelp: #3f7a52; --sea: #1d4f6b;
+    --sans: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+    --latin: Georgia, "Palatino Linotype", "Book Antiqua", Palatino, serif;
+    --dots: radial-gradient(circle, rgba(23, 58, 94, .16) 1px, transparent 1.4px) 0 0 / 6px 6px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #d8c7a0; touch-action: none; overscroll-behavior: none; position: fixed; inset: 0; }
+  body { font-family: var(--sans); color: var(--ink); font-size: 14px; line-height: 1.4; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  ::selection { background: var(--coral); color: #fff; }
+  canvas#view { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  button { font-family: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  button:focus-visible, a:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
+  .num { font-variant-numeric: tabular-nums lining-nums; }
+  i.lat { font-family: var(--latin); font-style: italic; color: var(--ink2); }
+
+  .btn { min-height: 44px; padding: 0 16px; border: 1.5px solid var(--ink); border-radius: 22px; font-size: 14px; font-weight: 600;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: var(--page); color: var(--ink); transition: background-color .12s ease-out, transform .12s ease-out; }
+  .btn:hover:not(:disabled) { background: #fff; }
+  .btn:active:not(:disabled) { background: var(--ink); color: var(--page); transform: translateY(1px); }
+  .btn:disabled { color: var(--faint); border-color: var(--rule); background: var(--dots), var(--page2); cursor: default; }
+  .btn.go { background: var(--coral-btn); border-color: var(--coral-btn); color: #fff; }
+  .btn.go:hover:not(:disabled) { background: #b53824; }
+  .btn.go:active:not(:disabled) { background: #93301f; border-color: #93301f; }
+  .btn.sm { min-height: 36px; padding: 0 12px; font-size: 13px; }
+
+  /* ---------- journal ---------- */
+  #deck { position: fixed; display: none; flex-direction: column; background: var(--page); z-index: 3; }
+  body.port #deck { left: 0; right: 0; bottom: 0; border-top: 2px solid var(--ink); }
+  body.land #deck { top: 0; right: 0; bottom: 0; border-left: 2px solid var(--ink); }
+  #tideWrap { flex: 0 0 auto; padding: 8px 14px 6px; border-bottom: 1px solid var(--rule); background: var(--page2); }
+  #tideCv { width: 100%; height: 52px; display: block; }
+  #tabs { flex: 0 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--rule); }
+  .tab { min-height: 42px; font-size: 13.5px; font-weight: 600; color: var(--faint); position: relative; }
+  .tab.on { color: var(--ink); }
+  .tab.on::after { content: ""; position: absolute; left: 24%; right: 24%; bottom: -1px; height: 3px; border-radius: 3px; background: var(--coral); }
+  .tab .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--coral); margin-left: 5px; vertical-align: 2px; }
+  #jbody { flex: 1 1 auto; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; padding-bottom: 14px; }
+  .scroll::-webkit-scrollbar { width: 6px; } .scroll::-webkit-scrollbar-thumb { background: #b8ccd3; border-radius: 3px; }
+  .scroll { scrollbar-width: thin; scrollbar-color: #b8ccd3 transparent; }
+  .note { padding: 10px 14px 4px; font-size: 13px; color: var(--ink2); }
+  .note b { color: var(--ink); }
+
+  .res { display: grid; grid-template-columns: 44px 1fr auto; gap: 10px; align-items: center; padding: 7px 14px; width: 100%; text-align: left; min-height: 52px; }
+  .res + .res { border-top: 1px solid #e3ecee; }
+  .res.sel { background: var(--wash); }
+  .res canvas { width: 44px; height: 44px; display: block; }
+  .res .nm { font-weight: 700; font-size: 14px; }
+  .res .why { font-size: 12.5px; color: var(--ink2); }
+  .mood { font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 11px; white-space: nowrap; }
+  .mood.happy { background: #dcefe1; color: #235c36; }
+  .mood.ok { background: #eef0da; color: #5b5a1d; }
+  .mood.sad { background: #f8dfd9; color: #9a2f1f; }
+  .card { margin: 10px 14px 6px; padding: 12px 14px; border-radius: 14px; background: var(--wash); }
+  .card h3 { font-size: 16px; font-weight: 800; }
+  .card .facts { margin-top: 8px; display: grid; gap: 4px; font-size: 13px; }
+  .card .facts div { display: grid; grid-template-columns: 18px 1fr; gap: 6px; align-items: start; }
+  .card .facts .tick { width: 14px; height: 14px; margin-top: 3px; border-radius: 50%; border: 1.5px solid var(--ink2); }
+  .card .facts .tick.on { background: var(--kelp); border-color: var(--kelp); }
+  .card .needs { margin-top: 8px; font-size: 12.5px; color: var(--ink2); }
+  .card .act { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .guide { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 6px; padding: 8px 12px; }
+  .ge { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px; border-radius: 12px; font-size: 11.5px; text-align: center; line-height: 1.2; min-height: 96px; }
+  .ge canvas { width: 56px; height: 56px; }
+  .ge.sel { background: var(--wash); }
+  .ge .pips { display: flex; gap: 3px; margin-top: 2px; }
+  .ge .pips i { width: 6px; height: 6px; border-radius: 50%; border: 1px solid var(--ink2); display: block; }
+  .ge .pips i.on { background: var(--kelp); border-color: var(--kelp); }
+  .ge.ghost { color: var(--faint); }
+
+  .shop { display: grid; grid-template-columns: 58px 1fr auto; gap: 10px; align-items: center; padding: 8px 14px; }
+  .shop + .shop { border-top: 1px solid #e3ecee; }
+  .shop canvas { width: 58px; height: 46px; }
+  .shop h4 { font-size: 14px; font-weight: 700; }
+  .shop p { font-size: 12.5px; color: var(--ink2); }
+  .buy { flex-direction: column; gap: 0; line-height: 1.15; min-width: 84px; padding: 4px 12px; }
+  .buy small { font-size: 11.5px; font-weight: 600; }
+  .cove { margin: 10px 14px 0; padding: 12px 14px; border-radius: 14px; border: 1.5px solid var(--rule); display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+  .cove.here { border-color: var(--ink); background: var(--wash); }
+  .cove.locked { background: var(--dots), var(--page2); }
+  .cove h4 { font-size: 15px; font-weight: 800; }
+  .cove p { font-size: 12.5px; color: var(--ink2); }
+
+  #muteBtn { position: fixed; width: 42px; height: 42px; display: none; align-items: center; justify-content: center; z-index: 4;
+    background: rgba(250, 252, 251, .92); border: 1.5px solid var(--ink); border-radius: 21px; color: var(--ink); }
+  #muteBtn svg { width: 20px; height: 20px; }
+  #muteBtn:active { background: var(--ink); color: var(--page); }
+  #toast { position: fixed; top: auto; display: none; z-index: 4; pointer-events: none; background: rgba(250, 252, 251, .95); color: var(--ink); border: 1.5px solid var(--ink);
+    border-radius: 18px; padding: 6px 14px; font-size: 13px; font-weight: 600; max-width: min(92vw, 460px); text-align: center; transform: translateX(-50%); }
+  #placeBar { position: fixed; display: none; z-index: 4; gap: 8px; align-items: center; background: rgba(250, 252, 251, .96); border: 1.5px solid var(--ink); border-radius: 26px; padding: 6px 6px 6px 14px; transform: translateX(-50%); font-size: 13px; font-weight: 600; }
+
+  .screen { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 10; background: rgba(15, 42, 60, .5); padding: 14px; }
+  .screen.show { display: flex; }
+  .panel { width: min(460px, 100%); max-height: 100%; overflow-y: auto; overscroll-behavior: contain; background: var(--page); border: 2px solid var(--ink); border-radius: 18px; padding: 20px; touch-action: pan-y; }
+  #title { background: linear-gradient(180deg, rgba(250, 252, 251, .9) 0%, rgba(250, 252, 251, .45) 32%, rgba(250, 252, 251, 0) 50%, rgba(250, 252, 251, 0) 70%, rgba(250, 252, 251, .88) 100%);
+    flex-direction: column; justify-content: space-between; text-align: center; padding: max(8vh, 26px) 16px 18px; }
+  #title h1 { font-size: clamp(40px, min(12vw, 13vh), 92px); font-weight: 800; letter-spacing: .02em; line-height: .95; color: var(--ink); }
+  #title h1 span { color: var(--coral); }
+  #title .tag { margin-top: 12px; font-size: clamp(14px, 3.6vw, 17px); color: var(--ink); font-weight: 600; }
+  #title .go { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  #title .btn.go { min-height: 52px; padding: 0 30px; font-size: 17px; }
+  #title .stat { font-size: 13px; color: var(--ink); font-weight: 600; }
+  #badge { color: var(--ink); font-size: 13px; font-weight: 600; text-decoration: none; border-bottom: 1.5px solid var(--coral); padding: 6px 2px 2px; }
+  #away .panel { text-align: center; }
+  #away h2 { font-size: 20px; font-weight: 800; }
+  #away .lede { color: var(--ink2); font-size: 14px; margin-top: 8px; }
+  #away .act { margin-top: 16px; display: flex; justify-content: center; }
+  body.land #title { align-items: flex-start; text-align: left; padding: max(9vh, 22px) 6vw max(7vh, 18px);
+    background: linear-gradient(90deg, rgba(250, 252, 251, .94) 0%, rgba(250, 252, 251, .8) 30%, rgba(250, 252, 251, 0) 46%); }
+  body.land #title .go { align-items: flex-start; }
+  body.land #title > div { max-width: 32vw; }
+  @media (max-height: 520px) { #tideCv { height: 40px; } #tideWrap { padding: 5px 12px 4px; } .tab { min-height: 36px; } .res { min-height: 44px; padding: 4px 12px; } .res canvas { width: 36px; height: 36px; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body class="port">
+<canvas id="view"></canvas>
+<button id="muteBtn" aria-label="Sound on or off">
+  <svg id="icoOn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6"/><path d="M18 6.5a7.8 7.8 0 0 1 0 11"/></svg>
+  <svg id="icoOff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" style="display:none"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
+</button>
+<div id="toast"></div>
+<div id="placeBar"><span id="placeText">Tap the pool to set it down</span><button class="btn sm" id="placeCancel">Cancel</button></div>
+
+<div id="deck">
+  <div id="tideWrap"><canvas id="tideCv" aria-label="Tide clock"></canvas></div>
+  <nav id="tabs">
+    <button class="tab on" data-tab="pool">Pool</button>
+    <button class="tab" data-tab="guide">Guide</button>
+    <button class="tab" data-tab="stones">Stones</button>
+    <button class="tab" data-tab="coves">Coves</button>
+  </nav>
+  <div id="jbody" class="scroll"></div>
+</div>
+
+<div id="title" class="screen show">
+  <div>
+    <h1>Tide<br><span>Pool</span></h1>
+    <p class="tag">Make a home. The sea brings the visitors.</p>
+  </div>
+  <div class="go">
+    <button class="btn go" id="playBtn">Go down to the shore</button>
+    <div class="stat num" id="titleStat"></div>
+    <a id="badge" href="https://tatertotgames.com">tatertotgames.com</a>
+  </div>
+</div>
+
+<div id="away" class="screen">
+  <div class="panel">
+    <h2>While you were away</h2>
+    <p class="lede num" id="awayText"></p>
+    <div class="act"><button class="btn go" id="awayBtn">Back to the pool</button></div>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+const TAU = Math.PI * 2;
+const lerp = (a, b, t) => a + (b - a) * t;
+
+/* ============================== species ============================== */
+// home: where it lives. food: what it eats. prey: who it hunts. social: pair or group. rare: 1 common, 2 uncommon, 3 rare.
+const SP = [
+  { id: 'limpet',   n: 'Common limpet',    lat: 'Patella vulgata',        cove: 'cove',  home: 'surface', food: 'algae',    rare: 1, social: 'group', draw: 'limpet',  col: '#b99a6b', max: 5, fact: 'Clamped down tight as the water drained away.' },
+  { id: 'winkle',   n: 'Periwinkle',       lat: 'Littorina littorea',     cove: 'cove', also: ['reef'],  home: 'pebble',  food: 'algae',    rare: 1, social: 'group', draw: 'snail',   col: '#5c5048', max: 5, fact: 'Grazed a clean trail across the rock.' },
+  { id: 'beadlet',  n: 'Beadlet anemone',  lat: 'Actinia equina',         cove: 'cove',  home: 'surface', food: 'plankton', rare: 1, social: 'solo',  draw: 'anemone', col: '#c8322e', max: 4, fact: 'Opened its tentacles the moment the tide returned.' },
+  { id: 'barnacle', n: 'Acorn barnacles',  lat: 'Semibalanus balanoides', cove: 'cove',  home: 'surface', food: 'plankton', rare: 1, social: 'group', draw: 'barnacle',col: '#d8d2c2', max: 5, fact: 'Kicked out their feathery legs to comb the water.' },
+  { id: 'mussel',   n: 'Blue mussel',      lat: 'Mytilus edulis',         cove: 'cove', also: ['reef', 'deep'],  home: 'surface', food: 'plankton', rare: 1, social: 'group', draw: 'mussel',  col: '#26354f', max: 5, fact: 'Anchored itself with fine threads.' },
+  { id: 'hermit',   n: 'Hermit crab',      lat: 'Pagurus bernhardus',     cove: 'cove', also: ['deep'],  home: 'shell',   food: 'detritus', rare: 1, social: 'solo',  draw: 'hermit',  col: '#d9713a', max: 3, fact: 'Tried on a bigger shell, then moved in.' },
+  { id: 'prawn',    n: 'Common prawn',     lat: 'Palaemon serratus',      cove: 'cove', also: ['kelp', 'reef', 'deep'],  home: 'kelp',    food: 'detritus', rare: 1, social: 'group', draw: 'prawn',   col: '#e2b8a6', max: 4, fact: 'Hovered in the fronds, picking at scraps.' },
+  { id: 'shore',    n: 'Shore crab',       lat: 'Carcinus maenas',        cove: 'cove', also: ['deep'],  home: 'crevice', food: 'prey', prey: ['winkle', 'mussel', 'limpet'], rare: 2, social: 'solo', draw: 'crab', col: '#4f6b36', max: 3, fact: 'Cracked open a shell with one claw.' },
+  { id: 'blenny',   n: 'Shanny',           lat: 'Lipophrys pholis',       cove: 'cove', also: ['reef'],  home: 'pebble',  food: 'prey', prey: ['barnacle', 'prawn'], rare: 2, social: 'solo', draw: 'fish', col: '#7d6b3f', max: 3, fact: 'Propped itself up on its fins to look around.' },
+  { id: 'starfish', n: 'Common starfish',  lat: 'Asterias rubens',        cove: 'cove',  home: 'surface', food: 'prey', prey: ['mussel', 'barnacle'], rare: 2, social: 'solo', draw: 'star', col: '#e07a2f', max: 2, fact: 'Pulled a mussel open, very slowly.' },
+  { id: 'dogwhelk', n: 'Dog whelk',        lat: 'Nucella lapillus',       cove: 'cove',  home: 'surface', food: 'prey', prey: ['barnacle', 'mussel'], rare: 2, social: 'group', draw: 'topshell', col: '#c9b27a', max: 3, fact: 'Drilled a neat hole through a barnacle.' },
+  { id: 'chiton',   n: 'Grey chiton',      lat: 'Lepidochitona cinerea',  cove: 'cove',  home: 'surface', food: 'algae',    rare: 1, social: 'group', draw: 'chiton',  col: '#8b8578', max: 4, fact: 'Rolled into a ball when it was lifted.' },
+  { id: 'urchin',   n: 'Purple sea urchin',lat: 'Paracentrotus lividus',  cove: 'kelp', also: ['deep'],  home: 'crevice', food: 'kelp',     rare: 1, social: 'group', draw: 'urchin',  col: '#6b3f7a', max: 4, fact: 'Wedged itself into a hollow it had worn itself.' },
+  { id: 'snakelock',n: 'Snakelocks anemone',lat: 'Anemonia viridis',      cove: 'kelp',  home: 'surface', food: 'plankton', rare: 1, social: 'solo',  draw: 'snakelock',col: '#6fa35a', max: 4, fact: 'Waved purple-tipped tentacles in the light.' },
+  { id: 'goby',     n: 'Rock goby',        lat: 'Gobius paganellus',      cove: 'kelp', also: ['reef', 'deep'],  home: 'pebble',  food: 'prey', prey: ['prawn'], rare: 1, social: 'pair', draw: 'fish', col: '#8a6e4c', max: 3, fact: 'Guarded a clutch of eggs under a stone.' },
+  { id: 'seahare',  n: 'Sea hare',         lat: 'Aplysia punctata',       cove: 'kelp',  home: 'kelp',    food: 'kelp',     rare: 2, social: 'pair',  draw: 'seahare', col: '#8a3d52', max: 3, fact: 'Let out a cloud of purple ink.' },
+  { id: 'pipefish', n: 'Snake pipefish',   lat: 'Entelurus aequoreus',    cove: 'kelp',  home: 'eelgrass',food: 'plankton', rare: 2, social: 'solo',  draw: 'pipefish',col: '#9b8a4a', max: 3, fact: 'Hung straight up among the eelgrass, invisible.' },
+  { id: 'topshell', n: 'Painted top shell',lat: 'Calliostoma zizyphinum', cove: 'kelp', also: ['reef'],  home: 'surface', food: 'algae',    rare: 1, social: 'group', draw: 'topshell',col: '#d39a8a', max: 4, fact: 'Climbed to the top of a rock to graze.' },
+  { id: 'kelpcrab', n: 'Spiny spider crab',lat: 'Maja brachydactyla',     cove: 'kelp',  home: 'kelp',    food: 'kelp',     rare: 2, social: 'solo',  draw: 'spider',  col: '#b0574a', max: 2, fact: 'Decorated its shell with bits of weed.' },
+  { id: 'sandgoby', n: 'Sand goby',        lat: 'Pomatoschistus minutus', cove: 'kelp', also: ['deep'],  home: 'sand',    food: 'detritus', rare: 1, social: 'pair',  draw: 'fish',    col: '#cdb88a', max: 3, fact: 'Vanished into the sand with a flick.' },
+  { id: 'bluerayed',n: 'Blue-rayed limpet',lat: 'Patella pellucida',      cove: 'kelp',  home: 'kelp',    food: 'kelp',     rare: 2, social: 'group', draw: 'bluelimpet', col: '#6b5a3a', max: 3, fact: 'Its blue lines flashed as the light moved.' },
+  { id: 'wrasse',   n: 'Corkwing wrasse',  lat: 'Symphodus melops',       cove: 'kelp',  home: 'kelp',    food: 'prey', prey: ['prawn', 'sandgoby'], rare: 2, social: 'pair', draw: 'fish', col: '#5f8a4a', max: 2, fact: 'Built a nest of weed and guarded it.' },
+  { id: 'lumpsucker',n: 'Lumpsucker',      lat: 'Cyclopterus lumpus',     cove: 'kelp',  home: 'surface', food: 'prey', prey: ['prawn'], rare: 3, spring: true, social: 'solo', draw: 'lump', col: '#6f8a5a', max: 1, fact: 'Stuck itself to a rock with its belly and sat there.' },
+  { id: 'cushion',  n: 'Cushion star',     lat: 'Asterina gibbosa',       cove: 'reef',  home: 'crevice', food: 'detritus', rare: 1, social: 'group', draw: 'cushion', col: '#c7a13a', max: 4, fact: 'Turned its stomach out over a scrap of food.' },
+  { id: 'brittle',  n: 'Common brittle star', lat: 'Ophiothrix fragilis', cove: 'reef',  home: 'crevice', food: 'plankton', rare: 1, social: 'group', draw: 'brittle', col: '#a14a78', max: 4, fact: 'Held two arms up into the current to feed.' },
+  { id: 'sealemon', n: 'Sea lemon',        lat: 'Doris pseudoargus',      cove: 'reef',  home: 'surface', food: 'algae',    rare: 2, social: 'pair',  draw: 'slug',    col: '#e0b84a', max: 3, fact: 'Laid a pale ribbon of eggs.' },
+  { id: 'dahlia',   n: 'Dahlia anemone',   lat: 'Urticina felina',        cove: 'reef',  home: 'surface', food: 'plankton', rare: 2, social: 'solo',  draw: 'anemone', col: '#d8495f', max: 3, fact: 'Caught a shrimp and folded it in.' },
+  { id: 'velvet',   n: 'Velvet swimming crab', lat: 'Necora puber',       cove: 'reef',  home: 'crevice', food: 'prey', prey: ['winkle', 'mussel', 'topshell'], rare: 2, social: 'solo', draw: 'crab', col: '#3d4a73', max: 2, fact: 'Raised its claws and stood its ground.' },
+  { id: 'greyslug', n: 'Grey sea slug',    lat: 'Aeolidia papillosa',     cove: 'reef',  home: 'surface', food: 'prey', prey: ['beadlet', 'snakelock', 'dahlia'], rare: 3, social: 'solo', draw: 'slug', col: '#a89e94', max: 2, fact: 'Grazed an anemone, stings and all.' },
+  { id: 'squat',    n: 'Squat lobster',    lat: 'Galathea strigosa',      cove: 'reef',  home: 'crevice', food: 'detritus', rare: 2, social: 'solo',  draw: 'lobster', col: '#c2452f', max: 2, fact: 'Backed into its crack, claws out front.' },
+  { id: 'scorpion', n: 'Sea scorpion',     lat: 'Taurulus bubalis',       cove: 'reef',  home: 'crevice', food: 'prey', prey: ['prawn', 'blenny', 'goby'], rare: 2, social: 'solo', draw: 'fish', col: '#8a5a4a', max: 2, fact: 'Sat so still it looked like part of the rock.' },
+  { id: 'cowrie',   n: 'Spotted cowrie',   lat: 'Trivia monacha',         cove: 'reef',  home: 'surface', food: 'plankton', rare: 3, social: 'solo',  draw: 'cowrie',  col: '#d9a58a', max: 2, fact: 'Wrapped its mantle right over its shell.' },
+  { id: 'octopus',  n: 'Common octopus',   lat: 'Octopus vulgaris',       cove: 'deep',  home: 'bigcrevice', food: 'prey', prey: ['shore', 'velvet', 'hermit'], rare: 3, social: 'solo', draw: 'octopus', col: '#b4613f', max: 1, fact: 'Poured itself through a gap no wider than a coin.' },
+  { id: 'seahorse', n: 'Short-snouted seahorse', lat: 'Hippocampus hippocampus', cove: 'deep', home: 'eelgrass', food: 'plankton', rare: 3, spring: true, social: 'pair', draw: 'seahorse', col: '#c98d3a', max: 2, fact: 'Wrapped its tail around a blade of eelgrass.' },
+  { id: 'jelly',    n: 'Compass jellyfish',lat: 'Chrysaora hysoscella',   cove: 'deep',  home: 'none',    food: 'none',     rare: 2, spring: true, visitor: true, social: 'solo', draw: 'jelly', col: '#e3b27c', max: 1, fact: 'Pulsed slowly across the pool on the flood.' },
+  { id: 'lobster',  n: 'European lobster', lat: 'Homarus gammarus',       cove: 'deep',  home: 'bigcrevice', food: 'prey', prey: ['urchin', 'shore', 'mussel'], rare: 3, social: 'solo', draw: 'lobster', col: '#2f3f6b', max: 1, fact: 'Waved its long feelers out of the dark.' },
+  { id: 'conger',   n: 'Conger eel',       lat: 'Conger conger',          cove: 'deep',  home: 'bigcrevice', food: 'prey', prey: ['tompot', 'goby', 'sandgoby'], rare: 3, social: 'solo', draw: 'eel', col: '#4a5058', max: 1, fact: 'Showed only its head, and then not even that.' },
+  { id: 'cuttle',   n: 'Common cuttlefish',lat: 'Sepia officinalis',      cove: 'deep',  home: 'sand',    food: 'prey', prey: ['prawn', 'sandgoby'], rare: 3, spring: true, social: 'solo', draw: 'cuttle', col: '#b89a7a', max: 1, fact: 'Rippled stripes down its back, then shot out its arms.' },
+  { id: 'moonjelly',n: 'Moon jellyfish',   lat: 'Aurelia aurita',         cove: 'deep',  home: 'none',    food: 'none',     rare: 1, visitor: true, social: 'solo', draw: 'moonjelly', col: '#cfd8e8', max: 1, fact: 'Four pale rings showed through its bell.' },
+  { id: 'tompot',   n: 'Tompot blenny',    lat: 'Parablennius gattorugine',cove: 'deep', home: 'crevice', food: 'prey', prey: ['prawn', 'goby', 'sandgoby'], rare: 2, social: 'solo', draw: 'fish', col: '#8c5a33', max: 2, fact: 'Peered out of its hole with frilly eyebrows.' },
+];
+const livesIn = (s, cove) => s.cove === cove || (s.also && s.also.indexOf(cove) >= 0);
+const SPBY = {}; SP.forEach(s => { SPBY[s.id] = s; });
+const HOME_WORD = { surface: 'bare rock', crevice: 'crevices', bigcrevice: 'a deep ledge', pebble: 'pebbles', shell: 'empty shells', kelp: 'kelp', eelgrass: 'eelgrass', sand: 'sand', none: 'nothing' };
+const FOOD_WORD = { algae: 'algae on the rocks', plankton: 'plankton from the tide', detritus: 'scraps', kelp: 'kelp to chew', prey: 'something to hunt', none: 'nothing' };
+
+/* ============================== pieces and coves ============================== */
+const PIECES = {
+  boulder:  { n: 'Boulder',        t: 'Bare rock on top for grazers and anemones, crevices underneath.', r: 7.5, cost: 20, give: { surface: 3, crevice: 2 } },
+  flat:     { n: 'Flat rock',      t: 'Wide bare rock. Algae grows on it and plenty can cling to it.', r: 7, cost: 8, give: { surface: 5 } },
+  pebble:   { n: 'Pebble bed',     t: 'Loose stones for small fish and winkles to hide among.', r: 6, cost: 12, give: { pebble: 4 } },
+  shells:   { n: 'Shell pile',     t: 'Empty shells for hermit crabs to move into.', r: 5, cost: 15, give: { shell: 3 } },
+  kelp:     { n: 'Kelp',           t: 'Tall fronds for cover. Urchins and sea hares eat it.', r: 6, cost: 25, give: { kelp: 3, kelpfood: 3 } },
+  eelgrass: { n: 'Eelgrass',       t: 'Soft green blades where pipefish and seahorses hide.', r: 6.5, cost: 30, give: { eelgrass: 4 } },
+  sand:     { n: 'Sand patch',     t: 'Clean sand for gobies to bury into.', r: 7, cost: 20, give: { sand: 4 } },
+  ledge:    { n: 'Rock ledge',     t: 'Deep, dark crevices. The only home an octopus will take.', r: 8.5, cost: 50, give: { crevice: 3, bigcrevice: 1 } },
+};
+const PIECE_ORDER = ['boulder', 'flat', 'pebble', 'shells', 'kelp', 'eelgrass', 'sand', 'ledge'];
+const COVES = {
+  cove: { n: 'Sheltered Cove', t: 'A quiet pool behind the harbour wall. Limpets, crabs and anemones.', need: 0, seed: 11, water: ['#5fb1c9', '#1f6f8f'] },
+  kelp: { n: 'Kelp Point',     t: 'Where the kelp forest meets the rocks. Urchins, gobies and sea hares.', need: 7, seed: 23, water: ['#56b2a4', '#1b6570'] },
+  reef: { n: 'Reef Shelf',     t: 'A low reef of broken rock. Brittle stars and anemones in every crack.', need: 15, seed: 37, water: ['#6aa6d6', '#224f8a'] },
+  deep: { n: 'Deep Channel',   t: 'A gully the sea never fully leaves. Spring tides bring strangers.', need: 23, seed: 51, water: ['#4c93b8', '#163f63'] },
+};
+const COVE_ORDER = ['cove', 'kelp', 'reef', 'deep'];
+const SIZE_COST = [60, 180];
+
+/* ============================== save ============================== */
+const KEY = 'ttg_tidepool';
+function freshCove(id) { return { pieces: id === 'cove' ? [{ type: 'boulder', x: 42, y: 56 }, { type: 'boulder', x: 60, y: 64 }] : [{ type: 'boulder', x: 50, y: 58 }], res: {}, size: 0 }; }
+function fresh() {
+  return { v: 1, started: false, muted: false, shells: 12, t: 0, cove: 'cove', coves: { cove: freshCove('cove') }, guide: {}, hints: 0, tides: 0, lastSeen: Date.now() };
+}
+function loadSave() {
+  let s = null;
+  try { s = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { s = null; }
+  if (!s || typeof s !== 'object' || !s.coves || !s.coves.cove) return fresh();
+  const o = Object.assign(fresh(), s);
+  if (!COVES[o.cove] || !o.coves[o.cove]) o.cove = 'cove';
+  Object.keys(o.coves).forEach(k => {
+    if (!COVES[k]) { delete o.coves[k]; return; }
+    const c = o.coves[k];
+    c.pieces = Array.isArray(c.pieces) ? c.pieces.filter(p => p && PIECES[p.type] && isFinite(p.x) && isFinite(p.y)) : [];
+    c.res = c.res && typeof c.res === 'object' ? c.res : {};
+    Object.keys(c.res).forEach(id => { if (!SPBY[id] || !(c.res[id].n > 0)) delete c.res[id]; });
+    c.size = clamp(c.size | 0, 0, SIZE_COST.length);
+  });
+  ['shells', 't', 'tides'].forEach(k => { if (!isFinite(o[k]) || o[k] < 0) o[k] = 0; });
+  if (!o.guide || typeof o.guide !== 'object') o.guide = {};
+  o.muted = !!o.muted;
+  return o;
+}
+let S = loadSave();
+function persist() { S.lastSeen = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* storage blocked */ } }
+const pool = () => S.coves[S.cove];
+const foundCount = () => Object.keys(S.guide).filter(k => S.guide[k].found).length;
+const factCount = () => Object.values(S.guide).reduce((n, g) => n + (g.found ? 1 : 0) + (g.settled ? 1 : 0) + (g.watched ? 1 : 0), 0);
+
+/* ============================== tides ============================== */
+// one tide takes two minutes: flood, high water, ebb, low water. Two tides make a day; the moon turns once in eight days.
+const TIDE = 120, FLOOD = 15, HIGH = 45, EBB = 60;
+function tideState(t) {
+  const p = ((t % TIDE) + TIDE) % TIDE;
+  if (p < FLOOD) return { name: 'Flooding', level: p / FLOOD, p };
+  if (p < HIGH) return { name: 'High water', level: 1, p };
+  if (p < EBB) return { name: 'Ebbing', level: 1 - (p - HIGH) / (EBB - HIGH), p };
+  return { name: 'Low water', level: 0, p };
+}
+const moonPhase = t => Math.floor(t / (TIDE * 2)) % 8;
+const isSpring = t => { const m = moonPhase(t); return m === 0 || m === 4; };
+const MOON_NAMES = ['New moon', 'Waxing crescent', 'First quarter', 'Waxing gibbous', 'Full moon', 'Waning gibbous', 'Last quarter', 'Waning crescent'];
+
+/* ============================== the pool's ecology ============================== */
+function capacity(c) {
+  const cap = { surface: 0, crevice: 0, bigcrevice: 0, pebble: 0, shell: 0, kelp: 0, kelpfood: 0, eelgrass: 0, sand: 0 };
+  for (const p of c.pieces) { const g = PIECES[p.type].give; for (const k in g) cap[k] += g[k]; }
+  return cap;
+}
+function homeFree(c, cap, home, except) {
+  if (home === 'none') return 99;
+  let used = 0;
+  for (const id in c.res) { if (id !== except && SPBY[id].home === home) used += c.res[id].n; }
+  return cap[home] - used;
+}
+// Work out how each resident is doing: a home, enough food, and not being eaten.
+function assess(c, eaten) {
+  const cap = capacity(c), out = {};
+  // homes are shared first come, first served
+  const used = {};
+  const ids = Object.keys(c.res).sort((a, b) => (c.res[a].since || 0) - (c.res[b].since || 0));
+  for (const id of ids) {
+    const s = SPBY[id], r = c.res[id];
+    if (s.home === 'none') { out[id] = { home: 1 }; continue; }
+    const free = Math.max(0, cap[s.home] - (used[s.home] || 0));
+    const got = Math.min(r.n, free); used[s.home] = (used[s.home] || 0) + got;
+    out[id] = { home: r.n ? got / r.n : 1 };
+  }
+  // food
+  const algae = cap.surface * 1.4, kelpfood = cap.kelpfood * 1.3, plankton = 5 + (isSpring(S.t) ? 4 : 0) + c.pieces.length * 0.4;
+  const detritus = 2 + (eaten || 0) * 1.5;
+  const demand = { algae: 0, plankton: 0, detritus: 0, kelp: 0 };
+  for (const id of ids) { const s = SPBY[id]; if (demand[s.food] !== undefined) demand[s.food] += c.res[id].n; }
+  const supply = { algae, plankton, detritus, kelp: kelpfood };
+  for (const id of ids) {
+    const s = SPBY[id], r = c.res[id];
+    if (s.food === 'none') out[id].food = 1;
+    else if (s.food === 'prey') out[id].food = s.prey.some(p => c.res[p] && c.res[p].n > 0) ? 1 : 0;
+    else out[id].food = demand[s.food] ? Math.min(1, supply[s.food] / demand[s.food]) : 1;
+    // danger: a hunter of this species is in the pool, and it lives out in the open
+    const hunted = ids.some(h => SPBY[h].prey && SPBY[h].prey.indexOf(id) >= 0);
+    const exposed = s.home === 'surface';
+    out[id].safe = hunted ? (exposed ? 0.4 : 0.8) : 1;
+    out[id].hunted = hunted;
+    const sc = out[id].home * 0.45 + out[id].food * 0.45 + out[id].safe * 0.1;
+    out[id].score = sc;
+    out[id].mood = out[id].home >= 1 && out[id].food >= 0.8 && out[id].safe >= 0.8 ? 'happy' : sc >= 0.6 ? 'ok' : 'sad';
+    out[id].why = moodWhy(s, out[id]);
+  }
+  return out;
+}
+function moodWhy(s, a) {
+  if (s.visitor) return 'Only passing through on the tide.';
+  if (a.home < 1) return 'Needs more ' + HOME_WORD[s.home] + '.';
+  if (a.food < 0.5) return s.food === 'prey' ? 'Nothing here it can hunt.' : 'Not enough ' + FOOD_WORD[s.food] + '.';
+  if (a.food < 0.8) return 'Getting by on too little ' + FOOD_WORD[s.food] + '.';
+  if (a.safe < 0.8) return 'Out in the open with a hunter about.';
+  if (a.safe < 1) return 'Hiding from a hunter, but safe.';
+  return s.social === 'pair' ? 'Settled. Two together will raise young.' : s.social === 'group' ? 'Settled. More will join over time.' : 'Settled in.';
+}
+function note(g) { S.guide[g] = S.guide[g] || {}; return S.guide[g]; }
+// Low water: everyone eats, hunters hunt, happy pairs breed, and the tide leaves gifts on the beach.
+function lowWater(c, live) {
+  const events = [];
+  let eaten = 0;
+  const ids = Object.keys(c.res);
+  const before = assess(c, 0);
+  // hunting
+  for (const id of ids) {
+    const s = SPBY[id]; if (!s.prey || !c.res[id]) continue;
+    for (let k = 0; k < c.res[id].n; k++) {
+      const prey = s.prey.filter(p => c.res[p] && c.res[p].n > 0);
+      if (!prey.length) break;
+      const p = prey[Math.floor(Math.random() * prey.length)], exposed = SPBY[p].home === 'surface';
+      if (Math.random() < (exposed ? 0.45 : 0.18)) {
+        c.res[p].n--; eaten++;
+        events.push({ kind: 'eat', who: id, prey: p });
+        if (c.res[p].n <= 0) { delete c.res[p]; events.push({ kind: 'gone', who: p, why: 'The last one was eaten.' }); }
+      }
+    }
+  }
+  const a = assess(c, eaten);
+  let happyCount = 0;
+  for (const id of Object.keys(c.res)) {
+    const s = SPBY[id], r = c.res[id], st = a[id]; if (!st) continue;
+    if (st.mood === 'happy') {
+      happyCount += r.n; r.streak = (r.streak || 0) + 1; r.sad = 0;
+      if (!note(id).settled && !s.visitor) { note(id).settled = 1; events.push({ kind: 'settled', who: id }); }
+      const breeds = s.social === 'pair' ? r.n >= 2 : s.social === 'group' ? r.n >= 1 : false;
+      if (breeds && r.streak >= 2 && r.n < s.max && homeFree(c, capacity(c), s.home, null) > 0) { r.n++; r.streak = 0; events.push({ kind: 'young', who: id }); }
+    } else { r.streak = 0; r.sad = (r.sad || 0) + (st.mood === 'sad' ? 1 : 0); }
+  }
+  const gift = happyCount;
+  S.shells += gift;
+  return { events, gift, before };
+}
+// High water: the unhappy leave, and new visitors come in on the tide.
+function highWater(c) {
+  const events = [];
+  const a = assess(c, 0);
+  for (const id of Object.keys(c.res)) {
+    const s = SPBY[id], r = c.res[id];
+    if (s.visitor && r.since < S.t - 5) { delete c.res[id]; events.push({ kind: 'left', who: id, why: 'Swept back out on the tide.' }); continue; }
+    if (a[id] && a[id].mood === 'sad' && (r.sad || 0) >= 1) { delete c.res[id]; events.push({ kind: 'left', who: id, why: a[id].why }); }
+  }
+  const cap = capacity(c), spring = isSpring(S.t);
+  const cands = SP.filter(s => livesIn(s, S.cove) && !c.res[s.id] && (!s.spring || spring) && homeFree(c, cap, s.home, null) > 0 &&
+    (s.food !== 'prey' || s.prey.some(p => c.res[p] && c.res[p].n > 0)) && (s.food !== 'kelp' || cap.kelpfood > 0));
+  let slots = 1 + (spring ? 1 : 0) + (Math.random() < 0.35 ? 1 : 0);
+  cands.sort(() => Math.random() - 0.5);
+  for (const s of cands) {
+    if (slots <= 0) break;
+    const chance = [0, 0.55, 0.3, 0.14][s.rare] * (spring ? 1.6 : 1);
+    if (Math.random() < chance) {
+      const n = s.social === 'group' ? Math.min(2, homeFree(c, cap, s.home, null)) : 1;
+      c.res[s.id] = { n: Math.max(1, n), since: S.t, streak: 0, sad: 0 };
+      slots--;
+      const first = !note(s.id).found; note(s.id).found = 1;
+      events.push({ kind: 'arrive', who: s.id, first });
+      if (first) window.TTG?.track('level_complete', { level: foundCount() });
+    }
+  }
+  // groups already here may gain a newcomer
+  for (const id of Object.keys(c.res)) {
+    const s = SPBY[id], r = c.res[id];
+    if (s.social === 'group' && r.n < s.max && homeFree(c, cap, s.home, null) > 0 && Math.random() < 0.3) { r.n++; events.push({ kind: 'more', who: id }); }
+  }
+  return events;
+}
+
+/* ============================== audio ============================== */
+let AC = null, master = null, surf = null, surfGain = null;
+function audio() {
+  if (AC) return AC;
+  try {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    master = AC.createGain(); master.gain.value = S.muted ? 0 : 0.8; master.connect(AC.destination);
+    const len = AC.sampleRate * 3, buf = AC.createBuffer(1, len, AC.sampleRate), d = buf.getChannelData(0);
+    let b = 0; for (let i = 0; i < len; i++) { b = b * 0.97 + (Math.random() * 2 - 1) * 0.03; d[i] = b * 3; }
+    surf = AC.createBufferSource(); surf.buffer = buf; surf.loop = true;
+    const f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 700;
+    surfGain = AC.createGain(); surfGain.gain.value = 0;
+    surf.connect(f); f.connect(surfGain); surfGain.connect(master); surf.start();
+  } catch (e) { AC = null; }
+  return AC;
+}
+function tone(f, dur, vol, type, delay) {
+  if (!AC || S.muted || AC.state !== 'running') return;
+  const t = AC.currentTime + (delay || 0), o = AC.createOscillator(), g = AC.createGain();
+  o.type = type || 'sine'; o.frequency.value = f;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + 0.02);
+}
+const PENTA = [392, 440, 523.3, 587.3, 659.3, 784, 880];
+function sfxArrive() { tone(PENTA[Math.floor(Math.random() * 4)], 0.9, 0.05); tone(PENTA[4 + Math.floor(Math.random() * 3)], 0.8, 0.035, 'sine', 0.12); }
+function sfxWatch() { [0, 2, 4].forEach((k, n) => tone(PENTA[k + 2] * 1, 0.7, 0.05, 'triangle', n * 0.08)); }
+function sfxShell() { tone(1568, 0.08, 0.04, 'triangle'); tone(2093, 0.12, 0.03, 'triangle', 0.05); }
+function sfxPlace() { tone(180, 0.18, 0.08, 'sine'); tone(120, 0.25, 0.05, 'sine', 0.03); }
+function sfxTap() { tone(660, 0.05, 0.03, 'triangle'); }
+function setMuted(m, keep) { S.muted = m; if (master) master.gain.value = m ? 0 : 0.8; $('icoOn').style.display = m ? 'none' : ''; $('icoOff').style.display = m ? '' : 'none'; if (!keep) persist(); }
+
+/* ============================== layout ============================== */
+const cv = $('view'), cx = cv.getContext('2d');
+let W = 1, H = 1, DPR = 1, land = false, mode = 'title';
+const area = { x: 0, y: 0, w: 1, h: 1 }, sc = { x: 0, y: 0, s: 1 };
+function layout() {
+  W = Math.max(1, innerWidth); H = Math.max(1, innerHeight); DPR = clamp(devicePixelRatio || 1, 1, 2.5);
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  land = W > H * 1.05; document.body.className = land ? 'land' : 'port';
+  const deck = $('deck');
+  if (mode !== 'play') { area.x = land ? Math.round(W * 0.36) : 0; area.y = 0; area.w = W - area.x; area.h = H; }
+  else if (land) { const dw = Math.round(clamp(W * 0.36, 300, 420)); deck.style.width = dw + 'px'; deck.style.height = ''; area.x = 0; area.y = 0; area.w = W - dw; area.h = H; }
+  else { const dh = Math.round(clamp(H * 0.44, 260, 420)); deck.style.height = dh + 'px'; deck.style.width = ''; area.x = 0; area.y = 0; area.w = W; area.h = H - dh; }
+  // the scene is 100 by 100 units, fitted into the view
+  sc.s = Math.min(area.w / 100, area.h / 100);
+  sc.x = area.x + (area.w - 100 * sc.s) / 2; sc.y = area.y + (area.h - 100 * sc.s) / 2;
+  const mb = $('muteBtn'); mb.style.left = (area.x + area.w - 52) + 'px'; mb.style.top = (area.y + 10) + 'px';
+  const pb = $('placeBar'); pb.style.left = (area.x + area.w / 2) + 'px'; pb.style.top = (area.y + 12) + 'px';
+  const tc = $('tideCv'), r = tc.getBoundingClientRect(); tc.width = Math.max(1, Math.round(r.width * DPR)); tc.height = Math.max(1, Math.round(r.height * DPR));
+  bgDirty = true;
+}
+const X = u => sc.x + u * sc.s, Y = v => sc.y + v * sc.s;
+const toU = px => (px - sc.x) / sc.s, toV = py => (py - sc.y) / sc.s;
+
+/* ============================== the pool shape ============================== */
+function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+let shape = null;
+function poolShape() {
+  const c = pool(), cv2 = COVES[S.cove], R = rng(cv2.seed), k = [1, 1.14, 1.26][c.size];
+  const a = [R() * TAU, R() * TAU, R() * TAU], pts = [];
+  for (let n = 0; n < 72; n++) {
+    const th = n / 72 * TAU;
+    const r = 1 + 0.12 * Math.sin(3 * th + a[0]) + 0.07 * Math.sin(5 * th + a[1]) + 0.04 * Math.sin(9 * th + a[2]);
+    pts.push([50 + Math.cos(th) * 31 * k * r, 57 + Math.sin(th) * 25 * k * r]);
+  }
+  shape = { pts, cx: 50, cy: 57, rx: 31 * k, ry: 25 * k, key: S.cove + c.size };
+}
+function inPool(u, v, margin) {
+  if (!shape) return false;
+  // point in polygon, then keep a margin from the edge
+  let ins = false; const p = shape.pts;
+  for (let i = 0, j = p.length - 1; i < p.length; j = i++) {
+    if (((p[i][1] > v) !== (p[j][1] > v)) && (u < (p[j][0] - p[i][0]) * (v - p[i][1]) / (p[j][1] - p[i][1]) + p[i][0])) ins = !ins;
+  }
+  if (!ins || !margin) return ins;
+  for (const q of p) if (Math.hypot(q[0] - u, q[1] - v) < margin) return false;
+  return true;
+}
+function poolPath(g, grow) {
+  const p = shape.pts; g.beginPath();
+  p.forEach((q, n) => { const u = shape.cx + (q[0] - shape.cx) * (grow || 1), v = shape.cy + (q[1] - shape.cy) * (grow || 1); n ? g.lineTo(X(u), Y(v)) : g.moveTo(X(u), Y(v)); });
+  g.closePath();
+}
+
+/* ============================== watercolor background ============================== */
+let bg = null, bgDirty = true;
+function blot(g, x, y, r, col, a) {
+  const grd = g.createRadialGradient(x, y, r * 0.2, x, y, r);
+  grd.addColorStop(0, col.replace(')', ',' + a + ')').replace('rgb', 'rgba')); grd.addColorStop(1, col.replace(')', ',0)').replace('rgb', 'rgba'));
+  g.fillStyle = grd; g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill();
+}
+function hexRgb(h) { const n = parseInt(h.slice(1), 16); return 'rgb(' + (n >> 16) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ')'; }
+function buildBg() {
+  if (!bg) bg = document.createElement('canvas');
+  bg.width = cv.width; bg.height = cv.height;
+  const g = bg.getContext('2d'); g.setTransform(DPR, 0, 0, DPR, 0, 0);
+  if (!shape || shape.key !== S.cove + pool().size) poolShape();
+  const R = rng(COVES[S.cove].seed * 7);
+  // wet sand
+  g.fillStyle = '#d8c7a0'; g.fillRect(0, 0, W, H);
+  for (let n = 0; n < 40; n++) blot(g, R() * W, R() * H, 30 + R() * 120, n % 2 ? 'rgb(196,170,122)' : 'rgb(229,214,178)', 0.35);
+  // the sea along the top
+  const seaY = Y(14);
+  const sg = g.createLinearGradient(0, 0, 0, seaY + 20);
+  sg.addColorStop(0, '#1d4f6b'); sg.addColorStop(0.7, '#2f7e98'); sg.addColorStop(1, 'rgba(95,177,201,0)');
+  g.fillStyle = sg; g.fillRect(0, 0, W, seaY + 20);
+  for (let n = 0; n < 18; n++) blot(g, R() * W, R() * seaY, 20 + R() * 60, 'rgb(120,190,210)', 0.25);
+  // a rock shelf around the pool: layered violet grey washes
+  const k = 1.34;
+  for (let layer = 0; layer < 3; layer++) {
+    poolPath(g, k - layer * 0.07);
+    g.fillStyle = ['rgba(126,118,138,.55)', 'rgba(104,98,118,.55)', 'rgba(88,84,104,.6)'][layer]; g.fill();
+  }
+  for (let n = 0; n < 60; n++) { const th = R() * TAU, rr = 1.08 + R() * 0.24; blot(g, X(shape.cx + Math.cos(th) * shape.rx * rr), Y(shape.cy + Math.sin(th) * shape.ry * rr), (2 + R() * 5) * sc.s, R() < 0.5 ? 'rgb(150,140,160)' : 'rgb(70,66,86)', 0.35); }
+  // barnacle speckle on the shelf
+  g.fillStyle = 'rgba(235,230,215,.5)';
+  for (let n = 0; n < 220; n++) { const th = R() * TAU, rr = 1.05 + R() * 0.25; g.fillRect(X(shape.cx + Math.cos(th) * shape.rx * rr), Y(shape.cy + Math.sin(th) * shape.ry * rr), 1.3, 1.3); }
+  // the channel the tide comes through
+  g.fillStyle = 'rgba(47,126,152,.75)';
+  g.beginPath(); g.moveTo(X(46), Y(10)); g.quadraticCurveTo(X(44), Y(24), X(46), Y(33)); g.lineTo(X(54), Y(33)); g.quadraticCurveTo(X(56), Y(24), X(54), Y(10)); g.closePath(); g.fill();
+  // water: pale at the edges, deep in the middle, with pigment blooms
+  const [wl, wd] = COVES[S.cove].water;
+  g.save(); poolPath(g); g.clip();
+  const wg = g.createRadialGradient(X(shape.cx), Y(shape.cy), 2, X(shape.cx), Y(shape.cy), shape.rx * sc.s * 1.1);
+  wg.addColorStop(0, wd); wg.addColorStop(0.75, wl); wg.addColorStop(1, '#a9d8df');
+  g.fillStyle = wg; g.fillRect(0, 0, W, H);
+  for (let n = 0; n < 26; n++) blot(g, X(shape.cx + (R() - 0.5) * shape.rx * 2), Y(shape.cy + (R() - 0.5) * shape.ry * 2), (5 + R() * 14) * sc.s, R() < 0.5 ? hexRgb(wd) : 'rgb(170,220,225)', 0.3);
+  g.restore();
+  // pigment pools at the edge, like a watercolor wash drying
+  poolPath(g); g.strokeStyle = 'rgba(20,55,80,.45)'; g.lineWidth = Math.max(2, sc.s * 0.8); g.stroke();
+  poolPath(g, 1.012); g.strokeStyle = 'rgba(245,250,250,.35)'; g.lineWidth = Math.max(1, sc.s * 0.3); g.stroke();
+  bgDirty = false;
+}
+
+/* ============================== painted things ============================== */
+function wash(g, x, y, rx, ry, col, alpha) {
+  g.save(); g.globalAlpha = alpha == null ? 0.9 : alpha;
+  g.fillStyle = col; g.beginPath(); g.ellipse(x, y, rx, ry, 0, 0, TAU); g.fill();
+  g.globalAlpha *= 0.5; g.strokeStyle = shade(col, -40); g.lineWidth = Math.max(1, rx * 0.12); g.stroke();
+  g.restore();
+}
+function shade(hex, amt) {
+  const n = parseInt(hex.slice(1), 16), c = v => clamp(v + amt, 0, 255);
+  return 'rgb(' + c(n >> 16) + ',' + c((n >> 8) & 255) + ',' + c(n & 255) + ')';
+}
+function drawPiece(g, type, x, y, s, t, seed) {
+  const R = rng(seed || 1), p = PIECES[type], r = p.r * s;
+  g.save();
+  if (type === 'boulder' || type === 'ledge' || type === 'flat') {
+    const col = type === 'flat' ? '#9c95a6' : type === 'ledge' ? '#5a5670' : '#7d7690';
+    const ry = type === 'flat' ? 0.62 : 0.82;
+    g.fillStyle = 'rgba(15,40,60,.28)'; g.beginPath(); g.ellipse(x + r * 0.12, y + r * 0.16, r, r * ry, 0, 0, TAU); g.fill();
+    g.beginPath();
+    for (let n = 0; n <= 14; n++) { const a = n / 14 * TAU, rr = r * (0.86 + R() * 0.18); const px = x + Math.cos(a) * rr, py = y + Math.sin(a) * rr * ry; n ? g.lineTo(px, py) : g.moveTo(px, py); }
+    g.closePath(); g.fillStyle = col; g.fill();
+    g.strokeStyle = shade(col, -45); g.lineWidth = Math.max(1, s * 0.5); g.stroke();
+    g.globalAlpha = 0.45; g.fillStyle = '#d8d4e2'; g.beginPath(); g.ellipse(x - r * 0.25, y - r * 0.3 * ry, r * 0.35, r * 0.18, -0.4, 0, TAU); g.fill();
+    g.globalAlpha = 1;
+    if (type !== 'flat') { g.fillStyle = 'rgba(20,20,34,.75)'; g.beginPath(); g.ellipse(x + r * 0.35, y + r * 0.45 * ry, r * (type === 'ledge' ? 0.42 : 0.22), r * 0.12, 0.2, 0, TAU); g.fill();
+      g.beginPath(); g.ellipse(x - r * 0.45, y + r * 0.38 * ry, r * 0.16, r * 0.08, -0.3, 0, TAU); g.fill(); }
+    // a green algae film
+    g.globalAlpha = 0.35; g.fillStyle = '#6e9a55'; g.beginPath(); g.ellipse(x + r * 0.1, y - r * 0.1 * ry, r * 0.5, r * 0.3 * ry, 0.3, 0, TAU); g.fill(); g.globalAlpha = 1;
+  } else if (type === 'pebble') {
+    for (let n = 0; n < 11; n++) { const a = R() * TAU, d = R() * r * 0.8; wash(g, x + Math.cos(a) * d, y + Math.sin(a) * d * 0.8, r * (0.16 + R() * 0.1), r * (0.12 + R() * 0.08), ['#a9a2a0', '#8c8480', '#c4bbb0', '#7a7383'][n % 4], 0.95); }
+  } else if (type === 'shells') {
+    for (let n = 0; n < 6; n++) { const a = R() * TAU, d = R() * r * 0.6, px = x + Math.cos(a) * d, py = y + Math.sin(a) * d * 0.8;
+      wash(g, px, py, r * 0.22, r * 0.16, ['#e6d3b8', '#d9b89a', '#efe3cf'][n % 3], 0.95);
+      g.strokeStyle = 'rgba(120,90,60,.6)'; g.lineWidth = 1; g.beginPath(); g.arc(px, py, r * 0.08, 0, TAU * 0.8); g.stroke(); }
+  } else if (type === 'sand') {
+    wash(g, x, y, r, r * 0.7, '#e3cf9d', 0.9);
+    g.strokeStyle = 'rgba(160,130,80,.45)'; g.lineWidth = 1;
+    for (let n = -2; n <= 2; n++) { g.beginPath(); g.ellipse(x, y + n * r * 0.18, r * (0.8 - Math.abs(n) * 0.12), r * 0.05, 0, 0, Math.PI); g.stroke(); }
+  } else if (type === 'kelp' || type === 'eelgrass') {
+    const col = type === 'kelp' ? '#7a6a2e' : '#4f8a45', blades = type === 'kelp' ? 5 : 9;
+    if (type === 'kelp') wash(g, x, y, r * 0.3, r * 0.22, '#5a4a2a', 0.9);
+    g.lineCap = 'round';
+    for (let n = 0; n < blades; n++) {
+      const a = n / blades * TAU + R(), len = r * (type === 'kelp' ? 1.3 : 1) * (0.7 + R() * 0.4), sway = Math.sin(t * 0.8 + n) * 0.25;
+      g.strokeStyle = shade(col, (n % 3) * 12 - 10); g.globalAlpha = 0.85; g.lineWidth = type === 'kelp' ? r * 0.28 : r * 0.1;
+      g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + Math.cos(a + sway) * len * 0.6, y + Math.sin(a + sway) * len * 0.6, x + Math.cos(a + sway * 1.6) * len, y + Math.sin(a + sway * 1.6) * len); g.stroke();
+    }
+    g.globalAlpha = 1;
+  }
+  g.restore();
+}
+// creatures, painted small
+function drawCreature(g, s, x, y, k, ang, t, alpha) {
+  const col = s.col, ink = shade(col, -60);
+  g.save(); g.translate(x, y); g.rotate(ang || 0); g.globalAlpha = alpha == null ? 1 : alpha;
+  g.lineWidth = Math.max(0.8, k * 0.12); g.strokeStyle = ink;
+  const E = (ex, ey, rx, ry, c) => { g.fillStyle = c || col; g.beginPath(); g.ellipse(ex, ey, rx, ry, 0, 0, TAU); g.fill(); g.stroke(); };
+  switch (s.draw) {
+    case 'limpet': E(0, 0, k, k * 0.9); g.fillStyle = shade(col, 30); g.beginPath(); g.arc(0, 0, k * 0.3, 0, TAU); g.fill(); break;
+    case 'snail': E(0, 0, k * 0.8, k * 0.8); g.beginPath(); g.arc(0, 0, k * 0.45, 0, TAU * 0.8); g.stroke(); g.beginPath(); g.arc(0.15 * k, 0, k * 0.2, 0, TAU * 0.8); g.stroke(); break;
+    case 'topshell': E(0, 0, k * 0.8, k * 0.8); g.strokeStyle = '#8a4f4f'; g.beginPath(); g.arc(0, 0, k * 0.5, 0, TAU); g.stroke(); g.beginPath(); g.arc(0, 0, k * 0.22, 0, TAU); g.stroke(); break;
+    case 'anemone': case 'snakelock': {
+      const n = s.draw === 'snakelock' ? 14 : 18, open = 0.7 + 0.3 * Math.sin(t * 1.5);
+      g.strokeStyle = s.draw === 'snakelock' ? '#9bc47e' : col; g.lineWidth = Math.max(1, k * 0.16); g.lineCap = 'round';
+      for (let i = 0; i < n; i++) { const a = i / n * TAU + Math.sin(t + i) * 0.1, L = k * (s.draw === 'snakelock' ? 1.5 : 1.1) * open; g.beginPath(); g.moveTo(Math.cos(a) * k * 0.4, Math.sin(a) * k * 0.4); g.lineTo(Math.cos(a) * L, Math.sin(a) * L); g.stroke();
+        if (s.draw === 'snakelock') { g.fillStyle = '#a45bb0'; g.beginPath(); g.arc(Math.cos(a) * L, Math.sin(a) * L, k * 0.1, 0, TAU); g.fill(); } }
+      g.strokeStyle = ink; g.lineWidth = Math.max(0.8, k * 0.1); E(0, 0, k * 0.5, k * 0.5, s.draw === 'snakelock' ? '#5f8f4c' : shade(col, -20)); break; }
+    case 'chiton': E(0, 0, k * 1.1, k * 0.6); g.strokeStyle = shade(col, -35); for (let i = -3; i <= 3; i++) { g.beginPath(); g.moveTo(i * k * 0.28, -k * 0.5); g.lineTo(i * k * 0.28, k * 0.5); g.stroke(); } break;
+    case 'bluelimpet': E(0, 0, k * 0.8, k * 0.6); g.strokeStyle = '#4fb3e8'; g.lineWidth = Math.max(1, k * 0.12); for (let i = -1; i <= 1; i++) { g.beginPath(); g.moveTo(-k * 0.5, i * k * 0.18); g.lineTo(k * 0.6, i * k * 0.28); g.stroke(); } break;
+    case 'cowrie': E(0, 0, k * 0.9, k * 0.6); g.fillStyle = '#6b3a2a'; [[-0.3, -0.2], [0.2, -0.25], [0, 0.2]].forEach(q => { g.beginPath(); g.arc(q[0] * k, q[1] * k, k * 0.12, 0, TAU); g.fill(); }); break;
+    case 'lump': E(0, 0, k * 1.1, k * 0.9); g.fillStyle = shade(col, 30); for (let i = 0; i < 6; i++) { g.beginPath(); g.arc(-k * 0.6 + i * k * 0.25, -k * 0.35 + (i % 2) * k * 0.2, k * 0.12, 0, TAU); g.fill(); } g.fillStyle = '#1b2230'; g.beginPath(); g.arc(k * 0.7, -k * 0.2, k * 0.12, 0, TAU); g.fill(); break;
+    case 'lobster': { g.strokeStyle = col; g.lineWidth = Math.max(1, k * 0.12); g.lineCap = 'round';
+      g.beginPath(); g.moveTo(k * 0.9, -k * 0.1); g.quadraticCurveTo(k * 2, -k * 0.8, k * 2.4, -k * 0.3); g.moveTo(k * 0.9, k * 0.1); g.quadraticCurveTo(k * 2, k * 0.8, k * 2.4, k * 0.3); g.stroke();
+      g.strokeStyle = ink; g.lineWidth = Math.max(0.8, k * 0.1); E(0, 0, k * 1.1, k * 0.38); E(-k * 1.2, 0, k * 0.4, k * 0.32, shade(col, -15));
+      E(k * 1.1, -k * 0.55, k * 0.45, k * 0.22, shade(col, 12)); E(k * 1.1, k * 0.55, k * 0.45, k * 0.22, shade(col, 12)); break; }
+    case 'eel': g.strokeStyle = col; g.lineWidth = k * 0.5; g.lineCap = 'round'; g.beginPath(); g.moveTo(-k * 2, Math.sin(t * 2) * k * 0.4); g.quadraticCurveTo(-k * 0.5, -k * 0.6 + Math.sin(t * 2 + 1) * k * 0.3, k * 1.4, 0); g.stroke();
+      g.fillStyle = '#e8e2c8'; g.beginPath(); g.arc(k * 1.2, -k * 0.1, k * 0.1, 0, TAU); g.fill(); break;
+    case 'cuttle': { E(0, 0, k * 1.2, k * 0.6); g.strokeStyle = '#6b4a2a'; for (let i = -2; i <= 2; i++) { g.beginPath(); g.moveTo(i * k * 0.3, -k * 0.5); g.lineTo(i * k * 0.3 + Math.sin(t * 3 + i) * k * 0.1, k * 0.5); g.stroke(); }
+      g.strokeStyle = col; g.lineWidth = k * 0.14; for (let i = -1; i <= 1; i++) { g.beginPath(); g.moveTo(k * 1.1, i * k * 0.15); g.lineTo(k * 1.7, i * k * 0.3); g.stroke(); } break; }
+    case 'moonjelly': { const pulse = 0.85 + 0.15 * Math.sin(t * 2); g.globalAlpha *= 0.7; g.fillStyle = col; g.beginPath(); g.arc(0, 0, k * 1.3 * pulse, 0, TAU); g.fill();
+      g.strokeStyle = '#9a7ab8'; g.lineWidth = Math.max(1, k * 0.14); for (let i = 0; i < 4; i++) { const a = i / 4 * TAU + 0.4; g.beginPath(); g.arc(Math.cos(a) * k * 0.45, Math.sin(a) * k * 0.45, k * 0.25, 0, TAU); g.stroke(); } break; }
+    case 'barnacle': for (let i = 0; i < 4; i++) { const a = i * 1.7; E(Math.cos(a) * k * 0.55, Math.sin(a) * k * 0.55, k * 0.38, k * 0.38); g.fillStyle = '#7d766a'; g.beginPath(); g.arc(Math.cos(a) * k * 0.55, Math.sin(a) * k * 0.55, k * 0.12, 0, TAU); g.fill(); } break;
+    case 'mussel': E(0, 0, k * 1.1, k * 0.5); g.strokeStyle = '#6f86a8'; g.beginPath(); g.moveTo(-k, 0); g.lineTo(k, 0); g.stroke(); break;
+    case 'hermit': E(k * 0.3, 0, k * 0.75, k * 0.65, '#e6d3b8'); g.strokeStyle = '#9a6a3a'; g.beginPath(); g.arc(k * 0.3, 0, k * 0.35, 0, TAU * 0.8); g.stroke();
+      g.strokeStyle = col; g.lineWidth = k * 0.16; for (let i = -1; i <= 1; i++) { g.beginPath(); g.moveTo(-k * 0.3, i * k * 0.2); g.lineTo(-k * 0.9, i * k * 0.45); g.stroke(); } E(-k * 0.5, 0, k * 0.3, k * 0.25); break;
+    case 'crab': case 'spider': {
+      g.strokeStyle = col; g.lineWidth = Math.max(1, k * 0.14); g.lineCap = 'round';
+      const walk = Math.sin(t * 8) * 0.2;
+      for (let sd = -1; sd <= 1; sd += 2) for (let i = 0; i < 4; i++) { g.beginPath(); g.moveTo(sd * k * 0.4, (i - 1.5) * k * 0.3); g.lineTo(sd * k * (s.draw === 'spider' ? 1.5 : 1.15), (i - 1.5) * k * 0.45 + walk * sd); g.stroke(); }
+      g.strokeStyle = ink; g.lineWidth = Math.max(0.8, k * 0.1);
+      if (s.draw === 'spider') E(0, 0, k * 0.7, k * 0.8); else E(0, 0, k * 0.85, k * 0.65);
+      E(-k * 0.45, -k * 0.75, k * 0.25, k * 0.2, shade(col, 15)); E(k * 0.45, -k * 0.75, k * 0.25, k * 0.2, shade(col, 15)); break; }
+    case 'prawn': g.globalAlpha *= 0.8; E(0, 0, k * 1.1, k * 0.3); g.strokeStyle = shade(col, -30); g.beginPath(); g.moveTo(k * 1.1, 0); g.lineTo(k * 2, -k * 0.5); g.moveTo(k * 1.1, 0); g.lineTo(k * 2, k * 0.4); g.stroke(); break;
+    case 'fish': { const wig = Math.sin(t * 6) * 0.3; E(0, 0, k * 1.1, k * 0.4); g.fillStyle = shade(col, -20); g.beginPath(); g.moveTo(-k * 1, 0); g.lineTo(-k * 1.6, -k * 0.4 + wig * k); g.lineTo(-k * 1.6, k * 0.4 + wig * k); g.closePath(); g.fill();
+      g.fillStyle = '#1b2230'; g.beginPath(); g.arc(k * 0.7, -k * 0.1, k * 0.1, 0, TAU); g.fill(); break; }
+    case 'pipefish': g.strokeStyle = col; g.lineWidth = k * 0.25; g.lineCap = 'round'; g.beginPath(); g.moveTo(-k * 1.6, Math.sin(t * 2) * k * 0.2); g.quadraticCurveTo(0, -k * 0.2, k * 1.6, 0); g.stroke(); break;
+    case 'star': case 'cushion': case 'brittle': {
+      const arms = 5, inner = s.draw === 'brittle' ? 0.25 : s.draw === 'cushion' ? 0.7 : 0.4, outer = s.draw === 'brittle' ? 1.6 : 1.1;
+      g.fillStyle = col; g.beginPath();
+      if (s.draw === 'brittle') { E(0, 0, k * 0.35, k * 0.35); g.strokeStyle = col; g.lineWidth = k * 0.16; g.lineCap = 'round';
+        for (let i = 0; i < arms; i++) { const a = i / arms * TAU + Math.sin(t + i) * 0.15; g.beginPath(); g.moveTo(0, 0); g.quadraticCurveTo(Math.cos(a + 0.4) * k, Math.sin(a + 0.4) * k, Math.cos(a) * k * outer, Math.sin(a) * k * outer); g.stroke(); } break; }
+      for (let i = 0; i < arms * 2; i++) { const a = i / (arms * 2) * TAU - Math.PI / 2, rr = (i % 2 ? inner : outer) * k; i ? g.lineTo(Math.cos(a) * rr, Math.sin(a) * rr) : g.moveTo(Math.cos(a) * rr, Math.sin(a) * rr); }
+      g.closePath(); g.fill(); g.stroke();
+      g.fillStyle = 'rgba(255,240,220,.5)'; for (let i = 0; i < 5; i++) { const a = i / 5 * TAU - Math.PI / 2; g.beginPath(); g.arc(Math.cos(a) * k * 0.45, Math.sin(a) * k * 0.45, k * 0.08, 0, TAU); g.fill(); } break; }
+    case 'urchin': g.strokeStyle = col; g.lineWidth = Math.max(0.8, k * 0.08); for (let i = 0; i < 24; i++) { const a = i / 24 * TAU; g.beginPath(); g.moveTo(Math.cos(a) * k * 0.5, Math.sin(a) * k * 0.5); g.lineTo(Math.cos(a) * k * 1.15, Math.sin(a) * k * 1.15); g.stroke(); }
+      g.strokeStyle = ink; E(0, 0, k * 0.65, k * 0.65); break;
+    case 'seahare': case 'slug': E(0, 0, k * 1.1, k * 0.55); g.fillStyle = shade(col, 25);
+      if (s.draw === 'slug' && s.id === 'greyslug') { for (let i = 0; i < 10; i++) { g.beginPath(); g.arc(-k * 0.8 + i * k * 0.18, (i % 2 ? -1 : 1) * k * 0.2, k * 0.14, 0, TAU); g.fill(); } }
+      else { g.beginPath(); g.arc(-k * 0.3, 0, k * 0.2, 0, TAU); g.arc(k * 0.3, k * 0.1, k * 0.15, 0, TAU); g.fill(); }
+      g.strokeStyle = ink; g.beginPath(); g.moveTo(k * 1, -k * 0.2); g.lineTo(k * 1.4, -k * 0.55); g.moveTo(k * 1, k * 0.2); g.lineTo(k * 1.4, k * 0.55); g.stroke(); break;
+    case 'octopus': { g.strokeStyle = col; g.lineWidth = k * 0.28; g.lineCap = 'round';
+      for (let i = 0; i < 8; i++) { const a = i / 8 * TAU + Math.sin(t * 1.2 + i) * 0.2; g.beginPath(); g.moveTo(0, 0); g.quadraticCurveTo(Math.cos(a + 0.5) * k * 1.2, Math.sin(a + 0.5) * k * 1.2, Math.cos(a) * k * 2, Math.sin(a) * k * 2); g.stroke(); }
+      g.strokeStyle = ink; g.lineWidth = Math.max(0.8, k * 0.1); E(0, 0, k * 0.9, k * 0.8); g.fillStyle = '#f4e6c8'; g.beginPath(); g.arc(-k * 0.3, -k * 0.2, k * 0.14, 0, TAU); g.arc(k * 0.3, -k * 0.2, k * 0.14, 0, TAU); g.fill(); break; }
+    case 'seahorse': g.strokeStyle = col; g.lineWidth = k * 0.35; g.lineCap = 'round'; g.beginPath(); g.moveTo(0, -k); g.quadraticCurveTo(k * 0.6, -k * 0.2, 0, k * 0.4); g.quadraticCurveTo(-k * 0.5, k * 0.9, k * 0.2, k * 1.2); g.stroke();
+      g.lineWidth = k * 0.2; g.beginPath(); g.moveTo(0, -k); g.lineTo(k * 0.6, -k * 0.9); g.stroke(); break;
+    case 'jelly': { const pulse = 0.85 + 0.15 * Math.sin(t * 2.4); g.globalAlpha *= 0.85; g.fillStyle = col; g.beginPath(); g.ellipse(0, 0, k * 1.2 * pulse, k * 1.2 * pulse, 0, 0, TAU); g.fill();
+      g.strokeStyle = '#8a4a2a'; for (let i = 0; i < 16; i++) { const a = i / 16 * TAU; g.beginPath(); g.moveTo(Math.cos(a) * k * 0.3, Math.sin(a) * k * 0.3); g.lineTo(Math.cos(a) * k * 1.1 * pulse, Math.sin(a) * k * 1.1 * pulse); g.stroke(); } break; }
+  }
+  g.restore();
+}
+const CK = 1.15;
+const SIZE = { limpet: 1.2, snail: 1.1, topshell: 1.2, anemone: 1.8, snakelock: 1.6, barnacle: 1.2, mussel: 1.4, hermit: 1.6, crab: 2.2, spider: 2.2, prawn: 1.3, fish: 2, pipefish: 2.2, star: 2.6, cushion: 1.8, brittle: 2, urchin: 1.9, seahare: 2.4, slug: 1.8, octopus: 2.2, seahorse: 2.2, jelly: 3, chiton: 1.3, bluelimpet: 1.1, cowrie: 1.2, lump: 1.8, lobster: 1.9, eel: 2.2, cuttle: 2.2, moonjelly: 2.8 };
+
+/* ============================== creature bodies in the pool ============================== */
+let bodies = [];
+function spotFor(s, c) {
+  // attached and grazing species sit on rock; others near their kind of home
+  const homes = c.pieces.filter(p => {
+    const g = PIECES[p.type].give;
+    if (s.home === 'surface') return g.surface; if (s.home === 'bigcrevice') return g.bigcrevice; if (s.home === 'none') return false;
+    return g[s.home];
+  });
+  const p = homes.length ? homes[Math.floor(Math.random() * homes.length)] : null;
+  if (p) { const a = Math.random() * TAU, d = Math.random() * PIECES[p.type].r * 0.7; return [p.x + Math.cos(a) * d, p.y + Math.sin(a) * d * 0.8, p]; }
+  for (let n = 0; n < 40; n++) { const u = shape.cx + (Math.random() - 0.5) * shape.rx * 1.6, v = shape.cy + (Math.random() - 0.5) * shape.ry * 1.6; if (inPool(u, v, 3)) return [u, v, null]; }
+  return [shape.cx, shape.cy, null];
+}
+function syncBodies(swimIn) {
+  const c = pool();
+  const want = {};
+  for (const id in c.res) want[id] = c.res[id].n;
+  bodies = bodies.filter(b => { if ((want[b.id] || 0) > 0) { want[b.id]--; return true; } b.leaving = true; return false; });
+  for (const id in want) for (let n = 0; n < want[id]; n++) {
+    const s = SPBY[id], [u, v, p] = spotFor(s, c);
+    const arriving = !!swimIn && mode === 'play';
+    bodies.push(makeBody(s, u, v, p, arriving));
+  }
+}
+function makeBody(s, u, v, p, arriving) {
+  return { id: s.id, s, u: arriving ? 50 + (Math.random() - 0.5) * 6 : u, v: arriving ? 30 : v, tu: u, tv: v, home: p, ang: Math.random() * TAU, wait: Math.random() * 3,
+    mobile: !(s.home === 'surface' && (s.draw === 'anemone' || s.draw === 'snakelock' || s.draw === 'barnacle' || s.draw === 'mussel' || s.draw === 'limpet')), phase: Math.random() * 10 };
+}
+function moveBodies(dt, t) {
+  const c = pool();
+  const hunters = bodies.filter(b => b.s.prey);
+  for (const b of bodies) {
+    const sp = b.s.draw === 'fish' || b.s.draw === 'prawn' || b.s.draw === 'jelly' || b.s.draw === 'moonjelly' || b.s.draw === 'cuttle' ? 7 : b.s.draw === 'crab' || b.s.draw === 'octopus' || b.s.draw === 'lobster' || b.s.draw === 'eel' ? 4 : 1.2;
+    const d = Math.hypot(b.tu - b.u, b.tv - b.v);
+    // hide when a hunter comes near
+    const threat = hunters.some(h => h.s.prey.indexOf(b.id) >= 0 && Math.hypot(h.u - b.u, h.v - b.v) < 12);
+    if (d > 0.3) { const k = Math.min(1, sp * dt / d); b.u += (b.tu - b.u) * k; b.v += (b.tv - b.v) * k; b.ang = Math.atan2(b.tv - b.v, b.tu - b.u); }
+    else if ((b.wait -= dt) <= 0) {
+      b.wait = 2 + Math.random() * 5;
+      if (b.mobile) { const [u, v, p] = threat && b.home ? [b.home.x, b.home.y + 1, b.home] : spotFor(b.s, c); b.tu = u; b.tv = v; b.home = p || b.home; }
+    }
+    b.hiding = threat && b.s.home !== 'surface';
+  }
+}
+
+/* ============================== beach finds and watching ============================== */
+let finds = [], watch = null, watchNext = 8, floats = [], toastT = 0;
+const FIND_KINDS = [{ n: 'shell', v: 1, col: '#efe0c8' }, { n: 'cockle', v: 2, col: '#e3c7a0' }, { n: 'whelk', v: 3, col: '#d8b99a' }, { n: 'sea glass', v: 8, col: '#7fc3b0' }];
+function spawnFinds() {
+  const n = 3 + Math.floor(Math.random() * 3);
+  for (let k = 0; k < n; k++) {
+    const kind = Math.random() < 0.08 ? FIND_KINDS[3] : FIND_KINDS[Math.floor(Math.random() * 3)];
+    let u, v, tries = 0;
+    do { u = 8 + Math.random() * 84; v = 84 + Math.random() * 12; tries++; } while (tries < 20 && (inPool(u, v, 0) || u < 0));
+    finds.push({ u, v, kind, born: S.t, rot: Math.random() * TAU });
+  }
+}
+function toast(msg) { const el = $('toast'); el.textContent = msg; el.style.display = 'block'; el.style.left = (area.x + area.w / 2) + 'px'; el.style.top = ''; el.style.bottom = (H - (area.y + area.h) + 12) + 'px'; toastT = 3.6 + Math.min(3, msg.length / 40); }
+function speciesLine(ev) {
+  const s = SPBY[ev.who];
+  if (ev.kind === 'arrive') return (ev.first ? 'New to your guide: ' : 'Back on the tide: ') + s.n + '.';
+  if (ev.kind === 'left') return s.n + ' left. ' + ev.why;
+  if (ev.kind === 'young') return 'The ' + s.n.toLowerCase() + ' have young.';
+  if (ev.kind === 'settled') return s.n + ' has settled in.';
+  if (ev.kind === 'eat') return 'The ' + s.n.toLowerCase() + ' caught a ' + SPBY[ev.prey].n.toLowerCase() + '.';
+  if (ev.kind === 'gone') return 'No ' + s.n.toLowerCase() + ' left in the pool.';
+  return '';
+}
+
+function listNames(ids) { const n = ids.map(id => SPBY[id].n); return n.length < 2 ? n.join('') : n.slice(0, -1).join(', ') + ' and ' + n[n.length - 1]; }
+function tideNews(evs) {
+  const first = evs.filter(e => e.kind === 'arrive' && e.first).map(e => e.who), back = evs.filter(e => e.kind === 'arrive' && !e.first).map(e => e.who), left = evs.filter(e => e.kind === 'left');
+  const out = [];
+  if (first.length) out.push('New to your guide: ' + listNames(first) + '.');
+  if (back.length) out.push('Back on the tide: ' + listNames(back) + '.');
+  if (left.length === 1) out.push(speciesLine(left[0]));
+  else if (left.length) out.push(listNames(left.map(e => e.who)) + ' left the pool.');
+  return out.join(' ');
+}
+
+/* ============================== simulation clock ============================== */
+let lastPhase = null, lastLog = [];
+function advance(dt) {
+  const before = S.t; S.t += dt;
+  const pb = ((before % TIDE) + TIDE) % TIDE, pa = ((S.t % TIDE) + TIDE) % TIDE;
+  const crossed = mark => (pb < mark && pa >= mark) || (pa < pb && (pb < mark || pa >= mark));
+  if (crossed(FLOOD)) onHigh();
+  if (crossed(EBB)) onLow();
+}
+function onHigh() {
+  finds = [];
+  const ev = highWater(pool()); syncBodies(true);
+  const shown = ev.filter(e => e.kind === 'arrive' || e.kind === 'left');
+  if (shown.length) { toast(tideNews(shown)); if (shown.some(e => e.kind === 'arrive')) sfxArrive(); }
+  else if (mode === 'play') toast(isSpring(S.t) ? 'Spring tide. Rare visitors ride the bigger tides.' : 'High water. Nobody new this time.');
+  lastLog = ev.concat(lastLog).slice(0, 12); journalDirty = true; persist();
+}
+function onLow() {
+  const r = lowWater(pool(), true); S.tides++;
+  syncBodies(); spawnFinds();
+  const shown = r.events.filter(e => e.kind !== 'eat' || Math.random() < 0.6);
+  if (shown.length) toast(shown.slice(0, 2).map(speciesLine).join(' ') + (r.gift ? ' Your residents left ' + r.gift + ' shells.' : ''));
+  else if (r.gift) toast('Low water. Your residents left ' + r.gift + ' shells on the rocks.');
+  lastLog = r.events.concat(lastLog).slice(0, 12); journalDirty = true; persist();
+}
+
+/* ============================== drawing ============================== */
+function draw(dt, t) {
+  cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  if (bgDirty || !bg) buildBg();
+  cx.drawImage(bg, 0, 0, W, H);
+  const c = pool(), ts = tideState(S.t);
+  // light dancing on the water
+  cx.save(); poolPath(cx); cx.clip();
+  cx.strokeStyle = 'rgba(230,250,250,.13)'; cx.lineWidth = Math.max(1, sc.s * 0.35);
+  for (let n = 0; n < 9; n++) {
+    cx.beginPath();
+    for (let k = 0; k <= 20; k++) { const u = 15 + k * 3.6, v = 34 + n * 5.5 + Math.sin(k * 0.9 + t * 0.9 + n) * 1.4; k ? cx.lineTo(X(u), Y(v)) : cx.moveTo(X(u), Y(v)); }
+    cx.stroke();
+  }
+  cx.restore();
+  // pieces
+  c.pieces.forEach((p, n) => { if (p !== dragging) drawPiece(cx, p.type, X(p.x), Y(p.y), sc.s, t, n * 17 + 3); });
+  // creatures
+  for (const b of bodies) {
+    const k = (SIZE[b.s.draw] || 1.5) * sc.s * CK;
+    const ang = b.mobile && b.s.draw !== 'anemone' ? b.ang : 0;
+    drawCreature(cx, b.s, X(b.u), Y(b.v), k, ang, t + b.phase, b.hiding ? 0.45 : 1);
+    if (selectedSp === b.id) { cx.strokeStyle = 'rgba(232,85,63,.9)'; cx.lineWidth = 2; cx.beginPath(); cx.arc(X(b.u), Y(b.v), k * 2.2, 0, TAU); cx.stroke(); }
+  }
+  if (dragging) { drawPiece(cx, dragging.type, X(dragging.x), Y(dragging.y), sc.s, t, 99); }
+  if (placing && hover) {
+    const ok = canPlace(placing, hover[0], hover[1], null);
+    cx.globalAlpha = 0.7; drawPiece(cx, placing, X(hover[0]), Y(hover[1]), sc.s, t, 5); cx.globalAlpha = 1;
+    cx.strokeStyle = ok ? 'rgba(63,122,82,.9)' : 'rgba(200,64,44,.9)'; cx.lineWidth = 2; cx.setLineDash([5, 4]);
+    cx.beginPath(); cx.arc(X(hover[0]), Y(hover[1]), PIECES[placing].r * sc.s, 0, TAU); cx.stroke(); cx.setLineDash([]);
+  }
+  // the tide: sea water spreads over the rocks
+  if (ts.level > 0) {
+    cx.save(); cx.globalAlpha = 0.3 * ts.level;
+    cx.fillStyle = '#3a8fa8'; cx.beginPath();
+    const reach = Y(14) + (area.y + area.h - Y(14)) * ts.level;
+    cx.rect(area.x, area.y, area.w, reach - area.y); cx.fill();
+    cx.globalAlpha = 0.8 * ts.level; cx.strokeStyle = 'rgba(245,252,252,.9)'; cx.lineWidth = Math.max(1.5, sc.s * 0.5);
+    cx.beginPath(); for (let k = 0; k <= 40; k++) { const px = area.x + k / 40 * area.w, py = reach + Math.sin(k * 0.8 + t * 2) * 3; k ? cx.lineTo(px, py) : cx.moveTo(px, py); } cx.stroke();
+    cx.restore();
+  }
+  // beach finds at low water
+  for (const f of finds) {
+    const px = X(f.u), py = Y(f.v), r = sc.s * 1.6;
+    cx.save(); cx.translate(px, py); cx.rotate(f.rot);
+    wash(cx, 0, 0, r, r * 0.75, f.kind.col, 0.95);
+    cx.strokeStyle = 'rgba(120,90,60,.55)'; cx.lineWidth = 1; for (let k = -1; k <= 1; k++) { cx.beginPath(); cx.moveTo(0, r * 0.7); cx.lineTo(k * r * 0.6, -r * 0.6); cx.stroke(); }
+    cx.restore();
+  }
+  // something worth watching
+  if (watch) {
+    const b = watch.b, k = (SIZE[b.s.draw] || 1.5) * sc.s * CK, px = X(b.u), py = Y(b.v) - k * 2.4, p = 0.5 + 0.5 * Math.sin(t * 5);
+    cx.fillStyle = 'rgba(250,252,251,.95)'; cx.strokeStyle = '#c8402c'; cx.lineWidth = 2;
+    cx.beginPath(); cx.arc(px, py, 9 + p * 2, 0, TAU); cx.fill(); cx.stroke();
+    // a small eye: something to watch
+    cx.strokeStyle = '#173a5e'; cx.lineWidth = 1.6; cx.beginPath(); cx.ellipse(px, py, 5.5, 3.2, 0, 0, TAU); cx.stroke();
+    cx.fillStyle = '#173a5e'; cx.beginPath(); cx.arc(px, py, 1.8, 0, TAU); cx.fill();
+  }
+  cx.textAlign = 'center'; cx.font = '700 13px ' + getComputedStyle(document.body).fontFamily;
+  for (let n = floats.length - 1; n >= 0; n--) { const f = floats[n]; f.t += dt; if (f.t > 1.2) { floats.splice(n, 1); continue; } cx.globalAlpha = 1 - f.t / 1.2; cx.fillStyle = '#173a5e'; cx.fillText(f.text, f.x, f.y - f.t * 24); }
+  cx.globalAlpha = 1;
+}
+function drawTide() {
+  const c = $('tideCv'), g = c.getContext('2d'), w = c.width / DPR, h = c.height / DPR;
+  if (w < 20) return;
+  g.setTransform(DPR, 0, 0, DPR, 0, 0); g.clearRect(0, 0, w, h);
+  const font = getComputedStyle(document.body).fontFamily, ts = tideState(S.t), mx = 26;
+  // moon
+  const m = moonPhase(S.t), mcx = 13, mcy = h / 2, mr = Math.min(11, h / 2 - 4);
+  g.fillStyle = '#173a5e'; g.beginPath(); g.arc(mcx, mcy, mr, 0, TAU); g.fill();
+  g.fillStyle = '#f2f0dc'; g.beginPath();
+  const lit = m / 8; // 0 new, .5 full
+  const k = Math.cos(lit * TAU);
+  g.arc(mcx, mcy, mr, -Math.PI / 2, Math.PI / 2, lit > 0.5); g.ellipse(mcx, mcy, Math.abs(k) * mr, mr, 0, Math.PI / 2, -Math.PI / 2, (lit > 0.5) !== (k > 0)); g.fill();
+  if (m === 0) { g.strokeStyle = '#f2f0dc'; g.lineWidth = 1; g.beginPath(); g.arc(mcx, mcy, mr, 0, TAU); g.stroke(); }
+  // the tide curve across one day, with now marked
+  const x0 = mx + 8, x1 = w - 4, day = TIDE * 2, t0 = Math.floor(S.t / day) * day;
+  const lvl = tt => tideState(tt).level;
+  g.strokeStyle = 'rgba(29,79,107,.35)'; g.lineWidth = 1; g.beginPath(); g.moveTo(x0, h - 3); g.lineTo(x1, h - 3); g.stroke();
+  g.fillStyle = 'rgba(95,177,201,.35)'; g.beginPath(); g.moveTo(x0, h - 3);
+  for (let k2 = 0; k2 <= 96; k2++) { const tt = t0 + k2 / 96 * day, px = x0 + (x1 - x0) * k2 / 96, py = h - 3 - lvl(tt) * (h - 23) * (isSpring(S.t) ? 1 : 0.8); g.lineTo(px, py); }
+  g.lineTo(x1, h - 3); g.closePath(); g.fill();
+  g.strokeStyle = '#1d4f6b'; g.lineWidth = 1.6; g.beginPath();
+  for (let k2 = 0; k2 <= 96; k2++) { const tt = t0 + k2 / 96 * day, px = x0 + (x1 - x0) * k2 / 96, py = h - 3 - lvl(tt) * (h - 23) * (isSpring(S.t) ? 1 : 0.8); k2 ? g.lineTo(px, py) : g.moveTo(px, py); }
+  g.stroke();
+  const nx = x0 + (x1 - x0) * ((S.t - t0) / day);
+  g.strokeStyle = '#c8402c'; g.lineWidth = 2; g.beginPath(); g.moveTo(nx, 17); g.lineTo(nx, h - 3); g.stroke();
+  g.fillStyle = '#173a5e'; g.font = '700 12px ' + font; g.textAlign = 'left'; g.textBaseline = 'top';
+  const next = ts.p < FLOOD ? FLOOD - ts.p : ts.p < EBB ? EBB - ts.p : TIDE - ts.p + FLOOD;
+  let label = ts.name + (ts.p < FLOOD || ts.p >= EBB ? ', high water in ' + Math.ceil(next) + ' s' : ', low water in ' + Math.ceil(next) + ' s');
+  if (g.measureText(label).width > x1 - x0 - 50) label = ts.name + ', ' + Math.ceil(next) + ' s';
+  g.fillText(label, x0, 0);
+  const labelW = g.measureText(label).width;
+  g.textAlign = 'right'; g.font = '600 11px ' + font; g.fillStyle = '#3d5f7c';
+  // the moon note gives way when the journal is narrow
+  const room = x1 - x0 - labelW - 12;
+  const moonText = [MOON_NAMES[m] + (isSpring(S.t) ? ', spring tides' : ''), isSpring(S.t) ? 'Spring tides' : MOON_NAMES[m], isSpring(S.t) ? 'Spring' : ''].find(x => g.measureText(x).width <= room) || '';
+  g.fillText(moonText, x1, 0);
+  g.textBaseline = 'alphabetic';
+}
+
+/* ============================== journal ============================== */
+let tab = 'pool', journalDirty = true, selectedSp = null, guideSel = null, placing = null, hover = null, dragging = null;
+const jb = $('jbody');
+function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; }
+function portrait(s, size, ghost) {
+  const c = document.createElement('canvas'); c.width = size * DPR; c.height = size * DPR;
+  const g = c.getContext('2d'); g.setTransform(DPR, 0, 0, DPR, 0, 0);
+  if (!ghost) { g.fillStyle = 'rgba(95,177,201,.28)'; g.beginPath(); g.ellipse(size / 2, size / 2, size * 0.46, size * 0.4, 0, 0, TAU); g.fill(); }
+  const k = size / ((SIZE[s.draw] || 1.5) * 3.4);
+  if (ghost) { g.globalAlpha = 0.25; drawCreature(g, Object.assign({}, s, { col: '#9fb3bf' }), size / 2, size / 2, k, 0, 0, 1); g.globalAlpha = 1; }
+  else drawCreature(g, s, size / 2, size / 2, k, s.draw === 'fish' || s.draw === 'prawn' ? 0 : 0, 1.2, 1);
+  return c;
+}
+function buildJournal() {
+  document.querySelectorAll('#tabs .tab').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+  const st = jb.scrollTop; jb.innerHTML = '';
+  if (tab === 'pool') buildPoolTab(); else if (tab === 'guide') buildGuideTab(); else if (tab === 'stones') buildStonesTab(); else buildCovesTab();
+  jb.scrollTop = st; journalDirty = false;
+}
+function buildPoolTab() {
+  const c = pool(), a = assess(c, 0), ids = Object.keys(c.res);
+  const n = ids.reduce((m, id) => m + c.res[id].n, 0);
+  jb.appendChild(el('div', 'note num', '<b>' + COVES[S.cove].n + '</b>. ' + (n ? n + ' living here, ' + ids.length + ' kinds. ' : 'Nobody lives here yet. ') + '<b>' + S.shells + '</b> shells.'));
+  if (selectedSp && c.res[selectedSp]) jb.appendChild(speciesCard(SPBY[selectedSp], a[selectedSp]));
+  if (!ids.length) jb.appendChild(el('div', 'note', firstHint()));
+  ids.forEach(id => {
+    const s = SPBY[id], st = a[id], row = el('button', 'res' + (selectedSp === id ? ' sel' : ''));
+    row.appendChild(portrait(s, 44));
+    row.appendChild(el('span', '', '<span class="nm">' + s.n + (c.res[id].n > 1 ? ' <span class="num" style="font-weight:400;color:#3d5f7c">x' + c.res[id].n + '</span>' : '') + '</span><br><span class="why">' + st.why + '</span>'));
+    row.appendChild(el('span', 'mood ' + st.mood, st.mood === 'happy' ? 'Happy' : st.mood === 'ok' ? 'Getting by' : 'Unhappy'));
+    row.addEventListener('click', () => { selectedSp = selectedSp === id ? null : id; sfxTap(); buildJournal(); });
+    jb.appendChild(row);
+  });
+  if (lastLog.length) {
+    const log = el('div', 'note'); log.innerHTML = '<b>Lately</b><br>' + lastLog.slice(0, 4).map(speciesLine).filter(Boolean).join('<br>');
+    jb.appendChild(log);
+  }
+}
+function speciesCard(s, st) {
+  const g = S.guide[s.id] || {}, card = el('div', 'card');
+  card.innerHTML = '<h3>' + s.n + '</h3><i class="lat">' + s.lat + '</i>' +
+    '<div class="needs">Lives on ' + HOME_WORD[s.home] + '. Eats ' + (s.food === 'prey' ? s.prey.map(p => SPBY[p].n.toLowerCase()).join(', ') : FOOD_WORD[s.food]) + '. ' +
+    (s.social === 'pair' ? 'Breeds in pairs.' : s.social === 'group' ? 'Lives in groups.' : 'Lives alone.') + (s.spring ? ' Only comes on spring tides.' : '') + '</div>' +
+    (st ? '<div class="needs"><b>Now:</b> ' + st.why + '</div>' : '') +
+    '<div class="facts">' + [['found', 'Found in the pool'], ['settled', 'Settled in happily'], ['watched', g.watched ? s.fact : 'Watch it do something']].map(([k, l]) => '<div><span class="tick' + (g[k] ? ' on' : '') + '"></span><span>' + l + '</span></div>').join('') + '</div>';
+  return card;
+}
+function firstHint() {
+  if (!S.tides) return 'Visitors arrive at high water. Each one needs the right home in your pool. Your two boulders give bare rock and crevices; the Stones tab has more.';
+  return 'Place stones so there is somewhere to live, then wait for high water.';
+}
+function buildGuideTab() {
+  const f = foundCount(), facts = factCount();
+  jb.appendChild(el('div', 'note num', '<b>' + f + ' of ' + SP.length + '</b> found. <b>' + facts + ' of ' + SP.length * 3 + '</b> notes in the guide. Tap an entry for its page.'));
+  if (guideSel) { const s = SPBY[guideSel], found = S.guide[guideSel] && S.guide[guideSel].found;
+    if (found) jb.appendChild(speciesCard(s, pool().res[guideSel] ? assess(pool(), 0)[guideSel] : null));
+    else jb.appendChild(el('div', 'card', '<h3>Not found yet</h3><div class="needs">Seen in ' + [s.cove].concat(s.also || []).map(c => COVES[c].n).join(', ') + '. Needs ' + HOME_WORD[s.home] + (s.food === 'prey' ? ' and something to hunt' : '') + '.' + (s.spring ? ' Only comes on spring tides.' : '') + '</div>')); }
+  COVE_ORDER.forEach(cv2 => {
+    jb.appendChild(el('div', 'note', '<b>' + COVES[cv2].n + '</b>'));
+    const grid = el('div', 'guide');
+    SP.filter(s => s.cove === cv2).forEach(s => {
+      const g = S.guide[s.id] || {}, e = el('button', 'ge' + (g.found ? '' : ' ghost') + (guideSel === s.id ? ' sel' : ''));
+      e.appendChild(portrait(s, 56, !g.found));
+      e.appendChild(el('span', '', g.found ? s.n : 'Unknown'));
+      const pips = el('span', 'pips', ['found', 'settled', 'watched'].map(k => '<i class="' + (g[k] ? 'on' : '') + '"></i>').join('')); e.appendChild(pips);
+      e.addEventListener('click', () => { guideSel = guideSel === s.id ? null : s.id; sfxTap(); buildJournal(); });
+      grid.appendChild(e);
+    });
+    jb.appendChild(grid);
+  });
+}
+function pieceCost(type) { const c = pool(); const owned = c.pieces.filter(p => p.type === type).length; return Math.round(PIECES[type].cost * Math.pow(1.5, owned)); }
+function buildStonesTab() {
+  window.TTG?.track('shop_open');
+  jb.appendChild(el('div', 'note num', '<b>' + S.shells + '</b> shells. Buy a piece, then tap the pool to set it down. Drag pieces in the pool to move them.'));
+  PIECE_ORDER.forEach(type => {
+    const p = PIECES[type], row = el('div', 'shop'), cost = pieceCost(type);
+    const c = document.createElement('canvas'); c.width = 58 * DPR; c.height = 46 * DPR; const g = c.getContext('2d'); g.setTransform(DPR, 0, 0, DPR, 0, 0);
+    drawPiece(g, type, 29, 23, 2.2, 0, 7); row.appendChild(c);
+    row.appendChild(el('div', '', '<h4>' + p.n + '</h4><p>' + p.t + '</p>'));
+    const b = el('button', 'btn buy num', 'Buy<small>' + cost + ' shells</small>'); b.disabled = S.shells < cost;
+    b.addEventListener('click', () => { if (S.shells < cost) return; startPlacing(type); });
+    row.appendChild(b); jb.appendChild(row);
+  });
+  const c = pool();
+  const row = el('div', 'shop');
+  row.appendChild(el('span', '', ''));
+  if (c.size < SIZE_COST.length) {
+    row.appendChild(el('div', '', '<h4>Widen the pool</h4><p>Room for more stones and more residents.</p>'));
+    const b = el('button', 'btn buy num', 'Dig<small>' + SIZE_COST[c.size] + ' shells</small>'); b.disabled = S.shells < SIZE_COST[c.size];
+    b.addEventListener('click', () => { const cost = SIZE_COST[c.size]; if (S.shells < cost) return; S.shells -= cost; c.size++; shape = null; bgDirty = true; buildBg(); keepInside(); syncBodies(); sfxPlace(); window.TTG?.track('purchase', { level: c.size, value: cost }); persist(); buildJournal(); });
+    row.appendChild(b);
+  } else row.appendChild(el('div', '', '<h4>The pool is as wide as it gets</h4><p>Every rock you can move, you have moved.</p>'));
+  jb.appendChild(row);
+}
+function buildCovesTab() {
+  const f = foundCount();
+  jb.appendChild(el('div', 'note num', 'Each cove has its own pool and its own creatures. Finding more species opens the next one. <b>' + f + '</b> found so far.'));
+  COVE_ORDER.forEach(id => {
+    const cv2 = COVES[id], open = f >= cv2.need || S.coves[id], here = S.cove === id;
+    const box = el('div', 'cove' + (here ? ' here' : '') + (open ? '' : ' locked'));
+    box.innerHTML = '<div><h4>' + cv2.n + '</h4><p>' + cv2.t + '</p>' + (open ? '' : '<p class="num"><b>Opens at ' + cv2.need + ' species found.</b></p>') + '</div>';
+    const b = el('button', 'btn sm', here ? 'Here' : open ? 'Go' : 'Locked'); b.disabled = here || !open;
+    b.addEventListener('click', () => goCove(id));
+    box.appendChild(b); jb.appendChild(box);
+  });
+}
+function goCove(id) {
+  if (!S.coves[id]) { S.coves[id] = freshCove(id); window.TTG?.track('village_levelup', { level: Object.keys(S.coves).length }); }
+  S.cove = id; shape = null; bgDirty = true; finds = []; watch = null; selectedSp = null; bodies = []; buildBg(); syncBodies(); persist(); sfxArrive(); tab = 'pool'; buildJournal();
+  toast('You walk round to ' + COVES[id].n + '.');
+}
+document.querySelectorAll('#tabs .tab').forEach(b => b.addEventListener('click', () => { tab = b.dataset.tab; sfxTap(); buildJournal(); }));
+
+/* ============================== placing and moving stones ============================== */
+function canPlace(type, u, v, except) {
+  const r = PIECES[type].r;
+  if (!inPool(u, v, r * 0.55)) return false;
+  for (const p of pool().pieces) { if (p === except) continue; if (Math.hypot(p.x - u, p.y - v) < (r + PIECES[p.type].r) * 0.72) return false; }
+  return true;
+}
+function startPlacing(type) {
+  placing = type; hover = null; $('placeBar').style.display = 'flex'; $('placeText').textContent = 'Tap the pool to set down the ' + PIECES[type].n.toLowerCase();
+}
+function stopPlacing() { placing = null; hover = null; $('placeBar').style.display = 'none'; }
+$('placeCancel').addEventListener('click', () => { stopPlacing(); sfxTap(); });
+function keepInside() { const c = pool(); c.pieces = c.pieces.filter(p => inPool(p.x, p.y, 2)); }
+let downAt = null, grab = null;
+cv.addEventListener('pointerdown', e => {
+  audio(); if (AC && AC.state === 'suspended') AC.resume();
+  if (mode !== 'play') return;
+  const px = e.clientX, py = e.clientY; if (px > area.x + area.w || py > area.y + area.h) return;
+  const u = toU(px), v = toV(py); downAt = [px, py];
+  if (placing) { hover = [u, v]; return; }
+  // watching: tap the creature with the eye over it
+  if (watch) { const b = watch.b; if (Math.hypot(b.u - u, b.v - (v + 3)) < 7) { recordWatch(); downAt = null; return; } }
+  // beach finds
+  for (let n = finds.length - 1; n >= 0; n--) { const f = finds[n]; if (Math.hypot(f.u - u, f.v - v) < 4.5) { collect(n); downAt = null; return; } }
+  // grab a stone to move it
+  for (let n = pool().pieces.length - 1; n >= 0; n--) { const p = pool().pieces[n]; if (Math.hypot(p.x - u, p.y - v) < PIECES[p.type].r * 0.8) { grab = { p, ox: p.x - u, oy: p.y - v, x0: p.x, y0: p.y, moved: false }; try { cv.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ } return; } }
+});
+cv.addEventListener('pointermove', e => {
+  if (mode !== 'play') return;
+  const u = toU(e.clientX), v = toV(e.clientY);
+  if (placing) { hover = [u, v]; return; }
+  if (grab) { if (!grab.moved && downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 6) { grab.moved = true; dragging = grab.p; } if (grab.moved) { grab.p.x = u + grab.ox; grab.p.y = v + grab.oy; } }
+});
+cv.addEventListener('pointerup', e => {
+  if (mode !== 'play') return;
+  const u = toU(e.clientX), v = toV(e.clientY);
+  if (placing) {
+    if (canPlace(placing, u, v, null)) {
+      const cost = pieceCost(placing); if (S.shells >= cost) {
+        S.shells -= cost; pool().pieces.push({ type: placing, x: u, y: v }); sfxPlace();
+        window.TTG?.track('upgrade_bought', { level: pool().pieces.length, value: cost });
+        stopPlacing(); journalDirty = true; syncBodies(); persist();
+        if (S.hints < 2) { S.hints = 2; toast('New visitors come in at high water. Watch the tide clock.'); }
+      }
+    } else toast('It will not fit there. Find open water inside the pool.');
+    return;
+  }
+  if (grab) {
+    if (grab.moved) { if (!canPlace(grab.p.type, grab.p.x, grab.p.y, grab.p)) { grab.p.x = grab.x0; grab.p.y = grab.y0; toast('No room there. The stone rolls back.'); } else sfxPlace(); journalDirty = true; syncBodies(); persist(); }
+    else if (downAt) selectPieceTap(grab.p);
+    grab = null; dragging = null; return;
+  }
+  // tap a creature to look at it
+  if (downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 10) {
+    let best = null, bd = 1e9;
+    for (const b of bodies) { const d = Math.hypot(b.u - u, b.v - v); if (d < 5 && d < bd) { bd = d; best = b; } }
+    if (best) { selectedSp = best.id; tab = 'pool'; sfxTap(); buildJournal(); }
+  }
+  downAt = null;
+});
+function selectPieceTap(p) { toast(PIECES[p.type].n + ': drag it to move it.'); }
+function collect(n) {
+  const f = finds.splice(n, 1)[0]; S.shells += f.kind.v;
+  floats.push({ x: X(f.u), y: Y(f.v) - 10, text: '+' + f.kind.v + (f.kind.v > 5 ? ' sea glass' : ''), t: 0 });
+  sfxShell(); journalDirty = true;
+}
+function recordWatch() {
+  const b = watch.b, g = note(b.id); watch = null; watchNext = 9 + Math.random() * 8;
+  if (!g.watched) { g.watched = 1; toast(SPBY[b.id].n + ': ' + SPBY[b.id].fact); S.shells += 4; floats.push({ x: X(b.u), y: Y(b.v) - 14, text: 'New note +4', t: 0 }); }
+  else { S.shells += 2; floats.push({ x: X(b.u), y: Y(b.v) - 14, text: '+2', t: 0 }); }
+  sfxWatch(); journalDirty = true; persist();
+}
+document.addEventListener('touchmove', e => {
+  let n = e.target;
+  while (n && n !== document.body) { if (n.scrollHeight > n.clientHeight + 1) { const oy = getComputedStyle(n).overflowY; if (oy === 'auto' || oy === 'scroll') return; } n = n.parentElement; }
+  if (e.cancelable) e.preventDefault();
+}, { passive: false });
+window.addEventListener('keydown', e => { if (e.key === 'Escape' && placing) { stopPlacing(); } });
+$('muteBtn').addEventListener('click', () => { audio(); setMuted(!S.muted); });
+
+/* ============================== away ============================== */
+function checkAway() {
+  const el2 = (Date.now() - S.lastSeen) / 1000;
+  if (!isFinite(el2) || el2 < 150) { S.lastSeen = Date.now(); return false; }
+  const tides = Math.min(6, Math.floor(el2 / TIDE)); if (!tides) return false;
+  const c = pool(), arrivals = [], lefts = []; let gifts = 0;
+  for (let k = 0; k < tides; k++) {
+    const ev = highWater(c); ev.forEach(e => { if (e.kind === 'arrive') arrivals.push(SPBY[e.who].n); if (e.kind === 'left') lefts.push(SPBY[e.who].n); });
+    const r = lowWater(c, false); gifts += r.gift; S.tides++;
+    S.t += TIDE;
+  }
+  syncBodies();
+  $('awayText').textContent = 'The tide came in ' + tides + ' time' + (tides > 1 ? 's' : '') + '. ' + (arrivals.length ? 'New arrivals: ' + [...new Set(arrivals)].join(', ') + '. ' : 'Nobody new came in. ') + (lefts.length ? 'Left: ' + [...new Set(lefts)].join(', ') + '. ' : '') + (gifts ? 'Your residents left ' + gifts + ' shells.' : '');
+  window.TTG?.track('offline_claim', { value: gifts });
+  $('away').classList.add('show'); persist(); return true;
+}
+$('awayBtn').addEventListener('click', () => { $('away').classList.remove('show'); journalDirty = true; });
+
+/* ============================== boot and loop ============================== */
+$('playBtn').addEventListener('click', () => {
+  audio(); if (AC && AC.state === 'suspended') AC.resume();
+  const firstTime = !S.started; S.started = true;
+  mode = 'play'; $('title').classList.remove('show'); $('deck').style.display = 'flex'; $('muteBtn').style.display = 'flex';
+  layout(); buildBg(); syncBodies(); buildJournal();
+  if (!checkAway() && firstTime) toast('High water brings visitors. Low water leaves shells on the sand.');
+  persist();
+});
+let last = performance.now(), running = true, uiT = 0, saveT = 0;
+function frame(nowMs) {
+  if (!running) return;
+  const dt = Math.min(0.05, Math.max(0, (nowMs - last) / 1000)); last = nowMs;
+  const t = nowMs / 1000;
+  if (mode === 'play' && !$('away').classList.contains('show')) {
+    advance(dt);
+    moveBodies(dt, t);
+    if (!watch) { watchNext -= dt; if (watchNext <= 0 && bodies.length) { const pick = bodies.filter(b => !b.hiding); if (pick.length) watch = { b: pick[Math.floor(Math.random() * pick.length)], until: 5 }; watchNext = 3; } }
+    else { watch.until -= dt; if (watch.until <= 0 || bodies.indexOf(watch.b) < 0) { watch = null; watchNext = 9 + Math.random() * 8; } }
+    // finds wash away when the tide comes back
+    if (tideState(S.t).level > 0.5 && finds.length) finds = [];
+    if (surfGain) surfGain.gain.value = S.muted ? 0 : 0.05 + tideState(S.t).level * 0.12;
+  } else if (mode === 'title') { moveBodies(dt, t); }
+  draw(dt, t);
+  if (toastT > 0) { toastT -= dt; if (toastT <= 0) $('toast').style.display = 'none'; }
+  uiT -= dt;
+  if (mode === 'play' && uiT <= 0) { uiT = 0.5; drawTide(); if (journalDirty && !placing) buildJournal(); }
+  saveT -= dt; if (saveT <= 0 && S.started && mode === 'play') { saveT = 10; persist(); }
+  requestAnimationFrame(frame);
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { running = false; if (mode === 'play') persist(); if (AC && AC.state === 'running') AC.suspend(); }
+  else {
+    if (running) return; running = true; last = performance.now();
+    if (AC && AC.state === 'suspended' && !S.muted) AC.resume();
+    if (mode === 'play') { checkAway(); journalDirty = true; }
+    requestAnimationFrame(frame);
+  }
+});
+window.addEventListener('pagehide', () => { if (mode === 'play') persist(); });
+window.addEventListener('resize', () => { layout(); });
+// read-only view of the pool for automated checks, plus a fast-forward; only with ?debug in the address
+if (/[?&]debug(&|=|$)/.test(location.search)) window.__tp = { state: () => ({ mode, t: S.t, shells: S.shells, cove: S.cove, pieces: pool().pieces.map(p => p.type), res: Object.keys(pool().res).map(id => id + ':' + pool().res[id].n), found: foundCount(), facts: factCount(), tides: S.tides, sc: { x: sc.x, y: sc.y, s: sc.s }, finds: finds.length, watch: !!watch }),
+  ff: sec => { for (let k = 0; k < sec * 10; k++) advance(0.1); syncBodies(); journalDirty = true; }, give: n => { S.shells += n; journalDirty = true; },
+  collect: () => { let v = 0; while (finds.length) { v += finds[0].kind.v; collect(0); } return v; },
+  place: type => { const cost = pieceCost(type); if (S.shells < cost) return false; for (let n = 0; n < 200; n++) { const u = 15 + Math.random() * 70, v = 30 + Math.random() * 55; if (canPlace(type, u, v, null)) { S.shells -= cost; pool().pieces.push({ type, x: u, y: v }); syncBodies(); return true; } } return false; },
+  dig: () => { const c = pool(); if (c.size >= SIZE_COST.length || S.shells < SIZE_COST[c.size]) return false; S.shells -= SIZE_COST[c.size]; c.size++; shape = null; bgDirty = true; buildBg(); keepInside(); return true; },
+  sp: SP, guide: () => S.guide, cost: pieceCost, go: goCove, open: () => COVE_ORDER.filter(id => foundCount() >= COVES[id].need || S.coves[id]), cove: () => ({ size: pool().size, cap: capacity(pool()), pieces: pool().pieces.length }) };
+setMuted(S.muted, true);
+layout(); buildBg();
+// the title shows the pool as you left it, or a few visitors if it is new
+if (!Object.keys(pool().res).length) { pool().res = {}; }
+syncBodies();
+// a new pool is empty, so the title borrows a few passers-by; the first sync in play clears them
+if (!bodies.length) ['beadlet', 'limpet', 'starfish', 'hermit', 'prawn'].forEach(id => { const sp = SPBY[id], [u, v, p] = spotFor(sp, pool()); bodies.push(makeBody(sp, u, v, p, false)); });
+if (S.started) { $('titleStat').textContent = foundCount() + ' of ' + SP.length + ' species in your guide. ' + S.shells + ' shells.'; $('playBtn').textContent = 'Back to the shore'; }
+requestAnimationFrame(t => { last = t; frame(t); });
+})();
+</script>
+</body>
+</html>

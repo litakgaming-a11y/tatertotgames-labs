@@ -18,6 +18,7 @@ export const GAMES = Object.freeze([
   'crucible',
   'cut-loose',
   'fire-season',
+  'tide-pool',
   'flip-force',
   'fold-friends',
   'freeze-frame',

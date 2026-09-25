@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-25T12:00:00Z",
+  "title": "Design System: Tide Pool",
+  "extensions": {
+    "colorMeta": {
+      "coral": { "role": "primary", "displayName": "Coral", "canonical": "#e8553f", "tonalRamp": ["#3d120b", "#6b2012", "#93301f", "#c8402c", "#e8553f", "#ee7c6a", "#f4a99c", "#fbd9d2"] },
+      "kelp": { "role": "secondary", "displayName": "Kelp", "canonical": "#3f7a52", "tonalRamp": ["#10241a", "#1c3d2a", "#285a3b", "#336b47", "#3f7a52", "#669a76", "#9bc2a4", "#dcefe1"] },
+      "journal": { "role": "neutral", "displayName": "Journal Page", "canonical": "#fafcfb", "tonalRamp": ["#173a5e", "#3d5f7c", "#7f97a8", "#b8ccd3", "#c6d8dc", "#d9eaf0", "#eef4f4", "#fafcfb"] },
+      "pool": { "role": "tertiary", "displayName": "Pool Teal", "canonical": "#5fb1c9", "tonalRamp": ["#0f2f3f", "#163f63", "#1f6f8f", "#2f7e98", "#5fb1c9", "#8cc9d9", "#a9d8df", "#dff0f3"] }
+    },
+    "typographyMeta": {
+      "latin": { "displayName": "Latin", "purpose": "Species' Latin names, italic, as a field guide sets them." },
+      "label": { "displayName": "Label", "purpose": "Names under guide portraits." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "press", "value": "0.12s ease-out background and 1px drop", "purpose": "A button inverting to ink when pressed." },
+      { "name": "tide", "value": "flood 15s, high 30s, ebb 15s, low 60s", "purpose": "The translucent band that moves across the scene." },
+      { "name": "sway", "value": "sine sway on weed and tentacles", "purpose": "Life in the pool without bouncing." }
+    ],
+    "breakpoints": [
+      { "name": "landscape", "value": "width > 1.05 * height" },
+      { "name": "compact", "value": "height <= 520px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Button",
+      "kind": "button",
+      "refersTo": "button",
+      "description": "Page-colored pill with an ink border that inverts when pressed and is dotted when disabled.",
+      "html": "<button class=\"ds-btn\">Go</button> <button class=\"ds-btn\" disabled>Locked</button>",
+      "css": ".ds-btn { min-height: 44px; padding: 0 16px; border: 1.5px solid #173a5e; border-radius: 22px; background: #fafcfb; color: #173a5e; font: 600 14px 'Segoe UI', system-ui, sans-serif; cursor: pointer; transition: background-color .12s ease-out, transform .12s ease-out; } .ds-btn:hover:not(:disabled) { background: #fff; } .ds-btn:active:not(:disabled) { background: #173a5e; color: #fafcfb; transform: translateY(1px); } .ds-btn:focus-visible { outline: 2px solid #e8553f; outline-offset: 2px; } .ds-btn:disabled { color: #7f97a8; border-color: #c6d8dc; background: radial-gradient(circle, rgba(23,58,94,.16) 1px, transparent 1.4px) 0 0 / 6px 6px, #eef4f4; cursor: default; }"
+    },
+    {
+      "name": "Go Button",
+      "kind": "button",
+      "refersTo": "button-go",
+      "description": "The one primary action per screen.",
+      "html": "<button class=\"ds-go\">Go down to the shore</button>",
+      "css": ".ds-go { min-height: 52px; padding: 0 30px; border: 0; border-radius: 26px; background: #c8402c; color: #fff; font: 600 17px 'Segoe UI', system-ui, sans-serif; cursor: pointer; } .ds-go:hover { background: #b53824; } .ds-go:active { background: #93301f; } .ds-go:focus-visible { outline: 2px solid #e8553f; outline-offset: 2px; }"
+    },
+    {
+      "name": "Resident Row",
+      "kind": "custom",
+      "refersTo": "resident-row",
+      "description": "A creature living in the pool, with a plain reason and a mood chip.",
+      "html": "<button class=\"ds-res\"><span class=\"pt\"></span><span><b>Shore crab</b><br><small>Nothing here it can hunt.</small></span><span class=\"mood\">Unhappy</span></button>",
+      "css": ".ds-res { display: grid; grid-template-columns: 44px 1fr auto; gap: 10px; align-items: center; padding: 7px 14px; min-height: 52px; width: 340px; text-align: left; border: 0; background: #fafcfb; font: 14px 'Segoe UI', system-ui, sans-serif; color: #173a5e; } .ds-res .pt { width: 44px; height: 44px; border-radius: 50%; background: rgba(95,177,201,.28); } .ds-res small { color: #3d5f7c; font-size: 12.5px; } .ds-res .mood { font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 11px; background: #f8dfd9; color: #9a2f1f; }"
+    },
+    {
+      "name": "Guide Pips",
+      "kind": "custom",
+      "refersTo": "species-card",
+      "description": "Three observation pips under a guide entry: found, settled, watched.",
+      "html": "<span class=\"ds-pips\"><i class=\"on\"></i><i class=\"on\"></i><i></i></span>",
+      "css": ".ds-pips { display: inline-flex; gap: 3px; } .ds-pips i { width: 6px; height: 6px; border-radius: 50%; border: 1px solid #3d5f7c; display: block; } .ds-pips i.on { background: #3f7a52; border-color: #3f7a52; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Naturalist's Journal",
+    "overview": "Tide Pool is a painted rock pool beside a field journal. The scene is watercolor washes; the journal is a pale ruled page in plain sentences, with Latin names in italic.",
+    "keyCharacteristics": ["Watercolor pool with pigment at the rim", "Tide as a band across the whole scene", "One coral for attention", "Kelp green only for observed", "Ghost silhouettes for undiscovered species"],
+    "rules": [
+      { "name": "Coral is attention", "body": "Coral marks the action to press or the thing selected, never decoration.", "section": "colors" },
+      { "name": "Green is observed", "body": "Kelp green only means found, settled or watched.", "section": "colors" },
+      { "name": "Paint, not shadows", "body": "Depth in the scene comes from washes; the journal has none.", "section": "elevation" }
+    ],
+    "dos": ["Write states as a naturalist's sentences", "Keep the scene painterly", "Design absence with ghost entries and empty pips"],
+    "donts": ["No glows or box shadows", "No decorative coral", "No glyph icons", "No nagging timers"]
+  }
+}
